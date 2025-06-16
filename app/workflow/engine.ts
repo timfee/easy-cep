@@ -5,6 +5,7 @@ import {
   LogLevel,
   StepCheckContext,
   StepId,
+  StepLogEntry,
   StepUIState,
   Var,
   WorkflowVars
@@ -20,6 +21,19 @@ export async function runStep(
 ): Promise<void> {
   const step = getStep(stepId);
 
+  let logs: StepLogEntry[] = [];
+  let currentState: StepUIState = { status: "idle", logs };
+
+  const pushState = (data: Partial<StepUIState>) => {
+    currentState = { ...currentState, ...data, logs };
+    updateStepState(stepId, currentState);
+  };
+
+  const addLog = (entry: StepLogEntry) => {
+    logs = [...logs, entry];
+    pushState({});
+  };
+
   const createFetch =
     (token: string | undefined) =>
     async <T>(
@@ -29,6 +43,15 @@ export async function runStep(
     ): Promise<T> => {
       if (!token) throw new Error("No auth token available");
 
+      const method = (init as RequestInit | undefined)?.method ?? "GET";
+      const body = (init as RequestInit | undefined)?.body;
+      addLog({
+        timestamp: Date.now(),
+        message: `Request ${method} ${url}`,
+        data: body,
+        level: LogLevel.Debug
+      });
+
       const headers = (init as RequestInit | undefined)?.headers;
       const res = await fetch(url, {
         ...(init as RequestInit),
@@ -37,6 +60,21 @@ export async function runStep(
           Authorization: `Bearer ${token}`,
           "Content-Type": "application/json"
         }
+      });
+
+      const clone = res.clone();
+      let logData: unknown;
+      try {
+        logData = await clone.json();
+      } catch {
+        logData = await clone.text();
+      }
+
+      addLog({
+        timestamp: Date.now(),
+        message: `Response ${res.status} ${url}`,
+        data: logData,
+        level: LogLevel.Debug
       });
 
       if (!res.ok) {
@@ -51,12 +89,12 @@ export async function runStep(
     fetchGoogle: createFetch(vars[Var.GoogleAccessToken] as string | undefined),
     fetchMicrosoft: createFetch(vars[Var.MsGraphToken] as string | undefined),
     log: (level: LogLevel, message: string, data?: unknown) => {
-      console.log(`[${stepId}] [${level}] ${message}`, data);
+      addLog({ timestamp: Date.now(), message, data, level });
     }
   };
 
   // CHECK PHASE
-  updateStepState(stepId, { status: "checking" });
+  pushState({ status: "checking" });
 
   type CheckType =
     Parameters<typeof step.check>[0] extends StepCheckContext<infer U> ? U
@@ -71,26 +109,20 @@ export async function runStep(
       markComplete: (data) => {
         checkData = data;
         isComplete = true;
-        updateStepState(stepId, {
-          status: "complete",
-          summary: "Already complete"
-        });
+        pushState({ status: "complete", summary: "Already complete" });
       },
       markIncomplete: (summary, data) => {
         checkData = data;
         isComplete = false;
-        updateStepState(stepId, { status: "idle", summary });
+        pushState({ status: "idle", summary });
       },
       markCheckFailed: (error) => {
         checkFailed = true;
-        updateStepState(stepId, {
-          status: "failed",
-          error: `Check failed: ${error}`
-        });
+        pushState({ status: "failed", error: `Check failed: ${error}` });
       }
     });
   } catch (error) {
-    updateStepState(stepId, {
+    pushState({
       status: "failed",
       error:
         "Check error: "
@@ -102,7 +134,7 @@ export async function runStep(
   if (checkFailed || isComplete) return;
 
   // EXECUTE PHASE
-  updateStepState(stepId, { status: "executing" });
+  pushState({ status: "executing" });
 
   try {
     await step.execute({
@@ -110,17 +142,17 @@ export async function runStep(
       checkData,
       markSucceeded: (newVars) => {
         updateVars(newVars);
-        updateStepState(stepId, { status: "complete", summary: "Succeeded" });
+        pushState({ status: "complete", summary: "Succeeded" });
       },
       markFailed: (error) => {
-        updateStepState(stepId, { status: "failed", error });
+        pushState({ status: "failed", error });
       },
       markPending: (notes) => {
-        updateStepState(stepId, { status: "pending", notes });
+        pushState({ status: "pending", notes });
       }
     });
   } catch (error) {
-    updateStepState(stepId, {
+    pushState({
       status: "failed",
       error:
         "Execute error: "

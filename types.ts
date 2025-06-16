@@ -112,9 +112,17 @@ export interface StepExecuteContext<T> {
   markPending(notes: string): void;
 }
 
+export interface StepLogEntry {
+  timestamp: number;
+  message: string;
+  data?: unknown;
+  level?: LogLevel;
+}
+
 export interface StepUIState {
   status: "idle" | "checking" | "executing" | "complete" | "failed" | "pending";
   summary?: string;
   error?: string;
   notes?: string;
+  logs?: StepLogEntry[];
 }

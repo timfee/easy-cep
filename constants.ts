@@ -64,6 +64,18 @@ export const TemplateId = {
 
 export const GroupId = { AllUsers: "allUsers" };
 
+
+export const PROVIDERS = { GOOGLE: "google", MICROSOFT: "microsoft" } as const;
+
+export type Provider = (typeof PROVIDERS)[keyof typeof PROVIDERS];
+
+export const OAUTH_STATE_COOKIE_NAME = "oauth_state";
+
+export const WORKFLOW_CONSTANTS = {
+  TOKEN_COOKIE_MAX_AGE: 60 * 60 * 24 * 7,
+  OAUTH_STATE_TTL_MS: 10 * 60 * 1000,
+  TOKEN_REFRESH_BUFFER_MS: 5 * 60 * 1000
+
 export const OAuthScope = {
   Google:
     "openid https://www.googleapis.com/auth/admin.directory.user.readonly",
