@@ -13,11 +13,7 @@ type WorkflowState = {
   executing: StepId | null;
 };
 
-const STEP_SEQUENCE: StepId[] = [
-  StepId.VerifyPrimaryDomain,
-  StepId.CreateAutomationOu,
-  StepId.CreateServiceUser
-];
+const STEP_SEQUENCE: StepId[] = [StepId.DummyStep];
 
 export default function WorkflowPage() {
   const [state, setState] = useState<WorkflowState>({
