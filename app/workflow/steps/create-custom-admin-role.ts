@@ -80,12 +80,25 @@ export default createStep<CheckData>({
 
   async execute({ fetchGoogle, checkData, markSucceeded, markFailed, log }) {
     /**
+     * GET https://admin.googleapis.com/admin/directory/v1/customer/my_customer/roles/ALL/privileges
+     *
+     * Completed step example response
+     *
+     * 200
+     * {
+     *   "items": [
+     *     { "serviceId": "00haapch16h1ysv", "privilegeName": "USERS_RETRIEVE" }
+     *   ]
+     * }
+     *
      * POST https://admin.googleapis.com/admin/directory/v1/customer/my_customer/roles
      * {
      *   "roleName": "Microsoft Entra Provisioning",
      *   "roleDescription": "Custom role for Microsoft provisioning",
      *   "rolePrivileges": [
-     *     { "serviceId": "{directoryServiceId}", "privilegeName": "USERS_RETRIEVE" }
+     *     { "serviceId": "{directoryServiceId}", "privilegeName": "USERS_RETRIEVE" },
+     *     { "serviceId": "{directoryServiceId}", "privilegeName": "USERS_CREATE" },
+     *     { "serviceId": "{directoryServiceId}", "privilegeName": "USERS_UPDATE" }
      *   ]
      * }
      *

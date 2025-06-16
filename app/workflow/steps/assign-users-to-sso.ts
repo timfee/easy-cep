@@ -79,6 +79,11 @@ export default createStep<CheckData>({
      *
      * 200
      * {}
+     *
+     * Error response
+     *
+     * 409
+     * { "error": { "message": "Assignment already exists" } }
      */
     try {
       const profileId = process.env.SAML_PROFILE_ID;
