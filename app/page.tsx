@@ -1,69 +1,63 @@
 "use client";
 
 import { StepId, StepUIState, WorkflowVars } from "@/types";
-import { useEffect, useState } from "react";
+import { useState } from "react";
+import ProviderLogin from "./components/ProviderLogin";
+import StepCard from "./components/StepCard";
 import { runStep } from "./workflow/engine";
+import { getAllSteps } from "./workflow/step-registry";
 
-type StepStatus = StepUIState;
-
-type WorkflowState = {
-  vars: Partial<WorkflowVars>;
-  status: Partial<Record<StepId, StepStatus>>;
-  executing: StepId | null;
-};
-
-const STEP_SEQUENCE: StepId[] = [StepId.DummyStep];
+const STEPS = getAllSteps();
 
 export default function WorkflowPage() {
-  const [state, setState] = useState<WorkflowState>({
-    vars: {},
-    status: {},
-    executing: null
-  });
+  const [vars, setVars] = useState<Partial<WorkflowVars>>({});
+  const [status, setStatus] = useState<Partial<Record<StepId, StepUIState>>>(
+    {}
+  );
+  const [executing, setExecuting] = useState<StepId | null>(null);
 
-  useEffect(() => {
-    // Initial state could be loaded here in the future
-  }, []);
+  const updateVars = (newVars: Partial<WorkflowVars>) =>
+    setVars((prev) => ({ ...prev, ...newVars }));
+
+  const updateStep = (stepId: StepId, stepState: StepUIState) =>
+    setStatus((prev) => ({ ...prev, [stepId]: stepState }));
 
   async function handleExecute(id: StepId) {
+    const def = STEPS.find((s) => s.id === id);
+    if (!def) return;
+    const missing = def.requires.filter((v) => !vars[v]);
+    if (missing.length > 0) {
+      updateStep(id, {
+        status: "failed",
+        error: `Missing required vars: ${missing.join(", ")}`
+      });
+      return;
+    }
+
+    setExecuting(id);
     try {
-      await runStep(
-        id,
-        state.vars,
-        (newVars) =>
-          setState((prev) => ({ ...prev, vars: { ...prev.vars, ...newVars } })),
-        (stepId, stepState) =>
-          setState((prev) => ({
-            ...prev,
-            status: { ...prev.status, [stepId]: stepState }
-          }))
-      );
+      await runStep(id, vars, updateVars, updateStep);
     } catch (error) {
       console.error("Failed to run step:", error);
+    } finally {
+      setExecuting(null);
     }
   }
 
   return (
-    <main>
-      <h1>Federation Workflow</h1>
-      <ul>
-        {STEP_SEQUENCE.map((id) => {
-          const step = state.status[id];
-          return (
-            <li key={id}>
-              <strong>{id}</strong>
-              <div>{step?.summary ?? step?.error ?? step?.notes ?? ""}</div>
-              {step?.status !== "complete" && (
-                <button
-                  onClick={() => handleExecute(id)}
-                  disabled={!!state.executing}>
-                  Execute
-                </button>
-              )}
-            </li>
-          );
-        })}
-      </ul>
+    <main className="p-4">
+      <h1 className="text-xl font-bold mb-4">Federation Workflow</h1>
+      <ProviderLogin onUpdate={updateVars} />
+      {STEPS.map((def) => (
+        <StepCard
+          key={def.id}
+          definition={def}
+          vars={vars}
+          state={status[def.id]}
+          executing={executing !== null}
+          onExecute={handleExecute}
+        />
+      ))}
     </main>
   );
 }
