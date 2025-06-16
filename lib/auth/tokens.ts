@@ -3,6 +3,7 @@ import {
   Provider,
   WORKFLOW_CONSTANTS
 } from "@/constants";
+import { env } from "@/env";
 import { cookies } from "next/headers";
 import { decrypt, encrypt } from "./crypto";
 import { Token } from "./oauth";
@@ -29,7 +30,7 @@ export async function setToken(
     name: cookieName,
     value: encrypted,
     httpOnly: true,
-    secure: process.env.NODE_ENV === "production",
+    secure: env.NODE_ENV === "production",
     path: "/",
     maxAge: WORKFLOW_CONSTANTS.TOKEN_COOKIE_MAX_AGE
   });

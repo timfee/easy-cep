@@ -5,6 +5,8 @@ interface StepLogsProps {
   logs: StepLogEntry[] | undefined;
 }
 
+const INDENT = 2;
+
 export default function StepLogs({ logs }: StepLogsProps) {
   if (!logs || logs.length === 0) return null;
   return (
@@ -17,7 +19,7 @@ export default function StepLogs({ logs }: StepLogsProps) {
             {l.level ? ` [${l.level}]` : ""} {l.message}
             {l.data ?
               <pre className="whitespace-pre-wrap bg-gray-100 p-1 mt-1">
-                {JSON.stringify(l.data, null, 2)}
+                {JSON.stringify(l.data, null, INDENT)}
               </pre>
             : null}
           </li>

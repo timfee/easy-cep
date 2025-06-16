@@ -35,7 +35,7 @@ const eslintConfig = [
   {
     plugins: { tsdoc, workflow: customRules },
     rules: {
-      "tsdoc/syntax": "warn",
+      "tsdoc/syntax": "off",
       // eslint-disable-next-line no-magic-numbers
       "sonarjs/cognitive-complexity": ["warn", 20],
       "no-magic-numbers": ["warn", { ignore: [-1, 0, 1] }]

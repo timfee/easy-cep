@@ -1,4 +1,5 @@
 import { ApiEndpoint, Provider, PROVIDERS } from "@/constants";
+import { env } from "@/env";
 
 interface OAuthConfig {
   clientId: string;
@@ -10,8 +11,8 @@ interface OAuthConfig {
 }
 
 const googleOAuthConfig: OAuthConfig = {
-  clientId: process.env.GOOGLE_CLIENT_ID || "",
-  clientSecret: process.env.GOOGLE_CLIENT_SECRET || "",
+  clientId: env.GOOGLE_CLIENT_ID,
+  clientSecret: env.GOOGLE_CLIENT_SECRET,
   redirectUri: `/api/auth/callback/google`,
   authorizationUrl: ApiEndpoint.GoogleAuth.Authorize,
   tokenUrl: ApiEndpoint.GoogleAuth.Token,
@@ -30,8 +31,8 @@ const googleOAuthConfig: OAuthConfig = {
 };
 
 const microsoftOAuthConfig: OAuthConfig = {
-  clientId: process.env.MICROSOFT_CLIENT_ID || "",
-  clientSecret: process.env.MICROSOFT_CLIENT_SECRET || "",
+  clientId: env.MICROSOFT_CLIENT_ID,
+  clientSecret: env.MICROSOFT_CLIENT_SECRET,
   redirectUri: `/api/auth/callback/microsoft`,
   authorizationUrl: ApiEndpoint.MicrosoftAuth.Authorize,
   tokenUrl: ApiEndpoint.MicrosoftAuth.Token,
@@ -48,6 +49,8 @@ const microsoftOAuthConfig: OAuthConfig = {
     "offline_access"
   ]
 };
+
+const MS_IN_SECOND = 1000;
 
 function getOAuthConfig(provider: Provider): OAuthConfig {
   return provider === PROVIDERS.GOOGLE ?
@@ -112,7 +115,7 @@ export async function exchangeCodeForToken(
   return {
     accessToken: data.access_token,
     refreshToken: data.refresh_token,
-    expiresAt: Date.now() + data.expires_in * 1000,
+    expiresAt: Date.now() + data.expires_in * MS_IN_SECOND,
     scope: data.scope?.split(" ") || config.scopes
   };
 }

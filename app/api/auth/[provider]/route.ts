@@ -1,4 +1,5 @@
 import { OAUTH_STATE_COOKIE_NAME, PROVIDERS, Provider } from "@/constants";
+import { env } from "@/env";
 import { encrypt, generateState } from "@/lib/auth/crypto";
 import { generateAuthUrl } from "@/lib/auth/oauth";
 import { NextResponse } from "next/server";
@@ -19,7 +20,7 @@ export async function GET(request: Request) {
   const data = { state, provider, timestamp: Date.now() };
   const encrypted = encrypt(JSON.stringify(data));
 
-  const isProduction = process.env.NODE_ENV === "production";
+  const isProduction = env.NODE_ENV === "production";
   const cookieOptions = {
     httpOnly: true,
     secure: isProduction,
