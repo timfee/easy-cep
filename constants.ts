@@ -70,11 +70,18 @@ export type Provider = (typeof PROVIDERS)[keyof typeof PROVIDERS];
 
 export const OAUTH_STATE_COOKIE_NAME = "oauth_state";
 
+/* eslint-disable no-magic-numbers */
+
+const MINUTE = 60;
+const HOUR = MINUTE * 60;
+const DAY = HOUR * 24;
+
 export const WORKFLOW_CONSTANTS = {
-  TOKEN_COOKIE_MAX_AGE: 60 * 60 * 24 * 7,
-  OAUTH_STATE_TTL_MS: 10 * 60 * 1000,
-  TOKEN_REFRESH_BUFFER_MS: 5 * 60 * 1000
+  TOKEN_COOKIE_MAX_AGE: DAY * 7,
+  OAUTH_STATE_TTL_MS: 10 * MINUTE * 1000,
+  TOKEN_REFRESH_BUFFER_MS: 5 * MINUTE * 1000
 };
+/* eslint-enable no-magic-numbers */
 
 export const OAuthScope = {
   Google:
