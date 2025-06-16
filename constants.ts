@@ -20,6 +20,11 @@ export const ApiEndpoint = {
     SsoAssignments:
       "https://cloudidentity.googleapis.com/v1/inboundSsoAssignments"
   },
+  GoogleAuth: {
+    Authorize: "https://accounts.google.com/o/oauth2/v2/auth",
+    Token: "https://oauth2.googleapis.com/token",
+    TokenInfo: "https://oauth2.googleapis.com/tokeninfo"
+  },
 
   Microsoft: {
     Applications: "https://graph.microsoft.com/beta/applications",
@@ -43,7 +48,13 @@ export const ApiEndpoint = {
       `https://graph.microsoft.com/v1.0/servicePrincipals/${spId}/claimsMappingPolicies/$ref`,
 
     ReadClaimsPolicy: (spId: string) =>
-      `https://graph.microsoft.com/beta/servicePrincipals/${spId}/claimsMappingPolicies`
+      `https://graph.microsoft.com/beta/servicePrincipals/${spId}/claimsMappingPolicies`,
+
+    Me: "https://graph.microsoft.com/v1.0/me"
+  },
+  MicrosoftAuth: {
+    Authorize: "https://login.microsoftonline.com/common/oauth2/v2.0/authorize",
+    Token: "https://login.microsoftonline.com/common/oauth2/v2.0/token"
   }
 };
 
@@ -52,6 +63,7 @@ export const TemplateId = {
 };
 
 export const GroupId = { AllUsers: "allUsers" };
+
 
 export const PROVIDERS = { GOOGLE: "google", MICROSOFT: "microsoft" } as const;
 
@@ -63,4 +75,22 @@ export const WORKFLOW_CONSTANTS = {
   TOKEN_COOKIE_MAX_AGE: 60 * 60 * 24 * 7,
   OAUTH_STATE_TTL_MS: 10 * 60 * 1000,
   TOKEN_REFRESH_BUFFER_MS: 5 * 60 * 1000
+
+export const OAuthScope = {
+  Google:
+    "openid https://www.googleapis.com/auth/admin.directory.user.readonly",
+  Microsoft: "https://graph.microsoft.com/.default offline_access"
+};
+
+export const OAuthConfig = {
+  Google: {
+    clientId: "dummy-google-client-id",
+    clientSecret: "dummy-google-client-secret",
+    redirectUri: "http://localhost:3000/api/auth/google/callback"
+  },
+  Microsoft: {
+    clientId: "dummy-ms-client-id",
+    clientSecret: "dummy-ms-client-secret",
+    redirectUri: "http://localhost:3000/api/auth/microsoft/callback"
+  }
 };

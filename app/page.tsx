@@ -1,6 +1,7 @@
 "use client";
 
 import { StepId, StepUIState, WorkflowVars } from "@/types";
+
 import { useState } from "react";
 import ProviderLogin from "./components/ProviderLogin";
 import StepCard from "./components/StepCard";
@@ -45,19 +46,27 @@ export default function WorkflowPage() {
   }
 
   return (
-    <main className="p-4">
-      <h1 className="text-xl font-bold mb-4">Federation Workflow</h1>
-      <ProviderLogin onUpdate={updateVars} />
-      {STEPS.map((def) => (
-        <StepCard
-          key={def.id}
-          definition={def}
-          vars={vars}
-          state={status[def.id]}
-          executing={executing !== null}
-          onExecute={handleExecute}
-        />
-      ))}
+    <main>
+      <AuthSection />
+      <h1>Federation Workflow</h1>
+      <ul>
+        {STEP_SEQUENCE.map((id) => {
+          const step = state.status[id];
+          return (
+            <li key={id}>
+              <strong>{id}</strong>
+              <div>{step?.summary ?? step?.error ?? step?.notes ?? ""}</div>
+              {step?.status !== "complete" && (
+                <button
+                  onClick={() => handleExecute(id)}
+                  disabled={!!state.executing}>
+                  Execute
+                </button>
+              )}
+            </li>
+          );
+        })}
+      </ul>
     </main>
   );
 }

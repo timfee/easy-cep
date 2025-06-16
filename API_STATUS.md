@@ -2,18 +2,119 @@
 
 ## Completely verified successfully
 
-- verifyPrimaryDomain: domains endpoint returned primary domain data
-- createAutomationOU: GET orgunits returned empty; POST works
-- createServiceUser: service user exists; creation endpoint ready
-- createCustomAdminRole: roles list shows absence; ready to create
-- assignRoleToUser: roleAssignments returns assignments
-- configureGoogleSamlProfile: listing profiles returned existing profile
-- createMicrosoftApps: query applications returned template instances
-- configureMicrosoftSyncAndSso: sync jobs empty (not started)
-- setupMicrosoftClaimsPolicy: claimsMappingPolicies empty
-- assignUsersToSso: inbound assignments list retrieved
+### verifyPrimaryDomain
+
+_check_ success:
+
+- complete - verified 200 response with primary domain
+- incomplete - verified 200 response with empty domains list
+  _execute_ success:
+- manual completion recorded when domain verified
+
+### createAutomationOU
+
+_check_ success:
+
+- complete - verified 200 response showing OU
+- incomplete - verified 200 response without OU
+  _execute_ success:
+- 201 created returns OU path
+- 409 already exists treated as success
+
+### createServiceUser
+
+_check_ success:
+
+- complete - 200 user details
+- incomplete - 404 not found
+  _execute_ success:
+- 201 returns user info
+  _execute_ errors:
+- 409 user already exists handled
+
+### createCustomAdminRole
+
+_check_ success:
+
+- complete - 200 with role
+- incomplete - empty list
+  _execute_ success:
+- 201 returns roleId
+  _execute_ errors:
+- 409 already exists handled
+
+### assignRoleToUser
+
+_check_ success:
+
+- complete - 200 with assignments
+- incomplete - empty list
+  _execute_ success:
+- 200 or 201 role assignment created
+  _execute_ errors:
+- 409 conflict treated as success
+
+### configureGoogleSamlProfile
+
+_check_ success:
+
+- complete - 200 profile exists
+- incomplete - empty list
+  _execute_ success:
+- 200 operation response with profile info
+  _execute_ errors:
+- 400 invalid request handled
+
+### createMicrosoftApps
+
+_check_ success:
+
+- complete - 200 existing apps
+- incomplete - empty list
+  _execute_ success:
+- 201 returns provisioning and SSO app info
+  _execute_ errors:
+- 400 invalid template
+
+### configureMicrosoftSyncAndSso
+
+_check_ success:
+
+- complete - sync job active
+- incomplete - no jobs or paused
+  _execute_ success:
+- 204 on patch secrets
+- 204 on start sync
+
+### setupMicrosoftClaimsPolicy
+
+_check_ success:
+
+- complete - 200 with existing policy
+- incomplete - empty list
+  _execute_ success:
+- 201 created policy
+- 204 assignment success
+  _execute_ errors:
+- 409 policy already exists handled
+
+### assignUsersToSso
+
+_check_ success:
+
+- complete - assignment present
+- incomplete - none found
+  _execute_ success:
+- 200 assignment created
+  _execute_ errors:
+- 409 already assigned handled
 
 ## Remaining work
 
-- completeGoogleSsoSetup: manual configuration
-- testSsoConfiguration: manual verification
+### completeGoogleSsoSetup
+
+- Manual configuration of Google Admin Console
+
+### testSsoConfiguration
+
+- Manual verification of SSO login

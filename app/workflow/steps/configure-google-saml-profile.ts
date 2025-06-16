@@ -88,6 +88,11 @@ export default createStep<CheckData>({
      *
      * 200
      * { "response": { "name": "inboundSamlSsoProfiles/010xi5tr1szon40" } }
+     *
+     * Error response
+     *
+     * 400
+     * { "error": { "message": "Invalid request" } }
      */
     try {
       const CreateSchema = z.object({
