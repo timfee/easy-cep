@@ -7,6 +7,12 @@ Below is a complete canvas of **12 steps**, each with:
 - **Execution**: prerequisites, HTTP request(s), expected responses, and behavior
 - **Required Inputs** (variables or tokens)
 
+Before running or developing a step that performs live API calls, execute
+`./scripts/token-info.sh` to confirm the Google and Microsoft bearer tokens are
+valid. The script queries Google's tokeninfo endpoint and Microsoft Graph so you
+can quickly verify access. These credentials point to test tenants, so API
+mutations are allowed during step development.
+
 ## Step 1: `verifyPrimaryDomain`
 
 ### Purpose
