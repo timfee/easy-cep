@@ -12,6 +12,24 @@ export default createStep<CheckData>({
   requires: [Var.GoogleAccessToken, Var.CustomerId],
   provides: [],
 
+  /**
+   * GET https://admin.googleapis.com/admin/directory/v1/customer/my_customer/orgunits?orgUnitPath=/Automation
+   *
+   * Completed step example response
+   *
+   * 200
+   * {
+   *   "organizationUnits": [
+   *     { "orgUnitPath": "/Automation" }
+   *   ]
+   * }
+   *
+   * Incomplete step example response
+   *
+   * 200
+   * { "kind": "admin#directory#orgUnits" }
+   */
+
   async check({
     fetchGoogle,
     markComplete,
@@ -50,6 +68,23 @@ export default createStep<CheckData>({
   },
 
   async execute({ fetchGoogle, markSucceeded, markFailed, log }) {
+    /**
+     * POST https://admin.googleapis.com/admin/directory/v1/customer/my_customer/orgunits
+     * {
+     *   "name": "Automation",
+     *   "parentOrgUnitPath": "/"
+     * }
+     *
+     * Success response
+     *
+     * 201
+     * { "orgUnitPath": "/Automation" }
+     *
+     * Conflict response
+     *
+     * 409
+     * { "error": { "message": "Invalid Ou Id" } }
+     */
     try {
       const CreateSchema = z.object({ orgUnitPath: z.string() }).passthrough();
 
@@ -70,13 +105,3 @@ export default createStep<CheckData>({
     }
   }
 });
-
-/* eslint-disable tsdoc/syntax */
-/**
-Sample check output:
-{ "kind": "admin#directory#orgUnit", "etag": "\"gxO1bXSFNeWqC3FiQQ6XLAXOpbF19C45texsy8ljSPo/9sjtqUintVa0VWRSFDje_b_Y_tI\"", "name": "Automation", "description": "Automation users", "orgUnitPath": "/Automation", "orgUnitId": "id:03ph8a2z1s3ovsg", "parentOrgUnitPath": "/", "parentOrgUnitId": "id:03ph8a2z23yjui6" }
-
-Sample create attempt output (existing OU):
-{ "error": { "code": 400, "message": "Invalid Ou Id", "errors": [ { "message": "Invalid Ou Id", "domain": "global", "reason": "invalid" } ] } }
-*/
-/* eslint-enable tsdoc/syntax */
