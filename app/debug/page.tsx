@@ -1,3 +1,4 @@
+/* eslint-disable no-magic-numbers */
 console.log("Environment variables:", process.env);
 
 export default function DebugPage() {

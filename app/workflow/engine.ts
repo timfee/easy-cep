@@ -3,13 +3,14 @@ import "server-only";
 
 import {
   LogLevel,
+  StepCheckContext,
   StepId,
   StepUIState,
-  WorkflowVars,
-  Var
+  Var,
+  WorkflowVars
 } from "@/types";
-import { getStep } from "./step-registry";
 import { z } from "zod";
+import { getStep } from "./step-registry";
 
 export async function runStep(
   stepId: StepId,
@@ -19,7 +20,8 @@ export async function runStep(
 ): Promise<void> {
   const step = getStep(stepId);
 
-  const createFetch = (token: string | undefined) =>
+  const createFetch =
+    (token: string | undefined) =>
     async <T>(
       url: string,
       schema: z.ZodSchema<T>,
@@ -56,8 +58,10 @@ export async function runStep(
   // CHECK PHASE
   updateStepState(stepId, { status: "checking" });
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  let checkData: any;
+  type CheckType =
+    Parameters<typeof step.check>[0] extends StepCheckContext<infer U> ? U
+    : never;
+  let checkData!: CheckType;
   let checkFailed = false;
   let isComplete = false;
 
@@ -89,7 +93,8 @@ export async function runStep(
     updateStepState(stepId, {
       status: "failed",
       error:
-        "Check error: " + (error instanceof Error ? error.message : "Unknown error")
+        "Check error: "
+        + (error instanceof Error ? error.message : "Unknown error")
     });
     return;
   }
@@ -118,7 +123,8 @@ export async function runStep(
     updateStepState(stepId, {
       status: "failed",
       error:
-        "Execute error: " + (error instanceof Error ? error.message : "Unknown error")
+        "Execute error: "
+        + (error instanceof Error ? error.message : "Unknown error")
     });
   }
 }

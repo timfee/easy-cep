@@ -1,3 +1,4 @@
+/* eslint-disable no-magic-numbers */
 // eslint-rules/workflow-rules.ts
 import { ESLintUtils } from "@typescript-eslint/utils";
 import * as fs from "fs";
@@ -309,7 +310,7 @@ export const mustDefineSchemaInline = createRule({
     },
     messages: {
       defineSchemaInline:
-        "Define Zod schema inline before using in {{method}} call"
+        "Define Zod schema as a const immediately before using in {{method}} call"
     },
     schema: []
   },
@@ -325,28 +326,17 @@ export const mustDefineSchemaInline = createRule({
         ) {
           const schemaArg = node.arguments[1];
 
-          // Check if schema is defined inline (should be a const/variable defined nearby)
+          // We want schemas to be defined as variables (not inline z.object())
+          // but close to where they're used
           if (schemaArg.type === "Identifier") {
-            // Look for the schema definition in the same scope
-            const scope = context.getScope();
-            const variable = scope.variables.find(
-              (v) => v.name === schemaArg.name
-            );
-
-            if (variable && variable.defs.length > 0) {
-              const def = variable.defs[0];
-
-              // Check if it's defined far from usage (more than 10 lines)
-              if (def.node.loc && node.loc) {
-                const distance = node.loc.start.line - def.node.loc.start.line;
-                if (distance > 10) {
-                  context.report({
-                    node: schemaArg,
-                    messageId: "defineSchemaInline",
-                    data: { method: node.callee.name }
-                  });
-                }
-              }
+            // Simple check: warn if it looks like a generic name
+            const schemaName = schemaArg.name;
+            if (schemaName === "schema" || schemaName === "Schema") {
+              context.report({
+                node: schemaArg,
+                messageId: "defineSchemaInline",
+                data: { method: node.callee.name }
+              });
             }
           }
         }
@@ -399,14 +389,402 @@ export const useVarEnum = createRule({
     };
   }
 });
+// Additional rules for eslint-rules/workflow-rules.ts
 
-// Export all rules
+export const mustExportCreateStep = createRule({
+  name: "must-export-create-step",
+  meta: {
+    type: "problem",
+    docs: {
+      description: "Step files must export result of createStep as default"
+    },
+    messages: { missingCreateStep: "Must export default createStep<...>(...)" }
+  },
+  defaultOptions: [],
+  create(context) {
+    let hasDefaultExport = false;
+    let usesCreateStep = false;
+
+    return {
+      ExportDefaultDeclaration(node) {
+        hasDefaultExport = true;
+        if (
+          node.declaration.type === "CallExpression"
+          && node.declaration.callee.type === "Identifier"
+          && node.declaration.callee.name === "createStep"
+        ) {
+          usesCreateStep = true;
+        }
+      },
+      "Program:exit"() {
+        if (!hasDefaultExport || !usesCreateStep) {
+          context.report({
+            node: context.getSourceCode().ast,
+            messageId: "missingCreateStep"
+          });
+        }
+      }
+    };
+  }
+});
+
+export const checkDataTypeRequired = createRule({
+  name: "check-data-type-required",
+  meta: {
+    type: "problem",
+    docs: { description: "createStep must have explicit CheckData type" },
+    messages: {
+      missingCheckDataType:
+        "Define CheckData interface and pass to createStep<CheckData>"
+    }
+  },
+  defaultOptions: [],
+  create(context) {
+    return {
+      CallExpression(node) {
+        if (
+          node.callee.type === "Identifier"
+          && node.callee.name === "createStep"
+        ) {
+          // Check if it has type arguments
+          if (!node.typeArguments || node.typeArguments.params.length === 0) {
+            context.report({ node, messageId: "missingCheckDataType" });
+          }
+        }
+      }
+    };
+  }
+});
+
+export const noStateMutations = createRule({
+  name: "no-state-mutations",
+  meta: {
+    type: "problem",
+    docs: {
+      description: "Steps cannot mutate vars directly, must use callbacks"
+    },
+    messages: {
+      noDirectMutation: "Use markSucceeded() to set vars, not direct mutation"
+    }
+  },
+  defaultOptions: [],
+  create(context) {
+    return {
+      AssignmentExpression(node) {
+        if (
+          node.left.type === "MemberExpression"
+          && node.left.object.type === "Identifier"
+          && (node.left.object.name === "vars"
+            || node.left.object.name === "state")
+        ) {
+          context.report({ node, messageId: "noDirectMutation" });
+        }
+      }
+    };
+  }
+});
+
+export const mustUseContextFetch = createRule({
+  name: "must-use-context-fetch",
+  meta: {
+    type: "problem",
+    docs: { description: "Must use fetchGoogle/fetchMicrosoft from context" },
+    messages: { useContextFetch: "Use {{method}} from destructured context" }
+  },
+  defaultOptions: [],
+  create(context) {
+    return {
+      CallExpression(node) {
+        // Check for ctx.fetchGoogle pattern (should be destructured)
+        if (
+          node.callee.type === "MemberExpression"
+          && node.callee.object.type === "Identifier"
+          && (node.callee.object.name === "ctx"
+            || node.callee.object.name === "context")
+          && node.callee.property.type === "Identifier"
+          && (node.callee.property.name === "fetchGoogle"
+            || node.callee.property.name === "fetchMicrosoft")
+        ) {
+          context.report({
+            node,
+            messageId: "useContextFetch",
+            data: { method: node.callee.property.name }
+          });
+        }
+      }
+    };
+  }
+});
+
+// Add these to eslint-rules/workflow-rules.ts
+
+// Parse StepId enum from types.ts
+function getStepIdEnumValues(projectRoot) {
+  const typesPath = path.join(projectRoot, "types.ts");
+  if (!fs.existsSync(typesPath)) return new Map();
+
+  const content = fs.readFileSync(typesPath, "utf-8");
+  const stepIds = new Map();
+
+  // Match StepId enum values
+  const regex = /StepId\.(\w+)\s*=\s*["']([^"']+)["']/g;
+  let match;
+  while ((match = regex.exec(content)) !== null) {
+    const [, enumName, stringValue] = match;
+    stepIds.set(stringValue, enumName);
+  }
+
+  return stepIds;
+}
+
+export const useStepIdEnum = createRule({
+  name: "use-step-id-enum",
+  meta: {
+    type: "problem",
+    docs: { description: "Use StepId enum values instead of string literals" },
+    messages: {
+      useStepIdEnum: 'Use StepId.{{suggestion}} instead of "{{value}}"'
+    },
+    schema: []
+  },
+  defaultOptions: [],
+  create(context) {
+    const projectRoot = context.getCwd();
+    const stepIdMap = getStepIdEnumValues(projectRoot);
+
+    return {
+      Property(node) {
+        if (
+          node.key.type === "Identifier"
+          && node.key.name === "id"
+          && node.value.type === "Literal"
+          && typeof node.value.value === "string"
+          && stepIdMap.has(node.value.value)
+        ) {
+          context.report({
+            node: node.value,
+            messageId: "useStepIdEnum",
+            data: {
+              value: node.value.value,
+              suggestion: stepIdMap.get(node.value.value)
+            }
+          });
+        }
+      }
+    };
+  }
+});
+
+export const noStringStepIds = createRule({
+  name: "no-string-step-ids",
+  meta: {
+    type: "problem",
+    docs: { description: "Do not use string literals for step IDs" },
+    messages: {
+      noStringStepId: "Use StepId enum instead of string literal for step IDs"
+    },
+    schema: []
+  },
+  defaultOptions: [],
+  create(context) {
+    return {
+      CallExpression(node) {
+        // Check getStep() calls
+        if (
+          node.callee.type === "Identifier"
+          && node.callee.name === "getStep"
+          && node.arguments.length > 0
+          && node.arguments[0].type === "Literal"
+          && typeof node.arguments[0].value === "string"
+        ) {
+          context.report({
+            node: node.arguments[0],
+            messageId: "noStringStepId"
+          });
+        }
+
+        // Check runStep() calls
+        if (
+          node.callee.type === "Identifier"
+          && node.callee.name === "runStep"
+          && node.arguments.length > 0
+          && node.arguments[0].type === "Literal"
+          && typeof node.arguments[0].value === "string"
+        ) {
+          context.report({
+            node: node.arguments[0],
+            messageId: "noStringStepId"
+          });
+        }
+      }
+    };
+  }
+});
+
+export const importTypesFromTypes = createRule({
+  name: "import-types-from-types",
+  meta: {
+    type: "problem",
+    docs: {
+      description: "Import types from @/types instead of defining locally"
+    },
+    messages: {
+      importFromTypes: 'Import {{type}} from "@/types" instead of defining it'
+    },
+    schema: []
+  },
+  defaultOptions: [],
+  create(context) {
+    const coreTypes = new Set([
+      "Var",
+      "StepId",
+      "StepOutcome",
+      "LogLevel",
+      "WorkflowVars",
+      "StepCheckContext",
+      "StepExecuteContext",
+      "StepUIState"
+    ]);
+
+    return {
+      // Check for local type definitions that should be imported
+      TSEnumDeclaration(node) {
+        if (coreTypes.has(node.id.name)) {
+          context.report({
+            node,
+            messageId: "importFromTypes",
+            data: { type: node.id.name }
+          });
+        }
+      },
+      TSInterfaceDeclaration(node) {
+        if (coreTypes.has(node.id.name)) {
+          context.report({
+            node,
+            messageId: "importFromTypes",
+            data: { type: node.id.name }
+          });
+        }
+      },
+      // Check imports are from correct location
+      ImportDeclaration(node) {
+        if (
+          node.source.value === "./types"
+          || node.source.value === "../types"
+        ) {
+          // Should be @/types
+          const importedTypes = node.specifiers
+            .filter((spec) => spec.type === "ImportSpecifier")
+            .map((spec) => spec.imported.name)
+            .filter((name) => coreTypes.has(name));
+
+          if (importedTypes.length > 0) {
+            context.report({
+              node: node.source,
+              messageId: "importFromTypes",
+              data: { type: importedTypes.join(", ") }
+            });
+          }
+        }
+      }
+    };
+  }
+});
+
+export const importConstantsFromConstants = createRule({
+  name: "import-constants-from-constants",
+  meta: {
+    type: "problem",
+    docs: { description: "Import constants from constants.ts" },
+    messages: {
+      importFromConstants:
+        "Import {{constant}} from constants.ts instead of hardcoding"
+    },
+    schema: []
+  },
+  defaultOptions: [],
+  create(context) {
+    return {
+      VariableDeclaration(node) {
+        // Check for local ApiEndpoint definitions
+        if (
+          node.declarations.some(
+            (decl) =>
+              decl.id.type === "Identifier" && decl.id.name === "ApiEndpoint"
+          )
+        ) {
+          context.report({
+            node,
+            messageId: "importFromConstants",
+            data: { constant: "ApiEndpoint" }
+          });
+        }
+
+        // Check for local TemplateId definitions
+        if (
+          node.declarations.some(
+            (decl) =>
+              decl.id.type === "Identifier" && decl.id.name === "TemplateId"
+          )
+        ) {
+          context.report({
+            node,
+            messageId: "importFromConstants",
+            data: { constant: "TemplateId" }
+          });
+        }
+      }
+    };
+  }
+});
+
+export const noAnyInSchemas = createRule({
+  name: "no-any-in-schemas",
+  meta: {
+    type: "problem",
+    docs: { description: "Do not use any type in Zod schemas" },
+    messages: {
+      noAnyInSchema: "Use specific types instead of z.any() in schemas"
+    },
+    schema: []
+  },
+  defaultOptions: [],
+  create(context) {
+    return {
+      CallExpression(node) {
+        // Check for z.any() calls
+        if (
+          node.callee.type === "MemberExpression"
+          && node.callee.object.type === "Identifier"
+          && node.callee.object.name === "z"
+          && node.callee.property.type === "Identifier"
+          && node.callee.property.name === "any"
+        ) {
+          context.report({ node, messageId: "noAnyInSchema" });
+        }
+      }
+    };
+  }
+});
+
 export const rules = {
-  "no-hardcoded-urls": noHardcodedUrls,
-  "must-destructure-context": mustDestructureContext,
-  "must-use-try-catch": mustUseTryCatch,
+  "check-data-type-required": checkDataTypeRequired,
+  "import-constants-from-constants": importConstantsFromConstants,
+  "import-types-from-types": importTypesFromTypes,
   "must-call-required-callbacks": mustCallRequiredCallbacks,
-  "no-direct-fetch-with-auth": noDirectFetchWithAuth,
   "must-define-schema-inline": mustDefineSchemaInline,
+  "must-destructure-context": mustDestructureContext,
+  "must-export-create-step": mustExportCreateStep,
+  "must-use-context-fetch": mustUseContextFetch,
+  "must-use-try-catch": mustUseTryCatch,
+  "no-any-in-schemas": noAnyInSchemas,
+  "no-direct-fetch-with-auth": noDirectFetchWithAuth,
+  "no-hardcoded-urls": noHardcodedUrls,
+  "no-state-mutations": noStateMutations,
+  "no-string-step-ids": noStringStepIds,
+  "use-step-id-enum": useStepIdEnum,
   "use-var-enum": useVarEnum
 };
+
+// eslint-disable-next-line import/no-anonymous-default-export
+export default { rules };

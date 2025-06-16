@@ -60,20 +60,19 @@ const eslintConfig = [
 
       // 4. Step-specific patterns
       "workflow/check-data-type-required": "error",
-      "workflow/no-state-mutations": "error",
-      "workflow/no-console-log": "error" // Use ctx.log instead
+      "workflow/no-state-mutations": "error"
     }
   },
   {
     files: ["**/__tests__/**", "test/**"],
     rules: {
-      "custom/no-console-log": "off",
       "no-magic-numbers": "off",
       "@typescript-eslint/no-explicit-any": "off",
       "sonarjs/no-nested-conditional": "off"
     }
   },
   {
+    ignores: ["**/__tests__/**", "test/**", "constants.ts", "types.ts"],
     rules: {
       "@typescript-eslint/no-unused-vars": [
         "warn",
@@ -81,7 +80,6 @@ const eslintConfig = [
       ],
       // 1. Constant usage
       "workflow/no-hardcoded-urls": "error",
-      "workflow/use-api-endpoint": "error",
 
       // 2. Type safety
       "workflow/use-var-enum": "error",
