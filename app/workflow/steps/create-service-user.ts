@@ -18,6 +18,23 @@ export default createStep<CheckData>({
     Var.GeneratedPassword
   ],
 
+  /**
+   * GET https://admin.googleapis.com/admin/directory/v1/users/azuread-provisioning@{primaryDomain}
+   *
+   * Completed step example response
+   *
+   * 200
+   * {
+   *   "id": "103898700330622175095",
+   *   "primaryEmail": "azuread-provisioning@cep-netnew.cc"
+   * }
+   *
+   * Incomplete step example response
+   *
+   * 404
+   * { "error": { "code": 404 } }
+   */
+
   async check({
     fetchGoogle,
     markComplete,
@@ -61,6 +78,25 @@ export default createStep<CheckData>({
     markFailed,
     log
   }) {
+    /**
+     * POST https://admin.googleapis.com/admin/directory/v1/users
+     * {
+     *   "primaryEmail": "azuread-provisioning@{primaryDomain}",
+     *   "name": { "givenName": "Microsoft", "familyName": "Provisioning" },
+     *   "password": "TempXXXX!",
+     *   "orgUnitPath": "/Automation"
+     * }
+     *
+     * Success response
+     *
+     * 201
+     * { "id": "...", "primaryEmail": "azuread-provisioning@cep-netnew.cc" }
+     *
+     * Conflict response
+     *
+     * 409
+     * { "error": { "message": "Entity already exists." } }
+     */
     try {
       const domain = process.env.PRIMARY_DOMAIN;
       if (!domain) {
@@ -108,13 +144,3 @@ export default createStep<CheckData>({
     }
   }
 });
-
-/* eslint-disable tsdoc/syntax */
-/**
-Sample check output:
-{ "kind": "admin#directory#user", "id": "117839542198896213400", "primaryEmail": "azuread-provisioning@cep-netnew.cc", ... }
-
-Sample create attempt output (user exists):
-{ "error": { "code": 409, "message": "Entity already exists.", "errors": [ { "message": "Entity already exists.", "domain": "global", "reason": "duplicate" } ] } }
-*/
-/* eslint-enable tsdoc/syntax */

@@ -14,6 +14,29 @@ export default createStep<CheckData>({
   requires: [Var.GoogleAccessToken],
   provides: [Var.CustomerId, Var.PrimaryDomain, Var.IsDomainVerified],
 
+  /**
+   * GET https://admin.googleapis.com/admin/directory/v1/customer/my_customer/domains
+   *
+   * Completed step example response
+   *
+   * 200
+   * {
+   *   "domains": [
+   *     {
+   *       "domainName": "cep-netnew.cc",
+   *       "isPrimary": true,
+   *       "verified": true,
+   *       "customerId": "C01b1e65b"
+   *     }
+   *   ]
+   * }
+   *
+   * Incomplete step example response
+   *
+   * 200
+   * { "domains": [] }
+   */
+
   async check({
     fetchGoogle,
     markComplete,
@@ -66,6 +89,10 @@ export default createStep<CheckData>({
   },
 
   async execute({ checkData, markSucceeded, markFailed, log }) {
+    /**
+     * Manual step – no API call. DNS TXT records must be configured
+     * to verify the primary domain.
+     */
     try {
       // This is a manual step - can't verify domain via API
       log(
