@@ -15,6 +15,74 @@ mutations are allowed during step development.
 
 ## Step 1: `verifyPrimaryDomain`
 
+## Implementation Pattern
+
+Every step MUST follow this exact pattern:
+
+1. Define interface for check data
+2. Call createStep with generic parameter
+3. In check: ALWAYS wrap in try-catch, ALWAYS call one of: markComplete, markIncomplete, markCheckFailed
+4. In execute: ALWAYS wrap in try-catch, ALWAYS call one of: markSucceeded, markFailed, markPending
+5. Use ApiEndpoint constants for ALL URLs
+6. Define Zod schemas inline before API calls
+
+Examples of URL usage:
+```ts
+// Static URLs
+await fetchGoogle(ApiEndpoint.Google.Domains, DomainsSchema);
+
+// Parameterized URLs
+const email = 'user@example.com';
+await fetchGoogle(ApiEndpoint.Google.user(email), UserSchema);
+
+// With POST body
+await fetchGoogle(
+  ApiEndpoint.Google.Users,
+  CreateUserSchema,
+  {
+    method: 'POST',
+    body: JSON.stringify({ name: 'Test User', email })
+  }
+);
+```
+
+Example:
+```ts
+interface CheckData {
+  fieldFromCheck?: string;
+}
+
+export default createStep<CheckData>({
+  id: StepId.MyStep,
+  requires: [Var.GoogleAccessToken],
+  provides: [Var.Something],
+
+  async check({ fetchGoogle, markComplete, markIncomplete, markCheckFailed }) {
+    try {
+      const Schema = z.object({ ... });
+      const data = await fetchGoogle(ApiEndpoint.Google.Something, Schema);
+
+      if (alreadyDone) {
+        markComplete({ fieldFromCheck: data.field });
+      } else {
+        markIncomplete("Need to do work", { fieldFromCheck: data.field });
+      }
+    } catch (error) {
+      markCheckFailed(error.message);
+    }
+  },
+
+  async execute({ fetchGoogle, checkData, markSucceeded, markFailed }) {
+    try {
+      // Do work
+      markSucceeded({ [Var.Something]: result });
+    } catch (error) {
+      markFailed(error.message);
+    }
+  }
+});
+```
+
 ### Purpose
 
 Ensure Google Workspace primary domain exists and is verified.

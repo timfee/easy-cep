@@ -1,11 +1,10 @@
 "use client";
 
-import { StepId, StepOutcome, WorkflowVars } from "@/types";
+import { StepId, WorkflowVars, StepUIState } from "@/types";
 import { useEffect, useState } from "react";
-import { checkStep } from "./actions/check-step";
-import { executeStep } from "./actions/execute-step";
+import { runStep } from "./workflow/engine";
 
-type StepStatus = { isComplete: boolean; summary: string };
+type StepStatus = StepUIState;
 
 type WorkflowState = {
   vars: Partial<WorkflowVars>;
@@ -22,42 +21,29 @@ export default function WorkflowPage() {
     executing: null
   });
 
-  // On mount, check all steps in sequence
   useEffect(() => {
-    (async () => {
-      let vars = { ...state.vars };
-      const status: WorkflowState["status"] = {};
-
-      for (const id of STEP_SEQUENCE) {
-        const result = await checkStep(id); // assumes no vars needed
-        status[id] = { isComplete: result.isComplete, summary: result.summary };
-        if (result.data) vars = { ...vars, ...result.data };
-      }
-
-      setState((prev) => ({ ...prev, status, vars }));
-    })();
+    // Initial state could be loaded here in the future
   }, []);
 
   async function handleExecute(id: StepId) {
-    setState((prev) => ({ ...prev, executing: id }));
-    const checkResult = await checkStep(id);
-    const execResult = await executeStep(id, checkResult);
-
-    const updatedVars =
-      execResult.output ? { ...state.vars, ...execResult.output } : state.vars;
-
-    setState((prev) => ({
-      ...prev,
-      executing: null,
-      vars: updatedVars,
-      status: {
-        ...prev.status,
-        [id]: {
-          isComplete: execResult.status === StepOutcome.Succeeded,
-          summary: execResult.notes ?? execResult.error ?? checkResult.summary
-        }
-      }
-    }));
+    try {
+      await runStep(
+        id,
+        state.vars,
+        (newVars) =>
+          setState((prev) => ({
+            ...prev,
+            vars: { ...prev.vars, ...newVars }
+          })),
+        (stepId, stepState) =>
+          setState((prev) => ({
+            ...prev,
+            status: { ...prev.status, [stepId]: stepState }
+          }))
+      );
+    } catch (error) {
+      console.error("Failed to run step:", error);
+    }
   }
 
   return (
@@ -69,8 +55,8 @@ export default function WorkflowPage() {
           return (
             <li key={id}>
               <strong>{id}</strong>
-              <div>{step?.summary ?? "Checking…"}</div>
-              {!step?.isComplete && (
+              <div>{step?.summary ?? step?.error ?? step?.notes ?? ""}</div>
+              {step?.status !== "complete" && (
                 <button
                   onClick={() => handleExecute(id)}
                   disabled={!!state.executing}>

@@ -2,77 +2,123 @@
 import "server-only";
 
 import {
-  StepContext,
+  LogLevel,
   StepId,
-  StepOutcome,
-  StepRunResult,
-  Var,
-  WorkflowVars
+  StepUIState,
+  WorkflowVars,
+  Var
 } from "@/types";
 import { getStep } from "./step-registry";
+import { z } from "zod";
 
-type Vars = Partial<WorkflowVars>;
+export async function runStep(
+  stepId: StepId,
+  vars: Partial<WorkflowVars>,
+  updateVars: (newVars: Partial<WorkflowVars>) => void,
+  updateStepState: (stepId: StepId, state: StepUIState) => void
+): Promise<void> {
+  const step = getStep(stepId);
 
-export async function runWorkflow(
-  steps: StepId[],
-  inputVars: Vars,
-  createCtx = defaultContext
-): Promise<StepRunResult[]> {
-  const vars: Vars = { ...inputVars };
-  const results: StepRunResult[] = [];
+  const createFetch = (token: string | undefined) =>
+    async <T>(
+      url: string,
+      schema: z.ZodSchema<T>,
+      init?: Omit<RequestInit, "headers">
+    ): Promise<T> => {
+      if (!token) throw new Error("No auth token available");
 
-  for (const id of steps) {
-    const step = getStep(id);
-    const ctx = createCtx(id);
-    const scoped = getVars(vars, step.requires);
-
-    const checkResult = await step.check(scoped, ctx);
-    if (checkResult.isComplete) {
-      results.push({
-        id,
-        outcome: StepOutcome.Skipped,
-        summary: checkResult.summary,
-        vars: {}
+      const headers = (init as RequestInit | undefined)?.headers;
+      const res = await fetch(url, {
+        ...(init as RequestInit),
+        headers: {
+          ...(headers ?? {}),
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json"
+        }
       });
-      continue;
-    }
 
-    const execResult = await step.execute(scoped, ctx, checkResult);
-    if (execResult.status === StepOutcome.Succeeded && execResult.output) {
-      Object.assign(vars, execResult.output);
-    }
+      if (!res.ok) {
+        throw new Error(`HTTP ${res.status}: ${res.statusText}`);
+      }
 
-    results.push({
-      id,
-      outcome: execResult.status,
-      summary: execResult.notes ?? execResult.error ?? checkResult.summary,
-      vars: execResult.output ?? {}
-    });
+      const json = await res.json();
+      return schema.parse(json);
+    };
 
-    if (execResult.status === StepOutcome.Failed) break;
-  }
-
-  return results;
-}
-
-function getVars<T extends readonly Var[]>(
-  vars: Vars,
-  keys: T
-): Pick<WorkflowVars, T[number]> {
-  const out: Partial<WorkflowVars> = {};
-  for (const k of keys) {
-    if (!(k in vars)) throw new Error(`Missing var: ${k}`);
-    out[k] = vars[k];
-  }
-  return out as Pick<WorkflowVars, T[number]>;
-}
-
-function defaultContext(step: StepId): StepContext {
-  return {
-    fetch,
-    refreshAuth: undefined,
-    log: (level, msg) => {
-      console.log(`[step:${step}] [${level.toUpperCase()}] ${msg}`);
+  const baseContext = {
+    fetchGoogle: createFetch(vars[Var.GoogleAccessToken] as string | undefined),
+    fetchMicrosoft: createFetch(vars[Var.MsGraphToken] as string | undefined),
+    log: (level: LogLevel, message: string, data?: unknown) => {
+      console.log(`[${stepId}] [${level}] ${message}`, data);
     }
   };
+
+  // CHECK PHASE
+  updateStepState(stepId, { status: "checking" });
+
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  let checkData: any;
+  let checkFailed = false;
+  let isComplete = false;
+
+  try {
+    await step.check({
+      ...baseContext,
+      markComplete: (data) => {
+        checkData = data;
+        isComplete = true;
+        updateStepState(stepId, {
+          status: "complete",
+          summary: "Already complete"
+        });
+      },
+      markIncomplete: (summary, data) => {
+        checkData = data;
+        isComplete = false;
+        updateStepState(stepId, { status: "idle", summary });
+      },
+      markCheckFailed: (error) => {
+        checkFailed = true;
+        updateStepState(stepId, {
+          status: "failed",
+          error: `Check failed: ${error}`
+        });
+      }
+    });
+  } catch (error) {
+    updateStepState(stepId, {
+      status: "failed",
+      error:
+        "Check error: " + (error instanceof Error ? error.message : "Unknown error")
+    });
+    return;
+  }
+
+  if (checkFailed || isComplete) return;
+
+  // EXECUTE PHASE
+  updateStepState(stepId, { status: "executing" });
+
+  try {
+    await step.execute({
+      ...baseContext,
+      checkData,
+      markSucceeded: (newVars) => {
+        updateVars(newVars);
+        updateStepState(stepId, { status: "complete", summary: "Succeeded" });
+      },
+      markFailed: (error) => {
+        updateStepState(stepId, { status: "failed", error });
+      },
+      markPending: (notes) => {
+        updateStepState(stepId, { status: "pending", notes });
+      }
+    });
+  } catch (error) {
+    updateStepState(stepId, {
+      status: "failed",
+      error:
+        "Execute error: " + (error instanceof Error ? error.message : "Unknown error")
+    });
+  }
 }
