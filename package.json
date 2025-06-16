@@ -7,7 +7,7 @@
     "check": "tsc --noEmit",
     "dev": "next dev --turbopack",
     "format": "prettier --write .",
-    "lint": "./node_modules/.bin/eslint --fix",
+    "lint": "./node_modules/.bin/eslint --fix && prettier --write .",
     "start": "next start",
     "test": "NODE_OPTIONS=\"$NODE_OPTIONS --experimental-vm-modules\" jest"
   },

@@ -1,7 +1,7 @@
-import { LogLevel, StepId, Var } from "@/types";
-import { createStep } from "../create-step";
 import { ApiEndpoint } from "@/constants";
+import { LogLevel, StepId, Var } from "@/types";
 import { z } from "zod";
+import { createStep } from "../create-step";
 
 interface CheckData {
   primaryDomain?: string;
@@ -14,7 +14,13 @@ export default createStep<CheckData>({
   requires: [Var.GoogleAccessToken],
   provides: [Var.CustomerId, Var.PrimaryDomain, Var.IsDomainVerified],
 
-  async check({ fetchGoogle, markComplete, markIncomplete, markCheckFailed, log }) {
+  async check({
+    fetchGoogle,
+    markComplete,
+    markIncomplete,
+    markCheckFailed,
+    log
+  }) {
     try {
       const DomainsResponse = z.object({
         domains: z.array(
@@ -27,7 +33,10 @@ export default createStep<CheckData>({
         )
       });
 
-      const { domains } = await fetchGoogle(ApiEndpoint.Google.Domains, DomainsResponse);
+      const { domains } = await fetchGoogle(
+        ApiEndpoint.Google.Domains,
+        DomainsResponse
+      );
 
       const primary = domains.find((d) => d.isPrimary);
 
@@ -50,14 +59,19 @@ export default createStep<CheckData>({
       }
     } catch (error) {
       log(LogLevel.Error, "Failed to check domains", { error });
-      markCheckFailed(error instanceof Error ? error.message : "Failed to check domains");
+      markCheckFailed(
+        error instanceof Error ? error.message : "Failed to check domains"
+      );
     }
   },
 
   async execute({ checkData, markSucceeded, markFailed, log }) {
     try {
       // This is a manual step - can't verify domain via API
-      log(LogLevel.Info, "Domain verification requires manual DNS configuration");
+      log(
+        LogLevel.Info,
+        "Domain verification requires manual DNS configuration"
+      );
 
       markSucceeded({
         [Var.PrimaryDomain]: checkData.primaryDomain || "",

@@ -1,6 +1,6 @@
 "use client";
 
-import { StepId, WorkflowVars, StepUIState } from "@/types";
+import { StepId, StepUIState, WorkflowVars } from "@/types";
 import { useEffect, useState } from "react";
 import { runStep } from "./workflow/engine";
 
@@ -31,10 +31,7 @@ export default function WorkflowPage() {
         id,
         state.vars,
         (newVars) =>
-          setState((prev) => ({
-            ...prev,
-            vars: { ...prev.vars, ...newVars }
-          })),
+          setState((prev) => ({ ...prev, vars: { ...prev.vars, ...newVars } })),
         (stepId, stepState) =>
           setState((prev) => ({
             ...prev,

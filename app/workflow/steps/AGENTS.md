@@ -27,26 +27,24 @@ Every step MUST follow this exact pattern:
 6. Define Zod schemas inline before API calls
 
 Examples of URL usage:
+
 ```ts
 // Static URLs
 await fetchGoogle(ApiEndpoint.Google.Domains, DomainsSchema);
 
 // Parameterized URLs
-const email = 'user@example.com';
+const email = "user@example.com";
 await fetchGoogle(ApiEndpoint.Google.user(email), UserSchema);
 
 // With POST body
-await fetchGoogle(
-  ApiEndpoint.Google.Users,
-  CreateUserSchema,
-  {
-    method: 'POST',
-    body: JSON.stringify({ name: 'Test User', email })
-  }
-);
+await fetchGoogle(ApiEndpoint.Google.Users, CreateUserSchema, {
+  method: "POST",
+  body: JSON.stringify({ name: "Test User", email })
+});
 ```
 
 Example:
+
 ```ts
 interface CheckData {
   fieldFromCheck?: string;

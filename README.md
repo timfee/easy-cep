@@ -23,6 +23,7 @@ The runtime engine orchestrates execution across steps using these declarations.
 Steps follow a two-phase pattern:
 
 1. **Check Phase**: Determines if work needs to be done
+
    - Must handle errors (service might be down)
    - Calls one of: markComplete, markIncomplete, markCheckFailed
    - Passes typed data to execute phase
@@ -48,12 +49,12 @@ Environments run behind an HTTP/HTTPS network proxy for security and abuse preve
 
 Environments are pre-configured to work with common tools and package managers:
 
-- Codex sets standard environment variables including `http_proxy` and `https_proxy`. These settings are respected by tools such as `curl`, `npm`, and `pip`.  
+- Codex sets standard environment variables including `http_proxy` and `https_proxy`. These settings are respected by tools such as `curl`, `npm`, and `pip`.
 - Codex installs a proxy certificate into the system trust store. This certificate's path is available as the environment variable `$CODEX_PROXY_CERT`. Additionally, specific package manager variables (e.g., `PIP_CERT`, `NODE_EXTRA_CA_CERTS`) are set to this certificate path.
 
 If you're encountering connectivity issues, verify and/or configure the following:
 
-- Ensure you are connecting via the proxy at `http://proxy:8080`.  
+- Ensure you are connecting via the proxy at `http://proxy:8080`.
 - Ensure you are trusting the proxy certificate located at `$CODEX_PROXY_CERT`. Always reference this environment variable instead of using a hardcoded file path, as the path may change.
 
 The `./tokens.sh` script will output bearer tokens in text format for using against Google and Microsoft as `./google_bearer.token` and `./microsoft_bearer.token` that you can use to verify commands.
