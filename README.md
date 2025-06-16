@@ -33,3 +33,23 @@ This system uses type-safe building blocks. Each `step` file contributes a unit 
 ## Notes
 
 Use `pnpm` for package management and execution.
+
+## Network access
+
+Internet access is available to install dependencies during the setup script phase. During the agent phase, internet access is disabled by default, but you can configure the environment to have limited or full internet access. [Learn more about agent internet access.](https://platform.openai.com/docs/codex/agent-network)
+
+Environments run behind an HTTP/HTTPS network proxy for security and abuse prevention purposes. All outbound internet traffic passes through this proxy.
+
+Environments are pre-configured to work with common tools and package managers:
+
+- Codex sets standard environment variables including `http_proxy` and `https_proxy`. These settings are respected by tools such as `curl`, `npm`, and `pip`.  
+- Codex installs a proxy certificate into the system trust store. This certificate's path is available as the environment variable `$CODEX_PROXY_CERT`. Additionally, specific package manager variables (e.g., `PIP_CERT`, `NODE_EXTRA_CA_CERTS`) are set to this certificate path.
+
+If you're encountering connectivity issues, verify and/or configure the following:
+
+- Ensure you are connecting via the proxy at `http://proxy:8080`.  
+- Ensure you are trusting the proxy certificate located at `$CODEX_PROXY_CERT`. Always reference this environment variable instead of using a hardcoded file path, as the path may change.
+
+The `./tokens.sh` script will output bearer tokens in text format for using against Google and Microsoft as `./google_bearer.token` and `./microsoft_bearer.token` that you can use to verify commands.
+
+**NOTE:** YOU HAVE BEEN PROVIDED FULL INTERNET ACCESS. IF YOU ENCOUNTER ANY ISSUES, IT IS PROXY RELATED; NOT CODEX CONFIGURATION.
