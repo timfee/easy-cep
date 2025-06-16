@@ -2,6 +2,10 @@
 
 This application automates the integration between **Google Workspace** and **Microsoft Entra ID** (Azure AD) by orchestrating the API calls necessary to create and configure provisioning and SAML operations.
 
+## Setup
+
+Node.js and [PNPM](https://pnpm.io/) must be installed. Run `pnpm install` once before executing `pnpm check`, `pnpm dev`, or `pnpm lint` so that all dependencies are available.
+
 ## Architecture
 
 This project defines a series of discrete, type-safe `step` files. Each step:
