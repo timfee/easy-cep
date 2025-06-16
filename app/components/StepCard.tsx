@@ -1,15 +1,15 @@
 "use client";
-import {
-  StepDefinition,
-  StepId,
-  StepUIState,
-  Var,
-  WorkflowVars
-} from "@/types";
+import { StepId, StepUIState, Var, WorkflowVars } from "@/types";
 import StepLogs from "./StepLogs";
 
+export interface StepInfo {
+  id: StepId;
+  requires: readonly Var[];
+  provides: readonly Var[];
+}
+
 interface StepCardProps {
-  definition: StepDefinition<readonly Var[], readonly Var[]>;
+  definition: StepInfo;
   state?: StepUIState;
   vars: Partial<WorkflowVars>;
   executing: boolean;

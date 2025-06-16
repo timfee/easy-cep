@@ -13,7 +13,7 @@ export async function GET(request: Request) {
   const baseUrl = url.protocol + "//" + url.host;
 
   if (error) {
-    console.error(err);
+    console.error(error);
     return NextResponse.redirect(`${baseUrl}/?error=${error}`);
   }
 

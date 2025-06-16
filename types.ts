@@ -25,7 +25,6 @@ export type WorkflowVars = { [K in Var]: string | boolean };
 // Workflow steps should use this ID as a filename
 // in ./app/workflow/steps/{filename-in-kebab-case}.ts
 export enum StepId {
-  DummyStep = "dummyStep",
   VerifyPrimaryDomain = "verifyPrimaryDomain",
   CreateAutomationOU = "createAutomationOU",
   CreateServiceUser = "createServiceUser",
@@ -58,7 +57,7 @@ export interface StepDefinition<
   P extends readonly Var[]
 > {
   /** Unique ID for the step */
-  id: string;
+  id: StepId;
 
   /** Variables that must be present before this step can run */
   requires: R;
