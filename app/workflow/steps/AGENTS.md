@@ -2,10 +2,10 @@
 
 Below is a complete canvas of **12 steps**, each with:
 
-* **Purpose**
-* **State Check**: HTTP request, expected response, completion criteria, and extracted variables
-* **Execution**: prerequisites, HTTP request(s), expected responses, and behavior
-* **Required Inputs** (variables or tokens)
+- **Purpose**
+- **State Check**: HTTP request, expected response, completion criteria, and extracted variables
+- **Execution**: prerequisites, HTTP request(s), expected responses, and behavior
+- **Required Inputs** (variables or tokens)
 
 ## Step 1: `verifyPrimaryDomain`
 
@@ -55,8 +55,8 @@ customerId = domains[] | select(.isPrimary == true) | .customerId
 
 ### Required Inputs
 
-* `googleAccessToken: string`
-* `customerId: string` (default `"my_customer"`)
+- `googleAccessToken: string`
+- `customerId: string` (default `"my_customer"`)
 
 ## Step 2: `createAutomationOU`
 
@@ -91,8 +91,8 @@ Authorization: Bearer {googleAccessToken}
 
 #### Prerequisites
 
-* `googleAccessToken`
-* `customerId`
+- `googleAccessToken`
+- `customerId`
 
 #### Request
 
@@ -106,9 +106,9 @@ Content-Type: application/json
 
 #### Expected Responses
 
-* `201 Created`: OU created
-* `409 Conflict`: OU already exists (acceptable)
-* `400/403`: validation or permission error
+- `201 Created`: OU created
+- `409 Conflict`: OU already exists (acceptable)
+- `400/403`: validation or permission error
 
 ## Step 3: `createServiceUser`
 
@@ -150,8 +150,8 @@ provisioningUserEmail = .primaryEmail
 
 #### Prerequisites
 
-* `googleAccessToken`
-* `primaryDomain` variable set
+- `googleAccessToken`
+- `primaryDomain` variable set
 
 #### Request
 
@@ -170,9 +170,9 @@ Content-Type: application/json
 
 #### Expected Responses
 
-* `201 Created`: User created
-* `409 Conflict`: User already exists (acceptable)
-* `400/403`: error
+- `201 Created`: User created
+- `409 Conflict`: User already exists (acceptable)
+- `400/403`: error
 
 #### Variables Extracted on Success
 
@@ -226,8 +226,8 @@ directoryServiceId = .rolePrivileges[0].serviceId
 
 #### Prerequisites
 
-* `googleAccessToken`
-* `customerId` variable
+- `googleAccessToken`
+- `customerId` variable
 
 #### Requests Sequence
 
@@ -262,9 +262,9 @@ Content-Type: application/json
 
 #### Expected Responses
 
-* `201 Created`: Role created
-* `409 Conflict`: Role already exists (acceptable)
-* `400/403`: error
+- `201 Created`: Role created
+- `409 Conflict`: Role already exists (acceptable)
+- `400/403`: error
 
 #### Variables Extracted on Success
 
@@ -301,8 +301,8 @@ Authorization: Bearer {googleAccessToken}
 
 #### Prerequisites
 
-* `googleAccessToken`
-* `customerId`, `adminRoleId`, `provisioningUserId`
+- `googleAccessToken`
+- `customerId`, `adminRoleId`, `provisioningUserId`
 
 #### Request
 
@@ -320,8 +320,8 @@ Content-Type: application/json
 
 #### Expected Responses
 
-* `201 Created` or `409 Conflict`
-* `400/404/403`: error
+- `201 Created` or `409 Conflict`
+- `400/404/403`: error
 
 ## Step 6: `configureGoogleSamlProfile`
 
@@ -341,7 +341,14 @@ Authorization: Bearer {googleAccessToken}
 #### Success Response (`200 OK`)
 
 ```json
-{ "inboundSamlSsoProfiles": [ { "name": "...", "spConfig": { "entityId": "...", "assertionConsumerServiceUri": "..." } } ] }
+{
+  "inboundSamlSsoProfiles": [
+    {
+      "name": "...",
+      "spConfig": { "entityId": "...", "assertionConsumerServiceUri": "..." }
+    }
+  ]
+}
 ```
 
 #### Completion Criteria
@@ -360,7 +367,7 @@ acsUrl = .inboundSamlSsoProfiles[0].spConfig.assertionConsumerServiceUri
 
 #### Prerequisites
 
-* `googleAccessToken`
+- `googleAccessToken`
 
 #### Request
 
@@ -377,7 +384,7 @@ Content-Type: application/json
 
 #### Expected Responses
 
-* `200 OK` with `operation` and `done: true`
+- `200 OK` with `operation` and `done: true`
   → Details in `.response`
 
 Extract:
@@ -388,7 +395,7 @@ entityId = .response.spConfig.entityId
 acsUrl = .response.spConfig.assertionConsumerServiceUri
 ```
 
-* `400`/`403`: error
+- `400`/`403`: error
 
 ## Step 7: `createMicrosoftApps`
 
@@ -408,7 +415,7 @@ Authorization: Bearer {msGraphToken}
 #### Success Response (`200 OK`)
 
 ```json
-{ "value": [ { "servicePrincipalId": "...", "appId": "..." } ] }
+{ "value": [{ "servicePrincipalId": "...", "appId": "..." }] }
 ```
 
 #### Completion Criteria
@@ -427,7 +434,7 @@ ssoAppId = .value[0].appId
 
 #### Prerequisites
 
-* `msGraphToken`
+- `msGraphToken`
 
 #### Requests
 
@@ -492,8 +499,8 @@ At least one `value[].status.code != "Paused"`
 
 #### Prerequisites
 
-* `msGraphToken`
-* `provisioningServicePrincipalId`, `generatedPassword`
+- `msGraphToken`
+- `provisioningServicePrincipalId`, `generatedPassword`
 
 #### Requests
 
@@ -558,8 +565,8 @@ claimsPolicyId = .value[0].id
 
 #### Prerequisites
 
-* `msGraphToken`
-* `ssoServicePrincipalId`
+- `msGraphToken`
+- `ssoServicePrincipalId`
 
 #### Requests
 
@@ -579,8 +586,8 @@ Content-Type: application/json
 
 Expected Responses:
 
-* `201 Created`: policy created → extract `claimsPolicyId`
-* `409 Conflict`: existing policy → query fetching needed
+- `201 Created`: policy created → extract `claimsPolicyId`
+- `409 Conflict`: existing policy → query fetching needed
 
 2. Assign to SP
 
@@ -606,12 +613,12 @@ Manual step — no API interaction
 
 #### Required Inputs
 
-* `samlProfileId`, `entityId`, `acsUrl`
+- `samlProfileId`, `entityId`, `acsUrl`
 
 #### Instructions
 
 1. Sign in to Google Admin Console
-2. Navigate to *Security → Authentication → SSO with third-party IdP*
+2. Navigate to _Security → Authentication → SSO with third-party IdP_
 3. Input the values from prior steps and upload certificates
 4. Save configuration
 
@@ -633,7 +640,14 @@ Authorization: Bearer {googleAccessToken}
 #### Success Response (`200 OK`)
 
 ```json
-{ "inboundSsoAssignments": [ { "targetGroup": { "id": "allUsers" }, "samlSsoInfo": { "inboundSamlSsoProfile": "{samlProfileId}" } } ] }
+{
+  "inboundSsoAssignments": [
+    {
+      "targetGroup": { "id": "allUsers" },
+      "samlSsoInfo": { "inboundSamlSsoProfile": "{samlProfileId}" }
+    }
+  ]
+}
 ```
 
 #### Completion Criteria
@@ -644,8 +658,8 @@ Assignment exists with `targetGroup.id = "allUsers"` and matching `samlProfileId
 
 #### Prerequisites
 
-* `googleAccessToken`
-* `samlProfileId`
+- `googleAccessToken`
+- `samlProfileId`
 
 #### Request
 
@@ -663,8 +677,8 @@ Content-Type: application/json
 
 #### Expected Responses
 
-* `200 OK` (operation returned)
-* `409 Conflict` (already assigned)
+- `200 OK` (operation returned)
+- `409 Conflict` (already assigned)
 
 ## Step 12: `testSsoConfiguration`
 
@@ -678,8 +692,8 @@ Manual step — requires human interaction
 
 #### Required Conditions
 
-* Previously configured steps must be complete
-* A test user exists
+- Previously configured steps must be complete
+- A test user exists
 
 #### Procedure
 

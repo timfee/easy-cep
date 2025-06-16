@@ -8,9 +8,6 @@ export async function checkStep(stepId: StepId) {
   const step = getStep(stepId);
   return await step.check(
     {},
-    {
-      fetch,
-      log: (lvl, msg) => console.log(`[CHECK:${stepId}]`, lvl, msg),
-    }
+    { fetch, log: (lvl, msg) => console.log(`[CHECK:${stepId}]`, lvl, msg) }
   );
 }

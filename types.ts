@@ -15,12 +15,10 @@ export enum Var {
   SamlProfileId = "samlProfileId",
   EntityId = "entityId",
   AcsUrl = "acsUrl",
-  ClaimsPolicyId = "claimsPolicyId",
+  ClaimsPolicyId = "claimsPolicyId"
 }
 
-export type WorkflowVars = {
-  [K in Var]: string | boolean;
-};
+export type WorkflowVars = { [K in Var]: string | boolean };
 
 // Workflow steps should use this ID as a filename
 // in ./app/workflow/steps/{filename-in-kebab-case}.ts
@@ -37,20 +35,20 @@ export enum StepId {
   SetupMicrosoftClaimsPolicy = "setupMicrosoftClaimsPolicy",
   CompleteGoogleSsoSetup = "completeGoogleSsoSetup",
   AssignUsersToSso = "assignUsersToSso",
-  TestSsoConfiguration = "testSsoConfiguration",
+  TestSsoConfiguration = "testSsoConfiguration"
 }
 
 export enum StepOutcome {
   Succeeded = "Succeeded",
   Failed = "Failed",
-  Skipped = "Skipped",
+  Skipped = "Skipped"
 }
 
 export enum LogLevel {
   Info = "info",
   Warn = "warn",
   Error = "error",
-  Debug = "debug",
+  Debug = "debug"
 }
 
 export interface StepDefinition<

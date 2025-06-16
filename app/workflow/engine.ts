@@ -7,7 +7,7 @@ import {
   StepOutcome,
   StepRunResult,
   Var,
-  WorkflowVars,
+  WorkflowVars
 } from "@/types";
 import { getStep } from "./step-registry";
 
@@ -32,7 +32,7 @@ export async function runWorkflow(
         id,
         outcome: StepOutcome.Skipped,
         summary: checkResult.summary,
-        vars: {},
+        vars: {}
       });
       continue;
     }
@@ -46,7 +46,7 @@ export async function runWorkflow(
       id,
       outcome: execResult.status,
       summary: execResult.notes ?? execResult.error ?? checkResult.summary,
-      vars: execResult.output ?? {},
+      vars: execResult.output ?? {}
     });
 
     if (execResult.status === StepOutcome.Failed) break;
@@ -73,6 +73,6 @@ function defaultContext(step: StepId): StepContext {
     refreshAuth: undefined,
     log: (level, msg) => {
       console.log(`[step:${step}] [${level.toUpperCase()}] ${msg}`);
-    },
+    }
   };
 }

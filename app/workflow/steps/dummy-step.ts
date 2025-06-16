@@ -8,20 +8,15 @@ export default createStep({
 
   async check(_, ctx) {
     ctx.log(LogLevel.Info, "Checking dummy step...");
-    return {
-      isComplete: false,
-      summary: "Customer ID not yet set",
-    };
+    return { isComplete: false, summary: "Customer ID not yet set" };
   },
 
   async execute(_, ctx) {
     ctx.log(LogLevel.Info, "Executing dummy step...");
     return {
       status: StepOutcome.Succeeded,
-      output: {
-        [Var.CustomerId]: "C123456",
-      },
-      notes: "Customer ID assigned",
+      output: { [Var.CustomerId]: "C123456" },
+      notes: "Customer ID assigned"
     };
-  },
+  }
 });

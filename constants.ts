@@ -18,7 +18,7 @@ export const ApiEndpoint = {
     SsoProfiles:
       "https://cloudidentity.googleapis.com/v1/inboundSamlSsoProfiles",
     SsoAssignments:
-      "https://cloudidentity.googleapis.com/v1/inboundSsoAssignments",
+      "https://cloudidentity.googleapis.com/v1/inboundSsoAssignments"
   },
 
   Microsoft: {
@@ -43,14 +43,12 @@ export const ApiEndpoint = {
       `https://graph.microsoft.com/v1.0/servicePrincipals/${spId}/claimsMappingPolicies/$ref`,
 
     ReadClaimsPolicy: (spId: string) =>
-      `https://graph.microsoft.com/beta/servicePrincipals/${spId}/claimsMappingPolicies`,
-  },
+      `https://graph.microsoft.com/beta/servicePrincipals/${spId}/claimsMappingPolicies`
+  }
 };
 
 export const TemplateId = {
-  GoogleWorkspaceConnector: "01303a13-8322-4e06-bee5-80d612907131",
+  GoogleWorkspaceConnector: "01303a13-8322-4e06-bee5-80d612907131"
 };
 
-export const GroupId = {
-  AllUsers: "allUsers",
-};
+export const GroupId = { AllUsers: "allUsers" };

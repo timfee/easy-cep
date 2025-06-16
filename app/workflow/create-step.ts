@@ -4,7 +4,7 @@ import type {
   StepExecuteResult,
   StepId,
   Var,
-  WorkflowVars,
+  WorkflowVars
 } from "@/types";
 
 /**

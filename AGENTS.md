@@ -36,10 +36,10 @@ createStep({
 
 Use only values from these enums — no string literals allowed:
 
-* `Var` (e.g. `Var.GoogleAccessToken`)
-* `StepId` (e.g. `StepId.CreateServiceUser`)
-* `StepOutcome` (e.g. `StepOutcome.Succeeded`)
-* `LogLevel` (e.g. `LogLevel.Info`)
+- `Var` (e.g. `Var.GoogleAccessToken`)
+- `StepId` (e.g. `StepId.CreateServiceUser`)
+- `StepOutcome` (e.g. `StepOutcome.Succeeded`)
+- `LogLevel` (e.g. `LogLevel.Info`)
 
 ## ✅ Logging
 
@@ -79,7 +79,7 @@ interface StepExecuteResult<K extends Var> {
 
 ## 🛑 Prohibited
 
-* No `any`
-* No `as` or casting
-* No console.log
-* No default exports other than `createStep()`
+- No `any`
+- No `as` or casting
+- No console.log
+- No default exports other than `createStep()`
