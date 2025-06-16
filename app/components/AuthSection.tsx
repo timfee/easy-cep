@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useEffect, useState } from "react";
 
 interface Status {
@@ -21,15 +22,15 @@ export default function AuthSection() {
     <section>
       <h2 className="text-xl font-bold mb-2">Authentication</h2>
       <div className="mb-2 flex items-center gap-2">
-        <a className="underline" href="/api/auth/google">
+        <Link className="underline" href="/api/auth/google">
           Sign in with Google
-        </a>
+        </Link>
         {status && <span>{status.google.valid ? "✅" : "❌"}</span>}
       </div>
       <div className="flex items-center gap-2">
-        <a className="underline" href="/api/auth/microsoft">
+        <Link className="underline" href="/api/auth/microsoft">
           Sign in with Microsoft
-        </a>
+        </Link>
         {status && <span>{status.microsoft.valid ? "✅" : "❌"}</span>}
       </div>
     </section>

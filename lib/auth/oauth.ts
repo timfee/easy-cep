@@ -1,4 +1,4 @@
-import { Provider, PROVIDERS } from "@/constants";
+import { ApiEndpoint, Provider, PROVIDERS } from "@/constants";
 
 interface OAuthConfig {
   clientId: string;
@@ -13,8 +13,8 @@ const googleOAuthConfig: OAuthConfig = {
   clientId: process.env.GOOGLE_CLIENT_ID || "",
   clientSecret: process.env.GOOGLE_CLIENT_SECRET || "",
   redirectUri: `/api/auth/callback/google`,
-  authorizationUrl: "https://accounts.google.com/o/oauth2/v2/auth",
-  tokenUrl: "https://oauth2.googleapis.com/token",
+  authorizationUrl: ApiEndpoint.GoogleAuth.Authorize,
+  tokenUrl: ApiEndpoint.GoogleAuth.Token,
   scopes: [
     "openid",
     "email",
@@ -33,9 +33,8 @@ const microsoftOAuthConfig: OAuthConfig = {
   clientId: process.env.MICROSOFT_CLIENT_ID || "",
   clientSecret: process.env.MICROSOFT_CLIENT_SECRET || "",
   redirectUri: `/api/auth/callback/microsoft`,
-  authorizationUrl:
-    "https://login.microsoftonline.com/organizations/oauth2/v2.0/authorize",
-  tokenUrl: "https://login.microsoftonline.com/organizations/oauth2/v2.0/token",
+  authorizationUrl: ApiEndpoint.MicrosoftAuth.Authorize,
+  tokenUrl: ApiEndpoint.MicrosoftAuth.Token,
   scopes: [
     "openid",
     "profile",
