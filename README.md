@@ -20,15 +20,21 @@ The runtime engine orchestrates execution across steps using these declarations.
 
 ## Steps
 
-Steps are evaluated and rendered by a runtime engine, which assembles a workflow dynamically (and will be implemented after all steps are complete.)
+Steps follow a two-phase pattern:
 
-Steps can be composed and executed sequentially or selectively. The engine is responsible for:
+1. **Check Phase**: Determines if work needs to be done
+   - Must handle errors (service might be down)
+   - Calls one of: markComplete, markIncomplete, markCheckFailed
+   - Passes typed data to execute phase
 
-- Maintaining and validating `vars`
-- Enforcing `requires`/`provides`
-- Logging outputs and summaries
+2. **Execute Phase**: Performs the actual work
+   - Receives typed checkData from check phase
+   - Must handle errors
+   - Calls one of: markSucceeded, markFailed, markPending
 
-This system uses type-safe building blocks. Each `step` file contributes a unit of orchestration.
+State is managed client-side in React. Each step reports its status through callbacks.
+
+Error handling is mandatory at every level - both phases must use try-catch.
 
 ## Notes
 

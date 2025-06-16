@@ -1,3 +1,5 @@
+import { z } from "zod";
+
 export enum Var {
   GoogleAccessToken = "googleAccessToken",
   MsGraphToken = "msGraphToken",
@@ -63,37 +65,6 @@ export interface StepDefinition<
 
   /** Variables this step will populate if successful */
   provides: P;
-
-  /**
-   * Checks current state to determine whether the step is complete.
-   * Also allows returning intermediate data used in `execute`.
-   */
-  check(
-    vars: Pick<WorkflowVars, R[number]>,
-    ctx: StepContext
-  ): Promise<StepCheckResult>;
-
-  /**
-   * Executes the step, using current vars and prior `check` result.
-   * Returns new output values and step status.
-   */
-  execute(
-    vars: Pick<WorkflowVars, R[number]>,
-    ctx: StepContext,
-    checkResult: StepCheckResult
-  ): Promise<StepExecuteResult<P[number]>>;
-}
-
-export interface StepContext {
-  fetch: typeof fetch;
-  log: (level: LogLevel, message: string) => void;
-  refreshAuth?: () => Promise<void>;
-}
-
-export interface StepCheckResult {
-  isComplete: boolean;
-  summary: string;
-  data?: Record<string, unknown>;
 }
 
 export interface StepRunResult {
@@ -103,9 +74,47 @@ export interface StepRunResult {
   vars: Partial<WorkflowVars>;
 }
 
-export interface StepExecuteResult<K extends Var> {
-  status: StepOutcome;
-  output?: Partial<Pick<WorkflowVars, K>>;
-  notes?: string;
+export interface StepCheckContext<T> {
+  fetchGoogle<R>(
+    url: string,
+    schema: z.ZodSchema<R>,
+    init?: Omit<RequestInit, "headers">
+  ): Promise<R>;
+  fetchMicrosoft<R>(
+    url: string,
+    schema: z.ZodSchema<R>,
+    init?: Omit<RequestInit, "headers">
+  ): Promise<R>;
+  log(level: LogLevel, message: string, data?: unknown): void;
+
+  markComplete(data: T): void;
+  markIncomplete(summary: string, data: T): void;
+  markCheckFailed(error: string): void;
+}
+
+export interface StepExecuteContext<T> {
+  fetchGoogle<R>(
+    url: string,
+    schema: z.ZodSchema<R>,
+    init?: Omit<RequestInit, "headers">
+  ): Promise<R>;
+  fetchMicrosoft<R>(
+    url: string,
+    schema: z.ZodSchema<R>,
+    init?: Omit<RequestInit, "headers">
+  ): Promise<R>;
+  log(level: LogLevel, message: string, data?: unknown): void;
+
+  checkData: T;
+
+  markSucceeded(vars: Partial<WorkflowVars>): void;
+  markFailed(error: string): void;
+  markPending(notes: string): void;
+}
+
+export interface StepUIState {
+  status: "idle" | "checking" | "executing" | "complete" | "failed" | "pending";
+  summary?: string;
   error?: string;
+  notes?: string;
 }
