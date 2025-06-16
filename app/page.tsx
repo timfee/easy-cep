@@ -2,6 +2,7 @@
 
 import { StepId, StepUIState, WorkflowVars } from "@/types";
 import { useEffect, useState } from "react";
+import AuthSection from "./components/AuthSection";
 import { runStep } from "./workflow/engine";
 
 type StepStatus = StepUIState;
@@ -45,6 +46,7 @@ export default function WorkflowPage() {
 
   return (
     <main>
+      <AuthSection />
       <h1>Federation Workflow</h1>
       <ul>
         {STEP_SEQUENCE.map((id) => {
