@@ -78,10 +78,18 @@ export default createStep<CheckData>({
      * POST https://graph.microsoft.com/v1.0/applicationTemplates/{templateId}/instantiate
      * { "displayName": "Google Workspace Provisioning" }
      *
+     * POST https://graph.microsoft.com/v1.0/applicationTemplates/{templateId}/instantiate
+     * { "displayName": "Google Workspace SSO" }
+     *
      * Success response
      *
      * 201
      * { "servicePrincipal": { "id": "..." }, "application": { "appId": "..." } }
+     *
+     * Error response
+     *
+     * 400
+     * { "error": { "message": "Invalid template" } }
      */
     try {
       const CreateSchema = z.object({
