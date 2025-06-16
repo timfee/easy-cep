@@ -1,7 +1,7 @@
 import { StepId } from "@/types";
-import dummyStep from "./steps/dummy-step";
+import verifyPrimaryDomain from "./steps/verify-primary-domain";
 
-const allSteps = [dummyStep] as const;
+const allSteps = [verifyPrimaryDomain] as const;
 
 export function getAllSteps() {
   return allSteps;
