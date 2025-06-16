@@ -1,36 +1,31 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Directory Federation Orchestrator
 
-## Getting Started
+This application automates the integration between **Google Workspace** and **Microsoft Entra ID** (Azure AD) by orchestrating the API calls necessary to create and configure provisioning and SAML operations.
 
-First, run the development server:
+## Architecture
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
-```
+This project defines a series of discrete, type-safe `step` files. Each step:
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+- Encapsulates one unit of setup (e.g. create service user, configure SAML)
+- Implements `check()` to detect current state
+- Implements `execute()` to perform a mutation (if needed)
+- Declares which variables it `requires` and what it `provides`
+- Contributes to global state (`vars`) in a type-safe way
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+The runtime engine orchestrates execution across steps using these declarations.
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+## Steps
 
-## Learn More
+Steps are evaluated and rendered by a runtime engine, which assembles a workflow dynamically (and will be implemented after all steps are complete.)
 
-To learn more about Next.js, take a look at the following resources:
+Steps can be composed and executed sequentially or selectively. The engine is responsible for:
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+- Maintaining and validating `vars`
+- Enforcing `requires`/`provides`
+- Logging outputs and summaries
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+This system uses type-safe building blocks. Each `step` file contributes a unit of orchestration.
 
-## Deploy on Vercel
+## Notes
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+Use `pnpm` for package management and execution.
