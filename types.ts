@@ -1,5 +1,6 @@
 export enum Var {
   GoogleAccessToken = "googleAccessToken",
+  MsGraphToken = "msGraphToken",
   CustomerId = "customerId",
   PrimaryDomain = "primaryDomain",
   IsDomainVerified = "isDomainVerified",
