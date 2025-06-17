@@ -26,6 +26,7 @@ export default createStep<CheckData>({
    */
 
   async check({
+    vars,
     fetchGoogle,
     markComplete,
     markIncomplete,
@@ -37,12 +38,17 @@ export default createStep<CheckData>({
         inboundSsoAssignments: z
           .array(
             z.object({
-              targetGroup: z.object({ id: z.string() }),
-              samlSsoInfo: z.object({ inboundSamlSsoProfile: z.string() })
+              targetGroup: z.object({ id: z.string() }).optional(),
+              targetOrgUnit: z.string().optional(),
+              samlSsoInfo: z
+                .object({ inboundSamlSsoProfile: z.string() })
+                .optional()
             })
           )
           .optional()
       });
+
+      const profileId = getVar(vars, Var.SamlProfileId);
 
       const { inboundSsoAssignments = [] } = await fetchGoogle(
         ApiEndpoint.Google.SsoAssignments,
@@ -50,7 +56,9 @@ export default createStep<CheckData>({
       );
 
       const exists = inboundSsoAssignments.some(
-        (a) => a.targetGroup.id === GroupId.AllUsers
+        (a) =>
+          a.targetGroup?.id === GroupId.AllUsers
+          && a.samlSsoInfo?.inboundSamlSsoProfile === profileId
       );
 
       if (exists) {
