@@ -43,16 +43,16 @@ _check_ success:
   _execute_ errors:
 - 409 already exists handled
 
-### assignRoleToUser
+### createAdminRoleAndAssignUser
 
 _check_ success:
 
-- complete - 200 with assignments
-- incomplete - empty list
+- complete - role and assignment exist (verified 200 roles page and assignment list)
+- incomplete - role missing or assignment missing
   _execute_ success:
-- 200 or 201 role assignment created
+- 200 privileges fetched, role created (200) or assignment created (200)
   _execute_ errors:
-- 409 conflict treated as success
+- 409 role or assignment already exists handled
 
 ### configureGoogleSamlProfile
 

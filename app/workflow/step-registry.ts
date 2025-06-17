@@ -7,13 +7,12 @@
  */
 
 import { StepIdValue } from "@/types";
-import assignRoleToUser from "./steps/assign-role-to-user";
 import assignUsersToSso from "./steps/assign-users-to-sso";
 import completeGoogleSsoSetup from "./steps/complete-google-sso-setup";
 import configureGoogleSamlProfile from "./steps/configure-google-saml-profile";
 import configureMicrosoftSyncAndSso from "./steps/configure-microsoft-sync-and-sso";
+import createAdminRoleAndAssignUser from "./steps/create-admin-role-and-assign-user";
 import createAutomationOu from "./steps/create-automation-ou";
-import createCustomAdminRole from "./steps/create-custom-admin-role";
 import createMicrosoftApps from "./steps/create-microsoft-apps";
 import createServiceUser from "./steps/create-service-user";
 import setupMicrosoftClaimsPolicy from "./steps/setup-microsoft-claims-policy";
@@ -24,8 +23,7 @@ const allSteps = [
   verifyPrimaryDomain,
   createAutomationOu,
   createServiceUser,
-  createCustomAdminRole,
-  assignRoleToUser,
+  createAdminRoleAndAssignUser,
   configureGoogleSamlProfile,
   createMicrosoftApps,
   configureMicrosoftSyncAndSso,
