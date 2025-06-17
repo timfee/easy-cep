@@ -1,4 +1,3 @@
-/* eslint-disable tsdoc/syntax */
 /** @type {import("prettier").Config} */
 const config = {
   experimentalOperatorPosition: "start",
