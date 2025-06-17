@@ -32,52 +32,43 @@ export default function ProviderLogin({ onUpdate }: Props) {
     loadTokens();
   }, [loadTokens]);
 
-  const signedIn = tokens.googleAccessToken || tokens.msGraphToken;
-
   return (
     <div className="border p-4 rounded mb-4">
       <h2 className="font-semibold mb-2">Provider Login</h2>
-      {!signedIn && (
-        <div className="space-x-2">
+      <div className="space-x-2">
+        {tokens.googleAccessToken ?
           <button
+            className="px-2 py-1 bg-gray-600 text-white rounded"
+            onClick={() =>
+              (window.location.href = `/api/auth/signout/${PROVIDERS.GOOGLE}`)
+            }>
+            Sign out Google
+          </button>
+        : <button
             className="px-2 py-1 bg-blue-600 text-white rounded"
             onClick={() =>
               (window.location.href = `/api/auth/${PROVIDERS.GOOGLE}`)
             }>
             Sign in with Google
           </button>
+        }
+        {tokens.msGraphToken ?
           <button
+            className="px-2 py-1 bg-gray-600 text-white rounded"
+            onClick={() =>
+              (window.location.href = `/api/auth/signout/${PROVIDERS.MICROSOFT}`)
+            }>
+            Sign out Microsoft
+          </button>
+        : <button
             className="px-2 py-1 bg-blue-600 text-white rounded"
             onClick={() =>
               (window.location.href = `/api/auth/${PROVIDERS.MICROSOFT}`)
             }>
             Sign in with Microsoft
           </button>
-        </div>
-      )}
-      {signedIn && (
-        <div className="space-x-2">
-          <span className="text-sm">Signed in</span>
-          {tokens.googleAccessToken && (
-            <button
-              className="px-2 py-1 bg-gray-600 text-white rounded"
-              onClick={() =>
-                (window.location.href = `/api/auth/signout/${PROVIDERS.GOOGLE}`)
-              }>
-              Sign out Google
-            </button>
-          )}
-          {tokens.msGraphToken && (
-            <button
-              className="px-2 py-1 bg-gray-600 text-white rounded"
-              onClick={() =>
-                (window.location.href = `/api/auth/signout/${PROVIDERS.MICROSOFT}`)
-              }>
-              Sign out Microsoft
-            </button>
-          )}
-        </div>
-      )}
+        }
+      </div>
     </div>
   );
 }

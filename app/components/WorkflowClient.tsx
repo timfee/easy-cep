@@ -1,8 +1,8 @@
 "use client";
 
-import { StepId, StepUIState, WorkflowVars } from "@/types";
-import { useState } from "react";
-import { runStep } from "../workflow/engine";
+import { StepId, StepUIState, Var, WorkflowVars } from "@/types";
+import { useCallback, useEffect, useState } from "react";
+import { checkStep, runStep } from "../workflow/engine";
 import ProviderLogin from "./ProviderLogin";
 import StepCard, { StepInfo } from "./StepCard";
 
@@ -17,11 +17,30 @@ export default function WorkflowClient({ steps }: Props) {
   );
   const [executing, setExecuting] = useState<StepId | null>(null);
 
-  const updateVars = (newVars: Partial<WorkflowVars>) =>
-    setVars((prev) => ({ ...prev, ...newVars }));
+  const updateVars = useCallback(
+    (newVars: Partial<WorkflowVars>) =>
+      setVars((prev) => ({ ...prev, ...newVars })),
+    []
+  );
 
-  const updateStep = (stepId: StepId, stepState: StepUIState) =>
-    setStatus((prev) => ({ ...prev, [stepId]: stepState }));
+  const updateStep = useCallback(
+    (stepId: StepId, stepState: StepUIState) =>
+      setStatus((prev) => ({ ...prev, [stepId]: stepState })),
+    []
+  );
+
+  useEffect(() => {
+    if (!vars[Var.GoogleAccessToken] && !vars[Var.MsGraphToken]) return;
+    (async () => {
+      for (const step of steps) {
+        const missing = step.requires.filter((v) => !vars[v]);
+        if (missing.length === 0) {
+          const result = await checkStep(step.id, vars);
+          updateStep(step.id, result.state);
+        }
+      }
+    })();
+  }, [vars, steps, updateStep]);
 
   async function handleExecute(id: StepId) {
     const def = steps.find((s) => s.id === id);
@@ -37,7 +56,9 @@ export default function WorkflowClient({ steps }: Props) {
 
     setExecuting(id);
     try {
-      await runStep(id, vars, updateVars, updateStep);
+      const result = await runStep(id, vars);
+      updateVars(result.newVars);
+      updateStep(id, result.state);
     } catch (error) {
       console.error("Failed to run step:", error);
     } finally {
