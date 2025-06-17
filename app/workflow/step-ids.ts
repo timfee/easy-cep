@@ -6,7 +6,7 @@ export const StepId = {
   VerifyPrimaryDomain: "verify-primary-domain",
   CreateAutomationOU: "create-automation-ou",
   CreateServiceUser: "create-service-user",
-  CreateRoleAndAssignUser: "create-role-and-assign-user",
+  CreateAdminRoleAndAssignUser: "create-admin-role-and-assign-user",
   ConfigureGoogleSamlProfile: "configure-google-saml-profile",
   CreateMicrosoftApps: "create-microsoft-apps",
   ConfigureMicrosoftSyncAndSso: "configure-microsoft-sync-and-sso",

@@ -10,7 +10,7 @@ const INDENT = 2;
 export default function StepLogs({ logs }: StepLogsProps) {
   if (!logs || logs.length === 0) return null;
   return (
-    <details className="mt-2">
+    <details className="mt-2 max-h-48 overflow-scroll">
       <summary className="cursor-pointer">Logs</summary>
       <ul className="text-xs space-y-1 mt-1">
         {logs.map((l, idx) => (

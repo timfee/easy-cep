@@ -11,6 +11,7 @@ import assignUsersToSso from "./steps/assign-users-to-sso";
 import completeGoogleSsoSetup from "./steps/complete-google-sso-setup";
 import configureGoogleSamlProfile from "./steps/configure-google-saml-profile";
 import configureMicrosoftSyncAndSso from "./steps/configure-microsoft-sync-and-sso";
+import createAdminRoleAndAssignUser from "./steps/create-admin-role-and-assign-user";
 import createAutomationOu from "./steps/create-automation-ou";
 import createMicrosoftApps from "./steps/create-microsoft-apps";
 import createRoleAndAssignUser from "./steps/create-role-and-assign-user";
@@ -23,7 +24,7 @@ const allSteps = [
   verifyPrimaryDomain,
   createAutomationOu,
   createServiceUser,
-  createRoleAndAssignUser,
+  createAdminRoleAndAssignUser,
   configureGoogleSamlProfile,
   createMicrosoftApps,
   configureMicrosoftSyncAndSso,

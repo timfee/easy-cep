@@ -161,6 +161,7 @@ Response `200 OK` (OU exists)
 
 - `googleAccessToken`
 - `isDomainVerified`
+- `provisioningUserId`
 
 #### Request
 
@@ -251,7 +252,7 @@ Content-Type: application/json
 // No vars provided; step ensures OU existence only
 ```
 
-## Step 4: `createRoleAndAssignUser`
+## Step 4: `createAdminRoleAndAssignUser`
 
 ### Purpose
 
@@ -270,12 +271,18 @@ Authorization: Bearer {googleAccessToken}
 
 ```json
 {
+  "kind": "admin#directory#roles",
   "items": [
     {
-      "roleId": "R123",
+      "roleId": "91447453409035723",
       "roleName": "Microsoft Entra Provisioning",
-      "rolePrivileges": [ { "serviceId": "svc", ... }, ... ]
-    }, ...
+      "roleDescription": "Custom role for Microsoft provisioning",
+      "rolePrivileges": [
+        { "privilegeName": "USERS_CREATE", "serviceId": "00haapch16h1ysv" },
+        { "privilegeName": "USERS_RETRIEVE", "serviceId": "00haapch16h1ysv" },
+        { "privilegeName": "USERS_UPDATE", "serviceId": "00haapch16h1ysv" }
+      ]
+    }
   ]
 }
 ```
@@ -335,7 +342,7 @@ Content-Type: application/json
 
 #### Expected Responses
 
-- `201 Created`: Role created
+- `200 OK`: Role created
 - `409 Conflict`: Role already exists (acceptable)
 - `400/403`: error
 
@@ -346,6 +353,9 @@ adminRoleId = .roleId
 ```
 
 2. **POST Role Assignment**
+
+#### Request 3: Assign Role
+
 
 ```http
 POST https://admin.googleapis.com/admin/directory/v1/customer/my_customer/roleassignments
@@ -358,10 +368,40 @@ Content-Type: application/json
   "scopeType": "CUSTOMER"
 }
 ```
-
 Expected: `201 Created` or `409 Conflict`
+#### Expected Responses
 
-## Step 6: `configureGoogleSamlProfile`
+- `200 OK` or `409 Conflict`
+- `400/404/403`: error
+
+Example success:
+
+```json
+{
+  "roleAssignmentId": "91447453409034880",
+  "roleId": "91447453409035734",
+  "assignedTo": "103898700330622175095"
+}
+```
+
+Conflict example:
+
+```json
+{
+  "error": {
+    "code": 409,
+    "message": "Role assignment already exists for the role"
+  }
+}
+```
+
+#### Variables Extracted on Success
+
+```ts
+adminRoleId = .roleId
+```
+
+## Step 5: `configureGoogleSamlProfile`
 
 ### Purpose
 

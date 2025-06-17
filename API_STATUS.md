@@ -31,17 +31,16 @@ _check_ success:
 - 201 returns user info
   _execute_ errors:
 - 409 user already exists handled
-
-### createRoleAndAssignUser
+### createAdminRoleAndAssignUser
 
 _check_ success:
 
-- complete - 200 with role
-- incomplete - empty list
+- complete - role and assignment exist (verified 200 roles page and assignment list)
+- incomplete - role missing or assignment missing
   _execute_ success:
-- 201 role created and assigned to user
+- 200 privileges fetched, role created (200) or assignment created (200)
   _execute_ errors:
-- 409 already exists handled
+- 409 role or assignment already exists handled
 
 ### configureGoogleSamlProfile
 
