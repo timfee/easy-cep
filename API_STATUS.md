@@ -31,18 +31,6 @@ _check_ success:
 - 201 returns user info
   _execute_ errors:
 - 409 user already exists handled
-
-### createCustomAdminRole
-
-_check_ success:
-
-- complete - 200 with role
-- incomplete - empty list
-  _execute_ success:
-- 201 returns roleId
-  _execute_ errors:
-- 409 already exists handled
-
 ### createAdminRoleAndAssignUser
 
 _check_ success:

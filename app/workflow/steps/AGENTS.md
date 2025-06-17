@@ -329,11 +329,13 @@ Content-Type: application/json
   "roleName": "Microsoft Entra Provisioning",
   "roleDescription": "Custom role for Microsoft provisioning",
   "rolePrivileges": [
-    { "serviceId": "{directoryServiceId}", "privilegeName": "ORGANIZATION_UNITS_RETRIEVE" },
+    { "serviceId": "{directoryServiceId}", "privilegeName": "ORGANIZATION_UNITS_READ" },
     { "serviceId": "{directoryServiceId}", "privilegeName": "USERS_RETRIEVE" },
     { "serviceId": "{directoryServiceId}", "privilegeName": "USERS_CREATE" },
     { "serviceId": "{directoryServiceId}", "privilegeName": "USERS_UPDATE" },
-    { "serviceId": "{directoryServiceId}", "privilegeName": "GROUPS_ALL" }
+    { "serviceId": "{directoryServiceId}", "privilegeName": "GROUPS_RETRIEVE" },
+    { "serviceId": "{directoryServiceId}", "privilegeName": "GROUPS_CREATE" },
+    { "serviceId": "{directoryServiceId}", "privilegeName": "GROUPS_UPDATE" }
   ]
 }
 ```
@@ -344,7 +346,16 @@ Content-Type: application/json
 - `409 Conflict`: Role already exists (acceptable)
 - `400/403`: error
 
+#### Variables Extracted on Success
+
+```ts
+adminRoleId = .roleId
+```
+
+2. **POST Role Assignment**
+
 #### Request 3: Assign Role
+
 
 ```http
 POST https://admin.googleapis.com/admin/directory/v1/customer/my_customer/roleassignments
@@ -357,7 +368,7 @@ Content-Type: application/json
   "scopeType": "CUSTOMER"
 }
 ```
-
+Expected: `201 Created` or `409 Conflict`
 #### Expected Responses
 
 - `200 OK` or `409 Conflict`
