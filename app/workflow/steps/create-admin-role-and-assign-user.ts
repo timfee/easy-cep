@@ -7,6 +7,11 @@ interface CheckData {
   adminRoleId?: string;
   directoryServiceId?: string;
 }
+interface AdminPrivilege {
+  serviceId: string;
+  privilegeName: string;
+  childPrivileges?: AdminPrivilege[];
+}
 
 export default createStep<CheckData>({
   id: StepId.CreateAdminRoleAndAssignUser,
@@ -191,20 +196,39 @@ export default createStep<CheckData>({
      * }
      */
     try {
-      const PrivSchema = z.object({
-        items: z.array(
-          z.object({ serviceId: z.string(), privilegeName: z.string() })
-        )
-      });
+      const PrivilegeSchema: z.ZodType<AdminPrivilege> = z.lazy(() =>
+        z.object({
+          serviceId: z.string(),
+          privilegeName: z.string(),
+          childPrivileges: z.array(PrivilegeSchema).optional()
+        })
+      );
+
+      const PrivListSchema = z.object({ items: z.array(PrivilegeSchema) });
+
+      const findServiceId = (
+        list: AdminPrivilege[],
+        target: string
+      ): string | undefined => {
+        for (const priv of list) {
+          if (priv.privilegeName === target) return priv.serviceId;
+          if (priv.childPrivileges) {
+            const nested = findServiceId(priv.childPrivileges, target);
+            if (nested) return nested;
+          }
+        }
+        return undefined;
+      };
 
       const { items } = await fetchGoogle(
         ApiEndpoint.Google.RolePrivileges,
-        PrivSchema
+        PrivListSchema
       );
-      const serviceId = items.find(
-        (p) => p.privilegeName === "USERS_RETRIEVE"
-      )?.serviceId;
-      if (!serviceId) throw new Error("Service ID not found");
+
+      const serviceId = findServiceId(items, "USERS_RETRIEVE");
+
+      if (!serviceId)
+        throw new Error("Service ID not found in role privileges");
 
       const CreateSchema = z.object({ roleId: z.string() });
 
