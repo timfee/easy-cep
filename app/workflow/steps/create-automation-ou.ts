@@ -1,4 +1,4 @@
-import { ApiEndpoint } from "@/constants";
+import { ApiEndpoint, OrgUnit } from "@/constants";
 import { LogLevel, StepId, Var } from "@/types";
 import { z } from "zod";
 import { createStep } from "../create-step";
@@ -40,7 +40,7 @@ export default createStep<CheckData>({
     log
   }) {
     try {
-      const ouName = "Automation";
+      const ouName = OrgUnit.AutomationName;
       const OrgUnitSchema = z.object({ orgUnitPath: z.string() }).passthrough();
       await fetchGoogle(
         `${ApiEndpoint.Google.OrgUnits}/${encodeURIComponent(ouName)}`,
@@ -89,7 +89,10 @@ export default createStep<CheckData>({
 
       await fetchGoogle(ApiEndpoint.Google.OrgUnits, CreateSchema, {
         method: "POST",
-        body: JSON.stringify({ name: "Automation", parentOrgUnitPath: "/" })
+        body: JSON.stringify({
+          name: OrgUnit.AutomationName,
+          parentOrgUnitPath: OrgUnit.RootPath
+        })
       });
 
       log(LogLevel.Info, "Automation OU created or already exists");

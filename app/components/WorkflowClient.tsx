@@ -1,6 +1,6 @@
 "use client";
 
-import { StepId, StepUIState, Var, WorkflowVars } from "@/types";
+import { StepId, StepUIState, WorkflowVars } from "@/types";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { checkStep, runStep } from "../workflow/engine";
 import ProviderLogin from "./ProviderLogin";
@@ -41,18 +41,15 @@ export default function WorkflowClient({ steps }: Props) {
     []
   );
 
-  // Run checks once when auth tokens become available
-  const hasChecked = useRef(false);
-  const googleToken = vars[Var.GoogleAccessToken];
-  const msToken = vars[Var.MsGraphToken];
+  // Check steps when their required vars become available
+  const checkedSteps = useRef(new Set<StepId>());
   useEffect(() => {
-    if (hasChecked.current) return;
-    if (!googleToken && !msToken) return;
-    hasChecked.current = true;
     (async () => {
       for (const step of steps) {
+        if (checkedSteps.current.has(step.id)) continue;
         const missing = step.requires.filter((v) => !vars[v]);
         if (missing.length === 0) {
+          checkedSteps.current.add(step.id);
           const result = await checkStep(step.id, vars);
           updateStep(step.id, result.state);
           if (Object.keys(result.newVars).length > 0) {
@@ -61,7 +58,7 @@ export default function WorkflowClient({ steps }: Props) {
         }
       }
     })();
-  }, [vars, googleToken, msToken, steps, updateStep, updateVars]);
+  }, [vars, steps, updateStep, updateVars]);
 
   async function handleExecute(id: StepId) {
     const def = steps.find((s) => s.id === id);

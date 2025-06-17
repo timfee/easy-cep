@@ -1,4 +1,4 @@
-import { ApiEndpoint } from "@/constants";
+import { ApiEndpoint, OrgUnit } from "@/constants";
 import { LogLevel, StepId, Var } from "@/types";
 import crypto from "crypto";
 import { z } from "zod";
@@ -113,7 +113,7 @@ export default createStep<CheckData>({
             primaryEmail: `azuread-provisioning@${domain}`,
             name: { givenName: "Microsoft", familyName: "Provisioning" },
             password,
-            orgUnitPath: "/Automation"
+            orgUnitPath: OrgUnit.AutomationPath
           })
         });
       } catch (error) {

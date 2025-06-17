@@ -171,8 +171,7 @@ Content-Type: application/json
 
 {
   "name": "Automation",
-  "parentOrgUnitId": "<rootOUId>",
-  "orgUnitPath": "/Automation"
+  "parentOrgUnitPath": "/"
 }
 ```
 

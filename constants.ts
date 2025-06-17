@@ -64,6 +64,12 @@ export const TemplateId = {
 
 export const GroupId = { AllUsers: "allUsers" };
 
+export const OrgUnit = {
+  AutomationName: "Automation",
+  AutomationPath: "/Automation",
+  RootPath: "/"
+};
+
 export const PROVIDERS = { GOOGLE: "google", MICROSOFT: "microsoft" } as const;
 
 export type Provider = (typeof PROVIDERS)[keyof typeof PROVIDERS];
