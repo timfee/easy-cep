@@ -1,6 +1,20 @@
 "use server";
 import "server-only";
 
+/**
+ * @file engine.ts
+ * @description Server-side execution engine for individual workflow steps.
+ *
+ * The engine abstracts the *lifecycle* of a step:
+ *  1. **Check** – interrogate external systems to see if the step is already
+ *     complete.
+ *  2. **Execute** – if needed, perform the mutation.
+ *  3. Stream log / status updates back to the UI.
+ *
+ * The public API is the `runStep` server action.  It is intentionally
+ * side-effect free *until* it calls the chosen step’s own implementation.
+ */
+
 import {
   LogLevel,
   StepCheckContext,

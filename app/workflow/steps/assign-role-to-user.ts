@@ -1,3 +1,10 @@
+/**
+ * @file assign-role-to-user.ts
+ * @description Google Workspace – ensure the custom admin role is assigned to
+ *              the automation service account.  If no assignment exists the
+ *              step creates one via the Directory API.
+ */
+
 import { ApiEndpoint } from "@/constants";
 import { LogLevel, StepId, Var } from "@/types";
 import { z } from "zod";

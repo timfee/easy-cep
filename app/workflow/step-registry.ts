@@ -1,3 +1,11 @@
+/**
+ * @file step-registry.ts
+ * @description Central, static list of all workflow step modules.  Keeping a
+ *              single import site helps with tree-shaking, ensures that each
+ *              file is evaluated exactly once, and enables fully typed look-ups
+ *              by `StepId`.
+ */
+
 import { StepId } from "@/types";
 import assignRoleToUser from "./steps/assign-role-to-user";
 import assignUsersToSso from "./steps/assign-users-to-sso";
