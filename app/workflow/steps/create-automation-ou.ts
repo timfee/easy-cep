@@ -5,31 +5,34 @@ import { createStep } from "../create-step";
 
 // eslint-disable-next-line @typescript-eslint/no-empty-object-type
 interface CheckData {}
-
 export default createStep<CheckData>({
   id: StepId.CreateAutomationOU,
   requires: [Var.GoogleAccessToken, Var.IsDomainVerified],
   provides: [],
 
   /**
-   * GET https://admin.googleapis.com/admin/directory/v1/customer/my_customer/orgunits?orgUnitPath=/Automation
+   * GET https://admin.googleapis.com/admin/directory/v1/customer/my_customer/orgunits/Automation
+   * Authorization: Bearer {googleAccessToken}
    *
-   * Completed step example response
-   *
-   * 200
+   * Success response (`200 OK`):
    * {
-   *   "organizationUnits": [
-   *     { "orgUnitPath": "/Automation" }
-   *   ]
+   *   "orgUnitPath": "/Automation",
+   *   "name": "Automation",
+   *   …
    * }
    *
-   * Incomplete step example response
-   *
-   * 200
-   * { "kind": "admin#directory#orgUnits" }
+   * Not found response (`404 Not Found`):
+   * {
+   *   "error": {
+   *     "code": 404,
+   *     "message": "Org unit not found",
+   *     "errors": [...]
+   *   }
+   * }
    */
 
   async check({
+    vars: _vars,
     fetchGoogle,
     markComplete,
     markIncomplete,
@@ -37,36 +40,27 @@ export default createStep<CheckData>({
     log
   }) {
     try {
-      const OrgUnitsSchema = z.object({
-        organizationUnits: z
-          .array(z.object({ orgUnitPath: z.string() }))
-          .optional()
-      });
-
-      const { organizationUnits = [] } = await fetchGoogle(
-        `${ApiEndpoint.Google.OrgUnits}?orgUnitPath=/Automation`,
-        OrgUnitsSchema
+      const ouName = "Automation";
+      const OrgUnitSchema = z.object({ orgUnitPath: z.string() }).passthrough();
+      await fetchGoogle(
+        `${ApiEndpoint.Google.OrgUnits}/${encodeURIComponent(ouName)}`,
+        OrgUnitSchema
       );
-
-      const exists = organizationUnits.some(
-        (ou) => ou.orgUnitPath === "/Automation"
-      );
-
-      if (exists) {
-        log(LogLevel.Info, "Automation OU already exists");
-        markComplete({});
-      } else {
-        markIncomplete("Automation OU missing", {});
-      }
+      log(LogLevel.Info, "Automation OU already exists");
+      markComplete({});
     } catch (error) {
-      log(LogLevel.Error, "Failed to check OU", { error });
-      markCheckFailed(
-        error instanceof Error ? error.message : "Failed to check OU"
-      );
+      if (error instanceof Error && error.message.startsWith("HTTP 404")) {
+        markIncomplete("Automation OU missing", {});
+      } else {
+        log(LogLevel.Error, "Failed to check OU", { error });
+        markCheckFailed(
+          error instanceof Error ? error.message : "Failed to check OU"
+        );
+      }
     }
   },
 
-  async execute({ fetchGoogle, markSucceeded, markFailed, log }) {
+  async execute({ vars: _vars, fetchGoogle, markSucceeded, markFailed, log }) {
     /**
      * POST https://admin.googleapis.com/admin/directory/v1/customer/my_customer/orgunits
      * {
@@ -85,7 +79,13 @@ export default createStep<CheckData>({
      * { "error": { "message": "Invalid Ou Id" } }
      */
     try {
-      const CreateSchema = z.object({ orgUnitPath: z.string() }).passthrough();
+      const CreateSchema = z
+        .object({
+          orgUnitPath: z.string(),
+          name: z.string(),
+          parentOrgUnitId: z.string()
+        })
+        .passthrough();
 
       await fetchGoogle(ApiEndpoint.Google.OrgUnits, CreateSchema, {
         method: "POST",

@@ -87,7 +87,7 @@ Ensure Google Workspace primary domain exists and is verified.
 
 ### State Check
 
-#### Request
+#### Request (path parameter)
 
 ```http
 GET https://admin.googleapis.com/admin/directory/v1/customer/my_customer/domains
@@ -137,7 +137,7 @@ Ensure the organizational unit `/Automation` exists.
 #### Request
 
 ```http
-GET https://admin.googleapis.com/admin/directory/v1/customer/my_customer/orgunits?orgUnitPath=/Automation
+GET https://admin.googleapis.com/admin/directory/v1/customer/my_customer/orgunits/Automation
 Authorization: Bearer {googleAccessToken}
 ```
 
@@ -145,15 +145,15 @@ Authorization: Bearer {googleAccessToken}
 
 ```json
 {
-  "organizationUnits": [
-    { "orgUnitPath": "/Automation", "name": "Automation", ... }
-  ]
+  "orgUnitPath": "/Automation",
+  "name": "Automation",
+  …
 }
 ```
 
 #### Completion Criteria
 
-`organizationUnits[] | select(.orgUnitPath == "/Automation")` exists
+Response `200 OK` (OU exists)
 
 ### Execution
 
@@ -169,7 +169,11 @@ POST https://admin.googleapis.com/admin/directory/v1/customer/my_customer/orguni
 Authorization: Bearer {googleAccessToken}
 Content-Type: application/json
 
-{ "name": "Automation", "parentOrgUnitPath": "/" }
+{
+  "name": "Automation",
+  "parentOrgUnitId": "<rootOUId>",
+  "orgUnitPath": "/Automation"
+}
 ```
 
 #### Expected Responses
@@ -245,9 +249,7 @@ Content-Type: application/json
 #### Variables Extracted on Success
 
 ```ts
-provisioningUserId = .id
-provisioningUserEmail = .primaryEmail
-generatedPassword = <plaintext password from body>
+// No vars provided; step ensures OU existence only
 ```
 
 ## Step 4: `createCustomAdminRole`
