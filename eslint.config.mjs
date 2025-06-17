@@ -59,7 +59,7 @@ const eslintConfig = [
       "workflow/no-any-in-schemas": "error",
 
       // 4. Step-specific patterns
-      "workflow/check-data-type-required": "error",
+      "workflow/check-data-type-required": "off",
       "workflow/no-state-mutations": "error"
     }
   },

@@ -5,7 +5,7 @@ import type {
   Var
 } from "@/types";
 
-export function createStep<TCheck>({
+export function createStep<TCheck = Record<string, never>>({
   id,
   requires,
   provides,

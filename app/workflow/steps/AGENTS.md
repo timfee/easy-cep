@@ -19,8 +19,9 @@ mutations are allowed during step development.
 
 Every step MUST follow this exact pattern:
 
-1. Define interface for check data
-2. Call createStep with generic parameter
+1. (Optional) Define an interface for check data if you need to pass values from
+   `check()` to `execute()`
+2. Call `createStep` with that type when needed (otherwise rely on the default)
 3. In check: ALWAYS wrap in try-catch, ALWAYS call one of: markComplete, markIncomplete, markCheckFailed
 4. In execute: ALWAYS wrap in try-catch, ALWAYS call one of: markSucceeded, markFailed, markPending
 5. Use ApiEndpoint constants for ALL URLs
@@ -80,6 +81,9 @@ export default createStep<CheckData>({
   }
 });
 ```
+
+If no data needs to flow from `check()` to `execute()`, omit the `CheckData`
+interface and call `createStep()` without a generic type.
 
 ### Purpose
 
