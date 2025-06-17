@@ -7,7 +7,7 @@ interface CheckData {}
 
 export default createStep<CheckData>({
   id: StepId.CompleteGoogleSsoSetup,
-  requires: [Var.SamlProfileId, Var.EntityId, Var.AcsUrl],
+  requires: [Var.SamlProfileId, Var.EntityId, Var.AcsUrl, Var.IsDomainVerified],
   provides: [],
 
   async check({ markIncomplete, markComplete }) {

@@ -102,8 +102,7 @@ Authorization: Bearer {googleAccessToken}
     {
       "domainName": "example.com",
       "isPrimary": true,
-      "verified": true,
-      "customerId": "C012345"
+      "verified": true
     }, ...
   ]
 }
@@ -118,7 +117,6 @@ Authorization: Bearer {googleAccessToken}
 ```ts
 primaryDomain = domains[] | select(.isPrimary == true) | .domainName
 isDomainVerified = domains[] | select(.isPrimary == true) | .verified
-customerId = domains[] | select(.isPrimary == true) | .customerId
 ```
 
 ### Execution
@@ -128,7 +126,6 @@ customerId = domains[] | select(.isPrimary == true) | .customerId
 ### Required Inputs
 
 - `googleAccessToken: string`
-- `customerId: string` (default `"my_customer"`)
 
 ## Step 2: `createAutomationOU`
 
@@ -164,7 +161,7 @@ Authorization: Bearer {googleAccessToken}
 #### Prerequisites
 
 - `googleAccessToken`
-- `customerId`
+- `isDomainVerified`
 
 #### Request
 
@@ -224,6 +221,7 @@ provisioningUserEmail = .primaryEmail
 
 - `googleAccessToken`
 - `primaryDomain` variable set
+- `isDomainVerified`
 
 #### Request
 
@@ -299,7 +297,7 @@ directoryServiceId = .rolePrivileges[0].serviceId
 #### Prerequisites
 
 - `googleAccessToken`
-- `customerId` variable
+- `isDomainVerified`
 
 #### Requests Sequence
 
@@ -374,7 +372,7 @@ Authorization: Bearer {googleAccessToken}
 #### Prerequisites
 
 - `googleAccessToken`
-- `customerId`, `adminRoleId`, `provisioningUserId`
+- `adminRoleId`, `provisioningUserId`, `isDomainVerified`
 
 #### Request
 

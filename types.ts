@@ -3,7 +3,6 @@ import { z } from "zod";
 export enum Var {
   GoogleAccessToken = "googleAccessToken",
   MsGraphToken = "msGraphToken",
-  CustomerId = "customerId",
   PrimaryDomain = "primaryDomain",
   IsDomainVerified = "isDomainVerified",
   ProvisioningUserId = "provisioningUserId",

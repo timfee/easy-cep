@@ -10,7 +10,7 @@ interface CheckData {
 
 export default createStep<CheckData>({
   id: StepId.CreateCustomAdminRole,
-  requires: [Var.GoogleAccessToken, Var.CustomerId],
+  requires: [Var.GoogleAccessToken, Var.IsDomainVerified],
   provides: [Var.AdminRoleId, Var.DirectoryServiceId],
 
   /**

@@ -11,7 +11,7 @@ interface CheckData {
 
 export default createStep<CheckData>({
   id: StepId.CreateServiceUser,
-  requires: [Var.GoogleAccessToken, Var.PrimaryDomain],
+  requires: [Var.GoogleAccessToken, Var.PrimaryDomain, Var.IsDomainVerified],
   provides: [
     Var.ProvisioningUserId,
     Var.ProvisioningUserEmail,

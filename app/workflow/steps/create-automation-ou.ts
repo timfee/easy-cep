@@ -9,7 +9,7 @@ interface CheckData {}
 
 export default createStep<CheckData>({
   id: StepId.CreateAutomationOU,
-  requires: [Var.GoogleAccessToken, Var.CustomerId],
+  requires: [Var.GoogleAccessToken, Var.IsDomainVerified],
   provides: [],
 
   /**
