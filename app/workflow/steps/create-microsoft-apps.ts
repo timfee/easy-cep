@@ -43,7 +43,11 @@ export default createStep<CheckData>({
       const AppsSchema = z.object({
         value: z
           .array(
-            z.object({ servicePrincipalId: z.string(), appId: z.string() })
+            z.object({
+              id: z.string(),
+              appId: z.string(),
+              displayName: z.string()
+            })
           )
           .optional()
       });
@@ -57,13 +61,42 @@ export default createStep<CheckData>({
       );
 
       if (value.length > 0) {
-        const first = value[0];
-        log(LogLevel.Info, "Microsoft apps already exist");
-        markComplete({
-          provisioningServicePrincipalId: first.servicePrincipalId,
-          ssoServicePrincipalId: first.servicePrincipalId,
-          ssoAppId: first.appId
-        });
+        const provApp = value.find((v) =>
+          v.displayName.includes("Provisioning")
+        );
+        const ssoApp = value.find((v) => v.displayName.includes("SSO"));
+
+        if (provApp && ssoApp) {
+          const SpSchema = z.object({
+            value: z.array(z.object({ id: z.string() }))
+          });
+
+          const provRes = await fetchMicrosoft(
+            `${ApiEndpoint.Microsoft.ServicePrincipals}?$filter=appId eq '${provApp.appId}'`,
+            SpSchema
+          );
+
+          const ssoRes = await fetchMicrosoft(
+            `${ApiEndpoint.Microsoft.ServicePrincipals}?$filter=appId eq '${ssoApp.appId}'`,
+            SpSchema
+          );
+
+          const provId = provRes.value[0]?.id;
+          const ssoId = ssoRes.value[0]?.id;
+
+          if (provId && ssoId) {
+            log(LogLevel.Info, "Microsoft apps already exist");
+            markComplete({
+              provisioningServicePrincipalId: provId,
+              ssoServicePrincipalId: ssoId,
+              ssoAppId: ssoApp.appId
+            });
+          } else {
+            markIncomplete("Microsoft service principals not found", {});
+          }
+        } else {
+          markIncomplete("Microsoft apps not found", {});
+        }
       } else {
         markIncomplete("Microsoft apps not found", {});
       }

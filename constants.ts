@@ -26,6 +26,7 @@ export const ApiEndpoint = {
 
   Microsoft: {
     Applications: "https://graph.microsoft.com/beta/applications",
+    ServicePrincipals: "https://graph.microsoft.com/v1.0/servicePrincipals",
 
     Templates: (templateId: string) =>
       `https://graph.microsoft.com/v1.0/applicationTemplates/${templateId}/instantiate`,
