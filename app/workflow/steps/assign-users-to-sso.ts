@@ -41,7 +41,8 @@ export default createStep<CheckData>({
               samlSsoInfo: z.object({ inboundSamlSsoProfile: z.string() })
             })
           )
-          .optional()
+          .optional(),
+        nextPageToken: z.string().optional()
       });
 
       const { inboundSsoAssignments = [] } = await fetchGoogle(

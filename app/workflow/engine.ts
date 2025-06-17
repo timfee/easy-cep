@@ -49,7 +49,7 @@ async function processStep<T extends StepIdValue>(
 
   const createFetch =
     (token: string | undefined) =>
-    async <T>(
+    async <T extends Record<string, unknown>>(
       url: string,
       schema: z.ZodSchema<T>,
       init?: Omit<RequestInit, "headers">
@@ -66,36 +66,72 @@ async function processStep<T extends StepIdValue>(
       });
 
       const headers = (init as RequestInit | undefined)?.headers;
-      const res = await fetch(url, {
-        ...(init as RequestInit),
-        headers: {
-          ...(headers ?? {}),
-          Authorization: `Bearer ${token}`,
-          "Content-Type": "application/json"
+
+      const fetchPage = async (pageUrl: string): Promise<T> => {
+        const res = await fetch(pageUrl, {
+          ...(init as RequestInit),
+          headers: {
+            ...(headers ?? {}),
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json"
+          }
+        });
+
+        const clone = res.clone();
+        let logData: unknown;
+        try {
+          logData = await clone.json();
+        } catch {
+          logData = await clone.text();
         }
-      });
 
-      const clone = res.clone();
-      let logData: unknown;
-      try {
-        logData = await clone.json();
-      } catch {
-        logData = await clone.text();
+        addLog({
+          timestamp: Date.now(),
+          message: `Response ${res.status} ${pageUrl}`,
+          data: logData,
+          level: LogLevel.Debug
+        });
+
+        if (!res.ok) {
+          throw new Error(`HTTP ${res.status}: ${res.statusText}`);
+        }
+
+        const json = await res.json();
+        return schema.parse(json);
+      };
+
+      const urlObj = new URL(url);
+      const result = await fetchPage(urlObj.toString());
+      let pageToken =
+        (
+          typeof (result as { nextPageToken?: unknown }).nextPageToken
+          === "string"
+        ) ?
+          (result as { nextPageToken: string }).nextPageToken
+        : undefined;
+
+      while (pageToken) {
+        urlObj.searchParams.set("pageToken", pageToken);
+        const next = (await fetchPage(urlObj.toString())) as Record<
+          string,
+          unknown
+        > & { nextPageToken?: string };
+
+        for (const key of Object.keys(next)) {
+          if (key === "nextPageToken") continue;
+          const current = (result as Record<string, unknown>)[key];
+          const value = next[key];
+          if (Array.isArray(current) && Array.isArray(value)) {
+            (result as Record<string, unknown>)[key] = [...current, ...value];
+          }
+        }
+
+        pageToken = next.nextPageToken;
       }
 
-      addLog({
-        timestamp: Date.now(),
-        message: `Response ${res.status} ${url}`,
-        data: logData,
-        level: LogLevel.Debug
-      });
+      delete (result as { nextPageToken?: string }).nextPageToken;
 
-      if (!res.ok) {
-        throw new Error(`HTTP ${res.status}: ${res.statusText}`);
-      }
-
-      const json = await res.json();
-      return schema.parse(json);
+      return result;
     };
 
   const baseContext = {

@@ -13,6 +13,12 @@ interface AdminPrivilege {
   childPrivileges?: AdminPrivilege[];
 }
 
+interface Role {
+  roleId: string;
+  roleName: string;
+  rolePrivileges: { serviceId: string }[];
+}
+
 export default createStep<CheckData>({
   id: StepId.CreateAdminRoleAndAssignUser,
   requires: [
@@ -71,36 +77,18 @@ export default createStep<CheckData>({
               rolePrivileges: z.array(z.object({ serviceId: z.string() }))
             })
           )
-          .optional()
+          .optional(),
+        nextPageToken: z.string().optional()
       });
 
-      let pageToken: string | undefined;
-      let role: {
-        roleId: string;
-        roleName: string;
-        rolePrivileges: { serviceId: string }[];
-      } | null = null;
+      const { items: roles = [] } = await fetchGoogle(
+        ApiEndpoint.Google.Roles,
+        RolesSchema
+      );
 
-      do {
-        const url =
-          pageToken ?
-            `${ApiEndpoint.Google.Roles}?pageToken=${pageToken}`
-          : ApiEndpoint.Google.Roles;
-
-        const { items = [], nextPageToken } = await fetchGoogle(
-          url,
-          RolesSchema
-        );
-        const found = items.find(
-          (r) => r.roleName === "Microsoft Entra Provisioning"
-        );
-        if (found) {
-          role = found;
-          pageToken = undefined;
-        } else {
-          pageToken = nextPageToken;
-        }
-      } while (!role && pageToken);
+      const role = roles.find(
+        (r) => r.roleName === "Microsoft Entra Provisioning"
+      );
 
       if (role) {
         const userId = getVar(vars, Var.ProvisioningUserId);
@@ -265,26 +253,16 @@ export default createStep<CheckData>({
               nextPageToken: z.string().optional()
             });
 
-            let page: string | undefined;
-            do {
-              const url =
-                page ?
-                  `${ApiEndpoint.Google.Roles}?pageToken=${page}`
-                : ApiEndpoint.Google.Roles;
-              const { items = [], nextPageToken } = await fetchGoogle(
-                url,
-                RolesSchema
-              );
-              const found = items.find(
-                (r) => r.roleName === "Microsoft Entra Provisioning"
-              );
-              if (found) {
-                roleId = found.roleId;
-                page = undefined;
-              } else {
-                page = nextPageToken;
-              }
-            } while (!roleId && page);
+            const { items: roles = [] } = await fetchGoogle(
+              ApiEndpoint.Google.Roles,
+              RolesSchema
+            );
+            const found = roles.find(
+              (r) => r.roleName === "Microsoft Entra Provisioning"
+            );
+            if (found) {
+              roleId = found.roleId;
+            }
           }
         } else {
           throw error;
