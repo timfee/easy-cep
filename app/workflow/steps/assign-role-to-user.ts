@@ -9,7 +9,12 @@ interface CheckData {}
 
 export default createStep<CheckData>({
   id: StepId.AssignRoleToUser,
-  requires: [Var.GoogleAccessToken, Var.AdminRoleId, Var.ProvisioningUserId],
+  requires: [
+    Var.GoogleAccessToken,
+    Var.AdminRoleId,
+    Var.ProvisioningUserId,
+    Var.IsDomainVerified
+  ],
   provides: [],
 
   /**

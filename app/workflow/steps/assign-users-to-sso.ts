@@ -9,7 +9,7 @@ interface CheckData {}
 
 export default createStep<CheckData>({
   id: StepId.AssignUsersToSso,
-  requires: [Var.GoogleAccessToken, Var.SamlProfileId],
+  requires: [Var.GoogleAccessToken, Var.SamlProfileId, Var.IsDomainVerified],
   provides: [],
 
   /**

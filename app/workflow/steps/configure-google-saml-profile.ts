@@ -11,7 +11,7 @@ interface CheckData {
 
 export default createStep<CheckData>({
   id: StepId.ConfigureGoogleSamlProfile,
-  requires: [Var.GoogleAccessToken],
+  requires: [Var.GoogleAccessToken, Var.IsDomainVerified],
   provides: [Var.SamlProfileId, Var.EntityId, Var.AcsUrl],
 
   /**

@@ -5,14 +5,13 @@ import { createStep } from "../create-step";
 
 interface CheckData {
   primaryDomain?: string;
-  customerId?: string;
   isDomainVerified?: boolean;
 }
 
 export default createStep<CheckData>({
   id: StepId.VerifyPrimaryDomain,
   requires: [Var.GoogleAccessToken],
-  provides: [Var.CustomerId, Var.PrimaryDomain, Var.IsDomainVerified],
+  provides: [Var.PrimaryDomain, Var.IsDomainVerified],
 
   /**
    * GET https://admin.googleapis.com/admin/directory/v1/customer/my_customer/domains
@@ -25,8 +24,7 @@ export default createStep<CheckData>({
    *     {
    *       "domainName": "cep-netnew.cc",
    *       "isPrimary": true,
-   *       "verified": true,
-   *       "customerId": "C01b1e65b"
+   *       "verified": true
    *     }
    *   ]
    * }
@@ -49,7 +47,6 @@ export default createStep<CheckData>({
         domains: z.array(
           z.object({
             domainName: z.string(),
-            customerId: z.string().optional(),
             isPrimary: z.boolean(),
             verified: z.boolean()
           })
@@ -67,17 +64,12 @@ export default createStep<CheckData>({
         log(LogLevel.Info, "Primary domain already verified");
         markComplete({
           primaryDomain: primary.domainName,
-          customerId: primary.customerId,
           isDomainVerified: true
         });
       } else {
         markIncomplete(
           primary ? "Primary domain not verified" : "No primary domain found",
-          {
-            primaryDomain: primary?.domainName,
-            customerId: primary?.customerId,
-            isDomainVerified: false
-          }
+          { primaryDomain: primary?.domainName, isDomainVerified: false }
         );
       }
     } catch (error) {
@@ -102,7 +94,6 @@ export default createStep<CheckData>({
 
       markSucceeded({
         [Var.PrimaryDomain]: checkData.primaryDomain || "",
-        [Var.CustomerId]: checkData.customerId || "my_customer",
         [Var.IsDomainVerified]: checkData.isDomainVerified || false
       });
     } catch (error) {
