@@ -26,7 +26,14 @@ export default createStep<CheckData>({
    * { "value": [] }
    */
 
-  async check({ vars, fetchMicrosoft, markComplete, markIncomplete, markCheckFailed, log }) {
+  async check({
+    vars,
+    fetchMicrosoft,
+    markComplete,
+    markIncomplete,
+    markCheckFailed,
+    log
+  }) {
     try {
       const spId = getVar(vars, Var.SsoServicePrincipalId) as string;
 

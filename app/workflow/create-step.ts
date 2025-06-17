@@ -57,8 +57,14 @@ export function createStep<
    */
   execute: (ctx: StepExecuteContext<D>) => Promise<void>;
 }): StepDefinition<R, P> & {
-  check: (ctx: StepCheckContext<Partial<WorkflowVars>>) => Promise<void>;
-  execute: (ctx: StepExecuteContext<Partial<WorkflowVars>>) => Promise<void>;
+  check(ctx: StepCheckContext<D>): Promise<void>;
+  check<T2 extends Partial<WorkflowVars>>(
+    ctx: StepCheckContext<T2>
+  ): Promise<void>;
+  execute(ctx: StepExecuteContext<D>): Promise<void>;
+  execute<T2 extends Partial<WorkflowVars>>(
+    ctx: StepExecuteContext<T2>
+  ): Promise<void>;
 } {
   // The function merely re-emits the object so that TypeScript retains the
   // literal types of `requires` and `provides` for downstream consumers.

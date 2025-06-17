@@ -771,9 +771,12 @@ export const noProcessEnv = createRule({
   name: "no-process-env",
   meta: {
     type: "problem",
-    docs: { description: "Disallow direct process.env usage in workflow steps" },
+    docs: {
+      description: "Disallow direct process.env usage in workflow steps"
+    },
     messages: {
-      noProcessEnv: "Direct use of process.env is forbidden; use env.ts or workflow vars"
+      noProcessEnv:
+        "Direct use of process.env is forbidden; use env.ts or workflow vars"
     },
     schema: []
   },
@@ -782,10 +785,10 @@ export const noProcessEnv = createRule({
     return {
       MemberExpression(node) {
         if (
-          node.object.type === "Identifier" &&
-          node.object.name === "process" &&
-          node.property.type === "Identifier" &&
-          node.property.name === "env"
+          node.object.type === "Identifier"
+          && node.object.name === "process"
+          && node.property.type === "Identifier"
+          && node.property.name === "env"
         ) {
           context.report({ node, messageId: "noProcessEnv" });
         }

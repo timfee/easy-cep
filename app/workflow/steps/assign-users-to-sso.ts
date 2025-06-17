@@ -25,7 +25,13 @@ export default createStep<CheckData>({
    * { "inboundSsoAssignments": [] }
    */
 
-  async check({ vars, fetchGoogle, markComplete, markIncomplete, markCheckFailed, log }) {
+  async check({
+    fetchGoogle,
+    markComplete,
+    markIncomplete,
+    markCheckFailed,
+    log
+  }) {
     try {
       const AssignSchema = z.object({
         inboundSsoAssignments: z
@@ -59,7 +65,14 @@ export default createStep<CheckData>({
     }
   },
 
-  async execute({ vars, fetchGoogle, markSucceeded, markFailed, markPending, log }) {
+  async execute({
+    vars,
+    fetchGoogle,
+    markSucceeded,
+    markFailed,
+    markPending,
+    log
+  }) {
     /**
      * POST https://cloudidentity.googleapis.com/v1/inboundSsoAssignments
      * {

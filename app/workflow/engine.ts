@@ -17,12 +17,12 @@ import "server-only";
 
 import {
   LogLevel,
+  StepCheckContext,
   StepId,
   StepLogEntry,
   StepUIState,
   Var,
-  WorkflowVars,
-  StepCheckContext
+  WorkflowVars
 } from "@/types";
 import { z } from "zod";
 import { getStep } from "./step-registry";
@@ -110,8 +110,8 @@ async function processStep<T extends StepId>(
   pushState({ status: "checking" });
 
   // Data carried from check() into execute() or propagated as newVars
-  type CheckType = Parameters<typeof step.check>[0] extends StepCheckContext<infer D>
-    ? D
+  type CheckType =
+    Parameters<typeof step.check>[0] extends StepCheckContext<infer D> ? D
     : never;
   let checkData!: CheckType;
   let checkFailed = false;
@@ -160,11 +160,9 @@ async function processStep<T extends StepId>(
     pushState({ status: "executing" });
 
     try {
-      // @ts-ignore dynamic checkData type for step.execute context
       await step.execute({
         ...baseContext,
         vars,
-        // @ts-ignore dynamic checkData type
         checkData,
         markSucceeded: (newVars) => {
           finalVars = newVars;

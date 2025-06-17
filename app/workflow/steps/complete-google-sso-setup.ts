@@ -9,9 +9,12 @@ export default createStep<CheckData>({
   requires: [Var.SamlProfileId, Var.EntityId, Var.AcsUrl, Var.IsDomainVerified],
   provides: [],
 
-  async check({ vars, markIncomplete, markComplete }) {
+  async check({ vars: _vars, markIncomplete, markComplete }) {
     try {
-      if (getVar(vars, Var.SsoAppId) /* placeholder: use correct var */ === "true") {
+      if (
+        getVar(_vars, Var.SsoAppId) /* placeholder: use correct var */
+        === "true"
+      ) {
         markComplete({});
       } else {
         markIncomplete("Manual configuration required", {});
@@ -21,7 +24,7 @@ export default createStep<CheckData>({
     }
   },
 
-  async execute({ vars, markSucceeded }) {
+  async execute({ markSucceeded }) {
     try {
       markSucceeded({});
     } catch {

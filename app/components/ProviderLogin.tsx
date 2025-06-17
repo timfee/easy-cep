@@ -24,7 +24,9 @@ export default function ProviderLogin({ onUpdate }: Props) {
     const data: SessionTokens = await res.json();
     const now = Date.now();
     const validGoogle =
-      data.googleAccessToken && data.googleExpiresAt && data.googleExpiresAt > now;
+      data.googleAccessToken
+      && data.googleExpiresAt
+      && data.googleExpiresAt > now;
     const validMicrosoft =
       data.msGraphToken && data.msGraphExpiresAt && data.msGraphExpiresAt > now;
 
@@ -51,59 +53,54 @@ export default function ProviderLogin({ onUpdate }: Props) {
     loadTokens();
   }, [loadTokens]);
 
-  const signOut = useCallback(
-    async (provider: Provider) => {
-      try {
-        await fetch(`/api/auth/signout/${provider}`, { method: "POST" });
-      } finally {
-        window.location.href = "/";
-      }
-    },
-    []
-  );
+  const signOut = useCallback(async (provider: Provider) => {
+    try {
+      await fetch(`/api/auth/signout/${provider}`, { method: "POST" });
+    } finally {
+      window.location.href = "/";
+    }
+  }, []);
 
   return (
     <div className="border p-4 rounded mb-4">
       <h2 className="font-semibold mb-2">Provider Login</h2>
       <div className="space-x-2">
-        {tokens.googleAccessToken ? (
+        {tokens.googleAccessToken ?
           <button
             className="px-2 py-1 bg-gray-600 text-white rounded"
-            onClick={() => signOut(PROVIDERS.GOOGLE)}
-          >
-            {`Sign out Google${tokens.googleExpiresAt
-              ? ` (valid until ${new Date(tokens.googleExpiresAt).toLocaleTimeString()})`
-              : ""}`}
+            onClick={() => signOut(PROVIDERS.GOOGLE)}>
+            {`Sign out Google${
+              tokens.googleExpiresAt ?
+                ` (valid until ${new Date(tokens.googleExpiresAt).toLocaleTimeString()})`
+              : ""
+            }`}
           </button>
-        ) : (
-          <button
+        : <button
             className="px-2 py-1 bg-blue-600 text-white rounded"
             onClick={() =>
               (window.location.href = `/api/auth/${PROVIDERS.GOOGLE}`)
-            }
-          >
+            }>
             Sign in with Google
           </button>
-        )}
-        {tokens.msGraphToken ? (
+        }
+        {tokens.msGraphToken ?
           <button
             className="px-2 py-1 bg-gray-600 text-white rounded"
-            onClick={() => signOut(PROVIDERS.MICROSOFT)}
-          >
-            {`Sign out Microsoft${tokens.msGraphExpiresAt
-              ? ` (valid until ${new Date(tokens.msGraphExpiresAt).toLocaleTimeString()})`
-              : ""}`}
+            onClick={() => signOut(PROVIDERS.MICROSOFT)}>
+            {`Sign out Microsoft${
+              tokens.msGraphExpiresAt ?
+                ` (valid until ${new Date(tokens.msGraphExpiresAt).toLocaleTimeString()})`
+              : ""
+            }`}
           </button>
-        ) : (
-          <button
+        : <button
             className="px-2 py-1 bg-blue-600 text-white rounded"
             onClick={() =>
               (window.location.href = `/api/auth/${PROVIDERS.MICROSOFT}`)
-            }
-          >
+            }>
             Sign in with Microsoft
           </button>
-        )}
+        }
       </div>
     </div>
   );

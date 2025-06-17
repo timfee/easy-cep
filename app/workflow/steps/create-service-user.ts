@@ -35,7 +35,14 @@ export default createStep<CheckData>({
    * { "error": { "code": 404 } }
    */
 
-  async check({ vars, fetchGoogle, markComplete, markIncomplete, markCheckFailed, log }) {
+  async check({
+    vars,
+    fetchGoogle,
+    markComplete,
+    markIncomplete,
+    markCheckFailed,
+    log
+  }) {
     try {
       const domain = getVar(vars, Var.PrimaryDomain) as string;
 
@@ -61,7 +68,14 @@ export default createStep<CheckData>({
     }
   },
 
-  async execute({ vars, fetchGoogle, checkData: _checkData, markSucceeded, markFailed, log }) {
+  async execute({
+    vars,
+    fetchGoogle,
+    checkData: _checkData,
+    markSucceeded,
+    markFailed,
+    log
+  }) {
     /**
      * POST https://admin.googleapis.com/admin/directory/v1/users
      * {

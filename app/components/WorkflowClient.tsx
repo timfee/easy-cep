@@ -1,7 +1,7 @@
 "use client";
 
 import { StepId, StepUIState, Var, WorkflowVars } from "@/types";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { checkStep, runStep } from "../workflow/engine";
 import ProviderLogin from "./ProviderLogin";
 import StepCard, { StepInfo } from "./StepCard";
@@ -17,11 +17,23 @@ export default function WorkflowClient({ steps }: Props) {
   );
   const [executing, setExecuting] = useState<StepId | null>(null);
 
-  const updateVars = useCallback(
-    (newVars: Partial<WorkflowVars>) =>
-      setVars((prev) => ({ ...prev, ...newVars })),
-    []
-  );
+  const updateVars = useCallback((newVars: Partial<WorkflowVars>) => {
+    const keys = Object.keys(newVars) as (keyof typeof newVars)[];
+    if (keys.length === 0) return;
+    setVars((prev) => {
+      let changed = false;
+      for (const k of keys) {
+        if (newVars[k] !== prev[k]) {
+          changed = true;
+          break;
+        }
+      }
+      if (!changed) {
+        return prev;
+      }
+      return { ...prev, ...newVars };
+    });
+  }, []);
 
   const updateStep = useCallback(
     (stepId: StepId, stepState: StepUIState) =>
@@ -29,19 +41,31 @@ export default function WorkflowClient({ steps }: Props) {
     []
   );
 
+  // Run checks once when auth tokens become available
+  const hasChecked = useRef(false);
   useEffect(() => {
+    if (hasChecked.current) return;
     if (!vars[Var.GoogleAccessToken] && !vars[Var.MsGraphToken]) return;
+    hasChecked.current = true;
     (async () => {
       for (const step of steps) {
         const missing = step.requires.filter((v) => !vars[v]);
         if (missing.length === 0) {
           const result = await checkStep(step.id, vars);
           updateStep(step.id, result.state);
-          updateVars(result.newVars);
+          if (Object.keys(result.newVars).length > 0) {
+            updateVars(result.newVars);
+          }
         }
       }
     })();
-  }, [vars, steps, updateStep, updateVars]);
+  }, [
+    vars[Var.GoogleAccessToken],
+    vars[Var.MsGraphToken],
+    steps,
+    updateStep,
+    updateVars
+  ]);
 
   async function handleExecute(id: StepId) {
     const def = steps.find((s) => s.id === id);
