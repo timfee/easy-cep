@@ -71,7 +71,8 @@ export default createStep<CheckData>({
               rolePrivileges: z.array(z.object({ serviceId: z.string() }))
             })
           )
-          .optional()
+          .optional(),
+        nextPageToken: z.string().optional()
       });
 
       let pageToken: string | undefined;

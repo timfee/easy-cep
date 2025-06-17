@@ -1,7 +1,6 @@
 import { OAUTH_STATE_COOKIE_NAME, PROVIDERS, Provider } from "@/constants";
 import { env } from "@/env";
-import { encrypt, generateState } from "@/lib/auth/crypto";
-import { generateAuthUrl } from "@/lib/auth/oauth";
+import { encrypt, generateAuthUrl, generateState } from "@/lib/auth";
 import { NextResponse } from "next/server";
 
 export async function GET(request: Request) {

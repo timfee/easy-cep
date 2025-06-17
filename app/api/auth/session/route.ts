@@ -1,5 +1,5 @@
 import { PROVIDERS } from "@/constants";
-import { getToken } from "@/lib/auth/tokens";
+import { getToken } from "@/lib/auth";
 import { NextResponse } from "next/server";
 
 export async function GET() {

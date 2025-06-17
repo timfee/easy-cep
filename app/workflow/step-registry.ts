@@ -14,7 +14,6 @@ import configureMicrosoftSyncAndSso from "./steps/configure-microsoft-sync-and-s
 import createAdminRoleAndAssignUser from "./steps/create-admin-role-and-assign-user";
 import createAutomationOu from "./steps/create-automation-ou";
 import createMicrosoftApps from "./steps/create-microsoft-apps";
-import createRoleAndAssignUser from "./steps/create-role-and-assign-user";
 import createServiceUser from "./steps/create-service-user";
 import setupMicrosoftClaimsPolicy from "./steps/setup-microsoft-claims-policy";
 import testSsoConfiguration from "./steps/test-sso-configuration";

@@ -4,7 +4,7 @@ This application automates the integration between **Google Workspace** and **Mi
 
 ## Setup
 
-Node.js and [PNPM](https://pnpm.io/) must be installed. Run `pnpm install` once before executing `pnpm check`, `pnpm dev`, or `pnpm lint` so that all dependencies are available.
+Node.js and [PNPM](https://pnpm.io/) must be installed. Run `pnpm install` once before executing `pnpm check`, `pnpm dev`, or `pnpm lint` so that all dependencies are available. Authentication utilities, including cookie helpers, reside in `./lib/auth.ts`.
 
 ## Architecture
 

@@ -1,5 +1,5 @@
 import { ApiEndpoint } from "@/constants";
-import { getChunkedCookie } from "@/lib/chunked-cookies";
+import { getChunkedCookie } from "@/lib/auth";
 import { NextResponse } from "next/server";
 
 export async function GET() {

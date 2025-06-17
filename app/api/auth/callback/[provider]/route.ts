@@ -1,6 +1,5 @@
 import { Provider } from "@/constants";
-import { exchangeCodeForToken } from "@/lib/auth/oauth";
-import { setToken, validateOAuthState } from "@/lib/auth/tokens";
+import { exchangeCodeForToken, setToken, validateOAuthState } from "@/lib/auth";
 import { NextResponse } from "next/server";
 
 export async function GET(request: Request) {
