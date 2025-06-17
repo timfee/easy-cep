@@ -43,9 +43,11 @@ export default function WorkflowClient({ steps }: Props) {
 
   // Run checks once when auth tokens become available
   const hasChecked = useRef(false);
+  const googleToken = vars[Var.GoogleAccessToken];
+  const msToken = vars[Var.MsGraphToken];
   useEffect(() => {
     if (hasChecked.current) return;
-    if (!vars[Var.GoogleAccessToken] && !vars[Var.MsGraphToken]) return;
+    if (!googleToken && !msToken) return;
     hasChecked.current = true;
     (async () => {
       for (const step of steps) {
@@ -59,13 +61,7 @@ export default function WorkflowClient({ steps }: Props) {
         }
       }
     })();
-  }, [
-    vars[Var.GoogleAccessToken],
-    vars[Var.MsGraphToken],
-    steps,
-    updateStep,
-    updateVars
-  ]);
+  }, [vars, googleToken, msToken, steps, updateStep, updateVars]);
 
   async function handleExecute(id: StepId) {
     const def = steps.find((s) => s.id === id);
