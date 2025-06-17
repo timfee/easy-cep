@@ -35,7 +35,7 @@ export default createStep<CheckData>({
     log
   }) {
     try {
-      const spId = getVar(vars, Var.SsoServicePrincipalId) as string;
+      const spId = getVar(vars, Var.SsoServicePrincipalId);
 
       const PoliciesSchema = z.object({
         value: z.array(z.object({ id: z.string() }))
@@ -75,7 +75,7 @@ export default createStep<CheckData>({
      * 204
      */
     try {
-      const spId = getVar(vars, Var.SsoServicePrincipalId) as string;
+      const spId = getVar(vars, Var.SsoServicePrincipalId);
 
       const PolicySchema = z.object({ id: z.string() });
 

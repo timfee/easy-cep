@@ -44,7 +44,7 @@ export default createStep<CheckData>({
     log
   }) {
     try {
-      const domain = getVar(vars, Var.PrimaryDomain) as string;
+      const domain = getVar(vars, Var.PrimaryDomain);
 
       const UserSchema = z.object({ id: z.string(), primaryEmail: z.string() });
       const url = `${ApiEndpoint.Google.Users}/azuread-provisioning@${domain}`;
@@ -96,7 +96,7 @@ export default createStep<CheckData>({
      * { "error": { "message": "Entity already exists." } }
      */
     try {
-      const domain = getVar(vars, Var.PrimaryDomain) as string;
+      const domain = getVar(vars, Var.PrimaryDomain);
 
       const BYTES = 4;
       const password = `Temp${crypto.randomBytes(BYTES).toString("hex")}!`;

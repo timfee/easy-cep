@@ -1,10 +1,10 @@
-import { ApiEndpoint } from "@/constants";
+import { ApiEndpoint, PROVIDERS } from "@/constants";
 import { getChunkedCookie } from "@/lib/auth";
 import { NextResponse } from "next/server";
 
 export async function GET() {
-  const googleToken = await getChunkedCookie("googleToken");
-  const msToken = await getChunkedCookie("msToken");
+  const googleToken = await getChunkedCookie(`${PROVIDERS.GOOGLE}_token`);
+  const msToken = await getChunkedCookie(`${PROVIDERS.MICROSOFT}_token`);
   const result = { google: { valid: false }, microsoft: { valid: false } };
 
   if (googleToken) {

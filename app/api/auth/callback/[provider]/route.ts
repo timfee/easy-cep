@@ -27,8 +27,8 @@ export async function GET(request: Request) {
 
   try {
     const token = await exchangeCodeForToken(provider, code, baseUrl);
-    await setToken(provider, token);
     const response = NextResponse.redirect(`${baseUrl}/`);
+    await setToken(response, provider, token);
     return response;
   } catch (err) {
     console.error(err);
