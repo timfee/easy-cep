@@ -92,7 +92,7 @@ export default createStep<CheckData>({
      * { "error": { "message": "Assignment already exists" } }
      */
     try {
-      const profileId = getVar(vars, Var.SamlProfileId) as string;
+      const profileId = getVar(vars, Var.SamlProfileId);
 
       const OpSchema = z.object({
         name: z.string(),

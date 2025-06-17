@@ -41,7 +41,7 @@ export default createStep<CheckData>({
   }) {
     try {
       const ouName = OrgUnit.AutomationName;
-      const OrgUnitSchema = z.object({ orgUnitPath: z.string() }).passthrough();
+      const OrgUnitSchema = z.object({ orgUnitPath: z.string() });
       await fetchGoogle(
         `${ApiEndpoint.Google.OrgUnits}/${encodeURIComponent(ouName)}`,
         OrgUnitSchema
@@ -79,13 +79,11 @@ export default createStep<CheckData>({
      * { "error": { "message": "Invalid Ou Id" } }
      */
     try {
-      const CreateSchema = z
-        .object({
-          orgUnitPath: z.string(),
-          name: z.string(),
-          parentOrgUnitId: z.string()
-        })
-        .passthrough();
+      const CreateSchema = z.object({
+        orgUnitPath: z.string(),
+        name: z.string(),
+        parentOrgUnitId: z.string()
+      });
 
       await fetchGoogle(ApiEndpoint.Google.OrgUnits, CreateSchema, {
         method: "POST",

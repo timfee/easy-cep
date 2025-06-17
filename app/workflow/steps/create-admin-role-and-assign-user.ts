@@ -294,9 +294,7 @@ export default createStep<CheckData>({
       if (!roleId) throw new Error("Role ID unavailable after create");
 
       const userId = getVar(vars, Var.ProvisioningUserId);
-      const AssignSchema = z
-        .object({ kind: z.string().optional() })
-        .passthrough();
+      const AssignSchema = z.object({ kind: z.string().optional() });
       try {
         /**
          * POST https://admin.googleapis.com/admin/directory/v1/customer/my_customer/roleassignments

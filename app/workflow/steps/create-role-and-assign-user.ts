@@ -1,7 +1,7 @@
 import { ApiEndpoint } from "@/constants";
 import { LogLevel, StepId, Var } from "@/types";
 import { z } from "zod";
-import { createStep } from "../create-step";
+import { createStep, getVar } from "../create-step";
 
 interface CheckData {
   adminRoleId?: string;
@@ -213,10 +213,8 @@ export default createStep<CheckData>({
       if (!roleId) throw new Error("Role ID unavailable after create");
 
       if (!checkData.hasAssignment) {
-        const AssignSchema = z
-          .object({ kind: z.string().optional() })
-          .passthrough();
-        const userId = vars.provisioningUserId as string;
+        const AssignSchema = z.object({ kind: z.string().optional() });
+        const userId = getVar(vars, Var.ProvisioningUserId);
         try {
           await fetchGoogle(ApiEndpoint.Google.RoleAssignments, AssignSchema, {
             method: "POST",

@@ -38,7 +38,7 @@ export default createStep<CheckData>({
     log
   }) {
     try {
-      const spId = getVar(vars, Var.ProvisioningServicePrincipalId) as string;
+      const spId = getVar(vars, Var.ProvisioningServicePrincipalId);
 
       const JobsSchema = z.object({
         value: z.array(z.object({ status: z.object({ code: z.string() }) }))
@@ -83,8 +83,8 @@ export default createStep<CheckData>({
      * 204
      */
     try {
-      const spId = getVar(vars, Var.ProvisioningServicePrincipalId) as string;
-      const password = getVar(vars, Var.GeneratedPassword) as string;
+      const spId = getVar(vars, Var.ProvisioningServicePrincipalId);
+      const password = getVar(vars, Var.GeneratedPassword);
 
       const PatchSchema = z.object({});
 

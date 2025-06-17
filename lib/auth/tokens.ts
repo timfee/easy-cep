@@ -7,13 +7,15 @@ import { env } from "@/env";
 import { cookies } from "next/headers";
 import { decrypt, encrypt } from "./crypto";
 import { Token } from "./oauth";
+import { getChunkedCookie, setChunkedCookie, clearChunkedCookie } from "@/lib/chunked-cookies";
+import { NextResponse } from "next/server";
 
 export async function getToken(provider: Provider): Promise<Token | null> {
   const cookieName = `${provider}_token`;
-  const cookie = (await cookies()).get(cookieName);
-  if (!cookie) return null;
+  const encrypted = await getChunkedCookie(cookieName);
+  if (!encrypted) return null;
   try {
-    const data = decrypt(cookie.value);
+    const data = decrypt(encrypted);
     return JSON.parse(data) as Token;
   } catch {
     return null;
@@ -21,29 +23,24 @@ export async function getToken(provider: Provider): Promise<Token | null> {
 }
 
 export async function setToken(
+  response: NextResponse,
   provider: Provider,
   token: Token
 ): Promise<void> {
   const encrypted = encrypt(JSON.stringify(token));
   const cookieName = `${provider}_token`;
-  (await cookies()).set({
-    name: cookieName,
-    value: encrypted,
-    httpOnly: true,
-    secure: env.NODE_ENV === "production",
-    path: "/",
-    maxAge: WORKFLOW_CONSTANTS.TOKEN_COOKIE_MAX_AGE
-  });
+  await clearChunkedCookie(response, cookieName);
+  await setChunkedCookie(response, cookieName, encrypted);
 }
 
 export async function validateOAuthState(
   state: string,
   provider: Provider
 ): Promise<boolean> {
-  const cookie = (await cookies()).get(OAUTH_STATE_COOKIE_NAME);
-  if (!cookie) return false;
+  const encrypted = await getChunkedCookie(OAUTH_STATE_COOKIE_NAME);
+  if (!encrypted) return false;
   try {
-    const data = JSON.parse(decrypt(cookie.value));
+    const data = JSON.parse(decrypt(encrypted));
     return (
       data.state === state
       && data.provider === provider
