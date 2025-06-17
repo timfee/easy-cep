@@ -13,20 +13,19 @@ import {
 import { z } from "zod";
 import { getStep } from "./step-registry";
 
-export async function runStep(
+async function processStep(
   stepId: StepId,
   vars: Partial<WorkflowVars>,
-  updateVars: (newVars: Partial<WorkflowVars>) => void,
-  updateStepState: (stepId: StepId, state: StepUIState) => void
-): Promise<void> {
+  execute: boolean
+): Promise<{ state: StepUIState; newVars: Partial<WorkflowVars> }> {
   const step = getStep(stepId);
 
   let logs: StepLogEntry[] = [];
   let currentState: StepUIState = { status: "idle", logs };
+  let finalVars: Partial<WorkflowVars> = {};
 
   const pushState = (data: Partial<StepUIState>) => {
     currentState = { ...currentState, ...data, logs };
-    updateStepState(stepId, currentState);
   };
 
   const addLog = (entry: StepLogEntry) => {
@@ -128,35 +127,55 @@ export async function runStep(
         "Check error: "
         + (error instanceof Error ? error.message : "Unknown error")
     });
-    return;
+    return { state: currentState, newVars: finalVars };
   }
 
-  if (checkFailed || isComplete) return;
-
-  // EXECUTE PHASE
-  pushState({ status: "executing" });
-
-  try {
-    await step.execute({
-      ...baseContext,
-      checkData,
-      markSucceeded: (newVars) => {
-        updateVars(newVars);
-        pushState({ status: "complete", summary: "Succeeded" });
-      },
-      markFailed: (error) => {
-        pushState({ status: "failed", error });
-      },
-      markPending: (notes) => {
-        pushState({ status: "pending", notes });
-      }
-    });
-  } catch (error) {
-    pushState({
-      status: "failed",
-      error:
-        "Execute error: "
-        + (error instanceof Error ? error.message : "Unknown error")
-    });
+  if (checkFailed || isComplete) {
+    return { state: currentState, newVars: finalVars };
   }
+
+  if (execute) {
+    // EXECUTE PHASE
+    pushState({ status: "executing" });
+
+    try {
+      await step.execute({
+        ...baseContext,
+        checkData,
+        markSucceeded: (newVars) => {
+          finalVars = newVars;
+          pushState({ status: "complete", summary: "Succeeded" });
+        },
+        markFailed: (error) => {
+          pushState({ status: "failed", error });
+        },
+        markPending: (notes) => {
+          pushState({ status: "pending", notes });
+        }
+      });
+    } catch (error) {
+      pushState({
+        status: "failed",
+        error:
+          "Execute error: "
+          + (error instanceof Error ? error.message : "Unknown error")
+      });
+    }
+  }
+
+  return { state: currentState, newVars: finalVars };
+}
+
+export async function runStep(
+  stepId: StepId,
+  vars: Partial<WorkflowVars>
+): Promise<{ state: StepUIState; newVars: Partial<WorkflowVars> }> {
+  return processStep(stepId, vars, true);
+}
+
+export async function checkStep(
+  stepId: StepId,
+  vars: Partial<WorkflowVars>
+): Promise<{ state: StepUIState; newVars: Partial<WorkflowVars> }> {
+  return processStep(stepId, vars, false);
 }
