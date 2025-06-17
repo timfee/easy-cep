@@ -72,7 +72,8 @@ export default createStep<CheckData>({
               rolePrivileges: z.array(z.object({ serviceId: z.string() }))
             })
           )
-          .optional()
+          .optional(),
+        nextPageToken: z.string().optional()
       });
 
       const { items = [] } = await fetchGoogle(

@@ -1,7 +1,12 @@
 import { OAUTH_STATE_COOKIE_NAME, PROVIDERS, Provider } from "@/constants";
-import { encrypt, generateState } from "@/lib/auth/crypto";
-import { generateAuthUrl } from "@/lib/auth/oauth";
-import { clearChunkedCookie, setChunkedCookie } from "@/lib/chunked-cookies";
+import {
+  clearChunkedCookie,
+  encrypt,
+  generateAuthUrl,
+  generateState,
+  setChunkedCookie
+} from "@/lib/auth";
+
 import { NextResponse } from "next/server";
 
 export async function GET(request: Request) {
