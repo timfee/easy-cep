@@ -1,4 +1,5 @@
 import { Provider } from "@/constants";
+import { clearChunkedCookie } from "@/lib/auth";
 import { NextResponse } from "next/server";
 
 /**
@@ -14,6 +15,6 @@ export async function POST(request: Request) {
   const cookieName = `${provider}_token`;
   const baseUrl = url.protocol + "//" + url.host;
   const response = NextResponse.redirect(`${baseUrl}/`);
-  response.cookies.set({ name: cookieName, value: "", maxAge: 0, path: "/" });
+  await clearChunkedCookie(response, cookieName);
   return response;
 }

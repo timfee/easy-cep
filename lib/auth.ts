@@ -14,6 +14,10 @@ import {
 } from "crypto";
 import { cookies } from "next/headers";
 import { NextResponse } from "next/server";
+/** Cookie option type for NextResponse.cookies.set */
+// disable magic number for tuple index accessing the third parameter type
+// eslint-disable-next-line no-magic-numbers
+type CookieOptions = Parameters<NextResponse["cookies"]["set"]>[2];
 
 /** Size of each cookie chunk in bytes */
 const CHUNK_SIZE = 3800;
@@ -195,12 +199,13 @@ export async function exchangeCodeForToken(
 }
 
 /** Retrieve an encrypted token from cookies. */
+/** Retrieve an encrypted token from chunked cookies. */
 export async function getToken(provider: Provider): Promise<Token | null> {
   const cookieName = `${provider}_token`;
-  const cookie = (await cookies()).get(cookieName);
-  if (!cookie) return null;
+  const encrypted = await getChunkedCookie(cookieName);
+  if (!encrypted) return null;
   try {
-    const data = decrypt(cookie.value);
+    const data = decrypt(encrypted);
     return JSON.parse(data) as Token;
   } catch {
     return null;
@@ -208,15 +213,16 @@ export async function getToken(provider: Provider): Promise<Token | null> {
 }
 
 /** Store an encrypted token in cookies. */
+/** Store an encrypted token in chunked cookies. */
 export async function setToken(
+  response: NextResponse,
   provider: Provider,
   token: Token
 ): Promise<void> {
   const encrypted = encrypt(JSON.stringify(token));
   const cookieName = `${provider}_token`;
-  (await cookies()).set({
-    name: cookieName,
-    value: encrypted,
+  await clearChunkedCookie(response, cookieName);
+  await setChunkedCookie(response, cookieName, encrypted, {
     httpOnly: true,
     secure: env.NODE_ENV === "production",
     path: "/",
@@ -227,14 +233,15 @@ export async function setToken(
 /**
  * Validate and clear the OAuth state cookie.
  */
+/** Validate the OAuth state stored in chunked cookies. */
 export async function validateOAuthState(
   state: string,
   provider: Provider
 ): Promise<boolean> {
-  const cookie = (await cookies()).get(OAUTH_STATE_COOKIE_NAME);
-  if (!cookie) return false;
+  const encrypted = await getChunkedCookie(OAUTH_STATE_COOKIE_NAME);
+  if (!encrypted) return false;
   try {
-    const data = JSON.parse(decrypt(cookie.value));
+    const data = JSON.parse(decrypt(encrypted));
     return (
       data.state === state
       && data.provider === provider
@@ -249,13 +256,15 @@ export async function validateOAuthState(
 export async function setChunkedCookie(
   response: NextResponse,
   name: string,
-  value: string
+  value: string,
+  options?: CookieOptions
 ) {
   const chunks = Math.ceil(value.length / CHUNK_SIZE);
+  const defaults: CookieOptions = { httpOnly: true, path: "/" };
   for (let i = 0; i < chunks; i++) {
     const chunk = value.slice(i * CHUNK_SIZE, (i + 1) * CHUNK_SIZE);
     const cookieName = i === 0 ? name : `${name}-${i}`;
-    response.cookies.set(cookieName, chunk, { httpOnly: true, path: "/" });
+    response.cookies.set(cookieName, chunk, { ...defaults, ...options });
   }
 }
 

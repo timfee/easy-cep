@@ -31,6 +31,7 @@ _check_ success:
 - 201 returns user info
   _execute_ errors:
 - 409 user already exists handled
+
 ### createAdminRoleAndAssignUser
 
 _check_ success:

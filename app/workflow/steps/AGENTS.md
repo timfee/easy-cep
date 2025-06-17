@@ -356,7 +356,6 @@ adminRoleId = .roleId
 
 #### Step 4 Execution Request 3: Assign Role
 
-
 ```http
 POST https://admin.googleapis.com/admin/directory/v1/customer/my_customer/roleassignments
 Authorization: Bearer {googleAccessToken}
@@ -368,7 +367,9 @@ Content-Type: application/json
   "scopeType": "CUSTOMER"
 }
 ```
+
 Expected: `201 Created` or `409 Conflict`
+
 #### Step 4 Expected Responses (Assign Role)
 
 - `200 OK` or `409 Conflict`
