@@ -454,8 +454,21 @@ Content-Type: application/json
 
 #### Expected Responses
 
-- `200 OK` with `operation` and `done: true`
-  → Details in `.response`
+- `200 OK` returning an [Operation](https://cloud.google.com/identity/docs/reference/rest/Shared.Types/Operation)
+  when `done: true`, profile details are under `.response`
+
+Example:
+
+```json
+{
+  "name": "operations/abc123",
+  "done": true,
+  "response": {
+    "name": "inboundSamlSsoProfiles/010xi5tr1szon40",
+    "spConfig": { "entityId": "...", "assertionConsumerServiceUri": "..." }
+  }
+}
+```
 
 Extract:
 
@@ -747,7 +760,7 @@ Content-Type: application/json
 
 #### Expected Responses
 
-- `200 OK` (operation returned)
+- `200 OK` returning an [Operation](https://cloud.google.com/identity/docs/reference/rest/Shared.Types/Operation) with `done: true`
 - `409 Conflict` (already assigned)
 
 ## Step 12: `testSsoConfiguration`

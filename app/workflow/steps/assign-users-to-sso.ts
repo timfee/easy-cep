@@ -66,7 +66,7 @@ export default createStep<CheckData>({
     }
   },
 
-  async execute({ fetchGoogle, markSucceeded, markFailed, log }) {
+  async execute({ fetchGoogle, markSucceeded, markFailed, markPending, log }) {
     /**
      * POST https://cloudidentity.googleapis.com/v1/inboundSsoAssignments
      * {
@@ -92,16 +92,40 @@ export default createStep<CheckData>({
         return;
       }
 
-      const OpSchema = z.object({});
-
-      await fetchGoogle(ApiEndpoint.Google.SsoAssignments, OpSchema, {
-        method: "POST",
-        body: JSON.stringify({
-          targetGroup: { id: GroupId.AllUsers },
-          samlSsoInfo: { inboundSamlSsoProfile: profileId },
-          ssoMode: "SAML_SSO"
-        })
+      const OpSchema = z.object({
+        name: z.string(),
+        done: z.boolean(),
+        error: z
+          .object({
+            message: z.string(),
+            code: z.number().optional(),
+            status: z.string().optional()
+          })
+          .optional()
       });
+
+      const op = await fetchGoogle(
+        ApiEndpoint.Google.SsoAssignments,
+        OpSchema,
+        {
+          method: "POST",
+          body: JSON.stringify({
+            targetGroup: { id: GroupId.AllUsers },
+            samlSsoInfo: { inboundSamlSsoProfile: profileId },
+            ssoMode: "SAML_SSO"
+          })
+        }
+      );
+      if (!op.done) {
+        markPending("User assignment operation in progress");
+        return;
+      }
+
+      if (op.error) {
+        log(LogLevel.Error, "Assignment failed", { error: op.error });
+        markFailed(op.error.message);
+        return;
+      }
 
       markSucceeded({});
     } catch (error) {
