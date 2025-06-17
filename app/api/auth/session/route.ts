@@ -7,6 +7,8 @@ export async function GET() {
   const microsoft = await getToken(PROVIDERS.MICROSOFT);
   return NextResponse.json({
     googleAccessToken: google?.accessToken,
-    msGraphToken: microsoft?.accessToken
+    googleExpiresAt: google?.expiresAt,
+    msGraphToken: microsoft?.accessToken,
+    msGraphExpiresAt: microsoft?.expiresAt
   });
 }

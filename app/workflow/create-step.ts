@@ -17,7 +17,8 @@ import type {
   StepDefinition,
   StepExecuteContext,
   StepId,
-  Var
+  Var,
+  WorkflowVars
 } from "@/types";
 
 /**
@@ -31,7 +32,7 @@ import type {
  *               Inferred from the `provides` property.
  */
 export function createStep<
-  D,
+  D extends Partial<WorkflowVars>,
   R extends readonly Var[] = Var[],
   P extends readonly Var[] = Var[]
 >(args: {

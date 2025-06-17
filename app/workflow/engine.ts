@@ -150,11 +150,8 @@ async function processStep(
   }
 
   if (isComplete) {
-    const newVarsFromCheck: Partial<WorkflowVars> = {};
-    for (const v of step.provides) {
-      newVarsFromCheck[v] = (checkData as any)[v];
-    }
-    return { state: currentState, newVars: newVarsFromCheck };
+    // Propagate any variables gathered during check for completed steps
+    return { state: currentState, newVars: checkData };
   }
 
   if (execute) {
