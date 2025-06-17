@@ -76,7 +76,7 @@ export default createStep<CheckData>({
     }
   },
 
-  async execute({ fetchGoogle, markSucceeded, markFailed, log }) {
+  async execute({ fetchGoogle, markSucceeded, markFailed, markPending, log }) {
     /**
      * POST https://cloudidentity.googleapis.com/v1/customers/my_customer/inboundSamlSsoProfiles
      * {
@@ -103,7 +103,18 @@ export default createStep<CheckData>({
         })
       });
 
-      const opSchema = z.object({ done: z.boolean(), response: CreateSchema });
+      const opSchema = z.object({
+        name: z.string(),
+        done: z.boolean(),
+        response: CreateSchema.optional(),
+        error: z
+          .object({
+            message: z.string(),
+            code: z.number().optional(),
+            status: z.string().optional()
+          })
+          .optional()
+      });
 
       const createUrl = `${ApiEndpoint.Google.SsoProfiles.replace(
         "/inboundSamlSsoProfiles",
@@ -117,7 +128,23 @@ export default createStep<CheckData>({
         })
       });
 
+      if (!op.done) {
+        markPending("SAML profile creation in progress");
+        return;
+      }
+
+      if (op.error) {
+        log(LogLevel.Error, "Operation failed", { error: op.error });
+        markFailed(op.error.message);
+        return;
+      }
+
       const profile = op.response;
+
+      if (!profile) {
+        markFailed("Missing profile in response");
+        return;
+      }
 
       markSucceeded({
         [Var.SamlProfileId]: profile.name,
