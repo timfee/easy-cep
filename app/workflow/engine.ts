@@ -47,56 +47,86 @@ async function processStep<T extends StepIdValue>(
     pushState({});
   };
 
-  const createFetch =
-    (token: string | undefined) =>
-    async <T>(
+  const createFetch = (token: string | undefined) => {
+    type FetchOpts = RequestInit & { flatten?: boolean };
+    return async <T>(
       url: string,
       schema: z.ZodSchema<T>,
-      init?: Omit<RequestInit, "headers">
+      init?: FetchOpts
     ): Promise<T> => {
       if (!token) throw new Error("No auth token available");
 
-      const method = (init as RequestInit | undefined)?.method ?? "GET";
-      const body = (init as RequestInit | undefined)?.body;
-      addLog({
-        timestamp: Date.now(),
-        message: `Request ${method} ${url}`,
-        data: body,
-        level: LogLevel.Debug
-      });
+      // Extract flatten flag from init, and prepare request options
+      const { flatten, ...reqInit } = (init as FetchOpts) ?? {};
 
-      const headers = (init as RequestInit | undefined)?.headers;
-      const res = await fetch(url, {
-        ...(init as RequestInit),
-        headers: {
-          ...(headers ?? {}),
-          Authorization: `Bearer ${token}`,
-          "Content-Type": "application/json"
+      // Single-page fetch helper
+      const fetchPage = async (pageUrl: string): Promise<T> => {
+        const method = reqInit.method ?? "GET";
+        const body = reqInit.body;
+        addLog({
+          timestamp: Date.now(),
+          message: `Request ${method} ${pageUrl}`,
+          data: body,
+          level: LogLevel.Debug
+        });
+
+        const res = await fetch(pageUrl, {
+          ...reqInit,
+          headers: {
+            ...(reqInit.headers ?? {}),
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json"
+          }
+        });
+        const clone = res.clone();
+        let logData: unknown;
+        try {
+          logData = await clone.json();
+        } catch {
+          logData = await clone.text();
         }
-      });
+        addLog({
+          timestamp: Date.now(),
+          message: `Response ${res.status} ${pageUrl}`,
+          data: logData,
+          level: LogLevel.Debug
+        });
+        if (!res.ok) throw new Error(`HTTP ${res.status}: ${res.statusText}`);
+        const json = await res.json();
+        return schema.parse(json);
+      };
 
-      const clone = res.clone();
-      let logData: unknown;
-      try {
-        logData = await clone.json();
-      } catch {
-        logData = await clone.text();
+      // If flatten is requested, accumulate paginated 'items'
+      if (flatten) {
+        let aggregated: T | undefined;
+        let nextToken: string | undefined;
+        const allItems: unknown[] = [];
+        const baseUrl = url;
+        do {
+          let pageUrl = baseUrl;
+          if (nextToken) {
+            const sep = baseUrl.includes("?") ? "&" : "?";
+            pageUrl = `${baseUrl}${sep}pageToken=${encodeURIComponent(nextToken)}`;
+          }
+          const page = await fetchPage(pageUrl);
+          if (aggregated === undefined) aggregated = page;
+          const p = page as unknown as {
+            items?: unknown[];
+            nextPageToken?: string;
+          };
+          if (Array.isArray(p.items)) allItems.push(...p.items);
+          nextToken = p.nextPageToken;
+        } while (nextToken);
+        const result = aggregated as unknown as { items: unknown[] };
+        result.items = allItems;
+        delete (result as unknown as { nextPageToken?: string }).nextPageToken;
+        return aggregated!;
       }
 
-      addLog({
-        timestamp: Date.now(),
-        message: `Response ${res.status} ${url}`,
-        data: logData,
-        level: LogLevel.Debug
-      });
-
-      if (!res.ok) {
-        throw new Error(`HTTP ${res.status}: ${res.statusText}`);
-      }
-
-      const json = await res.json();
-      return schema.parse(json);
+      // Default single fetch
+      return fetchPage(url);
     };
+  };
 
   const baseContext = {
     fetchGoogle: createFetch(vars[Var.GoogleAccessToken] as string | undefined),

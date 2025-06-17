@@ -193,13 +193,12 @@ export default createStep<CheckData>({
         if (error instanceof Error && error.message.includes("409")) {
           if (!roleId) {
             const RolesSchema = z.object({
-              items: z.array(
-                z.object({ roleId: z.string(), roleName: z.string() })
-              )
+              items: z.array(z.object({ roleId: z.string(), roleName: z.string() })).optional()
             });
-            const { items: roles } = await fetchGoogle(
+            const { items: roles = [] } = await fetchGoogle(
               ApiEndpoint.Google.Roles,
-              RolesSchema
+              RolesSchema,
+              { flatten: true }
             );
             roleId = roles.find(
               (r) => r.roleName === "Microsoft Entra Provisioning"
