@@ -1,6 +1,6 @@
 "use client";
 
-import { StepId, StepUIState, WorkflowVars } from "@/types";
+import { StepIdValue, StepUIState, WorkflowVars } from "@/types";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { checkStep, runStep } from "../workflow/engine";
 import ProviderLogin from "./ProviderLogin";
@@ -12,10 +12,10 @@ interface Props {
 
 export default function WorkflowClient({ steps }: Props) {
   const [vars, setVars] = useState<Partial<WorkflowVars>>({});
-  const [status, setStatus] = useState<Partial<Record<StepId, StepUIState>>>(
-    {}
-  );
-  const [executing, setExecuting] = useState<StepId | null>(null);
+  const [status, setStatus] = useState<
+    Partial<Record<StepIdValue, StepUIState>>
+  >({});
+  const [executing, setExecuting] = useState<StepIdValue | null>(null);
 
   const updateVars = useCallback((newVars: Partial<WorkflowVars>) => {
     const keys = Object.keys(newVars) as (keyof typeof newVars)[];
@@ -36,13 +36,13 @@ export default function WorkflowClient({ steps }: Props) {
   }, []);
 
   const updateStep = useCallback(
-    (stepId: StepId, stepState: StepUIState) =>
+    (stepId: StepIdValue, stepState: StepUIState) =>
       setStatus((prev) => ({ ...prev, [stepId]: stepState })),
     []
   );
 
   // Check steps when their required vars become available
-  const checkedSteps = useRef(new Set<StepId>());
+  const checkedSteps = useRef(new Set<StepIdValue>());
   useEffect(() => {
     (async () => {
       for (const step of steps) {
@@ -60,7 +60,7 @@ export default function WorkflowClient({ steps }: Props) {
     })();
   }, [vars, steps, updateStep, updateVars]);
 
-  async function handleExecute(id: StepId) {
+  async function handleExecute(id: StepIdValue) {
     const def = steps.find((s) => s.id === id);
     if (!def) return;
     const missing = def.requires.filter((v) => !vars[v]);

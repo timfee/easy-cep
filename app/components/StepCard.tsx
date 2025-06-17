@@ -1,11 +1,11 @@
 "use client";
-import { StepId, StepUIState, Var, WorkflowVars } from "@/types";
+import { StepIdValue, StepUIState, VarName, WorkflowVars } from "@/types";
 import StepLogs from "./StepLogs";
 
 export interface StepInfo {
-  id: StepId;
-  requires: readonly Var[];
-  provides: readonly Var[];
+  id: StepIdValue;
+  requires: readonly VarName[];
+  provides: readonly VarName[];
 }
 
 interface StepCardProps {
@@ -13,7 +13,7 @@ interface StepCardProps {
   state?: StepUIState;
   vars: Partial<WorkflowVars>;
   executing: boolean;
-  onExecute(id: StepId): void;
+  onExecute(id: StepIdValue): void;
 }
 
 export default function StepCard({

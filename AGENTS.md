@@ -8,7 +8,7 @@ Each step performs one logical operation (e.g. creating a user or assigning a ro
 
 Place your step definition in: `./app/workflow/steps/{step-id}.ts`
 
-Use `kebab-case` for filenames. The `step-id` must match one of the values in `StepId` (see `./types.ts`).
+Use `kebab-case` for filenames. The `step-id` must match one of the values in `StepId` (see `./app/workflow/step-ids.ts`).
 
 There is an `AGENTS.md` file in `./app/workflow/steps` that will provide the API contracts you can expect.
 

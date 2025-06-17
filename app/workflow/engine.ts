@@ -18,7 +18,7 @@ import "server-only";
 import {
   LogLevel,
   StepCheckContext,
-  StepId,
+  StepIdValue,
   StepLogEntry,
   StepUIState,
   Var,
@@ -27,7 +27,7 @@ import {
 import { z } from "zod";
 import { getStep } from "./step-registry";
 
-async function processStep<T extends StepId>(
+async function processStep<T extends StepIdValue>(
   stepId: T,
   vars: Partial<WorkflowVars>,
   execute: boolean
@@ -188,14 +188,14 @@ async function processStep<T extends StepId>(
   return { state: currentState, newVars: finalVars };
 }
 
-export async function runStep<T extends StepId>(
+export async function runStep<T extends StepIdValue>(
   stepId: T,
   vars: Partial<WorkflowVars>
 ): Promise<{ state: StepUIState; newVars: Partial<WorkflowVars> }> {
   return processStep(stepId, vars, true);
 }
 
-export async function checkStep<T extends StepId>(
+export async function checkStep<T extends StepIdValue>(
   stepId: T,
   vars: Partial<WorkflowVars>
 ): Promise<{ state: StepUIState; newVars: Partial<WorkflowVars> }> {

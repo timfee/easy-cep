@@ -1,43 +1,13 @@
 import { z } from "zod";
+import type { StepIdValue } from "./app/workflow/step-ids";
+import type { VarName, WorkflowVars } from "./app/workflow/variables";
 
-export enum Var {
-  GoogleAccessToken = "googleAccessToken",
-  MsGraphToken = "msGraphToken",
-  PrimaryDomain = "primaryDomain",
-  IsDomainVerified = "isDomainVerified",
-  ProvisioningUserId = "provisioningUserId",
-  ProvisioningUserEmail = "provisioningUserEmail",
-  GeneratedPassword = "generatedPassword",
-  AdminRoleId = "adminRoleId",
-  DirectoryServiceId = "directoryServiceId",
-  SsoServicePrincipalId = "ssoServicePrincipalId",
-  ProvisioningServicePrincipalId = "provisioningServicePrincipalId",
-  SsoAppId = "ssoAppId",
-  SamlProfileId = "samlProfileId",
-  EntityId = "entityId",
-  AcsUrl = "acsUrl",
-  ClaimsPolicyId = "claimsPolicyId"
-}
+// Re-export workflow types from their new locations
+export { StepId } from "./app/workflow/step-ids";
+export { Var } from "./app/workflow/variables";
+export type { StepIdValue, VarName, WorkflowVars };
 
-export type WorkflowVars = { [K in Var]: string | boolean };
-
-// Workflow steps should use this ID as a filename
-// in ./app/workflow/steps/{filename-in-kebab-case}.ts
-export enum StepId {
-  VerifyPrimaryDomain = "verifyPrimaryDomain",
-  CreateAutomationOU = "createAutomationOU",
-  CreateServiceUser = "createServiceUser",
-  CreateCustomAdminRole = "createCustomAdminRole",
-  AssignRoleToUser = "assignRoleToUser",
-  ConfigureGoogleSamlProfile = "configureGoogleSamlProfile",
-  CreateMicrosoftApps = "createMicrosoftApps",
-  ConfigureMicrosoftSyncAndSso = "configureMicrosoftSyncAndSso",
-  SetupMicrosoftClaimsPolicy = "setupMicrosoftClaimsPolicy",
-  CompleteGoogleSsoSetup = "completeGoogleSsoSetup",
-  AssignUsersToSso = "assignUsersToSso",
-  TestSsoConfiguration = "testSsoConfiguration"
-}
-
+// Keep only the general types here
 export enum StepOutcome {
   Succeeded = "Succeeded",
   Failed = "Failed",
@@ -52,21 +22,16 @@ export enum LogLevel {
 }
 
 export interface StepDefinition<
-  R extends readonly Var[],
-  P extends readonly Var[]
+  R extends readonly VarName[],
+  P extends readonly VarName[]
 > {
-  /** Unique ID for the step */
-  id: StepId;
-
-  /** Variables that must be present before this step can run */
+  id: StepIdValue;
   requires: R;
-
-  /** Variables this step will populate if successful */
   provides: P;
 }
 
 export interface StepRunResult {
-  id: StepId;
+  id: StepIdValue;
   outcome: StepOutcome;
   summary: string;
   vars: Partial<WorkflowVars>;
@@ -84,10 +49,7 @@ export interface StepCheckContext<T> {
     init?: Omit<RequestInit, "headers">
   ): Promise<R>;
   log(level: LogLevel, message: string, data?: unknown): void;
-
-  /** Current workflow variables available to this step */
   vars: Partial<WorkflowVars>;
-
   markComplete(data: T): void;
   markIncomplete(summary: string, data: T): void;
   markCheckFailed(error: string): void;
@@ -105,12 +67,8 @@ export interface StepExecuteContext<T> {
     init?: Omit<RequestInit, "headers">
   ): Promise<R>;
   log(level: LogLevel, message: string, data?: unknown): void;
-
-  /** Current workflow variables available to this step */
   vars: Partial<WorkflowVars>;
-
   checkData: T;
-
   markSucceeded(vars: Partial<WorkflowVars>): void;
   markFailed(error: string): void;
   markPending(notes: string): void;

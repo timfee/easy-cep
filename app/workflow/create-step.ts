@@ -16,8 +16,8 @@ import type {
   StepCheckContext,
   StepDefinition,
   StepExecuteContext,
-  StepId,
-  Var,
+  StepIdValue,
+  VarName,
   WorkflowVars
 } from "@/types";
 
@@ -33,11 +33,11 @@ import type {
  */
 export function createStep<
   D extends Partial<WorkflowVars>,
-  R extends readonly Var[] = Var[],
-  P extends readonly Var[] = Var[]
+  R extends readonly VarName[] = VarName[],
+  P extends readonly VarName[] = VarName[]
 >(args: {
   /** Unique identifier for the step */
-  id: StepId;
+  id: StepIdValue;
   /** Variables that must be present before the step may execute */
   requires: R;
   /** Variables provided when the step has executed successfully */
@@ -74,7 +74,7 @@ export function createStep<
 /**
  * Safely extract a required workflow variable, or throw if missing.
  */
-export function getVar<K extends Var>(
+export function getVar<K extends VarName>(
   vars: Partial<WorkflowVars>,
   key: K
 ): WorkflowVars[K] {
