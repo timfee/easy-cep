@@ -145,8 +145,16 @@ async function processStep(
     return { state: currentState, newVars: finalVars };
   }
 
-  if (checkFailed || isComplete) {
+  if (checkFailed) {
     return { state: currentState, newVars: finalVars };
+  }
+
+  if (isComplete) {
+    const newVarsFromCheck: Partial<WorkflowVars> = {};
+    for (const v of step.provides) {
+      newVarsFromCheck[v] = (checkData as any)[v];
+    }
+    return { state: currentState, newVars: newVarsFromCheck };
   }
 
   if (execute) {
