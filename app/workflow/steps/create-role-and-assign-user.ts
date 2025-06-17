@@ -6,11 +6,16 @@ import { createStep } from "../create-step";
 interface CheckData {
   adminRoleId?: string;
   directoryServiceId?: string;
+  hasAssignment?: boolean;
 }
 
 export default createStep<CheckData>({
-  id: StepId.CreateCustomAdminRole,
-  requires: [Var.GoogleAccessToken, Var.IsDomainVerified],
+  id: StepId.CreateRoleAndAssignUser,
+  requires: [
+    Var.GoogleAccessToken,
+    Var.IsDomainVerified,
+    Var.ProvisioningUserId
+  ],
   provides: [Var.AdminRoleId, Var.DirectoryServiceId],
 
   /**
@@ -36,6 +41,7 @@ export default createStep<CheckData>({
    */
 
   async check({
+    vars,
     fetchGoogle,
     markComplete,
     markIncomplete,
@@ -64,11 +70,32 @@ export default createStep<CheckData>({
         (r) => r.roleName === "Microsoft Entra Provisioning"
       );
       if (role) {
-        log(LogLevel.Info, "Custom admin role exists");
-        markComplete({
-          adminRoleId: role.roleId,
-          directoryServiceId: role.rolePrivileges[0]?.serviceId
+        const userId = vars.provisioningUserId;
+        if (!userId) {
+          markCheckFailed("Provisioning user ID missing");
+          return;
+        }
+
+        const AssignSchema = z.object({
+          items: z.array(z.unknown()).optional()
         });
+        const url = `${ApiEndpoint.Google.RoleAssignments}?roleId=${encodeURIComponent(role.roleId)}&userKey=${encodeURIComponent(userId)}`;
+        const { items: assigns = [] } = await fetchGoogle(url, AssignSchema);
+
+        if (assigns.length > 0) {
+          log(LogLevel.Info, "Role already assigned");
+          markComplete({
+            adminRoleId: role.roleId,
+            directoryServiceId: role.rolePrivileges[0]?.serviceId,
+            hasAssignment: true
+          });
+        } else {
+          markIncomplete("Role exists without assignment", {
+            adminRoleId: role.roleId,
+            directoryServiceId: role.rolePrivileges[0]?.serviceId,
+            hasAssignment: false
+          });
+        }
       } else {
         markIncomplete("Custom admin role missing", {});
       }
@@ -78,7 +105,14 @@ export default createStep<CheckData>({
     }
   },
 
-  async execute({ fetchGoogle, checkData, markSucceeded, markFailed, log }) {
+  async execute({
+    vars,
+    fetchGoogle,
+    checkData,
+    markSucceeded,
+    markFailed,
+    log
+  }) {
     /**
      * GET https://admin.googleapis.com/admin/directory/v1/customer/my_customer/roles/ALL/privileges
      *
@@ -132,19 +166,29 @@ export default createStep<CheckData>({
 
       let roleId = checkData.adminRoleId;
       try {
-        const res = await fetchGoogle(ApiEndpoint.Google.Roles, CreateSchema, {
-          method: "POST",
-          body: JSON.stringify({
-            roleName: "Microsoft Entra Provisioning",
-            roleDescription: "Custom role for Microsoft provisioning",
-            rolePrivileges: [
-              { serviceId, privilegeName: "USERS_RETRIEVE" },
-              { serviceId, privilegeName: "USERS_CREATE" },
-              { serviceId, privilegeName: "USERS_UPDATE" }
-            ]
-          })
-        });
-        roleId = res.roleId;
+        if (!roleId) {
+          const res = await fetchGoogle(
+            ApiEndpoint.Google.Roles,
+            CreateSchema,
+            {
+              method: "POST",
+              body: JSON.stringify({
+                roleName: "Microsoft Entra Provisioning",
+                roleDescription: "Custom role for Microsoft provisioning",
+                rolePrivileges: [
+                  { serviceId, privilegeName: "ORGANIZATION_UNITS_READ" },
+                  { serviceId, privilegeName: "USERS_RETRIEVE" },
+                  { serviceId, privilegeName: "USERS_CREATE" },
+                  { serviceId, privilegeName: "USERS_UPDATE" },
+                  { serviceId, privilegeName: "GROUPS_RETRIEVE" },
+                  { serviceId, privilegeName: "GROUPS_CREATE" },
+                  { serviceId, privilegeName: "GROUPS_UPDATE" }
+                ]
+              })
+            }
+          );
+          roleId = res.roleId;
+        }
       } catch (error) {
         if (error instanceof Error && error.message.includes("409")) {
           if (!roleId) {
@@ -167,6 +211,27 @@ export default createStep<CheckData>({
       }
 
       if (!roleId) throw new Error("Role ID unavailable after create");
+
+      if (!checkData.hasAssignment) {
+        const AssignSchema = z
+          .object({ kind: z.string().optional() })
+          .passthrough();
+        const userId = vars.provisioningUserId as string;
+        try {
+          await fetchGoogle(ApiEndpoint.Google.RoleAssignments, AssignSchema, {
+            method: "POST",
+            body: JSON.stringify({
+              roleId,
+              assignedTo: userId,
+              scopeType: "CUSTOMER"
+            })
+          });
+        } catch (error) {
+          if (!(error instanceof Error && error.message.includes("409"))) {
+            throw error;
+          }
+        }
+      }
 
       markSucceeded({
         [Var.AdminRoleId]: roleId,

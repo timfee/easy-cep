@@ -251,11 +251,11 @@ Content-Type: application/json
 // No vars provided; step ensures OU existence only
 ```
 
-## Step 4: `createCustomAdminRole`
+## Step 4: `createRoleAndAssignUser`
 
 ### Purpose
 
-Ensure custom admin role `Microsoft Entra Provisioning` exists with correct privileges.
+Ensure custom admin role `Microsoft Entra Provisioning` exists with correct privileges and is assigned to the provisioning user.
 
 ### State Check
 
@@ -322,9 +322,13 @@ Content-Type: application/json
   "roleName": "Microsoft Entra Provisioning",
   "roleDescription": "Custom role for Microsoft provisioning",
   "rolePrivileges": [
+    { "serviceId": "{directoryServiceId}", "privilegeName": "ORGANIZATION_UNITS_READ" },
     { "serviceId": "{directoryServiceId}", "privilegeName": "USERS_RETRIEVE" },
     { "serviceId": "{directoryServiceId}", "privilegeName": "USERS_CREATE" },
-    { "serviceId": "{directoryServiceId}", "privilegeName": "USERS_UPDATE" }
+    { "serviceId": "{directoryServiceId}", "privilegeName": "USERS_UPDATE" },
+    { "serviceId": "{directoryServiceId}", "privilegeName": "GROUPS_RETRIEVE" },
+    { "serviceId": "{directoryServiceId}", "privilegeName": "GROUPS_CREATE" },
+    { "serviceId": "{directoryServiceId}", "privilegeName": "GROUPS_UPDATE" }
   ]
 }
 ```
@@ -341,39 +345,7 @@ Content-Type: application/json
 adminRoleId = .roleId
 ```
 
-## Step 5: `assignRoleToUser`
-
-### Purpose
-
-Ensure the custom role is assigned to the service user.
-
-### State Check
-
-#### Request
-
-```http
-GET https://admin.googleapis.com/admin/directory/v1/customer/my_customer/roleassignments?roleId={adminRoleId}&userKey={provisioningUserId}
-Authorization: Bearer {googleAccessToken}
-```
-
-#### Success Response (`200 OK`)
-
-```json
-{ "items": [ { ... } ] }
-```
-
-#### Completion Criteria
-
-`items` array length >= 1
-
-### Execution
-
-#### Prerequisites
-
-- `googleAccessToken`
-- `adminRoleId`, `provisioningUserId`, `isDomainVerified`
-
-#### Request
+2. **POST Role Assignment**
 
 ```http
 POST https://admin.googleapis.com/admin/directory/v1/customer/my_customer/roleassignments
@@ -387,10 +359,7 @@ Content-Type: application/json
 }
 ```
 
-#### Expected Responses
-
-- `201 Created` or `409 Conflict`
-- `400/404/403`: error
+Expected: `201 Created` or `409 Conflict`
 
 ## Step 6: `configureGoogleSamlProfile`
 

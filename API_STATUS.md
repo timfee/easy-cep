@@ -32,27 +32,16 @@ _check_ success:
   _execute_ errors:
 - 409 user already exists handled
 
-### createCustomAdminRole
+### createRoleAndAssignUser
 
 _check_ success:
 
 - complete - 200 with role
 - incomplete - empty list
   _execute_ success:
-- 201 returns roleId
+- 201 role created and assigned to user
   _execute_ errors:
 - 409 already exists handled
-
-### assignRoleToUser
-
-_check_ success:
-
-- complete - 200 with assignments
-- incomplete - empty list
-  _execute_ success:
-- 200 or 201 role assignment created
-  _execute_ errors:
-- 409 conflict treated as success
 
 ### configureGoogleSamlProfile
 
