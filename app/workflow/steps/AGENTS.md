@@ -81,20 +81,20 @@ export default createStep<CheckData>({
 });
 ```
 
-### Purpose
+### Step 1 Purpose
 
 Ensure Google Workspace primary domain exists and is verified.
 
-### State Check
+### Step 1 State Check
 
-#### Request (path parameter)
+#### Step 1 Check Request (path parameter)
 
 ```http
 GET https://admin.googleapis.com/admin/directory/v1/customer/my_customer/domains
 Authorization: Bearer {googleAccessToken}
 ```
 
-#### Success Response (`200 OK`)
+#### Step 1 Success Response (`200 OK`)
 
 ```json
 {
@@ -108,40 +108,40 @@ Authorization: Bearer {googleAccessToken}
 }
 ```
 
-#### Completion Criteria
+#### Step 1 Completion Criteria
 
 `.domains[] | select(.isPrimary == true && .verified == true)` exists
 
-#### Variables Extracted
+#### Step 1 Variables Extracted
 
 ```ts
 isDomainVerified = domains[] | select(.isPrimary == true) | .verified
 ```
 
-### Execution
+### Step 1 Execution
 
 **Manual DNS required**; no API mutation for completion
 
-### Required Inputs
+### Step 1 Required Inputs
 
 - `googleAccessToken: string`
 
 ## Step 2: `createAutomationOU`
 
-### Purpose
+### Step 2 Purpose
 
 Ensure the organizational unit `/Automation` exists.
 
-### State Check
+### Step 2 State Check
 
-#### Request
+#### Step 2 Check Request
 
 ```http
 GET https://admin.googleapis.com/admin/directory/v1/customer/my_customer/orgunits/Automation
 Authorization: Bearer {googleAccessToken}
 ```
 
-#### Success Response (`200 OK`)
+#### Step 2 Success Response (`200 OK`)
 
 ```json
 {
@@ -151,19 +151,19 @@ Authorization: Bearer {googleAccessToken}
 }
 ```
 
-#### Completion Criteria
+#### Step 2 Completion Criteria
 
 Response `200 OK` (OU exists)
 
-### Execution
+### Step 2 Execution
 
-#### Prerequisites
+#### Step 2 Prerequisites
 
 - `googleAccessToken`
 - `isDomainVerified`
 - `provisioningUserId`
 
-#### Request
+#### Step 2 Execution Request
 
 ```http
 POST https://admin.googleapis.com/admin/directory/v1/customer/my_customer/orgunits
@@ -176,7 +176,7 @@ Content-Type: application/json
 }
 ```
 
-#### Expected Responses
+#### Step 2 Expected Responses
 
 - `201 Created`: OU created
 - `409 Conflict`: OU already exists (acceptable)
@@ -184,20 +184,20 @@ Content-Type: application/json
 
 ## Step 3: `createServiceUser`
 
-### Purpose
+### Step 3 Purpose
 
 Ensure service account email `azuread-provisioning@{primaryDomain}` exists.
 
-### State Check
+### Step 3 State Check
 
-#### Request
+#### Step 3 Check Request
 
 ```http
 GET https://admin.googleapis.com/admin/directory/v1/users/azuread-provisioning@{primaryDomain}
 Authorization: Bearer {googleAccessToken}
 ```
 
-#### Success Response (`200 OK`)
+#### Step 3 Success Response (`200 OK`)
 
 ```json
 {
@@ -207,25 +207,25 @@ Authorization: Bearer {googleAccessToken}
 }
 ```
 
-#### Completion Criteria
+#### Step 3 Completion Criteria
 
 Response `200 OK`
 
-#### Variables Extracted
+#### Step 3 Variables Extracted
 
 ```ts
 provisioningUserId = .id
 provisioningUserEmail = .primaryEmail
 ```
 
-### Execution
+### Step 3 Execution
 
-#### Prerequisites
+#### Step 3 Prerequisites
 
 - `googleAccessToken`
 - `isDomainVerified`
 
-#### Request
+#### Step 3 Execution Request
 
 ```http
 POST https://admin.googleapis.com/admin/directory/v1/users
@@ -240,13 +240,13 @@ Content-Type: application/json
 }
 ```
 
-#### Expected Responses
+#### Step 3 Expected Responses
 
 - `201 Created`: User created
 - `409 Conflict`: User already exists (acceptable)
 - `400/403`: error
 
-#### Variables Extracted on Success
+#### Step 3 Variables Extracted on Success
 
 ```ts
 // No vars provided; step ensures OU existence only
@@ -254,20 +254,20 @@ Content-Type: application/json
 
 ## Step 4: `createAdminRoleAndAssignUser`
 
-### Purpose
+### Step 4 Purpose
 
 Ensure custom admin role `Microsoft Entra Provisioning` exists with correct privileges and is assigned to the provisioning user.
 
-### State Check
+### Step 4 State Check
 
-#### Request
+#### Step 4 Check Request
 
 ```http
 GET https://admin.googleapis.com/admin/directory/v1/customer/my_customer/roles
 Authorization: Bearer {googleAccessToken}
 ```
 
-#### Success Response (`200 OK`)
+#### Step 4 Success Response (`200 OK`)
 
 ```json
 {
@@ -287,25 +287,25 @@ Authorization: Bearer {googleAccessToken}
 }
 ```
 
-#### Completion Criteria
+#### Step 4 Completion Criteria
 
 `items[] | select(.roleName == "Microsoft Entra Provisioning")` exists
 
-#### Variables Extracted
+#### Step 4 Variables Extracted
 
 ```ts
 adminRoleId = .roleId
 directoryServiceId = .rolePrivileges[0].serviceId
 ```
 
-### Execution
+### Step 4 Execution
 
-#### Prerequisites
+#### Step 4 Prerequisites
 
 - `googleAccessToken`
 - `isDomainVerified`
 
-#### Requests Sequence
+#### Step 4 Execution Requests Sequence
 
 1. **GET Privileges**
 
@@ -340,13 +340,13 @@ Content-Type: application/json
 }
 ```
 
-#### Expected Responses
+#### Step 4 Expected Responses (Create Role)
 
 - `200 OK`: Role created
 - `409 Conflict`: Role already exists (acceptable)
 - `400/403`: error
 
-#### Variables Extracted on Success
+#### Step 4 Variables Extracted on Success (Create Role)
 
 ```ts
 adminRoleId = .roleId
@@ -354,7 +354,7 @@ adminRoleId = .roleId
 
 2. **POST Role Assignment**
 
-#### Request 3: Assign Role
+#### Step 4 Execution Request 3: Assign Role
 
 
 ```http
@@ -369,7 +369,7 @@ Content-Type: application/json
 }
 ```
 Expected: `201 Created` or `409 Conflict`
-#### Expected Responses
+#### Step 4 Expected Responses (Assign Role)
 
 - `200 OK` or `409 Conflict`
 - `400/404/403`: error
@@ -395,7 +395,7 @@ Conflict example:
 }
 ```
 
-#### Variables Extracted on Success
+#### Step 4 Variables Extracted on Success (Assign Role)
 
 ```ts
 adminRoleId = .roleId
@@ -403,20 +403,20 @@ adminRoleId = .roleId
 
 ## Step 5: `configureGoogleSamlProfile`
 
-### Purpose
+### Step 5 Purpose
 
 Ensure at least one inbound SAML profile exists for Google.
 
-### State Check
+### Step 5 State Check
 
-#### Request
+#### Step 5 Check Request
 
 ```http
 GET https://cloudidentity.googleapis.com/v1/inboundSamlSsoProfiles
 Authorization: Bearer {googleAccessToken}
 ```
 
-#### Success Response (`200 OK`)
+#### Step 5 Success Response (`200 OK`)
 
 ```json
 {
@@ -429,11 +429,11 @@ Authorization: Bearer {googleAccessToken}
 }
 ```
 
-#### Completion Criteria
+#### Step 5 Completion Criteria
 
 `inboundSamlSsoProfiles` array length >= 1
 
-#### Variables Extracted
+#### Step 5 Variables Extracted
 
 ```ts
 samlProfileId = .inboundSamlSsoProfiles[0].name
@@ -441,13 +441,13 @@ entityId = .inboundSamlSsoProfiles[0].spConfig.entityId
 acsUrl = .inboundSamlSsoProfiles[0].spConfig.assertionConsumerServiceUri
 ```
 
-### Execution
+### Step 5 Execution
 
-#### Prerequisites
+#### Step 5 Prerequisites
 
 - `googleAccessToken`
 
-#### Request
+#### Step 5 Execution Request
 
 ```http
 POST https://cloudidentity.googleapis.com/v1/customers/my_customer/inboundSamlSsoProfiles
@@ -460,7 +460,7 @@ Content-Type: application/json
 }
 ```
 
-#### Expected Responses
+#### Step 5 Expected Responses
 
 - `200 OK` returning an [Operation](https://cloud.google.com/identity/docs/reference/rest/Shared.Types/Operation)
   when `done: true`, profile details are under `.response`
@@ -490,30 +490,30 @@ acsUrl = .response.spConfig.assertionConsumerServiceUri
 
 ## Step 7: `createMicrosoftApps`
 
-### Purpose
+### Step 7 Purpose
 
 Instantiate provisioning and SSO Microsoft enterprise apps from template.
 
-### State Check
+### Step 7 State Check
 
-#### Request
+#### Step 7 Check Request
 
 ```http
 GET https://graph.microsoft.com/beta/applications?$filter=applicationTemplateId eq '01303a13-8322-4e06-bee5-80d612907131'
 Authorization: Bearer {msGraphToken}
 ```
 
-#### Success Response (`200 OK`)
+#### Step 7 Success Response (`200 OK`)
 
 ```json
 { "value": [{ "servicePrincipalId": "...", "appId": "..." }] }
 ```
 
-#### Completion Criteria
+#### Step 7 Completion Criteria
 
 `value` array length >= 1
 
-#### Variables Extracted
+#### Step 7 Check Variables Extracted
 
 ```ts
 provisioningServicePrincipalId = .value[0].servicePrincipalId
@@ -521,13 +521,13 @@ ssoServicePrincipalId = .value[0].servicePrincipalId
 ssoAppId = .value[0].appId
 ```
 
-### Execution
+### Step 7 Execution
 
-#### Prerequisites
+#### Step 7 Prerequisites
 
 - `msGraphToken`
 
-#### Requests
+#### Step 7 Execution Requests
 
 1. Provisioning App
 
@@ -549,11 +549,11 @@ Content-Type: application/json
 { "displayName": "Google Workspace SSO" }
 ```
 
-#### Expected Response (`201 Created`)
+#### Step 7 Expected Response (`201 Created`)
 
 Return includes `servicePrincipal.id` and `application.appId`
 
-#### Variables Extracted
+#### Step 7 Execution Variables Extracted
 
 ```ts
 provisioningServicePrincipalId = .servicePrincipal.id
@@ -563,37 +563,37 @@ ssoAppId = .application.appId
 
 ## Step 8: `configureMicrosoftSyncAndSso`
 
-### Purpose
+### Step 8 Purpose
 
 Configure Azure AD provisioning and SSO settings.
 
-### State Check
+### Step 8 State Check
 
-#### Request
+#### Step 8 Check Request
 
 ```http
 GET https://graph.microsoft.com/v1.0/servicePrincipals/{provisioningServicePrincipalId}/synchronization/jobs
 Authorization: Bearer {msGraphToken}
 ```
 
-#### Success Response (`200 OK`)
+#### Step 8 Success Response (`200 OK`)
 
 ```json
 { "value": [ { "status": { "code": "Active" } }, ... ] }
 ```
 
-#### Completion Criteria
+#### Step 8 Completion Criteria
 
 At least one `value[].status.code != "Paused"`
 
-### Execution
+### Step 8 Execution
 
-#### Prerequisites
+#### Step 8 Prerequisites
 
 - `msGraphToken`
 - `provisioningServicePrincipalId`, `generatedPassword`
 
-#### Requests
+#### Step 8 Execution Requests
 
 1. Set Secrets
 
@@ -623,43 +623,43 @@ Expected: `204 No Content`
 
 ## Step 9: `setupMicrosoftClaimsPolicy`
 
-### Purpose
+### Step 9 Purpose
 
 Ensure a claims mapping policy exists and is assigned to the SSO service principal.
 
-### State Check
+### Step 9 State Check
 
-#### Request
+#### Step 9 Check Request
 
 ```http
 GET https://graph.microsoft.com/beta/servicePrincipals/{ssoServicePrincipalId}/claimsMappingPolicies
 Authorization: Bearer {msGraphToken}
 ```
 
-#### Success Response (`200 OK`)
+#### Step 9 Success Response (`200 OK`)
 
 ```json
 { "value": [ { "id": "policy123" }, ... ] }
 ```
 
-#### Completion Criteria
+#### Step 9 Completion Criteria
 
 `value` array length >= 1
 
-#### Variables Extracted
+#### Step 9 Variables Extracted
 
 ```ts
 claimsPolicyId = .value[0].id
 ```
 
-### Execution
+### Step 9 Execution
 
-#### Prerequisites
+#### Step 9 Prerequisites
 
 - `msGraphToken`
 - `ssoServicePrincipalId`
 
-#### Requests
+#### Step 9 Execution Requests
 
 1. Create Policy
 
@@ -694,19 +694,19 @@ Expected: `204 No Content`
 
 ## Step 10: `completeGoogleSsoSetup`
 
-### Purpose
+### Step 10 Purpose
 
 Manual configuration in Google Admin Console of SSO federation.
 
-### State Check & Execution
+### Step 10 State Check & Execution
 
 Manual step — no API interaction
 
-#### Required Inputs
+#### Step 10 Required Inputs
 
 - `samlProfileId`, `entityId`, `acsUrl`
 
-#### Instructions
+#### Step 10 Instructions
 
 1. Sign in to Google Admin Console
 2. Navigate to _Security → Authentication → SSO with third-party IdP_
@@ -715,20 +715,20 @@ Manual step — no API interaction
 
 ## Step 11: `assignUsersToSso`
 
-### Purpose
+### Step 11 Purpose
 
 Enable SAML SSO for all users in the domain.
 
-### State Check
+### Step 11 State Check
 
-#### Request
+#### Step 11 Check Request
 
 ```http
 GET https://cloudidentity.googleapis.com/v1/inboundSsoAssignments
 Authorization: Bearer {googleAccessToken}
 ```
 
-#### Success Response (`200 OK`)
+#### Step 11 Success Response (`200 OK`)
 
 ```json
 {
@@ -741,18 +741,18 @@ Authorization: Bearer {googleAccessToken}
 }
 ```
 
-#### Completion Criteria
+#### Step 11 Completion Criteria
 
 Assignment exists with `targetGroup.id = "allUsers"` and matching `samlProfileId`
 
-### Execution
+### Step 11 Execution
 
-#### Prerequisites
+#### Step 11 Prerequisites
 
 - `googleAccessToken`
 - `samlProfileId`
 
-#### Request
+#### Step 11 Execution Request
 
 ```http
 POST https://cloudidentity.googleapis.com/v1/inboundSsoAssignments
@@ -766,27 +766,27 @@ Content-Type: application/json
 }
 ```
 
-#### Expected Responses
+#### Step 11 Expected Responses
 
 - `200 OK` returning an [Operation](https://cloud.google.com/identity/docs/reference/rest/Shared.Types/Operation) with `done: true`
 - `409 Conflict` (already assigned)
 
 ## Step 12: `testSsoConfiguration`
 
-### Purpose
+### Step 12 Purpose
 
 Verify end-to-end SAML SSO is functioning.
 
-### State Check & Execution
+### Step 12 State Check & Execution
 
 Manual step — requires human interaction
 
-#### Required Conditions
+#### Step 12 Required Conditions
 
 - Previously configured steps must be complete
 - A test user exists
 
-#### Procedure
+#### Step 12 Procedure
 
 1. Open private or incognito browser window
 2. Navigate to Google Workspace login
