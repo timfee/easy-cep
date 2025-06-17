@@ -17,7 +17,7 @@ import "server-only";
 
 import {
   LogLevel,
-  StepCheckContext,
+  StepExecuteContext,
   StepId,
   StepLogEntry,
   StepUIState,
@@ -110,7 +110,8 @@ async function processStep(
   pushState({ status: "checking" });
 
   type CheckType =
-    Parameters<typeof step.check>[0] extends StepCheckContext<infer U> ? U
+    typeof step.execute extends (ctx: StepExecuteContext<infer U>) => unknown ?
+      U
     : never;
   let checkData!: CheckType;
   let checkFailed = false;

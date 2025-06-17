@@ -32,8 +32,8 @@ import type {
  */
 export function createStep<
   D,
-  R extends readonly Var[],
-  P extends readonly Var[]
+  R extends readonly Var[] = Var[],
+  P extends readonly Var[] = Var[]
 >(args: {
   /** Unique identifier for the step */
   id: StepId;
