@@ -6,7 +6,7 @@
  *              by `StepId`.
  */
 
-import { StepId } from "@/types";
+import { StepIdValue } from "@/types";
 import assignRoleToUser from "./steps/assign-role-to-user";
 import assignUsersToSso from "./steps/assign-users-to-sso";
 import completeGoogleSsoSetup from "./steps/complete-google-sso-setup";
@@ -39,7 +39,7 @@ export function getAllSteps() {
   return allSteps;
 }
 
-export function getStep<T extends StepId>(
+export function getStep<T extends StepIdValue>(
   id: T
 ): Extract<(typeof allSteps)[number], { id: T }> {
   const match = allSteps.find(

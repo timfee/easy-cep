@@ -5,12 +5,13 @@ import { createStep } from "../create-step";
 
 interface CheckData {
   isDomainVerified: boolean;
+  primaryDomain?: string;
 }
 
 export default createStep<CheckData>({
   id: StepId.VerifyPrimaryDomain,
   requires: [Var.GoogleAccessToken],
-  provides: [Var.IsDomainVerified],
+  provides: [Var.IsDomainVerified, Var.PrimaryDomain],
 
   /**
    * GET https://admin.googleapis.com/admin/directory/v1/customer/my_customer/domains
@@ -61,11 +62,14 @@ export default createStep<CheckData>({
 
       if (primary?.verified) {
         log(LogLevel.Info, "Primary domain already verified");
-        markComplete({ isDomainVerified: true });
+        markComplete({
+          isDomainVerified: true,
+          primaryDomain: primary.domainName
+        });
       } else {
         markIncomplete(
           primary ? "Primary domain not verified" : "No primary domain found",
-          { isDomainVerified: false }
+          { isDomainVerified: false, primaryDomain: primary?.domainName }
         );
       }
     } catch (error) {
@@ -88,7 +92,10 @@ export default createStep<CheckData>({
         "Domain verification requires manual DNS configuration"
       );
 
-      markSucceeded({ [Var.IsDomainVerified]: checkData.isDomainVerified });
+      markSucceeded({
+        [Var.IsDomainVerified]: checkData.isDomainVerified,
+        [Var.PrimaryDomain]: checkData.primaryDomain || ""
+      });
     } catch (error) {
       log(LogLevel.Error, "Execute failed", { error });
       markFailed(error instanceof Error ? error.message : "Execute failed");

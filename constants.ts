@@ -1,7 +1,5 @@
 // ✅ Usage: Avoid string repetition and centralize well-known URLs, group IDs, and template constants.
 
-// app/workflow/constants.ts
-
 export const ApiEndpoint = {
   Google: {
     Domains:

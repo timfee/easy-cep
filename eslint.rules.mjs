@@ -1,4 +1,4 @@
-/* eslint-disable no-magic-numbers */
+/* eslint-disable no-magic-numbers, sonarjs/slow-regex */
 // eslint-rules/workflow-rules.ts
 import { ESLintUtils } from "@typescript-eslint/utils";
 import * as fs from "fs";
@@ -26,18 +26,20 @@ function getApiEndpoints(projectRoot) {
   return endpoints;
 }
 
-// Parse types.ts to get all Var enum values
+// Parse workflow variable names from variables.ts
 function getVarEnumValues(projectRoot) {
-  const typesPath = path.join(projectRoot, "types.ts");
-  if (!fs.existsSync(typesPath)) return new Set();
+  const varsPath = path.join(projectRoot, "app/workflow/variables.ts");
+  if (!fs.existsSync(varsPath)) return new Set();
 
-  const content = fs.readFileSync(typesPath, "utf-8");
+  const content = fs.readFileSync(varsPath, "utf-8");
   const vars = new Set();
 
-  // Match Var enum values
-  const regex = /Var\.\w+\s*=\s*["']([^"']+)["']/g;
+  const obj = content.match(/WORKFLOW_VARIABLES\s*=\s*{([\s\S]*?)}/);
+  if (!obj) return vars;
+
+  const regex = /(\w+)\s*:/g;
   let match;
-  while ((match = regex.exec(content)) !== null) {
+  while ((match = regex.exec(obj[1])) !== null) {
     vars.add(match[1]);
   }
 
@@ -518,16 +520,17 @@ export const mustUseContextFetch = createRule({
 
 // Add these to eslint-rules/workflow-rules.ts
 
-// Parse StepId enum from types.ts
+// Parse StepId values from step-ids.ts
 function getStepIdEnumValues(projectRoot) {
-  const typesPath = path.join(projectRoot, "types.ts");
-  if (!fs.existsSync(typesPath)) return new Map();
+  const idsPath = path.join(projectRoot, "app/workflow/step-ids.ts");
+  if (!fs.existsSync(idsPath)) return new Map();
 
-  const content = fs.readFileSync(typesPath, "utf-8");
+  const content = fs.readFileSync(idsPath, "utf-8");
   const stepIds = new Map();
 
-  // Match StepId enum values
-  const regex = /StepId\.(\w+)\s*=\s*["']([^"']+)["']/g;
+  // Match StepId object values
+
+  const regex = /([A-Za-z]+):\s*['"]([^'"\n]+)['"]/g;
   let match;
   while ((match = regex.exec(content)) !== null) {
     const [, enumName, stringValue] = match;
