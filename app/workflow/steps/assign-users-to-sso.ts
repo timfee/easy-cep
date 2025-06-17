@@ -1,11 +1,10 @@
 import { ApiEndpoint, GroupId } from "@/constants";
 import { LogLevel, StepId, Var } from "@/types";
 import { z } from "zod";
-import { createStep } from "../create-step";
+import { createStep, getVar } from "../create-step";
 
-/* eslint-disable @typescript-eslint/no-empty-object-type */
+// eslint-disable-next-line @typescript-eslint/no-empty-object-type
 interface CheckData {}
-/* eslint-enable @typescript-eslint/no-empty-object-type */
 
 export default createStep<CheckData>({
   id: StepId.AssignUsersToSso,
@@ -26,13 +25,7 @@ export default createStep<CheckData>({
    * { "inboundSsoAssignments": [] }
    */
 
-  async check({
-    fetchGoogle,
-    markComplete,
-    markIncomplete,
-    markCheckFailed,
-    log
-  }) {
+  async check({ vars, fetchGoogle, markComplete, markIncomplete, markCheckFailed, log }) {
     try {
       const AssignSchema = z.object({
         inboundSsoAssignments: z
@@ -66,7 +59,7 @@ export default createStep<CheckData>({
     }
   },
 
-  async execute({ fetchGoogle, markSucceeded, markFailed, markPending, log }) {
+  async execute({ vars, fetchGoogle, markSucceeded, markFailed, markPending, log }) {
     /**
      * POST https://cloudidentity.googleapis.com/v1/inboundSsoAssignments
      * {
@@ -86,11 +79,7 @@ export default createStep<CheckData>({
      * { "error": { "message": "Assignment already exists" } }
      */
     try {
-      const profileId = process.env.SAML_PROFILE_ID;
-      if (!profileId) {
-        markFailed("Missing SAML profile ID");
-        return;
-      }
+      const profileId = getVar(vars, Var.SamlProfileId) as string;
 
       const OpSchema = z.object({
         name: z.string(),

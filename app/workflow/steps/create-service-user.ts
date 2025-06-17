@@ -2,7 +2,7 @@ import { ApiEndpoint } from "@/constants";
 import { LogLevel, StepId, Var } from "@/types";
 import crypto from "crypto";
 import { z } from "zod";
-import { createStep } from "../create-step";
+import { createStep, getVar } from "../create-step";
 
 interface CheckData {
   provisioningUserId?: string;
@@ -11,7 +11,7 @@ interface CheckData {
 
 export default createStep<CheckData>({
   id: StepId.CreateServiceUser,
-  requires: [Var.GoogleAccessToken, Var.PrimaryDomain, Var.IsDomainVerified],
+  requires: [Var.GoogleAccessToken, Var.IsDomainVerified],
   provides: [
     Var.ProvisioningUserId,
     Var.ProvisioningUserEmail,
@@ -35,19 +35,9 @@ export default createStep<CheckData>({
    * { "error": { "code": 404 } }
    */
 
-  async check({
-    fetchGoogle,
-    markComplete,
-    markIncomplete,
-    markCheckFailed,
-    log
-  }) {
+  async check({ vars, fetchGoogle, markComplete, markIncomplete, markCheckFailed, log }) {
     try {
-      const domain = process.env.PRIMARY_DOMAIN;
-      if (!domain) {
-        markCheckFailed("Primary domain not available");
-        return;
-      }
+      const domain = getVar(vars, Var.PrimaryDomain) as string;
 
       const UserSchema = z.object({ id: z.string(), primaryEmail: z.string() });
       const url = `${ApiEndpoint.Google.Users}/azuread-provisioning@${domain}`;
@@ -71,13 +61,7 @@ export default createStep<CheckData>({
     }
   },
 
-  async execute({
-    fetchGoogle,
-    checkData: _checkData,
-    markSucceeded,
-    markFailed,
-    log
-  }) {
+  async execute({ vars, fetchGoogle, checkData: _checkData, markSucceeded, markFailed, log }) {
     /**
      * POST https://admin.googleapis.com/admin/directory/v1/users
      * {
@@ -98,11 +82,7 @@ export default createStep<CheckData>({
      * { "error": { "message": "Entity already exists." } }
      */
     try {
-      const domain = process.env.PRIMARY_DOMAIN;
-      if (!domain) {
-        markFailed("Primary domain not available");
-        return;
-      }
+      const domain = getVar(vars, Var.PrimaryDomain) as string;
 
       const BYTES = 4;
       const password = `Temp${crypto.randomBytes(BYTES).toString("hex")}!`;

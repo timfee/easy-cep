@@ -37,6 +37,10 @@ State is managed client-side in React. Each step reports its status through call
 
 Error handling is mandatory at every level - both phases must use try-catch.
 
+### Environment Variables in Steps
+
+Steps must not read directly from `process.env`. Any required environment variables must be declared in `env.ts` and accessed via the `env` import. All other runtime state must use workflow `vars` (via the `Var` enum and `getVar(vars, Var.X)` helper) to ensure type safety and consistency.
+
 ## Notes
 
 Use `pnpm` for package management and execution.

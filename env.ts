@@ -13,6 +13,11 @@ export const env = createEnv({
     MICROSOFT_CLIENT_SECRET: z.string()
   },
   client: {},
+  shared: {
+    NODE_ENV: z
+      .enum(["development", "test", "production"])
+      .default("development")
+  },
   runtimeEnv: {
     NODE_ENV: process.env.NODE_ENV,
     AUTH_SECRET: process.env.AUTH_SECRET,

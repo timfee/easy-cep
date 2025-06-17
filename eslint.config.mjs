@@ -60,7 +60,8 @@ const eslintConfig = [
 
       // 4. Step-specific patterns
       "workflow/check-data-type-required": "error",
-      "workflow/no-state-mutations": "error"
+      "workflow/no-state-mutations": "error",
+      "workflow/no-process-env": "error"
     }
   },
   {

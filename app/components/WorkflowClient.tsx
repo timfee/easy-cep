@@ -37,10 +37,11 @@ export default function WorkflowClient({ steps }: Props) {
         if (missing.length === 0) {
           const result = await checkStep(step.id, vars);
           updateStep(step.id, result.state);
+          updateVars(result.newVars);
         }
       }
     })();
-  }, [vars, steps, updateStep]);
+  }, [vars, steps, updateStep, updateVars]);
 
   async function handleExecute(id: StepId) {
     const def = steps.find((s) => s.id === id);

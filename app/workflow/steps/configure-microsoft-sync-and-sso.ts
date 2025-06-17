@@ -1,11 +1,10 @@
 import { ApiEndpoint } from "@/constants";
 import { LogLevel, StepId, Var } from "@/types";
 import { z } from "zod";
-import { createStep } from "../create-step";
+import { createStep, getVar } from "../create-step";
 
-/* eslint-disable @typescript-eslint/no-empty-object-type */
+// eslint-disable-next-line @typescript-eslint/no-empty-object-type
 interface CheckData {}
-/* eslint-enable @typescript-eslint/no-empty-object-type */
 
 export default createStep<CheckData>({
   id: StepId.ConfigureMicrosoftSyncAndSso,
@@ -31,6 +30,7 @@ export default createStep<CheckData>({
    */
 
   async check({
+    vars,
     fetchMicrosoft,
     markComplete,
     markIncomplete,
@@ -38,11 +38,7 @@ export default createStep<CheckData>({
     log
   }) {
     try {
-      const spId = process.env.PROVISIONING_SP_ID;
-      if (!spId) {
-        markCheckFailed("Provisioning SP ID missing");
-        return;
-      }
+      const spId = getVar(vars, Var.ProvisioningServicePrincipalId) as string;
 
       const JobsSchema = z.object({
         value: z.array(z.object({ status: z.object({ code: z.string() }) }))
@@ -67,7 +63,7 @@ export default createStep<CheckData>({
     }
   },
 
-  async execute({ fetchMicrosoft, markSucceeded, markFailed, log }) {
+  async execute({ vars, fetchMicrosoft, markSucceeded, markFailed, log }) {
     /**
      * PATCH https://graph.microsoft.com/v1.0/servicePrincipals/{provisioningServicePrincipalId}/synchronization
      * {
@@ -87,12 +83,8 @@ export default createStep<CheckData>({
      * 204
      */
     try {
-      const spId = process.env.PROVISIONING_SP_ID;
-      const password = process.env.GENERATED_PASSWORD;
-      if (!spId || !password) {
-        markFailed("Missing service principal or password");
-        return;
-      }
+      const spId = getVar(vars, Var.ProvisioningServicePrincipalId) as string;
+      const password = getVar(vars, Var.GeneratedPassword) as string;
 
       const PatchSchema = z.object({});
 

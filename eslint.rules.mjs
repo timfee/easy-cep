@@ -767,6 +767,33 @@ export const noAnyInSchemas = createRule({
   }
 });
 
+export const noProcessEnv = createRule({
+  name: "no-process-env",
+  meta: {
+    type: "problem",
+    docs: { description: "Disallow direct process.env usage in workflow steps" },
+    messages: {
+      noProcessEnv: "Direct use of process.env is forbidden; use env.ts or workflow vars"
+    },
+    schema: []
+  },
+  defaultOptions: [],
+  create(context) {
+    return {
+      MemberExpression(node) {
+        if (
+          node.object.type === "Identifier" &&
+          node.object.name === "process" &&
+          node.property.type === "Identifier" &&
+          node.property.name === "env"
+        ) {
+          context.report({ node, messageId: "noProcessEnv" });
+        }
+      }
+    };
+  }
+});
+
 export const rules = {
   "check-data-type-required": checkDataTypeRequired,
   "import-constants-from-constants": importConstantsFromConstants,
@@ -783,7 +810,8 @@ export const rules = {
   "no-state-mutations": noStateMutations,
   "no-string-step-ids": noStringStepIds,
   "use-step-id-enum": useStepIdEnum,
-  "use-var-enum": useVarEnum
+  "use-var-enum": useVarEnum,
+  "no-process-env": noProcessEnv
 };
 
 // eslint-disable-next-line import/no-anonymous-default-export

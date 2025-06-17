@@ -1,7 +1,7 @@
 import { ApiEndpoint } from "@/constants";
 import { LogLevel, StepId, Var } from "@/types";
 import { z } from "zod";
-import { createStep } from "../create-step";
+import { createStep, getVar } from "../create-step";
 
 interface CheckData {
   claimsPolicyId?: string;
@@ -26,19 +26,9 @@ export default createStep<CheckData>({
    * { "value": [] }
    */
 
-  async check({
-    fetchMicrosoft,
-    markComplete,
-    markIncomplete,
-    markCheckFailed,
-    log
-  }) {
+  async check({ vars, fetchMicrosoft, markComplete, markIncomplete, markCheckFailed, log }) {
     try {
-      const spId = process.env.SSO_SP_ID;
-      if (!spId) {
-        markCheckFailed("SSO service principal ID missing");
-        return;
-      }
+      const spId = getVar(vars, Var.SsoServicePrincipalId) as string;
 
       const PoliciesSchema = z.object({
         value: z.array(z.object({ id: z.string() }))
@@ -61,7 +51,7 @@ export default createStep<CheckData>({
     }
   },
 
-  async execute({ fetchMicrosoft, markSucceeded, markFailed, log }) {
+  async execute({ vars, fetchMicrosoft, markSucceeded, markFailed, log }) {
     /**
      * POST https://graph.microsoft.com/beta/policies/claimsMappingPolicies
      * { "displayName": "Google Workspace Basic Claims", ... }
@@ -78,11 +68,7 @@ export default createStep<CheckData>({
      * 204
      */
     try {
-      const spId = process.env.SSO_SP_ID;
-      if (!spId) {
-        markFailed("SSO service principal ID missing");
-        return;
-      }
+      const spId = getVar(vars, Var.SsoServicePrincipalId) as string;
 
       const PolicySchema = z.object({ id: z.string() });
 

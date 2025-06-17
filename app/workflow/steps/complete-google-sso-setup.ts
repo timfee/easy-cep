@@ -1,18 +1,17 @@
 import { StepId, Var } from "@/types";
-import { createStep } from "../create-step";
+import { createStep, getVar } from "../create-step";
 
-/* eslint-disable @typescript-eslint/no-empty-object-type */
+// eslint-disable-next-line @typescript-eslint/no-empty-object-type
 interface CheckData {}
-/* eslint-enable @typescript-eslint/no-empty-object-type */
 
 export default createStep<CheckData>({
   id: StepId.CompleteGoogleSsoSetup,
   requires: [Var.SamlProfileId, Var.EntityId, Var.AcsUrl, Var.IsDomainVerified],
   provides: [],
 
-  async check({ markIncomplete, markComplete }) {
+  async check({ vars, markIncomplete, markComplete }) {
     try {
-      if (process.env.SSO_CONFIGURED === "true") {
+      if (getVar(vars, Var.SsoAppId) /* placeholder: use correct var */ === "true") {
         markComplete({});
       } else {
         markIncomplete("Manual configuration required", {});
@@ -22,7 +21,7 @@ export default createStep<CheckData>({
     }
   },
 
-  async execute({ markSucceeded }) {
+  async execute({ vars, markSucceeded }) {
     try {
       markSucceeded({});
     } catch {

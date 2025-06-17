@@ -8,11 +8,10 @@
 import { ApiEndpoint } from "@/constants";
 import { LogLevel, StepId, Var } from "@/types";
 import { z } from "zod";
-import { createStep } from "../create-step";
+import { createStep, getVar } from "../create-step";
 
-/* eslint-disable @typescript-eslint/no-empty-object-type */
+// eslint-disable-next-line @typescript-eslint/no-empty-object-type
 interface CheckData {}
-/* eslint-enable @typescript-eslint/no-empty-object-type */
 
 export default createStep<CheckData>({
   id: StepId.AssignRoleToUser,
@@ -39,6 +38,7 @@ export default createStep<CheckData>({
    */
 
   async check({
+    vars,
     fetchGoogle,
     markComplete,
     markIncomplete,
@@ -46,8 +46,8 @@ export default createStep<CheckData>({
     log
   }) {
     try {
-      const roleId = process.env.ADMIN_ROLE_ID;
-      const userId = process.env.PROVISIONING_USER_ID;
+      const roleId = getVar(vars, Var.AdminRoleId);
+      const userId = getVar(vars, Var.ProvisioningUserId);
       if (!roleId || !userId) {
         markCheckFailed("Role or user ID missing");
         return;
@@ -73,7 +73,7 @@ export default createStep<CheckData>({
     }
   },
 
-  async execute({ fetchGoogle, markSucceeded, markFailed, log }) {
+  async execute({ vars, fetchGoogle, markSucceeded, markFailed, log }) {
     /**
      * POST https://admin.googleapis.com/admin/directory/v1/customer/my_customer/roleassignments
      * {
@@ -93,8 +93,8 @@ export default createStep<CheckData>({
      * { "error": { "message": "Entity already exists" } }
      */
     try {
-      const roleId = process.env.ADMIN_ROLE_ID;
-      const userId = process.env.PROVISIONING_USER_ID;
+      const roleId = getVar(vars, Var.AdminRoleId);
+      const userId = getVar(vars, Var.ProvisioningUserId);
       if (!roleId || !userId) {
         markFailed("Role or user ID missing");
         return;

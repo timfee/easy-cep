@@ -3,9 +3,8 @@ import { LogLevel, StepId, Var } from "@/types";
 import { z } from "zod";
 import { createStep } from "../create-step";
 
-/* eslint-disable @typescript-eslint/no-empty-object-type */
+// eslint-disable-next-line @typescript-eslint/no-empty-object-type
 interface CheckData {}
-/* eslint-enable @typescript-eslint/no-empty-object-type */
 
 export default createStep<CheckData>({
   id: StepId.CreateAutomationOU,

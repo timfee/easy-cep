@@ -85,6 +85,9 @@ export interface StepCheckContext<T> {
   ): Promise<R>;
   log(level: LogLevel, message: string, data?: unknown): void;
 
+  /** Current workflow variables available to this step */
+  vars: Partial<WorkflowVars>;
+
   markComplete(data: T): void;
   markIncomplete(summary: string, data: T): void;
   markCheckFailed(error: string): void;
@@ -102,6 +105,9 @@ export interface StepExecuteContext<T> {
     init?: Omit<RequestInit, "headers">
   ): Promise<R>;
   log(level: LogLevel, message: string, data?: unknown): void;
+
+  /** Current workflow variables available to this step */
+  vars: Partial<WorkflowVars>;
 
   checkData: T;
 

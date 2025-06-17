@@ -115,7 +115,6 @@ Authorization: Bearer {googleAccessToken}
 #### Variables Extracted
 
 ```ts
-primaryDomain = domains[] | select(.isPrimary == true) | .domainName
 isDomainVerified = domains[] | select(.isPrimary == true) | .verified
 ```
 
@@ -220,7 +219,6 @@ provisioningUserEmail = .primaryEmail
 #### Prerequisites
 
 - `googleAccessToken`
-- `primaryDomain` variable set
 - `isDomainVerified`
 
 #### Request

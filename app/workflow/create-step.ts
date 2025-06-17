@@ -57,10 +57,24 @@ export function createStep<
    */
   execute: (ctx: StepExecuteContext<D>) => Promise<void>;
 }): StepDefinition<R, P> & {
-  check: (ctx: StepCheckContext<D>) => Promise<void>;
-  execute: (ctx: StepExecuteContext<D>) => Promise<void>;
+  check: (ctx: StepCheckContext<Partial<WorkflowVars>>) => Promise<void>;
+  execute: (ctx: StepExecuteContext<Partial<WorkflowVars>>) => Promise<void>;
 } {
   // The function merely re-emits the object so that TypeScript retains the
   // literal types of `requires` and `provides` for downstream consumers.
   return args;
+}
+
+/**
+ * Safely extract a required workflow variable, or throw if missing.
+ */
+export function getVar<K extends Var>(
+  vars: Partial<WorkflowVars>,
+  key: K
+): WorkflowVars[K] {
+  const value = vars[key];
+  if (value === undefined) {
+    throw new Error(`Required variable ${key} is not available`);
+  }
+  return value;
 }

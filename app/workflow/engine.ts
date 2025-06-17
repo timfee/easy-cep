@@ -17,18 +17,18 @@ import "server-only";
 
 import {
   LogLevel,
-  StepExecuteContext,
   StepId,
   StepLogEntry,
   StepUIState,
   Var,
-  WorkflowVars
+  WorkflowVars,
+  StepCheckContext
 } from "@/types";
 import { z } from "zod";
 import { getStep } from "./step-registry";
 
-async function processStep(
-  stepId: StepId,
+async function processStep<T extends StepId>(
+  stepId: T,
   vars: Partial<WorkflowVars>,
   execute: boolean
 ): Promise<{ state: StepUIState; newVars: Partial<WorkflowVars> }> {
@@ -109,9 +109,9 @@ async function processStep(
   // CHECK PHASE
   pushState({ status: "checking" });
 
-  type CheckType =
-    typeof step.execute extends (ctx: StepExecuteContext<infer U>) => unknown ?
-      U
+  // Data carried from check() into execute() or propagated as newVars
+  type CheckType = Parameters<typeof step.check>[0] extends StepCheckContext<infer D>
+    ? D
     : never;
   let checkData!: CheckType;
   let checkFailed = false;
@@ -120,6 +120,7 @@ async function processStep(
   try {
     await step.check({
       ...baseContext,
+      vars,
       markComplete: (data) => {
         checkData = data;
         isComplete = true;
@@ -159,8 +160,11 @@ async function processStep(
     pushState({ status: "executing" });
 
     try {
+      // @ts-ignore dynamic checkData type for step.execute context
       await step.execute({
         ...baseContext,
+        vars,
+        // @ts-ignore dynamic checkData type
         checkData,
         markSucceeded: (newVars) => {
           finalVars = newVars;
@@ -186,15 +190,15 @@ async function processStep(
   return { state: currentState, newVars: finalVars };
 }
 
-export async function runStep(
-  stepId: StepId,
+export async function runStep<T extends StepId>(
+  stepId: T,
   vars: Partial<WorkflowVars>
 ): Promise<{ state: StepUIState; newVars: Partial<WorkflowVars> }> {
   return processStep(stepId, vars, true);
 }
 
-export async function checkStep(
-  stepId: StepId,
+export async function checkStep<T extends StepId>(
+  stepId: T,
   vars: Partial<WorkflowVars>
 ): Promise<{ state: StepUIState; newVars: Partial<WorkflowVars> }> {
   return processStep(stepId, vars, false);
