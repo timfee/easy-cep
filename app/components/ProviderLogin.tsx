@@ -62,42 +62,40 @@ export default function ProviderLogin({ onUpdate }: Props) {
   }, []);
 
   return (
-    <div className="backdrop-blur-xl bg-white/[0.02] border border-white/[0.05] rounded-xl shadow-[0_0_0_1px_rgba(255,255,255,0.03)] mb-4 p-4 transition-all duration-200 ease-out">
-      <h2 className="font-semibold mb-2 text-white">Provider Login</h2>
-      <div className="flex flex-col sm:flex-row gap-2">
+    <div className="mb-6 rounded-xl border border-blue-100 bg-gradient-to-r from-blue-50 to-indigo-50 p-6 shadow-sm">
+      <h2 className="mb-4 text-lg font-semibold text-gray-900">
+        Provider Login
+      </h2>
+      <div className="flex flex-col gap-3 sm:flex-row">
         {tokens.googleAccessToken ?
           <button
-            className="px-3 py-1.5 rounded backdrop-blur-sm bg-white/10 hover:bg-white/20 focus:outline-none focus:ring-2 focus:ring-blue-500/50 transition-all duration-200 ease-out"
+            className="flex h-11 items-center gap-2 rounded-lg border border-gray-300 bg-white px-4 text-gray-700 shadow-sm transition hover:bg-gray-50 hover:shadow"
             onClick={() => signOut(PROVIDERS.GOOGLE)}>
-            {`Sign out Google${
-              tokens.googleExpiresAt ?
-                ` (valid until ${new Date(tokens.googleExpiresAt).toLocaleTimeString()})`
-              : ""
-            }`}
+            <span>G</span>
+            {`Sign out Google`}
           </button>
         : <button
-            className="px-3 py-1.5 rounded bg-gradient-to-r from-blue-600 to-blue-500 hover:from-blue-500 hover:to-blue-400 focus:outline-none focus:ring-2 focus:ring-blue-500/50 transition-all duration-200 ease-out"
+            className="flex h-11 items-center gap-2 rounded-lg bg-primary px-4 text-white shadow-sm transition hover:bg-blue-700 hover:shadow"
             onClick={() =>
               (window.location.href = `/api/auth/${PROVIDERS.GOOGLE}`)
             }>
+            <span>G</span>
             Sign in with Google
           </button>
         }
         {tokens.msGraphToken ?
           <button
-            className="px-3 py-1.5 rounded backdrop-blur-sm bg-white/10 hover:bg-white/20 focus:outline-none focus:ring-2 focus:ring-blue-500/50 transition-all duration-200 ease-out"
+            className="flex h-11 items-center gap-2 rounded-lg border border-gray-300 bg-white px-4 text-gray-700 shadow-sm transition hover:bg-gray-50 hover:shadow"
             onClick={() => signOut(PROVIDERS.MICROSOFT)}>
-            {`Sign out Microsoft${
-              tokens.msGraphExpiresAt ?
-                ` (valid until ${new Date(tokens.msGraphExpiresAt).toLocaleTimeString()})`
-              : ""
-            }`}
+            <span>M</span>
+            {`Sign out Microsoft`}
           </button>
         : <button
-            className="px-3 py-1.5 rounded bg-gradient-to-r from-blue-600 to-blue-500 hover:from-blue-500 hover:to-blue-400 focus:outline-none focus:ring-2 focus:ring-blue-500/50 transition-all duration-200 ease-out"
+            className="flex h-11 items-center gap-2 rounded-lg bg-primary px-4 text-white shadow-sm transition hover:bg-blue-700 hover:shadow"
             onClick={() =>
               (window.location.href = `/api/auth/${PROVIDERS.MICROSOFT}`)
             }>
+            <span>M</span>
             Sign in with Microsoft
           </button>
         }

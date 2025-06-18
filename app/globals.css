@@ -1,28 +1,24 @@
 @import "tailwindcss";
 
 :root {
-  --background: #0a0a0a;
-  --foreground: #ededed;
+  --background: #ffffff;
+  --foreground: #0a0a0a;
 
-  --gray-50: #f9fafb;
-  --gray-100: #f3f4f6;
-  --gray-200: #e5e7eb;
-  --gray-300: #d1d5db;
-  --gray-400: #9ca3af;
-  --gray-500: #6b7280;
-  --gray-600: #4b5563;
-  --gray-700: #374151;
+  --gray-50: #fafafa;
+  --gray-100: #f4f4f5;
+  --gray-200: #e4e4e7;
+  --gray-300: #d4d4d8;
+  --gray-400: #a1a1aa;
+  --gray-500: #71717a;
+  --gray-600: #52525b;
+  --gray-700: #3f3f46;
   --gray-800: #27272a;
   --gray-900: #18181b;
 
-  --blue-500: #3b82f6;
-  --green-500: #10b981;
-  --amber-500: #f59e0b;
-
-  --surface-elevated: #18181b;
-  --surface-overlay: #27272a;
-
-  --border-subtle: rgba(255, 255, 255, 0.08);
+  --primary: #0066ff;
+  --success: #00c853;
+  --warning: #ff6d00;
+  --error: #d32f2f;
 }
 
 @theme inline {
@@ -30,19 +26,33 @@
   --color-foreground: var(--foreground);
 }
 
-body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family:
-    Inter,
-    "SF Pro Text",
-    system-ui,
-    -apple-system,
-    BlinkMacSystemFont,
-    "Segoe UI",
-    Roboto,
-    Helvetica,
-    Arial,
-    sans-serif;
-  scroll-behavior: smooth;
+@layer base {
+  body {
+    background: var(--background);
+    color: var(--foreground);
+    font-family:
+      system-ui,
+      -apple-system,
+      "Inter",
+      sans-serif;
+    scroll-behavior: smooth;
+  }
+  h1 {
+    @apply text-2xl font-semibold text-gray-900;
+  }
+  h2 {
+    @apply text-xl font-semibold text-gray-900;
+  }
+  h3 {
+    @apply text-lg font-medium text-gray-800;
+  }
+  body {
+    @apply text-base text-gray-700;
+  }
+  small {
+    @apply text-sm text-gray-600;
+  }
+  .caption {
+    @apply text-xs text-gray-500;
+  }
 }

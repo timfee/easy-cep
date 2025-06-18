@@ -3,6 +3,7 @@
 import { StepIdValue, StepUIState, WorkflowVars } from "@/types";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { checkStep, runStep } from "../workflow/engine";
+import AppShell from "./AppShell";
 import ProviderLogin from "./ProviderLogin";
 import StepCard, { StepInfo } from "./StepCard";
 
@@ -41,7 +42,6 @@ export default function WorkflowClient({ steps }: Props) {
     []
   );
 
-  // Check steps when their required vars become available
   const checkedSteps = useRef(new Set<StepIdValue>());
   useEffect(() => {
     (async () => {
@@ -84,26 +84,31 @@ export default function WorkflowClient({ steps }: Props) {
     }
   }
 
+  const completed = steps.filter(
+    (s) => status[s.id]?.status === "complete"
+  ).length;
+
   return (
-    <main className="min-h-screen bg-zinc-950 bg-gradient-to-br from-zinc-950 via-zinc-900 to-zinc-950">
-      <header className="sticky top-0 z-10 backdrop-blur-xl bg-zinc-950/80 border-b border-white/[0.08] shadow-[0_1px_3px_rgba(0,0,0,0.3)]">
-        <div className="max-w-7xl mx-auto px-6 py-3">
-          <h1 className="text-white text-sm font-medium">Easy CEP</h1>
-        </div>
-      </header>
-      <div className="max-w-7xl mx-auto px-6 py-8">
-        <ProviderLogin onUpdate={updateVars} />
-        {steps.map((step) => (
-          <StepCard
-            key={step.id}
-            definition={step}
-            state={status[step.id]}
-            vars={vars}
-            executing={executing !== null}
-            onExecute={handleExecute}
-          />
-        ))}
+    <AppShell sidebar={<nav className="p-4 space-y-2">Workflow</nav>}>
+      <h1 className="text-2xl font-bold text-gray-900 mb-8">Workflow</h1>
+      <p className="text-gray-600 mb-6">
+        Run each step to configure the environment.
+      </p>
+      <div className="mb-4 text-sm text-gray-600">
+        {completed} of {steps.length} steps complete
       </div>
-    </main>
+      <ProviderLogin onUpdate={updateVars} />
+      {steps.map((step, idx) => (
+        <StepCard
+          key={step.id}
+          index={idx}
+          definition={step}
+          state={status[step.id]}
+          vars={vars}
+          executing={executing !== null}
+          onExecute={handleExecute}
+        />
+      ))}
+    </AppShell>
   );
 }
