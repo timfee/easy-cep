@@ -122,6 +122,7 @@ export default function WorkflowClient({ steps }: Props) {
       updateStep(id, result.state);
 
       if (result.state.status === "reverted") {
+        // Clear provided vars and force a fresh check (step returns to idle)
         setVars((prev) => {
           const next = { ...prev };
           for (const v of def.provides) {
@@ -130,6 +131,7 @@ export default function WorkflowClient({ steps }: Props) {
           return next;
         });
         checkedSteps.current.delete(id);
+        updateStep(id, { status: "idle" });
       }
     } catch (error) {
       console.error("Failed to undo step:", error);

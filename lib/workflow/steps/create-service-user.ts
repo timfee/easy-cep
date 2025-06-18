@@ -54,8 +54,20 @@ export default createStep<CheckData>({
         })
         .passthrough();
       const email = `azuread-provisioning@${domain}`;
+      // If we already have a provisioning user recorded, skip the API check
+      const existingId = vars[Var.ProvisioningUserId] as string | undefined;
+      const existingEmail = vars[Var.ProvisioningUserEmail] as
+        | string
+        | undefined;
+      if (existingId && existingEmail) {
+        log(LogLevel.Info, "Service user recorded from previous run");
+        markComplete({
+          provisioningUserId: existingId,
+          provisioningUserEmail: existingEmail
+        });
+        return;
+      }
       const url = `${ApiEndpoint.Google.Users}/${encodeURIComponent(email)}`;
-
       const user = await fetchGoogle(url, UserSchema);
 
       if (user.id && user.primaryEmail) {
@@ -170,7 +182,11 @@ export default createStep<CheckData>({
       );
       markReverted();
     } catch (error) {
-      if (error instanceof Error && error.message.startsWith("HTTP 404")) {
+      if (
+        error instanceof Error
+        && (error.message.startsWith("HTTP 404")
+          || error.message.startsWith("HTTP 412"))
+      ) {
         markReverted();
       } else {
         log(LogLevel.Error, "Failed to delete service user", { error });

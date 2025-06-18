@@ -38,8 +38,8 @@ export default function StepLogs({ logs }: StepLogsProps) {
         </Badge>
       </button>
       {expanded && (
-        <div className="mt-2 max-h-80 overflow-y-auto">
-          <Table dense bleed>
+        <div className="mt-2 max-h-80 overflow-y-auto overflow-x-hidden">
+          <Table dense>
             <TableBody>
               {logs.map((log, idx) => (
                 <TableRow key={idx}>
@@ -57,7 +57,7 @@ export default function StepLogs({ logs }: StepLogsProps) {
                         {log.message}
                       </summary>
                       {log.data !== undefined && (
-                        <pre className="mt-2 max-h-48 rounded bg-zinc-50 p-2 text-xs leading-none">
+                        <pre className="mt-2 max-h-48 whitespace-pre-wrap break-words rounded bg-zinc-50 p-2 text-xs">
                           {JSON.stringify(log.data, null, 2)}
                         </pre>
                       )}

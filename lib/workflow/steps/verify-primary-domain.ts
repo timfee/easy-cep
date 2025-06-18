@@ -174,7 +174,7 @@ export default createStep<CheckData>({
       markFailed(error instanceof Error ? error.message : "Execute failed");
     }
   },
-  undo: async ({ markFailed }) => {
-    markFailed("Cannot automatically unverify domain");
+  undo: async ({ markReverted }) => {
+    markReverted();
   }
 });

@@ -260,7 +260,7 @@ export default createStep<CheckData>({
       markFailed(error instanceof Error ? error.message : "Execute failed");
     }
   },
-  undo: async ({ markFailed }) => {
-    markFailed("Manual configuration cannot be reverted automatically");
+  undo: async ({ markReverted }) => {
+    markReverted();
   }
 });

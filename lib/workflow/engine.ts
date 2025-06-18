@@ -110,7 +110,13 @@ async function processStep<T extends StepIdValue>(
           level: LogLevel.Debug
         });
         if (!res.ok) throw new Error(`HTTP ${res.status}: ${res.statusText}`);
-        const json = await res.json();
+        // Attempt to parse JSON; empty responses (e.g. 204 No Content) yield an empty object
+        let json: unknown;
+        try {
+          json = await res.json();
+        } catch {
+          json = {};
+        }
         return schema.parse(json);
       };
 
@@ -331,7 +337,13 @@ async function processUndoStep<T extends StepIdValue>(
           level: LogLevel.Debug
         });
         if (!res.ok) throw new Error(`HTTP ${res.status}: ${res.statusText}`);
-        const json = await res.json();
+        // Handle empty response (e.g. 204 No Content) by falling back to an empty object
+        let json: unknown;
+        try {
+          json = await res.json();
+        } catch {
+          json = {};
+        }
         return schema.parse(json);
       };
 

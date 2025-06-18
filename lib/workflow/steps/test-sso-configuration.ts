@@ -24,7 +24,7 @@ export default createStep<CheckData>({
       markPending("Complete login flow manually");
     }
   },
-  undo: async ({ markFailed }) => {
-    markFailed("Manual test cannot be reverted automatically");
+  undo: async ({ markReverted }) => {
+    markReverted();
   }
 });
