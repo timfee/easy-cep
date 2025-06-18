@@ -44,14 +44,12 @@ export default function StepLogs({ logs }: StepLogsProps) {
               {logs.map((log, idx) => (
                 <TableRow key={idx}>
                   <TableCell className="w-28 text-xs text-zinc-500">
-                    {new Date(log.timestamp).toLocaleTimeString()}
-                  </TableCell>
-                  <TableCell className="w-20">
                     {log.level && (
-                      <Badge size="xs" color={levelColor[log.level]}>
+                      <Badge size="xs" color={levelColor[log.level]} className="mb-1 block">
                         {log.level}
                       </Badge>
                     )}
+                    <div>{new Date(log.timestamp).toLocaleTimeString()}</div>
                   </TableCell>
                   <TableCell className="py-2">
                     <details className="group">
