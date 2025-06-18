@@ -20,12 +20,35 @@ interface StepLogsProps {
 export default function StepLogs({ logs }: StepLogsProps) {
   if (!logs || logs.length === 0) return null;
 
-  const levelColor: Record<LogLevel, "blue" | "amber" | "red" | "zinc"> = {
+  const levelColor: Record<
+    LogLevel,
+    | "zinc"
+    | "indigo"
+    | "cyan"
+    | "red"
+    | "orange"
+    | "amber"
+    | "yellow"
+    | "lime"
+    | "green"
+    | "emerald"
+    | "teal"
+    | "sky"
+    | "blue"
+    | "violet"
+    | "purple"
+    | "fuchsia"
+    | "pink"
+    | "rose"
+    | undefined
+  > = {
     [LogLevel.Info]: "blue",
     [LogLevel.Warn]: "amber",
     [LogLevel.Error]: "red",
     [LogLevel.Debug]: "zinc"
   };
+
+  const INDENT = 2;
 
   return (
     <Disclosure>
