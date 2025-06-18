@@ -1,0 +1,19 @@
+{
+  "id": "ef36b7bd-231b-421e-ac50-8f2995a39eee",
+  "verifiedDomains": [
+    {
+      "capabilities": "Email, OfficeCommunicationsOnline",
+      "isDefault": false,
+      "isInitial": true,
+      "name": "timcepnetnew.onmicrosoft.com",
+      "type": "Managed"
+    },
+    {
+      "capabilities": "CustomUrlDomain",
+      "isDefault": true,
+      "isInitial": false,
+      "name": "cep-netnew.cc",
+      "type": "Managed"
+    }
+  ]
+}
