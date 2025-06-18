@@ -1,8 +1,8 @@
+import type { WorkflowVars } from "@/types";
 import { StepId } from "@/types";
 import { createStep } from "../create-step";
 
-// eslint-disable-next-line @typescript-eslint/no-empty-object-type
-interface CheckData {}
+type CheckData = Partial<Pick<WorkflowVars, never>>;
 
 export default createStep<CheckData>({
   id: StepId.TestSsoConfiguration,

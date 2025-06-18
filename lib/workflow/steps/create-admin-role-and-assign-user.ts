@@ -1,5 +1,9 @@
 import { ApiEndpoint } from "@/constants";
-import { EmptyResponseSchema, findInTree, isConflictError } from "@/lib/workflow/utils";
+import {
+  EmptyResponseSchema,
+  findInTree,
+  isConflictError
+} from "@/lib/workflow/utils";
 import { LogLevel, StepId, Var } from "@/types";
 import { z } from "zod";
 import { createStep, getVar } from "../create-step";
@@ -300,13 +304,7 @@ export default createStep<CheckData>({
       markFailed(error instanceof Error ? error.message : "Execute failed");
     }
   },
-  undo: async ({
-    vars,
-    fetchGoogle,
-    markReverted,
-    markFailed,
-    log
-  }) => {
+  undo: async ({ vars, fetchGoogle, markReverted, markFailed, log }) => {
     try {
       const roleId = vars[Var.AdminRoleId] as string | undefined;
       const userId = vars[Var.ProvisioningUserId] as string | undefined;

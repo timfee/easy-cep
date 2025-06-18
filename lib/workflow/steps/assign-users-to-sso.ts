@@ -1,11 +1,11 @@
 import { ApiEndpoint, GroupId } from "@/constants";
 import { EmptyResponseSchema, isConflictError } from "@/lib/workflow/utils";
+import type { WorkflowVars } from "@/types";
 import { LogLevel, StepId, Var } from "@/types";
 import { z } from "zod";
 import { createStep, getVar } from "../create-step";
 
-// eslint-disable-next-line @typescript-eslint/no-empty-object-type
-interface CheckData {}
+type CheckData = Partial<Pick<WorkflowVars, never>>;
 
 export default createStep<CheckData>({
   id: StepId.AssignUsersToSso,
@@ -180,8 +180,8 @@ export default createStep<CheckData>({
       const target = `groups/${GroupId.AllUsers}`;
       const assignment = inboundSsoAssignments.find(
         (a) =>
-          a.targetGroup === target &&
-          a.samlSsoInfo?.inboundSamlSsoProfile === profileId
+          a.targetGroup === target
+          && a.samlSsoInfo?.inboundSamlSsoProfile === profileId
       );
 
       if (assignment) {

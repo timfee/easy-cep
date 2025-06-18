@@ -28,7 +28,7 @@ export interface StepDefinition<
   id: StepIdValue;
   requires: R;
   provides: P;
-  undo?: (ctx: StepUndoContext<unknown>) => Promise<void>;
+  undo?: (ctx: StepUndoContext) => Promise<void>;
 }
 
 export interface StepRunResult {
@@ -75,7 +75,7 @@ export interface StepExecuteContext<T> {
   markPending(notes: string): void;
 }
 
-export interface StepUndoContext<T> {
+export interface StepUndoContext {
   fetchGoogle<R>(
     url: string,
     schema: z.ZodSchema<R>,
@@ -91,8 +91,6 @@ export interface StepUndoContext<T> {
   markReverted(): void;
   markFailed(error: string): void;
 }
-
-export type { StepUndoContext };
 
 export interface StepLogEntry {
   timestamp: number;

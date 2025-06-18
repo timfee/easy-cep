@@ -99,7 +99,7 @@ export default createStep<CheckData>({
             verificationToken: verificationData.token,
             verificationMethod: "DNS_TXT"
           });
-        } catch (_error) {
+        } catch {
           markIncomplete("Domain not verified", {
             isDomainVerified: false,
             primaryDomain: primary.domainName
@@ -157,7 +157,7 @@ export default createStep<CheckData>({
           [Var.PrimaryDomain]: checkData.primaryDomain,
           [Var.VerificationToken]: checkData.verificationToken || ""
         });
-      } catch (_error) {
+      } catch {
         if (checkData.verificationToken) {
           markPending(
             `Add TXT record to DNS: ${checkData.verificationToken}\n`

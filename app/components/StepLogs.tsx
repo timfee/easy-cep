@@ -58,7 +58,7 @@ export default function StepLogs({ logs }: StepLogsProps) {
                       <summary className="cursor-pointer text-xs">
                         {log.message}
                       </summary>
-                      {log.data && (
+                      {log.data !== undefined && (
                         <pre className="mt-2 max-h-48 overflow-auto rounded bg-zinc-50 p-2 text-[10px]">
                           {JSON.stringify(log.data, null, 2)}
                         </pre>

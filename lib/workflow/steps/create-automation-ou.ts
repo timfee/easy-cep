@@ -1,11 +1,11 @@
 import { ApiEndpoint, OrgUnit } from "@/constants";
 import { EmptyResponseSchema, isConflictError } from "@/lib/workflow/utils";
+import type { WorkflowVars } from "@/types";
 import { LogLevel, StepId, Var } from "@/types";
 import { z } from "zod";
 import { createStep } from "../create-step";
 
-// eslint-disable-next-line @typescript-eslint/no-empty-object-type
-interface CheckData {}
+type CheckData = Partial<Pick<WorkflowVars, never>>;
 export default createStep<CheckData>({
   id: StepId.CreateAutomationOU,
   requires: [Var.GoogleAccessToken, Var.IsDomainVerified],

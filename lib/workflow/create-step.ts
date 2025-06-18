@@ -16,8 +16,8 @@ import type {
   StepCheckContext,
   StepDefinition,
   StepExecuteContext,
-  StepUndoContext,
   StepIdValue,
+  StepUndoContext,
   VarName,
   WorkflowVars
 } from "@/types";
@@ -57,7 +57,7 @@ export function createStep<
    * on the context.
    */
   execute: (ctx: StepExecuteContext<D>) => Promise<void>;
-  undo?: (ctx: StepUndoContext<D>) => Promise<void>;
+  undo?: (ctx: StepUndoContext) => Promise<void>;
 }): StepDefinition<R, P> & {
   check(ctx: StepCheckContext<D>): Promise<void>;
   check<T2 extends Partial<WorkflowVars>>(
@@ -67,14 +67,35 @@ export function createStep<
   execute<T2 extends Partial<WorkflowVars>>(
     ctx: StepExecuteContext<T2>
   ): Promise<void>;
-  undo?(ctx: StepUndoContext<D>): Promise<void>;
-  undo?<T2 extends Partial<WorkflowVars>>(
-    ctx: StepUndoContext<T2>
-  ): Promise<void>;
+  undo?(ctx: StepUndoContext): Promise<void>;
 } {
-  // The function merely re-emits the object so that TypeScript retains the
-  // literal types of `requires` and `provides` for downstream consumers.
-  return args;
+  // Wrap the original handlers to enforce presence of all declared `requires`
+  const wrappedCheck = async (ctx: StepCheckContext<D>) => {
+    for (const key of args.requires) {
+      if (ctx.vars[key] === undefined) {
+        return ctx.markCheckFailed(`Missing required variable ${key}`);
+      }
+    }
+    return args.check(ctx);
+  };
+
+  const wrappedExecute = async (ctx: StepExecuteContext<D>) => {
+    for (const key of args.requires) {
+      if (ctx.vars[key] === undefined) {
+        throw new Error(`Missing required variable ${key}`);
+      }
+    }
+    return args.execute(ctx);
+  };
+
+  return {
+    id: args.id,
+    requires: args.requires,
+    provides: args.provides,
+    check: wrappedCheck,
+    execute: wrappedExecute,
+    undo: args.undo
+  };
 }
 
 /**

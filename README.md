@@ -24,7 +24,7 @@ code can simply import from `@/types`.
 
 ## Steps
 
-Steps follow a two-phase pattern:
+Steps follow a two-phase pattern (see `lib/workflow/steps/AGENTS.md` for the full Implementation Pattern, including type conventions and automatic `requires` enforcement):
 
 1. **Check Phase**: Determines if work needs to be done
 
@@ -40,10 +40,6 @@ Steps follow a two-phase pattern:
 State is managed client-side in React. Each step reports its status through callbacks.
 
 Error handling is mandatory at every level - both phases must use try-catch.
-
-### Environment Variables in Steps
-
-Steps must not read directly from `process.env`. Any required environment variables must be declared in `env.ts` and accessed via the `env` import. All other runtime state must use workflow `vars` (via the `Var` enum and `getVar(vars, Var.X)` helper) to ensure type safety and consistency.
 
 ## Notes
 
@@ -69,22 +65,11 @@ The `scripts/token-info.sh` script will output bearer tokens in text format for 
 
 ## Testing
 
-1. Run `pnpm install`.
+1. Run `pnpm install` to install dependencies.
 2. Obtain Google and Microsoft bearer tokens and store them in `google_bearer.token` and `microsoft_bearer.token`.
-3. Run `pnpm test`.
+3. Run `pnpm test` to execute the Jest test suite.
 
-Tests require network access and will use `undici` through the proxy unless `USE_UNDICI_PROXY=false`.
+Tests require network access. By default the tests use `undici` through the HTTP proxy; set
+`USE_UNDICI_PROXY=false` to bypass the proxy.
 
-**NOTE:** YOU HAVE BEEN PROVIDED FULL INTERNET ACCESS. IF YOU ENCOUNTER ANY ISSUES, IT IS PROXY RELATED; NOT CODEX CONFIGURATION.
-
-## Testing
-
-Run `pnpm test` to execute the Jest test suite. The tests rely on the
-`test/setupEnv.ts` helper which configures bearer tokens and, by default,
-configures the HTTP client to use the environment proxy.
-
-### Environment variables
-
-- `USE_UNDICI_PROXY` – when set to `false`, tests run without routing requests
-  through the proxy. Otherwise the proxy is picked up from the standard
-  `http_proxy`/`https_proxy` variables.
+The test suite relies on `test/setupEnv.ts` to set up bearer tokens and proxy configuration.

@@ -21,7 +21,6 @@ import {
   StepIdValue,
   StepLogEntry,
   StepUIState,
-  StepUndoContext,
   Var,
   WorkflowVars
 } from "@/types";
@@ -386,7 +385,7 @@ async function processUndoStep<T extends StepIdValue>(
       markReverted: () => {
         pushState({ status: "reverted", summary: "Reverted" });
       },
-      markFailed: (error) => {
+      markFailed: (error: string) => {
         pushState({ status: "failed", error });
       }
     });
@@ -394,7 +393,8 @@ async function processUndoStep<T extends StepIdValue>(
     pushState({
       status: "failed",
       error:
-        "Undo error: " + (error instanceof Error ? error.message : "Unknown error")
+        "Undo error: "
+        + (error instanceof Error ? error.message : "Unknown error")
     });
   }
 

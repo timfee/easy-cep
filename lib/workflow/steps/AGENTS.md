@@ -19,12 +19,30 @@ mutations are allowed during step development.
 
 Every step MUST follow this exact pattern:
 
-1. Define interface for check data
-2. Call createStep with generic parameter
-3. In check: ALWAYS wrap in try-catch, ALWAYS call one of: markComplete, markIncomplete, markCheckFailed
-4. In execute: ALWAYS wrap in try-catch, ALWAYS call one of: markSucceeded, markFailed, markPending
-5. Use ApiEndpoint constants for ALL URLs
-6. Define Zod schemas inline before API calls
+1. Define the `CheckData` type for data extracted in your `check()` phase:
+   - For non-empty payloads, declare an `interface CheckData { … }` listing each field.
+   - If your step extracts no data, use the empty alias:
+
+     ```ts
+     import type { WorkflowVars } from "@/types";
+     type CheckData = Partial<Pick<WorkflowVars, never>>;
+     ```
+
+2. Call `createStep<CheckData>({...})` with your `id`, `requires`, and `provides`.
+3. In `check()`: wrap in `try/catch`, then call exactly one of:
+   `markComplete`, `markIncomplete`, or `markCheckFailed`.
+4. In `execute()`: wrap in `try/catch`, then call exactly one of:
+   `markSucceeded`, `markFailed`, or `markPending`.
+5. Use `ApiEndpoint` constants for ALL URLs.
+6. Define Zod schemas inline before API calls (never use `z.any()`).
+7. You do _not_ need manual token/var checks—`createStep` now automatically fails the check if any declared `requires` variable is missing.
+
+### Environment Variables in Steps
+
+Steps must not read directly from `process.env`. Any required environment variables
+must be declared in `env.ts` and accessed via the `env` import. All other runtime
+state must use workflow `vars` (via the `Var` enum and `getVar(vars, Var.X)` helper)
+to ensure type safety and consistency.
 
 Examples of URL usage:
 
@@ -318,7 +336,7 @@ Authorization: Bearer {googleAccessToken}
 directoryServiceId = .items[] | select(.privilegeName == "USERS_RETRIEVE") | .serviceId
 ```
 
-2. **POST Create Role**
+1. **POST Create Role**
 
 ```http
 POST https://admin.googleapis.com/admin/directory/v1/customer/my_customer/roles
@@ -352,7 +370,7 @@ Content-Type: application/json
 adminRoleId = .roleId
 ```
 
-2. **POST Role Assignment**
+1. **POST Role Assignment**
 
 #### Step 4 Execution Request 3: Assign Role
 
@@ -553,7 +571,7 @@ Content-Type: application/json
 { "displayName": "Google Workspace Provisioning" }
 ```
 
-2. SSO App
+1. SSO App
 
 ```http
 POST https://graph.microsoft.com/v1.0/applicationTemplates/8b1025e4-1dd2-430b-a150-2ef79cd700f5/instantiate
@@ -621,7 +639,7 @@ Content-Type: application/json
 
 Expected: `201 Created` returning job ID
 
-2. Set Secrets
+1. Set Secrets
 
 ```http
 PUT https://graph.microsoft.com/v1.0/servicePrincipals/{provisioningServicePrincipalId}/synchronization/secrets
@@ -638,7 +656,7 @@ Content-Type: application/json
 
 Expected: `204 No Content`
 
-3. Start Job
+1. Start Job
 
 ```http
 POST https://graph.microsoft.com/v1.0/servicePrincipals/{provisioningServicePrincipalId}/synchronization/jobs/{jobId}/start
@@ -706,7 +724,7 @@ Expected Responses:
 - `201 Created`: policy created → extract `claimsPolicyId`
 - `409 Conflict`: existing policy → query fetching needed
 
-2. Assign to SP
+1. Assign to SP
 
 ```http
 POST https://graph.microsoft.com/v1.0/servicePrincipals/{ssoServicePrincipalId}/claimsMappingPolicies/$ref

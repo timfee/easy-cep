@@ -9,8 +9,11 @@ interface ApiCallMetadata {
 }
 
 function extractPath(url: string): string {
+  // eslint-disable-next-line workflow/no-hardcoded-urls
   const googlePrefix = "https://admin.googleapis.com/admin/directory/v1";
+  // eslint-disable-next-line workflow/no-hardcoded-urls
   const googleCloudPrefix = "https://cloudidentity.googleapis.com/v1";
+  // eslint-disable-next-line workflow/no-hardcoded-urls
   const msGraphPrefix = "https://graph.microsoft.com";
 
   if (url.startsWith(googlePrefix)) {

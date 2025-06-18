@@ -61,7 +61,13 @@ const eslintConfig = [
     }
   },
   {
-    ignores: ["**/__tests__/**", "test/**", "constants.ts", "types.ts"],
+    ignores: [
+      "**/__tests__/**",
+      "test/**",
+      "constants.ts",
+      "**/api-prefixes.ts",
+      "types.ts"
+    ],
     rules: {
       "@typescript-eslint/no-unused-vars": [
         "warn",

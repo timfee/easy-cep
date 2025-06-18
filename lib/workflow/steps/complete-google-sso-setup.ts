@@ -1,13 +1,10 @@
 import { ApiEndpoint } from "@/constants";
+import type { WorkflowVars } from "@/types";
 import { LogLevel, StepId, Var } from "@/types";
 import { z } from "zod";
 import { createStep, getVar } from "../create-step";
 
-interface CheckData {
-  isConfigured?: boolean;
-  currentIdpEntityId?: string;
-  currentSsoUri?: string;
-}
+type CheckData = Partial<Pick<WorkflowVars, never>>;
 
 export default createStep<CheckData>({
   id: StepId.CompleteGoogleSsoSetup,
@@ -15,14 +12,18 @@ export default createStep<CheckData>({
     Var.GoogleAccessToken,
     Var.MsGraphToken,
     Var.SamlProfileId,
-    Var.EntityId,
-    Var.AcsUrl,
-    Var.SsoServicePrincipalId,
-    Var.IsDomainVerified
+    Var.SsoServicePrincipalId
   ],
   provides: [],
 
-  async check({ vars, fetchGoogle, markComplete, markIncomplete, markCheckFailed, log }) {
+  async check({
+    vars,
+    fetchGoogle,
+    markComplete,
+    markIncomplete,
+    markCheckFailed,
+    log
+  }) {
     try {
       const profileId = getVar(vars, Var.SamlProfileId);
 
@@ -47,23 +48,15 @@ export default createStep<CheckData>({
       );
 
       if (
-        profile.idpConfig?.entityId &&
-        profile.idpConfig?.singleSignOnServiceUri &&
-        profile.idpConfig.entityId !== "" &&
-        profile.idpConfig.singleSignOnServiceUri !== ""
+        profile.idpConfig?.entityId
+        && profile.idpConfig.singleSignOnServiceUri
+        && profile.idpConfig.entityId !== ""
+        && profile.idpConfig.singleSignOnServiceUri !== ""
       ) {
         log(LogLevel.Info, "Google SSO already configured");
-        markComplete({
-          isConfigured: true,
-          currentIdpEntityId: profile.idpConfig.entityId,
-          currentSsoUri: profile.idpConfig.singleSignOnServiceUri
-        });
+        markComplete({});
       } else {
-        markIncomplete("Google SSO configuration incomplete", {
-          isConfigured: false,
-          currentIdpEntityId: profile.idpConfig?.entityId,
-          currentSsoUri: profile.idpConfig?.singleSignOnServiceUri
-        });
+        markIncomplete("Google SSO configuration incomplete", {});
       }
     } catch (error) {
       log(LogLevel.Error, "Failed to check SSO configuration", { error });
@@ -71,7 +64,14 @@ export default createStep<CheckData>({
     }
   },
 
-  async execute({ vars, fetchGoogle, fetchMicrosoft, markSucceeded, markFailed, log }) {
+  async execute({
+    vars,
+    fetchGoogle,
+    fetchMicrosoft,
+    markSucceeded,
+    markFailed,
+    log
+  }) {
     try {
       const profileId = getVar(vars, Var.SamlProfileId);
       const ssoSpId = getVar(vars, Var.SsoServicePrincipalId);
@@ -100,10 +100,7 @@ export default createStep<CheckData>({
           z.object({
             id: z.string(),
             verifiedDomains: z.array(
-              z.object({
-                name: z.string(),
-                isDefault: z.boolean()
-              })
+              z.object({ name: z.string(), isDefault: z.boolean() })
             )
           })
         )
@@ -179,22 +176,23 @@ export default createStep<CheckData>({
       }
 
       const certData = activeCert.key;
-      const pemCert = certData.includes("BEGIN CERTIFICATE")
-        ? certData
-        : `-----BEGIN CERTIFICATE-----\n${certData}\n-----END CERTIFICATE-----`;
+      const pemCert =
+        certData.includes("BEGIN CERTIFICATE") ? certData : (
+          `-----BEGIN CERTIFICATE-----\n${certData}\n-----END CERTIFICATE-----`
+        );
 
-      log(LogLevel.Info, "Updating Google SAML profile with Azure AD configuration");
+      log(
+        LogLevel.Info,
+        "Updating Google SAML profile with Azure AD configuration"
+      );
 
       const UpdateSchema = z.object({
         name: z.string(),
         done: z.boolean(),
         error: z
-          .object({
-            message: z.string(),
-            code: z.number().optional()
-          })
+          .object({ message: z.string(), code: z.number().optional() })
           .optional(),
-        response: z.any().optional()
+        response: z.unknown().optional()
       });
 
       const updateMask =
@@ -220,7 +218,9 @@ export default createStep<CheckData>({
       }
 
       if (updateOp.error) {
-        log(LogLevel.Error, "SAML profile update failed", { error: updateOp.error });
+        log(LogLevel.Error, "SAML profile update failed", {
+          error: updateOp.error
+        });
         markFailed(updateOp.error.message);
         return;
       }
@@ -246,7 +246,9 @@ export default createStep<CheckData>({
       }
 
       if (certOp.error) {
-        log(LogLevel.Error, "Certificate upload failed", { error: certOp.error });
+        log(LogLevel.Error, "Certificate upload failed", {
+          error: certOp.error
+        });
         markFailed(certOp.error.message);
         return;
       }

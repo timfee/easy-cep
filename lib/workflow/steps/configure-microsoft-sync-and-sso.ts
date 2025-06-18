@@ -1,11 +1,11 @@
 import { ApiEndpoint, SyncTemplateId } from "@/constants";
 import { EmptyResponseSchema } from "@/lib/workflow/utils";
+import type { WorkflowVars } from "@/types";
 import { LogLevel, StepId, Var } from "@/types";
 import { z } from "zod";
 import { createStep, getVar } from "../create-step";
 
-// eslint-disable-next-line @typescript-eslint/no-empty-object-type
-interface CheckData {}
+type CheckData = Partial<Pick<WorkflowVars, never>>;
 
 export default createStep<CheckData>({
   id: StepId.ConfigureMicrosoftSyncAndSso,
@@ -124,13 +124,17 @@ export default createStep<CheckData>({
   },
   undo: async ({ vars, fetchMicrosoft, markReverted, markFailed, log }) => {
     try {
-      const spId = vars[Var.ProvisioningServicePrincipalId] as string | undefined;
+      const spId = vars[Var.ProvisioningServicePrincipalId] as
+        | string
+        | undefined;
       if (!spId) {
         markFailed("Missing service principal id");
         return;
       }
 
-      const JobsSchema = z.object({ value: z.array(z.object({ id: z.string() })) });
+      const JobsSchema = z.object({
+        value: z.array(z.object({ id: z.string() }))
+      });
       const { value } = await fetchMicrosoft(
         ApiEndpoint.Microsoft.SyncJobs(spId),
         JobsSchema,

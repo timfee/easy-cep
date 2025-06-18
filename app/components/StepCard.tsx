@@ -66,10 +66,10 @@ export default function StepCard({
   const missing = definition.requires.filter((v) => !vars[v]);
   const status = state?.status ?? "idle";
   const inProgress =
-    status === "checking" ||
-    status === "executing" ||
-    status === "pending" ||
-    status === "undoing";
+    status === "checking"
+    || status === "executing"
+    || status === "pending"
+    || status === "undoing";
   const executed = status === "complete" || status === "failed";
 
   return (

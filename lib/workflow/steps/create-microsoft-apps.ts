@@ -176,7 +176,9 @@ export default createStep<CheckData>({
   },
   undo: async ({ vars, fetchMicrosoft, markReverted, markFailed, log }) => {
     try {
-      const provSpId = vars[Var.ProvisioningServicePrincipalId] as string | undefined;
+      const provSpId = vars[Var.ProvisioningServicePrincipalId] as
+        | string
+        | undefined;
       const ssoSpId = vars[Var.SsoServicePrincipalId] as string | undefined;
       const appId = vars[Var.SsoAppId] as string | undefined;
 
