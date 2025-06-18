@@ -1,12 +1,32 @@
 "use client";
 import { StepIdValue, StepUIState, VarName, WorkflowVars } from "@/types";
 import StepLogs from "./StepLogs";
+import { Badge } from "./ui/badge";
+import { Button } from "./ui/button";
+import {
+  DescriptionDetails,
+  DescriptionList,
+  DescriptionTerm
+} from "./ui/description-list";
+import { Heading } from "./ui/heading";
 
 export interface StepInfo {
   id: StepIdValue;
   requires: readonly VarName[];
   provides: readonly VarName[];
 }
+
+const statusColor: Record<
+  StepUIState["status"],
+  "zinc" | "sky" | "blue" | "green" | "red" | "amber"
+> = {
+  idle: "zinc",
+  checking: "sky",
+  executing: "blue",
+  complete: "green",
+  failed: "red",
+  pending: "amber"
+};
 
 interface StepCardProps {
   definition: StepInfo;
@@ -26,42 +46,59 @@ export default function StepCard({
   const missing = definition.requires.filter((v) => !vars[v]);
 
   return (
-    <div className="border p-4 rounded mb-4">
-      <h2 className="font-semibold mb-1">{definition.id}</h2>
-      <div className="text-sm mb-1">Status: {state?.status ?? "idle"}</div>
-      <div className="text-sm mb-2">
-        {state?.summary || state?.error || state?.notes || ""}
+    <div className="border p-4 rounded mb-4 space-y-3">
+      <Heading level={2}>{definition.id}</Heading>
+      <div className="text-sm flex items-center gap-2">
+        <span>Status:</span>
+        <Badge color={statusColor[state?.status ?? "idle"]}>
+          {state?.status ?? "idle"}
+        </Badge>
       </div>
+      {(state?.summary || state?.error || state?.notes) && (
+        <div className="text-sm text-zinc-700 dark:text-zinc-300">
+          {state?.summary || state?.error || state?.notes}
+        </div>
+      )}
 
-      <div className="mb-2">
-        <strong>Requires</strong>
-        <ul className="list-disc list-inside">
+      <div>
+        <Heading level={3} className="mb-1 text-sm font-semibold">
+          Requires
+        </Heading>
+        <DescriptionList>
           {definition.requires.map((v) => (
-            <li key={v}>
-              {v}: {vars[v] ? "✔" : "✗"}
-            </li>
+            <>
+              <DescriptionTerm key={`${v}-term`}>{v}</DescriptionTerm>
+              <DescriptionDetails key={`${v}-details`}>
+                {vars[v] ? "✔" : "✗"}
+              </DescriptionDetails>
+            </>
           ))}
-        </ul>
+        </DescriptionList>
       </div>
 
-      <div className="mb-2">
-        <strong>Provides</strong>
-        <ul className="list-disc list-inside">
+      <div>
+        <Heading level={3} className="mb-1 text-sm font-semibold">
+          Provides
+        </Heading>
+        <DescriptionList>
           {definition.provides.map((v) => (
-            <li key={v}>
-              {v}: {vars[v] ? "✔" : "✗"}
-            </li>
+            <>
+              <DescriptionTerm key={`${v}-term`}>{v}</DescriptionTerm>
+              <DescriptionDetails key={`${v}-details`}>
+                {vars[v] ? "✔" : "✗"}
+              </DescriptionDetails>
+            </>
           ))}
-        </ul>
+        </DescriptionList>
       </div>
 
       {state?.status !== "complete" && (
-        <button
-          className="px-2 py-1 bg-blue-600 text-white rounded disabled:opacity-50"
+        <Button
+          color="blue"
           onClick={() => onExecute(definition.id)}
           disabled={executing || missing.length > 0}>
           Execute
-        </button>
+        </Button>
       )}
 
       <StepLogs logs={state?.logs} />
