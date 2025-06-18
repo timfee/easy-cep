@@ -23,5 +23,8 @@ export default createStep<CheckData>({
     } catch {
       /* no-op */
     }
+  },
+  undo: async ({ markFailed }) => {
+    markFailed("Manual configuration cannot be reverted automatically");
   }
 });

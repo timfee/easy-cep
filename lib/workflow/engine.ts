@@ -21,6 +21,7 @@ import {
   StepIdValue,
   StepLogEntry,
   StepUIState,
+  StepUndoContext,
   Var,
   WorkflowVars
 } from "@/types";
@@ -248,4 +249,161 @@ export async function checkStep<T extends StepIdValue>(
   vars: Partial<WorkflowVars>
 ): Promise<{ state: StepUIState; newVars: Partial<WorkflowVars> }> {
   return processStep(stepId, vars, false);
+}
+
+async function processUndoStep<T extends StepIdValue>(
+  stepId: T,
+  vars: Partial<WorkflowVars>
+): Promise<{ state: StepUIState }> {
+  const step = getStep(stepId);
+
+  let logs: StepLogEntry[] = [];
+  let currentState: StepUIState = { status: "undoing", logs };
+
+  const pushState = (data: Partial<StepUIState>) => {
+    currentState = { ...currentState, ...data, logs };
+  };
+
+  const addLog = (entry: StepLogEntry) => {
+    logs = [...logs, entry];
+    if (process.env.NODE_ENV === "development") {
+      const prefix = `[${entry.level?.toUpperCase()}] ${new Date(
+        entry.timestamp
+      ).toISOString()}`;
+
+      console.log(`${prefix}: ${entry.message}`, entry.data ?? "");
+    }
+    pushState({});
+  };
+
+  const createFetch = (token: string | undefined) => {
+    type FetchOpts = RequestInit & { flatten?: boolean };
+    return async <T>(
+      url: string,
+      schema: z.ZodSchema<T>,
+      init?: FetchOpts
+    ): Promise<T> => {
+      if (!token) throw new Error("No auth token available");
+
+      const { flatten, ...reqInit } = (init as FetchOpts) ?? {};
+
+      const fetchPage = async (pageUrl: string): Promise<T> => {
+        const method = reqInit.method ?? "GET";
+        const body = reqInit.body;
+        let parsedBody: unknown;
+        if (body) {
+          try {
+            parsedBody = JSON.parse(body as string);
+          } catch {
+            parsedBody = body;
+          }
+        }
+        addLog({
+          timestamp: Date.now(),
+          message: `Request ${method} ${pageUrl}`,
+          data: {
+            url: pageUrl,
+            method,
+            headers: reqInit.headers,
+            body: parsedBody
+          },
+          level: LogLevel.Debug
+        });
+
+        const res = await fetch(pageUrl, {
+          ...reqInit,
+          headers: {
+            ...(reqInit.headers ?? {}),
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json"
+          }
+        });
+        const clone = res.clone();
+        let logData: unknown;
+        try {
+          logData = await clone.json();
+        } catch {
+          logData = await clone.text();
+        }
+        addLog({
+          timestamp: Date.now(),
+          message: `Response ${res.status} ${pageUrl}`,
+          data: logData,
+          level: LogLevel.Debug
+        });
+        if (!res.ok) throw new Error(`HTTP ${res.status}: ${res.statusText}`);
+        const json = await res.json();
+        return schema.parse(json);
+      };
+
+      if (flatten) {
+        let aggregated: T | undefined;
+        let nextToken: string | undefined;
+        const allItems: unknown[] = [];
+        const baseUrl = url;
+        do {
+          let pageUrl = baseUrl;
+          if (nextToken) {
+            const sep = baseUrl.includes("?") ? "&" : "?";
+            pageUrl = `${baseUrl}${sep}pageToken=${encodeURIComponent(nextToken)}`;
+          }
+          const page = await fetchPage(pageUrl);
+          if (aggregated === undefined) aggregated = page;
+          const p = page as unknown as {
+            items?: unknown[];
+            nextPageToken?: string;
+          };
+          if (Array.isArray(p.items)) allItems.push(...p.items);
+          nextToken = p.nextPageToken;
+        } while (nextToken);
+        const result = aggregated as unknown as { items: unknown[] };
+        result.items = allItems;
+        delete (result as unknown as { nextPageToken?: string }).nextPageToken;
+        return aggregated!;
+      }
+
+      return fetchPage(url);
+    };
+  };
+
+  const baseContext = {
+    fetchGoogle: createFetch(vars[Var.GoogleAccessToken] as string | undefined),
+    fetchMicrosoft: createFetch(vars[Var.MsGraphToken] as string | undefined),
+    log: (level: LogLevel, message: string, data?: unknown) => {
+      addLog({ timestamp: Date.now(), message, data, level });
+    }
+  };
+
+  if (!step.undo) {
+    pushState({ status: "failed", error: "Undo not implemented" });
+    return { state: currentState };
+  }
+
+  try {
+    await step.undo({
+      ...baseContext,
+      vars,
+      markReverted: () => {
+        pushState({ status: "reverted", summary: "Reverted" });
+      },
+      markFailed: (error) => {
+        pushState({ status: "failed", error });
+      }
+    });
+  } catch (error) {
+    pushState({
+      status: "failed",
+      error:
+        "Undo error: " + (error instanceof Error ? error.message : "Unknown error")
+    });
+  }
+
+  return { state: currentState };
+}
+
+export async function undoStep<T extends StepIdValue>(
+  stepId: T,
+  vars: Partial<WorkflowVars>
+): Promise<{ state: StepUIState }> {
+  return processUndoStep(stepId, vars);
 }

@@ -52,6 +52,9 @@ export const ApiEndpoint = {
     AssignClaimsPolicy: (spId: string) =>
       `https://graph.microsoft.com/v1.0/servicePrincipals/${spId}/claimsMappingPolicies/$ref`,
 
+    UnassignClaimsPolicy: (spId: string, policyId: string) =>
+      `https://graph.microsoft.com/v1.0/servicePrincipals/${spId}/claimsMappingPolicies/${policyId}/$ref`,
+
     ReadClaimsPolicy: (spId: string) =>
       `https://graph.microsoft.com/beta/servicePrincipals/${spId}/claimsMappingPolicies`,
 

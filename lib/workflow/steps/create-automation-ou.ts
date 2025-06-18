@@ -1,5 +1,5 @@
 import { ApiEndpoint, OrgUnit } from "@/constants";
-import { isConflictError } from "@/lib/workflow/utils";
+import { EmptyResponseSchema, isConflictError } from "@/lib/workflow/utils";
 import { LogLevel, StepId, Var } from "@/types";
 import { z } from "zod";
 import { createStep } from "../create-step";
@@ -102,6 +102,23 @@ export default createStep<CheckData>({
         markSucceeded({});
       } else {
         markFailed(error instanceof Error ? error.message : "Create failed");
+      }
+    }
+  },
+  undo: async ({ fetchGoogle, markReverted, markFailed, log }) => {
+    try {
+      await fetchGoogle(
+        `${ApiEndpoint.Google.OrgUnits}/${encodeURIComponent(OrgUnit.AutomationName)}`,
+        EmptyResponseSchema,
+        { method: "DELETE" }
+      );
+      markReverted();
+    } catch (error) {
+      if (error instanceof Error && error.message.startsWith("HTTP 404")) {
+        markReverted();
+      } else {
+        log(LogLevel.Error, "Failed to delete OU", { error });
+        markFailed(error instanceof Error ? error.message : "Undo failed");
       }
     }
   }

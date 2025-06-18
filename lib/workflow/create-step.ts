@@ -16,6 +16,7 @@ import type {
   StepCheckContext,
   StepDefinition,
   StepExecuteContext,
+  StepUndoContext,
   StepIdValue,
   VarName,
   WorkflowVars
@@ -56,6 +57,7 @@ export function createStep<
    * on the context.
    */
   execute: (ctx: StepExecuteContext<D>) => Promise<void>;
+  undo?: (ctx: StepUndoContext<D>) => Promise<void>;
 }): StepDefinition<R, P> & {
   check(ctx: StepCheckContext<D>): Promise<void>;
   check<T2 extends Partial<WorkflowVars>>(
@@ -64,6 +66,10 @@ export function createStep<
   execute(ctx: StepExecuteContext<D>): Promise<void>;
   execute<T2 extends Partial<WorkflowVars>>(
     ctx: StepExecuteContext<T2>
+  ): Promise<void>;
+  undo?(ctx: StepUndoContext<D>): Promise<void>;
+  undo?<T2 extends Partial<WorkflowVars>>(
+    ctx: StepUndoContext<T2>
   ): Promise<void>;
 } {
   // The function merely re-emits the object so that TypeScript retains the

@@ -1,5 +1,5 @@
 import { ApiEndpoint, OrgUnit } from "@/constants";
-import { isConflictError } from "@/lib/workflow/utils";
+import { EmptyResponseSchema, isConflictError } from "@/lib/workflow/utils";
 import { LogLevel, StepId, Var } from "@/types";
 import crypto from "crypto";
 import { z } from "zod";
@@ -142,6 +142,28 @@ export default createStep<CheckData>({
     } catch (error) {
       log(LogLevel.Error, "Failed to create service user", { error });
       markFailed(error instanceof Error ? error.message : "Create failed");
+    }
+  },
+  undo: async ({ vars, fetchGoogle, markReverted, markFailed, log }) => {
+    try {
+      const id = vars[Var.ProvisioningUserId] as string | undefined;
+      if (!id) {
+        markFailed("Missing provisioning user id");
+        return;
+      }
+      await fetchGoogle(
+        `${ApiEndpoint.Google.Users}/${id}`,
+        EmptyResponseSchema,
+        { method: "DELETE" }
+      );
+      markReverted();
+    } catch (error) {
+      if (error instanceof Error && error.message.startsWith("HTTP 404")) {
+        markReverted();
+      } else {
+        log(LogLevel.Error, "Failed to delete service user", { error });
+        markFailed(error instanceof Error ? error.message : "Undo failed");
+      }
     }
   }
 });

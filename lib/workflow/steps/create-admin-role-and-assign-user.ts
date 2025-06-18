@@ -1,5 +1,5 @@
 import { ApiEndpoint } from "@/constants";
-import { findInTree, isConflictError } from "@/lib/workflow/utils";
+import { EmptyResponseSchema, findInTree, isConflictError } from "@/lib/workflow/utils";
 import { LogLevel, StepId, Var } from "@/types";
 import { z } from "zod";
 import { createStep, getVar } from "../create-step";
@@ -298,6 +298,60 @@ export default createStep<CheckData>({
     } catch (error) {
       log(LogLevel.Error, "Failed to create custom role", { error });
       markFailed(error instanceof Error ? error.message : "Execute failed");
+    }
+  },
+  undo: async ({
+    vars,
+    fetchGoogle,
+    markReverted,
+    markFailed,
+    log
+  }) => {
+    try {
+      const roleId = vars[Var.AdminRoleId] as string | undefined;
+      const userId = vars[Var.ProvisioningUserId] as string | undefined;
+      if (!roleId || !userId) {
+        markFailed("Missing role or user id");
+        return;
+      }
+      const AssignSchema = z.object({
+        items: z
+          .array(
+            z.object({
+              roleAssignmentId: z.string(),
+              roleId: z.string(),
+              assignedTo: z.string()
+            })
+          )
+          .optional()
+      });
+
+      const { items = [] } = await fetchGoogle(
+        `${ApiEndpoint.Google.RoleAssignments}?userKey=${encodeURIComponent(userId)}`,
+        AssignSchema
+      );
+      const assignment = items.find((a) => a.roleId === roleId);
+      if (assignment) {
+        await fetchGoogle(
+          `${ApiEndpoint.Google.RoleAssignments}/${assignment.roleAssignmentId}`,
+          EmptyResponseSchema,
+          { method: "DELETE" }
+        );
+      }
+
+      await fetchGoogle(
+        `${ApiEndpoint.Google.Roles}/${roleId}`,
+        EmptyResponseSchema,
+        { method: "DELETE" }
+      );
+      markReverted();
+    } catch (error) {
+      if (error instanceof Error && error.message.startsWith("HTTP 404")) {
+        markReverted();
+      } else {
+        log(LogLevel.Error, "Failed to undo admin role", { error });
+        markFailed(error instanceof Error ? error.message : "Undo failed");
+      }
     }
   }
 });

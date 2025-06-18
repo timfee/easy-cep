@@ -101,5 +101,8 @@ export default createStep<CheckData>({
       log(LogLevel.Error, "Execute failed", { error });
       markFailed(error instanceof Error ? error.message : "Execute failed");
     }
+  },
+  undo: async ({ markFailed }) => {
+    markFailed("Cannot automatically unverify domain");
   }
 });

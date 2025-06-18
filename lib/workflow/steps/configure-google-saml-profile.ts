@@ -1,4 +1,5 @@
 import { ApiEndpoint } from "@/constants";
+import { EmptyResponseSchema } from "@/lib/workflow/utils";
 import { LogLevel, StepId, Var } from "@/types";
 import { z } from "zod";
 import { createStep } from "../create-step";
@@ -155,6 +156,28 @@ export default createStep<CheckData>({
     } catch (error) {
       log(LogLevel.Error, "Failed to create SAML profile", { error });
       markFailed(error instanceof Error ? error.message : "Execute failed");
+    }
+  },
+  undo: async ({ vars, fetchGoogle, markReverted, markFailed, log }) => {
+    try {
+      const id = vars[Var.SamlProfileId] as string | undefined;
+      if (!id) {
+        markFailed("Missing samlProfileId");
+        return;
+      }
+      await fetchGoogle(
+        `${ApiEndpoint.Google.SsoProfiles}/${encodeURIComponent(id)}`,
+        EmptyResponseSchema,
+        { method: "DELETE" }
+      );
+      markReverted();
+    } catch (error) {
+      if (error instanceof Error && error.message.startsWith("HTTP 404")) {
+        markReverted();
+      } else {
+        log(LogLevel.Error, "Failed to delete SAML profile", { error });
+        markFailed(error instanceof Error ? error.message : "Undo failed");
+      }
     }
   }
 });

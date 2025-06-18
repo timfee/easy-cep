@@ -139,5 +139,38 @@ export default createStep<CheckData>({
       log(LogLevel.Error, "Failed to setup claims policy", { error });
       markFailed(error instanceof Error ? error.message : "Execute failed");
     }
+  },
+  undo: async ({ vars, fetchMicrosoft, markReverted, markFailed, log }) => {
+    try {
+      const spId = vars[Var.SsoServicePrincipalId] as string | undefined;
+      const policyId = vars[Var.ClaimsPolicyId] as string | undefined;
+      if (!policyId) {
+        markFailed("Missing claims policy id");
+        return;
+      }
+
+      if (spId) {
+        await fetchMicrosoft(
+          ApiEndpoint.Microsoft.UnassignClaimsPolicy(spId, policyId),
+          EmptyResponseSchema,
+          { method: "DELETE" }
+        );
+      }
+
+      await fetchMicrosoft(
+        `${ApiEndpoint.Microsoft.ClaimsPolicies}/${policyId}`,
+        EmptyResponseSchema,
+        { method: "DELETE" }
+      );
+
+      markReverted();
+    } catch (error) {
+      if (error instanceof Error && error.message.includes("404")) {
+        markReverted();
+      } else {
+        log(LogLevel.Error, "Failed to delete claims policy", { error });
+        markFailed(error instanceof Error ? error.message : "Undo failed");
+      }
+    }
   }
 });

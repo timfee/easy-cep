@@ -1,5 +1,5 @@
 import { ApiEndpoint, GroupId } from "@/constants";
-import { isConflictError } from "@/lib/workflow/utils";
+import { EmptyResponseSchema, isConflictError } from "@/lib/workflow/utils";
 import { LogLevel, StepId, Var } from "@/types";
 import { z } from "zod";
 import { createStep, getVar } from "../create-step";
@@ -147,6 +147,58 @@ export default createStep<CheckData>({
       } else {
         log(LogLevel.Error, "Failed to assign users to SSO", { error });
         markFailed(error instanceof Error ? error.message : "Execute failed");
+      }
+    }
+  },
+  undo: async ({ vars, fetchGoogle, markReverted, markFailed, log }) => {
+    try {
+      const profileId = vars[Var.SamlProfileId] as string | undefined;
+      if (!profileId) {
+        markFailed("Missing samlProfileId");
+        return;
+      }
+      const AssignSchema = z.object({
+        inboundSsoAssignments: z
+          .array(
+            z.object({
+              name: z.string(),
+              targetGroup: z.string().optional(),
+              samlSsoInfo: z
+                .object({ inboundSamlSsoProfile: z.string() })
+                .optional()
+            })
+          )
+          .optional()
+      });
+
+      const { inboundSsoAssignments = [] } = await fetchGoogle(
+        ApiEndpoint.Google.SsoAssignments,
+        AssignSchema,
+        { flatten: true }
+      );
+
+      const target = `groups/${GroupId.AllUsers}`;
+      const assignment = inboundSsoAssignments.find(
+        (a) =>
+          a.targetGroup === target &&
+          a.samlSsoInfo?.inboundSamlSsoProfile === profileId
+      );
+
+      if (assignment) {
+        await fetchGoogle(
+          `${ApiEndpoint.Google.SsoAssignments}/${encodeURIComponent(assignment.name)}`,
+          EmptyResponseSchema,
+          { method: "DELETE" }
+        );
+      }
+
+      markReverted();
+    } catch (error) {
+      if (error instanceof Error && error.message.startsWith("HTTP 404")) {
+        markReverted();
+      } else {
+        log(LogLevel.Error, "Failed to delete SSO assignment", { error });
+        markFailed(error instanceof Error ? error.message : "Undo failed");
       }
     }
   }
