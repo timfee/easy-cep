@@ -8,6 +8,8 @@ import {
   XMarkIcon as X
 } from "@heroicons/react/24/solid";
 import StepLogs from "./StepLogs";
+import { Badge } from "./ui/badge";
+import { Button } from "./ui/button";
 
 export interface StepInfo {
   id: StepIdValue;
@@ -24,13 +26,16 @@ const accent: Record<StepUIState["status"], string> = {
   pending: "border-amber-500"
 };
 
-const badge: Record<StepUIState["status"], string> = {
-  idle: "bg-gray-100 text-gray-700",
-  checking: "bg-blue-50 text-blue-700 animate-pulse",
-  executing: "bg-blue-50 text-blue-700 animate-pulse",
-  complete: "bg-green-50 text-green-700",
-  failed: "bg-red-50 text-red-700",
-  pending: "bg-amber-50 text-amber-700"
+const badgeColor: Record<
+  StepUIState["status"],
+  "zinc" | "blue" | "green" | "red" | "amber"
+> = {
+  idle: "zinc",
+  checking: "blue",
+  executing: "blue",
+  complete: "green",
+  failed: "red",
+  pending: "amber"
 };
 
 interface StepCardProps {
@@ -65,10 +70,11 @@ export default function StepCard({
             {definition.id}
           </h3>
         </div>
-        <span
-          className={`rounded-full px-3 py-1 text-xs font-medium ${badge[status]}`}>
+        <Badge
+          color={badgeColor[status]}
+          className="px-3 py-1 text-xs font-medium capitalize">
           {status}
-        </span>
+        </Badge>
       </div>
 
       {(state?.summary || state?.error || state?.notes) && (
@@ -77,7 +83,7 @@ export default function StepCard({
         </p>
       )}
 
-      <div className="mt-4 grid grid-cols-2 gap-4">
+      <div className="mt-4 grid grid-cols-1 gap-4 sm:grid-cols-2">
         <div className="rounded-lg bg-gray-50 p-4">
           <h4 className="mb-2 flex items-center gap-1 text-sm font-medium text-gray-800">
             <FileStack className="h-4 w-4" /> Requires
@@ -111,16 +117,13 @@ export default function StepCard({
       </div>
 
       {status !== "complete" && (
-        <button
+        <Button
+          color="blue"
+          className="mt-4 inline-flex items-center gap-2"
           onClick={() => onExecute(definition.id)}
-          disabled={executing || missing.length > 0}
-          className={`mt-4 inline-flex items-center gap-2 rounded-md px-6 py-2.5 font-medium transition-all ${
-            executing || missing.length > 0 ?
-              "cursor-not-allowed bg-gray-100 text-gray-400"
-            : "bg-gradient-to-r from-blue-600 to-blue-500 text-white shadow-sm hover:shadow-md active:scale-95"
-          }`}>
+          disabled={executing || missing.length > 0}>
           Execute <ArrowRight className="h-4 w-4" />
-        </button>
+        </Button>
       )}
 
       <StepLogs logs={state?.logs} />
