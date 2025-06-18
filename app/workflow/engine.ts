@@ -44,6 +44,11 @@ async function processStep<T extends StepIdValue>(
 
   const addLog = (entry: StepLogEntry) => {
     logs = [...logs, entry];
+    if (process.env.NODE_ENV === "development") {
+      const prefix = `[${entry.level?.toUpperCase()}] ${new Date(entry.timestamp).toISOString()}`;
+      // eslint-disable-next-line no-console
+      console.log(`${prefix}: ${entry.message}`, entry.data ?? "");
+    }
     pushState({});
   };
 
@@ -63,10 +68,23 @@ async function processStep<T extends StepIdValue>(
       const fetchPage = async (pageUrl: string): Promise<T> => {
         const method = reqInit.method ?? "GET";
         const body = reqInit.body;
+        let parsedBody: unknown;
+        if (body) {
+          try {
+            parsedBody = JSON.parse(body as string);
+          } catch {
+            parsedBody = body;
+          }
+        }
         addLog({
           timestamp: Date.now(),
           message: `Request ${method} ${pageUrl}`,
-          data: body,
+          data: {
+            url: pageUrl,
+            method,
+            headers: reqInit.headers,
+            body: parsedBody
+          },
           level: LogLevel.Debug
         });
 
