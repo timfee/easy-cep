@@ -46,7 +46,7 @@ async function processStep<T extends StepIdValue>(
     logs = [...logs, entry];
     if (process.env.NODE_ENV === "development") {
       const prefix = `[${entry.level?.toUpperCase()}] ${new Date(entry.timestamp).toISOString()}`;
-      // eslint-disable-next-line no-console
+
       console.log(`${prefix}: ${entry.message}`, entry.data ?? "");
     }
     pushState({});

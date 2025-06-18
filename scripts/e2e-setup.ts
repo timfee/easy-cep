@@ -22,10 +22,10 @@ export async function cleanupGoogleEnvironment() {
 
   // 1. Delete test service user if exists
   try {
-    await fetch(`${ApiEndpoint.Google.Users}/azuread-provisioning@${TEST_DOMAIN}`, {
-      method: "DELETE",
-      headers: { Authorization: `Bearer ${GOOGLE_TOKEN}` }
-    });
+    await fetch(
+      `${ApiEndpoint.Google.Users}/azuread-provisioning@${TEST_DOMAIN}`,
+      { method: "DELETE", headers: { Authorization: `Bearer ${GOOGLE_TOKEN}` } }
+    );
   } catch {
     // ignore
   }
@@ -132,7 +132,6 @@ export async function setupEnvironment() {
 }
 
 if (require.main === module) {
-  // eslint-disable-next-line promise/prefer-await-to-then
   setupEnvironment().catch((err) => {
     console.error(err);
     process.exitCode = 1;

@@ -1,6 +1,12 @@
 "use client";
 import { StepIdValue, StepUIState, VarName, WorkflowVars } from "@/types";
-import { ArrowRight, Boxes, Check, FileStack, X } from "lucide-react";
+import {
+  ArrowRightIcon as ArrowRight,
+  Square3Stack3DIcon as Boxes,
+  CheckIcon as Check,
+  DocumentPlusIcon as FileStack,
+  XMarkIcon as X
+} from "@heroicons/react/24/solid";
 import StepLogs from "./StepLogs";
 
 export interface StepInfo {

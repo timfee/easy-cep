@@ -1,7 +1,17 @@
 "use client";
 import { LogLevel, StepLogEntry } from "@/types";
-import { Disclosure, Transition } from "@headlessui/react";
-import { ChevronDown } from "lucide-react";
+import { Disclosure } from "@headlessui/react";
+import { ChevronDownIcon as ChevronDown } from "@heroicons/react/24/outline";
+import { AnimatePresence, motion } from "framer-motion";
+import { Badge } from "./ui/badge";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow
+} from "./ui/table";
 
 interface StepLogsProps {
   logs: StepLogEntry[] | undefined;

@@ -2,6 +2,7 @@
 import { PROVIDERS, type Provider } from "@/constants";
 import { Var, WorkflowVars } from "@/types";
 import { useCallback, useEffect, useState } from "react";
+import { Button } from "./ui/button";
 
 interface Props {
   onUpdate(vars: Partial<WorkflowVars>): void;
@@ -68,36 +69,32 @@ export default function ProviderLogin({ onUpdate }: Props) {
       </h2>
       <div className="flex flex-col gap-3 sm:flex-row">
         {tokens.googleAccessToken ?
-          <button
-            className="flex h-11 items-center gap-2 rounded-lg border border-gray-300 bg-white px-4 text-gray-700 shadow-sm transition hover:bg-gray-50 hover:shadow"
-            onClick={() => signOut(PROVIDERS.GOOGLE)}>
+          <Button color="zinc" onClick={() => signOut(PROVIDERS.GOOGLE)}>
             <span>G</span>
             {`Sign out Google`}
-          </button>
-        : <button
-            className="flex h-11 items-center gap-2 rounded-lg bg-primary px-4 text-white shadow-sm transition hover:bg-blue-700 hover:shadow"
+          </Button>
+        : <Button
+            color="blue"
             onClick={() =>
               (window.location.href = `/api/auth/${PROVIDERS.GOOGLE}`)
             }>
             <span>G</span>
             Sign in with Google
-          </button>
+          </Button>
         }
         {tokens.msGraphToken ?
-          <button
-            className="flex h-11 items-center gap-2 rounded-lg border border-gray-300 bg-white px-4 text-gray-700 shadow-sm transition hover:bg-gray-50 hover:shadow"
-            onClick={() => signOut(PROVIDERS.MICROSOFT)}>
+          <Button color="zinc" onClick={() => signOut(PROVIDERS.MICROSOFT)}>
             <span>M</span>
             {`Sign out Microsoft`}
-          </button>
-        : <button
-            className="flex h-11 items-center gap-2 rounded-lg bg-primary px-4 text-white shadow-sm transition hover:bg-blue-700 hover:shadow"
+          </Button>
+        : <Button
+            color="blue"
             onClick={() =>
               (window.location.href = `/api/auth/${PROVIDERS.MICROSOFT}`)
             }>
             <span>M</span>
             Sign in with Microsoft
-          </button>
+          </Button>
         }
       </div>
     </div>

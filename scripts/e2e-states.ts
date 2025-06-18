@@ -20,7 +20,10 @@ const TEST_USER_PASSWORD = process.env.TEST_USER_PASSWORD || "TempPassword123!";
 export async function createGoogleUser(body: Record<string, unknown>) {
   await fetch(ApiEndpoint.Google.Users, {
     method: "POST",
-    headers: { Authorization: `Bearer ${GOOGLE_TOKEN}`, "Content-Type": "application/json" },
+    headers: {
+      Authorization: `Bearer ${GOOGLE_TOKEN}`,
+      "Content-Type": "application/json"
+    },
     body: JSON.stringify(body)
   });
 }
@@ -28,7 +31,10 @@ export async function createGoogleUser(body: Record<string, unknown>) {
 async function createMicrosoftApp(templateId: string) {
   await fetch(ApiEndpoint.Microsoft.Templates(templateId), {
     method: "POST",
-    headers: { Authorization: `Bearer ${MS_TOKEN}`, "Content-Type": "application/json" },
+    headers: {
+      Authorization: `Bearer ${MS_TOKEN}`,
+      "Content-Type": "application/json"
+    },
     body: JSON.stringify({ displayName: "Temp" })
   });
 }
@@ -36,7 +42,10 @@ async function createMicrosoftApp(templateId: string) {
 async function createClaimsPolicy(body: Record<string, unknown>) {
   await fetch(ApiEndpoint.Microsoft.ClaimsPolicies, {
     method: "POST",
-    headers: { Authorization: `Bearer ${MS_TOKEN}`, "Content-Type": "application/json" },
+    headers: {
+      Authorization: `Bearer ${MS_TOKEN}`,
+      "Content-Type": "application/json"
+    },
     body: JSON.stringify(body)
   });
 }
@@ -66,10 +75,13 @@ export async function createPartiallyCompletedState(step: string) {
 }
 
 async function getProvisioningServicePrincipalId() {
-  const filter = encodeURIComponent(`displayName eq 'Google Workspace Provisioning'`);
-  const res = await fetch(`${ApiEndpoint.Microsoft.ServicePrincipals}?$filter=${filter}`, {
-    headers: { Authorization: `Bearer ${MS_TOKEN}` }
-  });
+  const filter = encodeURIComponent(
+    `displayName eq 'Google Workspace Provisioning'`
+  );
+  const res = await fetch(
+    `${ApiEndpoint.Microsoft.ServicePrincipals}?$filter=${filter}`,
+    { headers: { Authorization: `Bearer ${MS_TOKEN}` } }
+  );
   const json = (await res.json()) as { value: Array<{ id: string }> };
   return json.value[0]?.id;
 }
@@ -77,7 +89,10 @@ async function getProvisioningServicePrincipalId() {
 async function createSyncJob(spId: string, templateId: string) {
   await fetch(ApiEndpoint.Microsoft.SyncJobs(spId), {
     method: "POST",
-    headers: { Authorization: `Bearer ${MS_TOKEN}`, "Content-Type": "application/json" },
+    headers: {
+      Authorization: `Bearer ${MS_TOKEN}`,
+      "Content-Type": "application/json"
+    },
     body: JSON.stringify({ templateId })
   });
 }
@@ -85,7 +100,10 @@ async function createSyncJob(spId: string, templateId: string) {
 async function setSyncJobToQuarantine(spId: string) {
   await fetch(`${ApiEndpoint.Microsoft.Synchronization(spId)}/jobs/Initial`, {
     method: "PATCH",
-    headers: { Authorization: `Bearer ${MS_TOKEN}`, "Content-Type": "application/json" },
+    headers: {
+      Authorization: `Bearer ${MS_TOKEN}`,
+      "Content-Type": "application/json"
+    },
     body: JSON.stringify({ status: { code: "Quarantine" } })
   });
 }
@@ -93,7 +111,10 @@ async function setSyncJobToQuarantine(spId: string) {
 async function createSsoAssignment(body: Record<string, unknown>) {
   await fetch(ApiEndpoint.Google.SsoAssignments, {
     method: "POST",
-    headers: { Authorization: `Bearer ${GOOGLE_TOKEN}`, "Content-Type": "application/json" },
+    headers: {
+      Authorization: `Bearer ${GOOGLE_TOKEN}`,
+      "Content-Type": "application/json"
+    },
     body: JSON.stringify(body)
   });
 }
