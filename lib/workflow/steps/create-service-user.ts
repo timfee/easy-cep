@@ -47,16 +47,26 @@ export default createStep<CheckData>({
     try {
       const domain = getVar(vars, Var.PrimaryDomain);
 
-      const UserSchema = z.object({ id: z.string(), primaryEmail: z.string() });
+      const UserSchema = z
+        .object({
+          id: z.string().optional(),
+          primaryEmail: z.string().optional()
+        })
+        .passthrough();
       const url = `${ApiEndpoint.Google.Users}/azuread-provisioning@${domain}`;
 
       const user = await fetchGoogle(url, UserSchema);
 
-      log(LogLevel.Info, "Service user already exists");
-      markComplete({
-        provisioningUserId: user.id,
-        provisioningUserEmail: user.primaryEmail
-      });
+      if (user.id && user.primaryEmail) {
+        log(LogLevel.Info, "Service user already exists");
+        markComplete({
+          provisioningUserId: user.id,
+          provisioningUserEmail: user.primaryEmail
+        });
+      } else {
+        log(LogLevel.Error, "Unexpected user response", { user });
+        markCheckFailed("Malformed user object returned");
+      }
     } catch (error) {
       if (error instanceof Error && error.message.startsWith("HTTP 404")) {
         markIncomplete("Service user missing", {});
