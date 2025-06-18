@@ -12,7 +12,7 @@ import {
   SidebarItem,
   SidebarSection
 } from "./ui/sidebar";
-import { SidebarLayout } from "./ui/sidebar-layout";
+import { StackedLayout } from "./ui/stacked-layout";
 
 interface Props {
   steps: ReadonlyArray<StepInfo>;
@@ -116,7 +116,7 @@ export default function WorkflowClient({ steps }: Props) {
   );
 
   return (
-    <SidebarLayout navbar={navbar} sidebar={sidebar}>
+    <StackedLayout navbar={navbar} sidebar={sidebar}>
       <h1 className="mb-8 text-2xl font-bold text-gray-900">Workflow</h1>
       <p className="mb-6 text-gray-600">
         Run each step to configure the environment.
@@ -136,6 +136,6 @@ export default function WorkflowClient({ steps }: Props) {
           onExecute={handleExecute}
         />
       ))}
-    </SidebarLayout>
+    </StackedLayout>
   );
 }

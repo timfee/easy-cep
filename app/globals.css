@@ -45,3 +45,18 @@
     @apply text-xs text-gray-500;
   }
 }
+
+@layer utilities {
+  @keyframes indeterminate {
+    from {
+      transform: translateX(-100%);
+    }
+    to {
+      transform: translateX(100%);
+    }
+  }
+
+  .animate-indeterminate {
+    animation: indeterminate 1.5s linear infinite;
+  }
+}
