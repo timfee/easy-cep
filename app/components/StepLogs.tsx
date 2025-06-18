@@ -1,47 +1,31 @@
 "use client";
 import { LogLevel, StepLogEntry } from "@/types";
-import { Disclosure } from "@headlessui/react";
-import { ChevronDownIcon } from "@heroicons/react/20/solid";
-import clsx from "clsx";
-import { AnimatePresence, motion } from "framer-motion";
-import { Badge } from "./ui/badge";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow
-} from "./ui/table";
+import { Disclosure, Transition } from "@headlessui/react";
+import { ChevronDown } from "lucide-react";
 
 interface StepLogsProps {
   logs: StepLogEntry[] | undefined;
 }
 
-const INDENT = 2;
-
 export default function StepLogs({ logs }: StepLogsProps) {
   if (!logs || logs.length === 0) return null;
 
-  const levelColor: Record<LogLevel, Parameters<typeof Badge>[0]["color"]> = {
-    [LogLevel.Info]: "blue",
-    [LogLevel.Warn]: "amber",
-    [LogLevel.Error]: "red",
-    [LogLevel.Debug]: "zinc"
+  const levelColor: Record<LogLevel, string> = {
+    [LogLevel.Info]: "border-blue-500",
+    [LogLevel.Warn]: "border-amber-500",
+    [LogLevel.Error]: "border-red-500",
+    [LogLevel.Debug]: "border-gray-400"
   };
 
   return (
     <Disclosure>
       {({ open }) => (
-        <div className="mt-2">
-          <Disclosure.Button className="flex items-center gap-1 bg-white/5 hover:bg-white/10 rounded-lg px-3 py-1.5 text-sm transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500/50">
-            <ChevronDownIcon
-              className={clsx(
-                "h-4 w-4 transition-transform",
-                open && "rotate-180"
-              )}
+        <div className="mt-4">
+          <Disclosure.Button className="flex items-center gap-1 text-sm font-medium text-blue-700 hover:underline">
+            <ChevronDown
+              className={`h-4 w-4 transition-transform ${open ? "rotate-180" : ""}`}
             />
-            Logs
+            View logs
           </Disclosure.Button>
           <AnimatePresence initial={false}>
             {open && (

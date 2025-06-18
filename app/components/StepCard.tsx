@@ -1,11 +1,7 @@
 "use client";
 import { StepIdValue, StepUIState, VarName, WorkflowVars } from "@/types";
-import React from "react";
+import { ArrowRight, Boxes, Check, FileStack, X } from "lucide-react";
 import StepLogs from "./StepLogs";
-import { Badge } from "./ui/badge";
-import { Button } from "./ui/button";
-
-import { Heading } from "./ui/heading";
 
 export interface StepInfo {
   id: StepIdValue;
@@ -13,28 +9,26 @@ export interface StepInfo {
   provides: readonly VarName[];
 }
 
-const statusColor: Record<
-  StepUIState["status"],
-  "zinc" | "sky" | "blue" | "green" | "red" | "amber"
-> = {
-  idle: "zinc",
-  checking: "sky",
-  executing: "blue",
-  complete: "green",
-  failed: "red",
-  pending: "amber"
+const accent: Record<StepUIState["status"], string> = {
+  idle: "border-gray-300",
+  checking: "border-blue-500",
+  executing: "border-blue-500",
+  complete: "border-green-500",
+  failed: "border-red-500",
+  pending: "border-amber-500"
 };
 
-const indicatorColor: Record<StepUIState["status"], string> = {
-  idle: "bg-gray-700",
-  checking: "bg-blue-500 animate-pulse",
-  executing: "bg-blue-500 animate-pulse",
-  complete: "bg-green-500",
-  failed: "bg-red-500",
-  pending: "bg-amber-500"
+const badge: Record<StepUIState["status"], string> = {
+  idle: "bg-gray-100 text-gray-700",
+  checking: "bg-blue-50 text-blue-700 animate-pulse",
+  executing: "bg-blue-50 text-blue-700 animate-pulse",
+  complete: "bg-green-50 text-green-700",
+  failed: "bg-red-50 text-red-700",
+  pending: "bg-amber-50 text-amber-700"
 };
 
 interface StepCardProps {
+  index: number;
   definition: StepInfo;
   state?: StepUIState;
   vars: Partial<WorkflowVars>;
@@ -43,6 +37,7 @@ interface StepCardProps {
 }
 
 export default function StepCard({
+  index,
   definition,
   state,
   vars,
@@ -50,69 +45,76 @@ export default function StepCard({
   onExecute
 }: StepCardProps) {
   const missing = definition.requires.filter((v) => !vars[v]);
+  const status = state?.status ?? "idle";
 
   return (
-    <div className="relative mb-4 rounded-xl p-6 backdrop-blur-xl bg-white/[0.02] border border-white/[0.05] shadow-[0_0_0_1px_rgba(255,255,255,0.03)] hover:shadow-[0_0_0_1px_rgba(255,255,255,0.08)] hover:bg-white/[0.03] transition-all duration-300 ease-out hover:scale-[1.01] space-y-3">
-      <div
-        className={`absolute left-0 top-0 bottom-0 w-[3px] rounded-l-xl ${indicatorColor[state?.status ?? "idle"]}`}></div>
-      <Heading level={2} className="text-white font-medium text-lg">
-        {definition.id}
-      </Heading>
-      <div className="text-sm flex items-center gap-2">
-        <span>Status:</span>
-        <Badge
-          className="px-2.5 py-0.5 rounded-full"
-          color={statusColor[state?.status ?? "idle"]}>
-          {state?.status ?? "idle"}
-        </Badge>
-      </div>
-      {(state?.summary || state?.error || state?.notes) && (
-        <div className="text-sm text-gray-300">
-          {state?.summary || state?.error || state?.notes}
+    <div
+      className={`relative mb-6 rounded-xl border ${accent[status]} border-l-4 bg-white p-6 shadow-sm hover:shadow-md transition-shadow duration-200`}>
+      <div className="flex items-start justify-between">
+        <div className="flex items-center gap-2">
+          <span className="flex h-6 w-6 items-center justify-center rounded-full bg-gray-100 text-xs font-medium text-gray-700">
+            {index + 1}
+          </span>
+          <h3 className="text-lg font-semibold text-gray-900">
+            {definition.id}
+          </h3>
         </div>
+        <span
+          className={`rounded-full px-3 py-1 text-xs font-medium ${badge[status]}`}>
+          {status}
+        </span>
+      </div>
+
+      {(state?.summary || state?.error || state?.notes) && (
+        <p className="mt-2 text-sm text-gray-700">
+          {state.summary || state.error || state.notes}
+        </p>
       )}
 
-      <div className="grid grid-cols-2 gap-6 mt-4">
-        <div className="bg-black/20 rounded-lg p-4 border border-white/[0.05]">
-          <Heading level={3} className="mb-2 text-sm font-medium text-gray-400">
-            Requires
-          </Heading>
-          <ul className="space-y-1 text-sm text-gray-300">
+      <div className="mt-4 grid grid-cols-2 gap-4">
+        <div className="rounded-lg bg-gray-50 p-4">
+          <h4 className="mb-2 flex items-center gap-1 text-sm font-medium text-gray-800">
+            <FileStack className="h-4 w-4" /> Requires
+          </h4>
+          <ul className="space-y-1 text-sm">
             {definition.requires.map((v) => (
-              <li key={v} className="flex justify-between">
-                <span className="font-mono">{v}</span>
-                <span className={vars[v] ? "text-green-400" : "text-gray-600"}>
-                  ✓
-                </span>
+              <li key={v} className="flex items-center gap-2">
+                <span className="font-mono text-gray-800">{v}</span>
+                {vars[v] ?
+                  <Check className="h-4 w-4 text-green-600" />
+                : <X className="h-4 w-4 text-gray-400" />}
               </li>
             ))}
           </ul>
         </div>
-        <div className="bg-black/20 rounded-lg p-4 border border-white/[0.05]">
-          <Heading level={3} className="mb-2 text-sm font-medium text-gray-400">
-            Provides
-          </Heading>
-          <ul className="space-y-1 text-sm text-gray-300">
+        <div className="rounded-lg bg-gray-50 p-4">
+          <h4 className="mb-2 flex items-center gap-1 text-sm font-medium text-gray-800">
+            <Boxes className="h-4 w-4" /> Provides
+          </h4>
+          <ul className="space-y-1 text-sm">
             {definition.provides.map((v) => (
-              <li key={v} className="flex justify-between">
-                <span className="font-mono">{v}</span>
-                <span className={vars[v] ? "text-green-400" : "text-gray-600"}>
-                  ✓
-                </span>
+              <li key={v} className="flex items-center gap-2">
+                <span className="font-mono text-gray-800">{v}</span>
+                {vars[v] ?
+                  <Check className="h-4 w-4 text-green-600" />
+                : <X className="h-4 w-4 text-gray-400" />}
               </li>
             ))}
           </ul>
         </div>
-
       </div>
 
-      {state?.status !== "complete" && (
-        <Button
-          color="blue"
+      {status !== "complete" && (
+        <button
           onClick={() => onExecute(definition.id)}
-          disabled={executing || missing.length > 0}>
-          Execute
-        </Button>
+          disabled={executing || missing.length > 0}
+          className={`mt-4 inline-flex items-center gap-2 rounded-md px-6 py-2.5 font-medium transition-all ${
+            executing || missing.length > 0 ?
+              "cursor-not-allowed bg-gray-100 text-gray-400"
+            : "bg-gradient-to-r from-blue-600 to-blue-500 text-white shadow-sm hover:shadow-md active:scale-95"
+          }`}>
+          Execute <ArrowRight className="h-4 w-4" />
+        </button>
       )}
 
       <StepLogs logs={state?.logs} />
