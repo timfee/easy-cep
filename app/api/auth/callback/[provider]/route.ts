@@ -1,15 +1,17 @@
 import { Provider } from "@/constants";
 import { exchangeCodeForToken, setToken, validateOAuthState } from "@/lib/auth";
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 
-export async function GET(request: Request) {
-  const url = new URL(request.url);
-  const provider = url.pathname.split("/").pop() as Provider;
-  const searchParams = url.searchParams;
+export async function GET(
+  request: NextRequest,
+  { params }: { params: { provider: Provider } }
+) {
+  const provider = params.provider;
+  const searchParams = request.nextUrl.searchParams;
   const code = searchParams.get("code");
   const state = searchParams.get("state");
   const error = searchParams.get("error");
-  const baseUrl = url.protocol + "//" + url.host;
+  const baseUrl = request.nextUrl.origin;
 
   if (error) {
     console.error(error);

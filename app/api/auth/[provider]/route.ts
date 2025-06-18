@@ -7,18 +7,20 @@ import {
   setChunkedCookie
 } from "@/lib/auth";
 
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 
-export async function GET(request: Request) {
-  const url = new URL(request.url);
-  const provider = url.pathname.split("/").pop() as Provider;
+export async function GET(
+  request: NextRequest,
+  { params }: { params: { provider: Provider } }
+) {
+  const provider = params.provider;
 
   if (provider !== PROVIDERS.GOOGLE && provider !== PROVIDERS.MICROSOFT) {
     return NextResponse.json({ error: "Invalid provider" }, { status: 400 });
   }
 
   const state = generateState();
-  const baseUrl = url.protocol + "//" + url.host;
+  const baseUrl = request.nextUrl.origin;
   const authUrl = generateAuthUrl(provider, state, baseUrl);
 
   const response = NextResponse.redirect(authUrl);
