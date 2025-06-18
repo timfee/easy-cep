@@ -1,5 +1,6 @@
 "use client";
 import { StepIdValue, StepUIState, VarName, WorkflowVars } from "@/types";
+import React from "react";
 import StepLogs from "./StepLogs";
 import { Badge } from "./ui/badge";
 import { Button } from "./ui/button";
@@ -66,12 +67,12 @@ export default function StepCard({
         </Heading>
         <DescriptionList>
           {definition.requires.map((v) => (
-            <>
+            <React.Fragment key={v}>
               <DescriptionTerm key={`${v}-term`}>{v}</DescriptionTerm>
               <DescriptionDetails key={`${v}-details`}>
                 {vars[v] ? "✔" : "✗"}
               </DescriptionDetails>
-            </>
+            </React.Fragment>
           ))}
         </DescriptionList>
       </div>
