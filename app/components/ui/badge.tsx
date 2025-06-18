@@ -34,10 +34,17 @@ const colors = {
   zinc: "bg-zinc-600/10 text-zinc-700 group-data-hover:bg-zinc-600/20 dark:bg-white/5 dark:text-zinc-400 dark:group-data-hover:bg-white/10"
 };
 
-type BadgeProps = { color?: keyof typeof colors };
+const sizes = {
+  xs: "px-1 py-0.5 text-xs",
+  sm: "px-1.5 py-0.5 text-sm/5 sm:text-xs/5",
+  md: "px-2 py-1 text-base/6 sm:text-sm/6"
+};
+
+type BadgeProps = { color?: keyof typeof colors; size?: keyof typeof sizes };
 
 export function Badge({
   color = "zinc",
+  size = "sm",
   className,
   ...props
 }: BadgeProps & React.ComponentPropsWithoutRef<"span">) {
@@ -46,7 +53,8 @@ export function Badge({
       {...props}
       className={clsx(
         className,
-        "inline-flex items-center gap-x-1.5 rounded-md px-1.5 py-0.5 text-sm/5 font-medium sm:text-xs/5 forced-colors:outline",
+        "inline-flex items-center gap-x-1.5 rounded-md font-medium forced-colors:outline",
+        sizes[size],
         colors[color]
       )}
     />
@@ -56,6 +64,7 @@ export function Badge({
 export const BadgeButton = forwardRef(function BadgeButton(
   {
     color = "zinc",
+    size = "sm",
     className,
     children,
     ...props
@@ -76,12 +85,16 @@ export const BadgeButton = forwardRef(function BadgeButton(
         className={classes}
         ref={ref as React.ForwardedRef<HTMLAnchorElement>}>
         <TouchTarget>
-          <Badge color={color}>{children}</Badge>
+          <Badge color={color} size={size}>
+            {children}
+          </Badge>
         </TouchTarget>
       </Link>
     : <Headless.Button {...props} className={classes} ref={ref}>
         <TouchTarget>
-          <Badge color={color}>{children}</Badge>
+          <Badge color={color} size={size}>
+            {children}
+          </Badge>
         </TouchTarget>
       </Headless.Button>;
 });
