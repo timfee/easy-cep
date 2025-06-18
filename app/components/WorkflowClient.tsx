@@ -3,9 +3,16 @@
 import { StepIdValue, StepUIState, WorkflowVars } from "@/types";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { checkStep, runStep } from "../workflow/engine";
-import AppShell from "./AppShell";
 import ProviderLogin from "./ProviderLogin";
 import StepCard, { StepInfo } from "./StepCard";
+import { Navbar, NavbarLabel, NavbarSection } from "./ui/navbar";
+import {
+  Sidebar,
+  SidebarBody,
+  SidebarItem,
+  SidebarSection
+} from "./ui/sidebar";
+import { SidebarLayout } from "./ui/sidebar-layout";
 
 interface Props {
   steps: ReadonlyArray<StepInfo>;
@@ -88,10 +95,30 @@ export default function WorkflowClient({ steps }: Props) {
     (s) => status[s.id]?.status === "complete"
   ).length;
 
+  const navbar = (
+    <Navbar>
+      <NavbarSection>
+        <NavbarLabel className="font-semibold">Easy CEP</NavbarLabel>
+      </NavbarSection>
+    </Navbar>
+  );
+
+  const sidebar = (
+    <Sidebar>
+      <SidebarBody>
+        <SidebarSection>
+          <SidebarItem current className="cursor-default">
+            Workflow
+          </SidebarItem>
+        </SidebarSection>
+      </SidebarBody>
+    </Sidebar>
+  );
+
   return (
-    <AppShell sidebar={<nav className="p-4 space-y-2">Workflow</nav>}>
-      <h1 className="text-2xl font-bold text-gray-900 mb-8">Workflow</h1>
-      <p className="text-gray-600 mb-6">
+    <SidebarLayout navbar={navbar} sidebar={sidebar}>
+      <h1 className="mb-8 text-2xl font-bold text-gray-900">Workflow</h1>
+      <p className="mb-6 text-gray-600">
         Run each step to configure the environment.
       </p>
       <div className="mb-4 text-sm text-gray-600">
@@ -109,6 +136,6 @@ export default function WorkflowClient({ steps }: Props) {
           onExecute={handleExecute}
         />
       ))}
-    </AppShell>
+    </SidebarLayout>
   );
 }
