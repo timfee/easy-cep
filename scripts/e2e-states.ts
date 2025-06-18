@@ -15,6 +15,7 @@ if (process.env.USE_UNDICI_PROXY !== "false") {
 const GOOGLE_TOKEN = process.env.GOOGLE_BEARER_TOKEN;
 const MS_TOKEN = process.env.MS_BEARER_TOKEN;
 const TEST_DOMAIN = process.env.TEST_DOMAIN || "test.example.com";
+const TEST_USER_PASSWORD = process.env.TEST_USER_PASSWORD || "TempPassword123!";
 
 export async function createGoogleUser(body: Record<string, unknown>) {
   await fetch(ApiEndpoint.Google.Users, {
@@ -46,7 +47,7 @@ export async function createPartiallyCompletedState(step: string) {
       await createGoogleUser({
         primaryEmail: `azuread-provisioning@${TEST_DOMAIN}`,
         name: { givenName: "Test", familyName: "User" },
-        password: "TempPassword123!",
+        password: TEST_USER_PASSWORD,
         orgUnitPath: OrgUnit.RootPath
       });
       break;
@@ -69,8 +70,8 @@ async function getProvisioningServicePrincipalId() {
   const res = await fetch(`${ApiEndpoint.Microsoft.ServicePrincipals}?$filter=${filter}`, {
     headers: { Authorization: `Bearer ${MS_TOKEN}` }
   });
-  const json = await res.json();
-  return json.value[0]?.id as string | undefined;
+  const json = (await res.json()) as { value: Array<{ id: string }> };
+  return json.value[0]?.id;
 }
 
 async function createSyncJob(spId: string, templateId: string) {

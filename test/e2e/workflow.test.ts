@@ -14,7 +14,9 @@ if (!process.env.MS_BEARER_TOKEN && fs.existsSync(msTokenPath)) {
 }
 
 if (!process.env.GOOGLE_BEARER_TOKEN || !process.env.MS_BEARER_TOKEN) {
-  test.skip('E2E tests require GOOGLE_BEARER_TOKEN and MS_BEARER_TOKEN', () => {});
+  console.warn(
+    'E2E tests require GOOGLE_BEARER_TOKEN and MS_BEARER_TOKEN; skipping.'
+  );
 } else {
 
 describe('Workflow Live E2E', () => {
