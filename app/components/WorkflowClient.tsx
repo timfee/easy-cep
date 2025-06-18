@@ -1,10 +1,11 @@
 "use client";
 
-import { StepIdValue, StepUIState, WorkflowVars } from "@/types";
+import { StepIdValue, StepUIState, Var, WorkflowVars } from "@/types";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { checkStep, runStep } from "../workflow/engine";
 import ProviderLogin from "./ProviderLogin";
 import StepCard, { StepInfo } from "./StepCard";
+import VarsInspector from "./VarsInspector";
 import { Navbar, NavbarLabel, NavbarSection } from "./ui/navbar";
 import {
   Sidebar,
@@ -19,7 +20,10 @@ interface Props {
 }
 
 export default function WorkflowClient({ steps }: Props) {
-  const [vars, setVars] = useState<Partial<WorkflowVars>>({});
+  const defaultPassword = useRef(Math.random().toString(36).slice(-12));
+  const [vars, setVars] = useState<Partial<WorkflowVars>>({
+    [Var.GeneratedPassword]: defaultPassword.current
+  });
   const [status, setStatus] = useState<
     Partial<Record<StepIdValue, StepUIState>>
   >({});
@@ -41,6 +45,7 @@ export default function WorkflowClient({ steps }: Props) {
       }
       return { ...prev, ...newVars };
     });
+    checkedSteps.current.clear();
   }, []);
 
   const updateStep = useCallback(
@@ -124,18 +129,25 @@ export default function WorkflowClient({ steps }: Props) {
       <div className="mb-4 text-sm text-gray-600">
         {completed} of {steps.length} steps complete
       </div>
-      <ProviderLogin onUpdate={updateVars} />
-      {steps.map((step, idx) => (
-        <StepCard
-          key={step.id}
-          index={idx}
-          definition={step}
-          state={status[step.id]}
-          vars={vars}
-          executing={executing !== null}
-          onExecute={handleExecute}
-        />
-      ))}
+      <div className="lg:flex lg:items-start lg:gap-6">
+        <div className="flex-1">
+          <ProviderLogin onUpdate={updateVars} />
+          {steps.map((step, idx) => (
+            <StepCard
+              key={step.id}
+              index={idx}
+              definition={step}
+              state={status[step.id]}
+              vars={vars}
+              executing={executing !== null}
+              onExecute={handleExecute}
+            />
+          ))}
+        </div>
+        <div className="mt-6 lg:mt-0 lg:w-80 lg:flex-none lg:sticky lg:top-4">
+          <VarsInspector vars={vars} onChange={updateVars} />
+        </div>
+      </div>
     </StackedLayout>
   );
 }
