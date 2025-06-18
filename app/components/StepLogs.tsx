@@ -45,14 +45,13 @@ export default function StepLogs({ logs }: StepLogsProps) {
           </Disclosure.Button>
           <AnimatePresence initial={false}>
             {open && (
-              <Disclosure.Panel
-                static
-                as={motion.div}
-                initial={{ height: 0, opacity: 0 }}
-                animate={{ height: "auto", opacity: 1 }}
-                exit={{ height: 0, opacity: 0 }}
-                transition={{ duration: 0.2 }}>
-                <div className="mt-2 max-h-48 overflow-auto bg-black/30 rounded-lg overflow-hidden">
+              <Disclosure.Panel static>
+                <motion.div
+                  initial={{ height: 0, opacity: 0 }}
+                  animate={{ height: "auto", opacity: 1 }}
+                  exit={{ height: 0, opacity: 0 }}
+                  transition={{ duration: 0.2 }}
+                  className="mt-2 max-h-48 overflow-auto bg-black/30 rounded-lg overflow-hidden">
                   <Table bleed dense className="text-xs">
                     <TableHead>
                       <TableRow>
@@ -88,7 +87,7 @@ export default function StepLogs({ logs }: StepLogsProps) {
                       ))}
                     </TableBody>
                   </Table>
-                </div>
+                </motion.div>
               </Disclosure.Panel>
             )}
           </AnimatePresence>

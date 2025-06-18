@@ -44,8 +44,12 @@ export async function cleanupGoogleEnvironment() {
   const rolesRes = await fetch(ApiEndpoint.Google.Roles, {
     headers: { Authorization: `Bearer ${GOOGLE_TOKEN}` }
   });
-  const roles = await rolesRes.json();
-  const customRole = roles.items?.find((r: any) => r.roleName === "Microsoft Entra Provisioning");
+  const roles = (await rolesRes.json()) as {
+    items?: Array<{ roleName: string; roleId: string }>;
+  };
+  const customRole = roles.items?.find(
+    (r) => r.roleName === "Microsoft Entra Provisioning"
+  );
   if (customRole) {
     await fetch(`${ApiEndpoint.Google.Roles}/${customRole.roleId}`, {
       method: "DELETE",
@@ -57,7 +61,9 @@ export async function cleanupGoogleEnvironment() {
   const samlRes = await fetch(ApiEndpoint.Google.SsoProfiles, {
     headers: { Authorization: `Bearer ${GOOGLE_TOKEN}` }
   });
-  const samlData = await samlRes.json();
+  const samlData = (await samlRes.json()) as {
+    inboundSamlSsoProfiles?: Array<{ name: string; displayName: string }>;
+  };
   for (const profile of samlData.inboundSamlSsoProfiles || []) {
     if (profile.displayName === "Azure AD") {
       await fetch(`${ApiEndpoint.Google.SsoProfiles}/${profile.name}`, {
@@ -78,14 +84,16 @@ export async function cleanupMicrosoftEnvironment() {
     `${ApiEndpoint.Microsoft.Applications}?$filter=displayName eq 'Google Workspace Provisioning' or displayName eq 'Google Workspace SSO'`,
     { headers: { Authorization: `Bearer ${MS_TOKEN}` } }
   );
-  const apps = await appsRes.json();
+  const apps = (await appsRes.json()) as {
+    value?: Array<{ id: string; appId: string }>;
+  };
 
   for (const app of apps.value || []) {
     const spRes = await fetch(
       `${ApiEndpoint.Microsoft.ServicePrincipals}?$filter=appId eq '${app.appId}'`,
       { headers: { Authorization: `Bearer ${MS_TOKEN}` } }
     );
-    const sps = await spRes.json();
+    const sps = (await spRes.json()) as { value?: Array<{ id: string }> };
     for (const sp of sps.value || []) {
       await fetch(`${ApiEndpoint.Microsoft.ServicePrincipals}/${sp.id}`, {
         method: "DELETE",
@@ -104,7 +112,9 @@ export async function cleanupMicrosoftEnvironment() {
     `${ApiEndpoint.Microsoft.ClaimsPolicies}?$filter=displayName eq 'Google Workspace Basic Claims'`,
     { headers: { Authorization: `Bearer ${MS_TOKEN}` } }
   );
-  const policies = await policiesRes.json();
+  const policies = (await policiesRes.json()) as {
+    value?: Array<{ id: string }>;
+  };
   for (const policy of policies.value || []) {
     await fetch(`${ApiEndpoint.Microsoft.ClaimsPolicies}/${policy.id}`, {
       method: "DELETE",
