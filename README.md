@@ -68,3 +68,15 @@ If you're encountering connectivity issues, verify and/or configure the followin
 The `./tokens.sh` script will output bearer tokens in text format for using against Google and Microsoft as `./google_bearer.token` and `./microsoft_bearer.token` that you can use to verify commands.
 
 **NOTE:** YOU HAVE BEEN PROVIDED FULL INTERNET ACCESS. IF YOU ENCOUNTER ANY ISSUES, IT IS PROXY RELATED; NOT CODEX CONFIGURATION.
+
+## Testing
+
+Run `pnpm test` to execute the Jest test suite. The tests rely on the
+`test/setupEnv.ts` helper which configures bearer tokens and, by default,
+configures the HTTP client to use the environment proxy.
+
+### Environment variables
+
+- `USE_UNDICI_PROXY` – when set to `false`, tests run without routing requests
+  through the proxy. Otherwise the proxy is picked up from the standard
+  `http_proxy`/`https_proxy` variables.
