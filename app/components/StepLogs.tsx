@@ -20,11 +20,11 @@ interface StepLogsProps {
 export default function StepLogs({ logs }: StepLogsProps) {
   if (!logs || logs.length === 0) return null;
 
-  const levelColor: Record<LogLevel, string> = {
-    [LogLevel.Info]: "border-blue-500",
-    [LogLevel.Warn]: "border-amber-500",
-    [LogLevel.Error]: "border-red-500",
-    [LogLevel.Debug]: "border-gray-400"
+  const levelColor: Record<LogLevel, "blue" | "amber" | "red" | "zinc"> = {
+    [LogLevel.Info]: "blue",
+    [LogLevel.Warn]: "amber",
+    [LogLevel.Error]: "red",
+    [LogLevel.Debug]: "zinc"
   };
 
   return (
