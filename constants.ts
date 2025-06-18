@@ -1,5 +1,3 @@
-// ✅ Usage: Avoid string repetition and centralize well-known URLs, group IDs, and template constants.
-
 export const ApiEndpoint = {
   Google: {
     Domains:
