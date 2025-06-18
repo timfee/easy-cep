@@ -46,12 +46,12 @@ export default function VarsInspector({ vars, onChange }: Props) {
   };
 
   return (
-    <div className="rounded-xl border border-zinc-200 bg-white shadow-sm">
-      <div className="border-b border-zinc-200 p-4">
-        <h2 className="text-lg font-semibold text-gray-900">Variables</h2>
+    <div className="rounded-xl border border-zinc-200 bg-white shadow-sm text-xs">
+      <div className="border-b border-zinc-200 p-2">
+        <h2 className="text-base font-semibold text-gray-900">Variables</h2>
       </div>
       <div className="max-h-[600px] overflow-y-auto">
-        <Table dense bleed>
+        <Table dense bleed className="!whitespace-normal">
           <TableHead>
             <TableRow>
               <TableHeader>Name</TableHeader>
@@ -67,20 +67,20 @@ export default function VarsInspector({ vars, onChange }: Props) {
 
               return (
                 <TableRow key={name}>
-                  <TableCell className="font-mono text-sm">{name}</TableCell>
+                  <TableCell className="font-mono text-xs">{name}</TableCell>
                   <TableCell>
                     {hasValue ?
                       type === "boolean" ?
                         <Badge color={value ? "green" : "zinc"}>
                           {String(value)}
                         </Badge>
-                      : <span className="text-sm text-zinc-700 truncate max-w-[200px] block">
+                      : <span className="text-xs text-zinc-700 truncate max-w-[200px] block">
                           {String(value).length > 20 ?
                             `${String(value).slice(0, 20)}…`
                           : String(value)}
                         </span>
 
-                    : <span className="text-sm text-zinc-400 italic">
+                    : <span className="text-xs text-zinc-400 italic">
                         Not set
                       </span>
                     }

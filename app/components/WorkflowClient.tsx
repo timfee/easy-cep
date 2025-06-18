@@ -20,14 +20,23 @@ interface Props {
 }
 
 export default function WorkflowClient({ steps }: Props) {
-  const defaultPassword = useRef(Math.random().toString(36).slice(-12));
-  const [vars, setVars] = useState<Partial<WorkflowVars>>({
-    [Var.GeneratedPassword]: defaultPassword.current
-  });
+  const initialized = useRef(false);
+  const [vars, setVars] = useState<Partial<WorkflowVars>>({});
   const [status, setStatus] = useState<
     Partial<Record<StepIdValue, StepUIState>>
   >({});
   const [executing, setExecuting] = useState<StepIdValue | null>(null);
+
+  // Generate a default password once on the client to avoid SSR mismatches
+  useEffect(() => {
+    if (!initialized.current) {
+      initialized.current = true;
+      setVars((prev) => ({
+        ...prev,
+        [Var.GeneratedPassword]: Math.random().toString(36).slice(-12)
+      }));
+    }
+  }, []);
 
   const updateVars = useCallback((newVars: Partial<WorkflowVars>) => {
     const keys = Object.keys(newVars) as (keyof typeof newVars)[];
@@ -144,7 +153,7 @@ export default function WorkflowClient({ steps }: Props) {
             />
           ))}
         </div>
-        <div className="mt-6 lg:mt-0 lg:w-80 lg:flex-none lg:sticky lg:top-4">
+        <div className="mt-6 lg:mt-0 lg:w-96 lg:flex-none lg:sticky lg:top-4">
           <VarsInspector vars={vars} onChange={updateVars} />
         </div>
       </div>
