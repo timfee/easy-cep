@@ -1,3 +1,4 @@
+import { EmptyResponseSchema } from "@/app/workflow/utils";
 import { ApiEndpoint, SyncTemplateId } from "@/constants";
 import { LogLevel, StepId, Var } from "@/types";
 import { z } from "zod";
@@ -97,7 +98,7 @@ export default createStep<CheckData>({
 
       await fetchMicrosoft(
         ApiEndpoint.Microsoft.SyncSecrets(spId),
-        z.object({}),
+        EmptyResponseSchema,
         {
           method: "PUT",
           body: JSON.stringify({
@@ -111,7 +112,7 @@ export default createStep<CheckData>({
 
       await fetchMicrosoft(
         ApiEndpoint.Microsoft.StartSync(spId, job.id),
-        z.object({}),
+        EmptyResponseSchema,
         { method: "POST" }
       );
 

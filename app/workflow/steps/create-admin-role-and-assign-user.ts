@@ -1,3 +1,4 @@
+import { findInTree, isConflictError } from "@/app/workflow/utils";
 import { ApiEndpoint } from "@/constants";
 import { LogLevel, StepId, Var } from "@/types";
 import { z } from "zod";
@@ -188,26 +189,16 @@ export default createStep<CheckData>({
 
       const PrivListSchema = z.object({ items: z.array(PrivilegeSchema) });
 
-      const findServiceId = (
-        list: AdminPrivilege[],
-        target: string
-      ): string | undefined => {
-        for (const priv of list) {
-          if (priv.privilegeName === target) return priv.serviceId;
-          if (priv.childPrivileges) {
-            const nested = findServiceId(priv.childPrivileges, target);
-            if (nested) return nested;
-          }
-        }
-        return undefined;
-      };
-
       const { items } = await fetchGoogle(
         ApiEndpoint.Google.RolePrivileges,
         PrivListSchema
       );
 
-      const serviceId = findServiceId(items, "USERS_RETRIEVE");
+      const serviceId = findInTree(
+        items,
+        (priv) => priv.privilegeName === "USERS_RETRIEVE",
+        (priv) => priv.childPrivileges
+      )?.serviceId;
 
       if (!serviceId)
         throw new Error("Service ID not found in role privileges");
@@ -232,7 +223,7 @@ export default createStep<CheckData>({
         });
         roleId = res.roleId;
       } catch (error) {
-        if (error instanceof Error && error.message.includes("409")) {
+        if (isConflictError(error)) {
           if (!roleId) {
             const RolesSchema = z.object({
               items: z
@@ -295,7 +286,7 @@ export default createStep<CheckData>({
           })
         });
       } catch (error) {
-        if (!(error instanceof Error && error.message.includes("409"))) {
+        if (!isConflictError(error)) {
           throw error;
         }
       }

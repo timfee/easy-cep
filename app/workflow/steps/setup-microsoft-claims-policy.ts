@@ -1,3 +1,4 @@
+import { EmptyResponseSchema, isConflictError } from "@/app/workflow/utils";
 import { ApiEndpoint } from "@/constants";
 import { LogLevel, StepId, Var } from "@/types";
 import { z } from "zod";
@@ -98,7 +99,7 @@ export default createStep<CheckData>({
         );
         policyId = created.id;
       } catch (error) {
-        if (error instanceof Error && error.message.includes("409")) {
+        if (isConflictError(error)) {
           const listSchema = z.object({
             value: z.array(z.object({ id: z.string() }))
           });
@@ -118,7 +119,7 @@ export default createStep<CheckData>({
       try {
         await fetchMicrosoft(
           ApiEndpoint.Microsoft.AssignClaimsPolicy(spId),
-          z.object({}),
+          EmptyResponseSchema,
           {
             method: "POST",
             body: JSON.stringify({
@@ -127,7 +128,7 @@ export default createStep<CheckData>({
           }
         );
       } catch (error) {
-        if (!(error instanceof Error) || !error.message.includes("409")) {
+        if (!isConflictError(error)) {
           throw error;
         }
         // Policy already assigned
