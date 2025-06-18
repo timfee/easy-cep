@@ -3,6 +3,20 @@ import { StepId, Var } from '@/types';
 import fs from 'fs';
 import path from 'path';
 
+const googleTokenPath = path.join(__dirname, 'google.token');
+if (!process.env.GOOGLE_BEARER_TOKEN && fs.existsSync(googleTokenPath)) {
+  process.env.GOOGLE_BEARER_TOKEN = fs.readFileSync(googleTokenPath, 'utf8').trim();
+}
+
+const msTokenPath = '/.microsoft.token';
+if (!process.env.MS_BEARER_TOKEN && fs.existsSync(msTokenPath)) {
+  process.env.MS_BEARER_TOKEN = fs.readFileSync(msTokenPath, 'utf8').trim();
+}
+
+if (!process.env.GOOGLE_BEARER_TOKEN || !process.env.MS_BEARER_TOKEN) {
+  test.skip('E2E tests require GOOGLE_BEARER_TOKEN and MS_BEARER_TOKEN', () => {});
+} else {
+
 describe('Workflow Live E2E', () => {
   const baseVars = {
     [Var.GoogleAccessToken]: process.env.GOOGLE_BEARER_TOKEN!,
@@ -52,3 +66,5 @@ describe('Workflow Live E2E', () => {
     });
   }
 });
+
+}

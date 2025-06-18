@@ -1,5 +1,6 @@
 "use client";
 import { StepIdValue, StepUIState, VarName, WorkflowVars } from "@/types";
+import React from "react";
 import StepLogs from "./StepLogs";
 import { Badge } from "./ui/badge";
 import { Button } from "./ui/button";
@@ -102,6 +103,7 @@ export default function StepCard({
             ))}
           </ul>
         </div>
+
       </div>
 
       {state?.status !== "complete" && (
