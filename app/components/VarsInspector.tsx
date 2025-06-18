@@ -54,9 +54,8 @@ export default function VarsInspector({ vars, onChange }: Props) {
         <Table dense bleed className="!whitespace-normal">
           <TableHead>
             <TableRow>
-              <TableHeader>Name</TableHeader>
+              <TableHeader className="w-32">Name</TableHeader>
               <TableHeader>Value</TableHeader>
-              <TableHeader className="w-20"></TableHeader>
             </TableRow>
           </TableHead>
           <TableBody>
@@ -67,33 +66,22 @@ export default function VarsInspector({ vars, onChange }: Props) {
 
               return (
                 <TableRow key={name}>
-                  <TableCell className="font-mono text-xs">{name}</TableCell>
-                  <TableCell>
+                  <TableCell className="text-xs font-medium text-zinc-800">
+                    {name}
+                  </TableCell>
+                  <TableCell
+                    onClick={() => setEditingVar({ name, value: value ?? "" })}
+                    className="cursor-pointer text-xs font-mono text-blue-700 underline decoration-dotted">
                     {hasValue ?
                       type === "boolean" ?
                         <Badge color={value ? "green" : "zinc"}>
                           {String(value)}
                         </Badge>
-                      : <span className="text-xs text-zinc-700 truncate max-w-[200px] block">
-                          {String(value).length > 20 ?
-                            `${String(value).slice(0, 20)}…`
-                          : String(value)}
+                      : <span className="truncate max-w-[260px] block">
+                          {String(value)}
                         </span>
 
-                    : <span className="text-xs text-zinc-400 italic">
-                        Not set
-                      </span>
-                    }
-                  </TableCell>
-                  <TableCell>
-                    <Button
-                      plain
-                      className="text-xs"
-                      onClick={() =>
-                        setEditingVar({ name, value: value ?? "" })
-                      }>
-                      Edit
-                    </Button>
+                    : <span className="italic text-zinc-400">Not set</span>}
                   </TableCell>
                 </TableRow>
               );
