@@ -1,3 +1,4 @@
+import { isConflictError } from "@/app/workflow/utils";
 import { ApiEndpoint, OrgUnit } from "@/constants";
 import { LogLevel, StepId, Var } from "@/types";
 import crypto from "crypto";
@@ -117,7 +118,7 @@ export default createStep<CheckData>({
           })
         });
       } catch (error) {
-        if (error instanceof Error && error.message.includes("409")) {
+        if (isConflictError(error)) {
           user = await fetchGoogle(
             `${ApiEndpoint.Google.Users}/azuread-provisioning@${domain}`,
             CreateSchema

@@ -1,3 +1,4 @@
+import { isConflictError } from "@/app/workflow/utils";
 import { ApiEndpoint, GroupId } from "@/constants";
 import { LogLevel, StepId, Var } from "@/types";
 import { z } from "zod";
@@ -141,7 +142,7 @@ export default createStep<CheckData>({
 
       markSucceeded({});
     } catch (error) {
-      if (error instanceof Error && error.message.includes("409")) {
+      if (isConflictError(error)) {
         markSucceeded({});
       } else {
         log(LogLevel.Error, "Failed to assign users to SSO", { error });
