@@ -123,15 +123,23 @@ export default function StepCard({
         </div>
       </div>
 
-      {status !== "complete" && (
+      <div className="mt-4 flex items-center gap-2">
         <Button
           color="blue"
-          className="mt-4 inline-flex items-center gap-2"
+          className="inline-flex items-center gap-2"
           onClick={() => onExecute(definition.id)}
           disabled={executing || missing.length > 0}>
           Execute <ArrowRight className="h-4 w-4" />
         </Button>
-      )}
+        {status === "complete" && (
+          <button
+            className="text-sm text-blue-700 hover:underline disabled:text-gray-300"
+            onClick={() => onExecute(definition.id)}
+            disabled={executing || missing.length > 0}>
+            Re-execute
+          </button>
+        )}
+      </div>
 
       <StepLogs logs={state?.logs} />
     </div>

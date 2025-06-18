@@ -69,10 +69,18 @@ export default function ProviderLogin({ onUpdate }: Props) {
       </h2>
       <div className="flex flex-col gap-3 sm:flex-row">
         {tokens.googleAccessToken ?
-          <Button color="zinc" onClick={() => signOut(PROVIDERS.GOOGLE)}>
-            <span>G</span>
-            {`Sign out Google`}
-          </Button>
+          <div className="flex items-center gap-2 text-sm">
+            <span className="font-medium">
+              {`Logged in to Google • ${Math.round(
+                ((tokens.googleExpiresAt ?? 0) - Date.now()) / 60000
+              )}m left`}
+            </span>
+            <button
+              className="text-blue-700 hover:underline"
+              onClick={() => signOut(PROVIDERS.GOOGLE)}>
+              Log Out
+            </button>
+          </div>
         : <Button
             color="blue"
             onClick={() =>
@@ -83,10 +91,18 @@ export default function ProviderLogin({ onUpdate }: Props) {
           </Button>
         }
         {tokens.msGraphToken ?
-          <Button color="zinc" onClick={() => signOut(PROVIDERS.MICROSOFT)}>
-            <span>M</span>
-            {`Sign out Microsoft`}
-          </Button>
+          <div className="flex items-center gap-2 text-sm">
+            <span className="font-medium">
+              {`Logged in to Microsoft • ${Math.round(
+                ((tokens.msGraphExpiresAt ?? 0) - Date.now()) / 60000
+              )}m left`}
+            </span>
+            <button
+              className="text-blue-700 hover:underline"
+              onClick={() => signOut(PROVIDERS.MICROSOFT)}>
+              Log Out
+            </button>
+          </div>
         : <Button
             color="blue"
             onClick={() =>
