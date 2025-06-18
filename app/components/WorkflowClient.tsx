@@ -1,8 +1,8 @@
 "use client";
 
+import { checkStep, runStep } from "@/lib/workflow/engine";
 import { StepIdValue, StepUIState, Var, WorkflowVars } from "@/types";
 import { useCallback, useEffect, useRef, useState } from "react";
-import { checkStep, runStep } from "../workflow/engine";
 import ProviderLogin from "./ProviderLogin";
 import StepCard, { StepInfo } from "./StepCard";
 import VarsInspector from "./VarsInspector";

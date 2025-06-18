@@ -1,6 +1,6 @@
+import { getAllSteps } from "@/lib/workflow/step-registry";
 import type { StepInfo } from "./components/StepCard";
 import WorkflowClient from "./components/WorkflowClient";
-import { getAllSteps } from "./workflow/step-registry";
 
 export default function HomePage() {
   const steps: StepInfo[] = getAllSteps().map((s) => ({

@@ -1,5 +1,5 @@
-import { EmptyResponseSchema } from "@/lib/workflow/utils";
 import { ApiEndpoint, SyncTemplateId } from "@/constants";
+import { EmptyResponseSchema } from "@/lib/workflow/utils";
 import { LogLevel, StepId, Var } from "@/types";
 import { z } from "zod";
 import { createStep, getVar } from "../create-step";

@@ -1,4 +1,3 @@
-/* eslint-disable no-magic-numbers, sonarjs/slow-regex */
 // eslint-rules/workflow-rules.ts
 import { ESLintUtils } from "@typescript-eslint/utils";
 import * as fs from "fs";

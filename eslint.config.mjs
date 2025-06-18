@@ -1,6 +1,4 @@
 import { FlatCompat } from "@eslint/eslintrc";
-import sonar from "eslint-plugin-sonarjs";
-import tsdoc from "eslint-plugin-tsdoc";
 import { dirname } from "path";
 import { fileURLToPath } from "url";
 import customRules from "./eslint.rules.mjs";
@@ -31,16 +29,7 @@ const eslintConfig = [
     "next/typescript",
     "plugin:promise/recommended"
   ),
-  sonar.configs.recommended,
-  {
-    plugins: { tsdoc, workflow: customRules },
-    rules: {
-      "tsdoc/syntax": "off",
-      // eslint-disable-next-line no-magic-numbers
-      "sonarjs/cognitive-complexity": ["warn", 20],
-      "no-magic-numbers": ["warn", { ignore: [-1, 0, 1] }]
-    }
-  },
+  { plugins: { workflow: customRules } },
   {
     files: ["lib/workflow/steps/*.ts"],
     rules: {
@@ -68,8 +57,7 @@ const eslintConfig = [
     files: ["**/__tests__/**", "test/**"],
     rules: {
       "no-magic-numbers": "off",
-      "@typescript-eslint/no-explicit-any": "off",
-      "sonarjs/no-nested-conditional": "off"
+      "@typescript-eslint/no-explicit-any": "off"
     }
   },
   {
@@ -91,8 +79,7 @@ const eslintConfig = [
       "workflow/import-types-from-types": "error",
       "workflow/import-constants-from-constants": "error"
     }
-  },
-  { files: ["jest.config.ts"], rules: { "sonarjs/slow-regex": "off" } }
+  }
 ];
 
 export default eslintConfig;

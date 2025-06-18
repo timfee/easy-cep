@@ -1,8 +1,8 @@
 import { ApiEndpoint, OrgUnit } from "@/constants";
+import { createStep } from "@/lib/workflow/create-step";
 import { isConflictError } from "@/lib/workflow/utils";
 import { LogLevel, StepId, Var } from "@/types";
 import { z } from "zod";
-import { createStep } from "../create-step";
 
 // eslint-disable-next-line @typescript-eslint/no-empty-object-type
 interface CheckData {}

@@ -1,4 +1,3 @@
-/* eslint-disable no-magic-numbers */
 import { env } from "@/env";
 console.log("Environment variables:", env);
 

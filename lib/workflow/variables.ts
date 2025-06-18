@@ -14,7 +14,6 @@ export const WORKFLOW_VARIABLES = {
   // Service account
   provisioningUserId: "string",
   provisioningUserEmail: "string",
-  // eslint-disable-next-line sonarjs/no-hardcoded-passwords
   generatedPassword: "string",
 
   // Roles

@@ -1,4 +1,3 @@
-/* eslint-disable sonarjs/no-nested-conditional */
 import * as Headless from "@headlessui/react";
 import clsx from "clsx";
 import React, { forwardRef } from "react";

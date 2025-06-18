@@ -16,7 +16,7 @@ import { cookies } from "next/headers";
 import { NextResponse } from "next/server";
 /** Cookie option type for NextResponse.cookies.set */
 // disable magic number for tuple index accessing the third parameter type
-// eslint-disable-next-line no-magic-numbers
+
 type CookieOptions = Parameters<NextResponse["cookies"]["set"]>[2];
 
 /** Size of each cookie chunk in bytes */

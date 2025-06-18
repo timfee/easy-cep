@@ -1,4 +1,3 @@
-/* eslint-disable no-magic-numbers */
 import clsx from "clsx";
 
 type HeadingProps = {
