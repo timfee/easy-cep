@@ -41,61 +41,72 @@ export default createStep<CheckData>({
   }) {
     try {
       const AppsSchema = z.object({
-        value: z
-          .array(
-            z.object({
-              id: z.string(),
-              appId: z.string(),
-              displayName: z.string()
-            })
-          )
-          .optional()
+        value: z.array(
+          z.object({
+            id: z.string(),
+            appId: z.string(),
+            displayName: z.string()
+          })
+        )
       });
 
-      const filter = encodeURIComponent(
+      const provFilter = encodeURIComponent(
         `applicationTemplateId eq '${TemplateId.GoogleWorkspaceConnector}'`
       );
-      const { value = [] } = await fetchMicrosoft(
-        `${ApiEndpoint.Microsoft.Applications}?$filter=${filter}`,
+      const ssoFilter = encodeURIComponent(
+        `applicationTemplateId eq '${TemplateId.GoogleWorkspaceSaml}'`
+      );
+
+      const { value: provApps } = await fetchMicrosoft(
+        `${ApiEndpoint.Microsoft.Applications}?$filter=${provFilter}`,
         AppsSchema
       );
 
-      if (value.length > 0) {
-        const provApp = value.find((v) =>
-          v.displayName.includes("Provisioning")
+      const { value: ssoApps } = await fetchMicrosoft(
+        `${ApiEndpoint.Microsoft.Applications}?$filter=${ssoFilter}`,
+        AppsSchema
+      );
+
+      const provApp = provApps[0];
+      const ssoApp = ssoApps[0] ?? provApp;
+      const sameApp = provApp?.appId === ssoApp?.appId;
+
+      if (provApp && ssoApp) {
+        const SpSchema = z.object({
+          value: z.array(z.object({ id: z.string() }))
+        });
+
+        const provFilter = encodeURIComponent(`appId eq '${provApp.appId}'`);
+        const ssoFilter = encodeURIComponent(`appId eq '${ssoApp.appId}'`);
+
+        const provRes = await fetchMicrosoft(
+          `${ApiEndpoint.Microsoft.ServicePrincipals}?$filter=${provFilter}`,
+          SpSchema
         );
-        const ssoApp = value.find((v) => v.displayName.includes("SSO"));
 
-        if (provApp && ssoApp) {
-          const SpSchema = z.object({
-            value: z.array(z.object({ id: z.string() }))
+        const ssoRes = await fetchMicrosoft(
+          `${ApiEndpoint.Microsoft.ServicePrincipals}?$filter=${ssoFilter}`,
+          SpSchema
+        );
+
+        const provId = provRes.value[0]?.id;
+        const ssoId = ssoRes.value[0]?.id;
+
+        if (provId && ssoId) {
+          log(
+            LogLevel.Info,
+            sameApp ?
+              "Provisioning and SSO use the same app"
+            : "Provisioning and SSO use separate apps"
+          );
+          log(LogLevel.Info, "Microsoft apps already exist");
+          markComplete({
+            provisioningServicePrincipalId: provId,
+            ssoServicePrincipalId: ssoId,
+            ssoAppId: ssoApp.appId
           });
-
-          const provRes = await fetchMicrosoft(
-            `${ApiEndpoint.Microsoft.ServicePrincipals}?$filter=appId eq '${provApp.appId}'`,
-            SpSchema
-          );
-
-          const ssoRes = await fetchMicrosoft(
-            `${ApiEndpoint.Microsoft.ServicePrincipals}?$filter=appId eq '${ssoApp.appId}'`,
-            SpSchema
-          );
-
-          const provId = provRes.value[0]?.id;
-          const ssoId = ssoRes.value[0]?.id;
-
-          if (provId && ssoId) {
-            log(LogLevel.Info, "Microsoft apps already exist");
-            markComplete({
-              provisioningServicePrincipalId: provId,
-              ssoServicePrincipalId: ssoId,
-              ssoAppId: ssoApp.appId
-            });
-          } else {
-            markIncomplete("Microsoft service principals not found", {});
-          }
         } else {
-          markIncomplete("Microsoft apps not found", {});
+          markIncomplete("Microsoft service principals not found", {});
         }
       } else {
         markIncomplete("Microsoft apps not found", {});
@@ -140,7 +151,7 @@ export default createStep<CheckData>({
       );
 
       const res2 = await fetchMicrosoft(
-        ApiEndpoint.Microsoft.Templates(TemplateId.GoogleWorkspaceConnector),
+        ApiEndpoint.Microsoft.Templates(TemplateId.GoogleWorkspaceSaml),
         CreateSchema,
         {
           method: "POST",

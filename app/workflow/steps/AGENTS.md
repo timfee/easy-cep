@@ -500,26 +500,39 @@ Instantiate provisioning and SSO Microsoft enterprise apps from template.
 #### Step 7 Check Request
 
 ```http
+# Provisioning app lookup
 GET https://graph.microsoft.com/beta/applications?$filter=applicationTemplateId eq '01303a13-8322-4e06-bee5-80d612907131'
+Authorization: Bearer {msGraphToken}
+
+# SSO app lookup
+GET https://graph.microsoft.com/beta/applications?$filter=applicationTemplateId eq '8b1025e4-1dd2-430b-a150-2ef79cd700f5'
+Authorization: Bearer {msGraphToken}
+
+# Service principal queries
+GET https://graph.microsoft.com/beta/servicePrincipals?$filter=appId eq '{appId}'
 Authorization: Bearer {msGraphToken}
 ```
 
 #### Step 7 Success Response (`200 OK`)
 
 ```json
-{ "value": [{ "servicePrincipalId": "...", "appId": "..." }] }
+# Application lookup example
+{ "value": [{ "id": "...", "appId": "..." }] }
+
+# Service principal lookup example
+{ "value": [{ "id": "..." }] }
 ```
 
 #### Step 7 Completion Criteria
 
-`value` array length >= 1
+Apps exist for both template IDs and their service principals are found. A single app may satisfy both roles if the IDs match. The check logs whether provisioning and SSO share an app or use separate ones.
 
 #### Step 7 Check Variables Extracted
 
 ```ts
-provisioningServicePrincipalId = .value[0].servicePrincipalId
-ssoServicePrincipalId = .value[0].servicePrincipalId
-ssoAppId = .value[0].appId
+provisioningServicePrincipalId = provisioningSp.value[0].id;
+ssoServicePrincipalId = ssoSp.value[0].id;
+ssoAppId = ssoApp.appId;
 ```
 
 ### Step 7 Execution
@@ -543,7 +556,7 @@ Content-Type: application/json
 2. SSO App
 
 ```http
-POST https://graph.microsoft.com/v1.0/applicationTemplates/01303a13-8322-4e06-bee5-80d612907131/instantiate
+POST https://graph.microsoft.com/v1.0/applicationTemplates/8b1025e4-1dd2-430b-a150-2ef79cd700f5/instantiate
 Authorization: Bearer {msGraphToken}
 Content-Type: application/json
 

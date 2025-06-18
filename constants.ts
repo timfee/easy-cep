@@ -26,7 +26,7 @@ export const ApiEndpoint = {
 
   Microsoft: {
     Applications: "https://graph.microsoft.com/beta/applications",
-    ServicePrincipals: "https://graph.microsoft.com/v1.0/servicePrincipals",
+    ServicePrincipals: "https://graph.microsoft.com/beta/servicePrincipals",
 
     Templates: (templateId: string) =>
       `https://graph.microsoft.com/v1.0/applicationTemplates/${templateId}/instantiate`,
@@ -59,7 +59,8 @@ export const ApiEndpoint = {
 };
 
 export const TemplateId = {
-  GoogleWorkspaceConnector: "01303a13-8322-4e06-bee5-80d612907131"
+  GoogleWorkspaceConnector: "01303a13-8322-4e06-bee5-80d612907131",
+  GoogleWorkspaceSaml: "8b1025e4-1dd2-430b-a150-2ef79cd700f5"
 };
 
 export const GroupId = { AllUsers: "allUsers" };
