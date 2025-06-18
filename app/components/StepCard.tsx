@@ -45,6 +45,8 @@ interface StepCardProps {
   vars: Partial<WorkflowVars>;
   executing: boolean;
   onExecute(id: StepIdValue): void;
+  onUndo(id: StepIdValue): void;
+  onForce(id: StepIdValue): void;
 }
 
 export default function StepCard({
@@ -53,12 +55,15 @@ export default function StepCard({
   state,
   vars,
   executing,
-  onExecute
+  onExecute,
+  onUndo,
+  onForce
 }: StepCardProps) {
   const missing = definition.requires.filter((v) => !vars[v]);
   const status = state?.status ?? "idle";
   const inProgress =
     status === "checking" || status === "executing" || status === "pending";
+  const executed = status === "complete" || status === "failed";
 
   return (
     <div
@@ -128,16 +133,26 @@ export default function StepCard({
           color="blue"
           className="inline-flex items-center gap-2"
           onClick={() => onExecute(definition.id)}
-          disabled={executing || missing.length > 0}>
+          disabled={executing || missing.length > 0}
+          data-complete={executed}
+          style={{ opacity: executed ? 0.5 : 1 }}>
           Execute <ArrowRight className="h-4 w-4" />
         </Button>
-        {status === "complete" && (
-          <button
-            className="text-sm text-blue-700 hover:underline disabled:text-gray-300"
-            onClick={() => onExecute(definition.id)}
-            disabled={executing || missing.length > 0}>
-            Re-execute
-          </button>
+        {executed && (
+          <div className="ml-auto flex items-center gap-2">
+            <button
+              className="text-sm text-blue-700 hover:underline disabled:text-gray-300"
+              onClick={() => onUndo(definition.id)}
+              disabled={executing}>
+              Undo
+            </button>
+            <button
+              className="text-sm text-blue-700 hover:underline disabled:text-gray-300"
+              onClick={() => onForce(definition.id)}
+              disabled={executing}>
+              Force
+            </button>
+          </div>
         )}
       </div>
 

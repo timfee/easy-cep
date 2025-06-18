@@ -105,6 +105,25 @@ export default function WorkflowClient({ steps }: Props) {
     }
   }
 
+  function handleUndo(id: StepIdValue) {
+    const def = steps.find((s) => s.id === id);
+    if (!def) return;
+    setStatus((prev) => ({ ...prev, [id]: { status: "idle" } }));
+    setVars((prev) => {
+      const next = { ...prev };
+      for (const v of def.provides) {
+        delete (next as Record<string, unknown>)[v];
+      }
+      return next;
+    });
+    checkedSteps.current.delete(id);
+  }
+
+  function handleForce(id: StepIdValue) {
+    console.log("Force execute", id);
+    handleExecute(id);
+  }
+
   const completed = steps.filter(
     (s) => status[s.id]?.status === "complete"
   ).length;
@@ -150,6 +169,8 @@ export default function WorkflowClient({ steps }: Props) {
               vars={vars}
               executing={executing !== null}
               onExecute={handleExecute}
+              onUndo={handleUndo}
+              onForce={handleForce}
             />
           ))}
         </div>
