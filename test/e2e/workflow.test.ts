@@ -1,4 +1,4 @@
-import { runStep } from "@/app/workflow/engine";
+import { runStep } from "@/lib/workflow/engine";
 import { StepId, Var } from "@/types";
 import fs from "fs";
 import path from "path";

@@ -1,10 +1,10 @@
 import { z } from "zod";
-import type { StepIdValue } from "./app/workflow/step-ids";
-import type { VarName, WorkflowVars } from "./app/workflow/variables";
+import type { StepIdValue } from "./lib/workflow/step-ids";
+import type { VarName, WorkflowVars } from "./lib/workflow/variables";
 
 // Re-export workflow types from their new locations
-export { StepId } from "./app/workflow/step-ids";
-export { Var } from "./app/workflow/variables";
+export { StepId } from "./lib/workflow/step-ids";
+export { Var } from "./lib/workflow/variables";
 export type { StepIdValue, VarName, WorkflowVars };
 
 // Keep only the general types here

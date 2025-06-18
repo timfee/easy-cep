@@ -18,8 +18,8 @@ This project defines a series of discrete, type-safe `step` files. Each step:
 
 The runtime engine orchestrates execution across steps using these declarations.
 
-Workflow variables live in `./app/workflow/variables.ts` and step identifiers
-in `./app/workflow/step-ids.ts`. These are re-exported from `types.ts` so most
+Workflow variables live in `./lib/workflow/variables.ts` and step identifiers
+in `./lib/workflow/step-ids.ts`. These are re-exported from `types.ts` so most
 code can simply import from `@/types`.
 
 ## Steps

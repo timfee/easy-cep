@@ -42,7 +42,7 @@ const eslintConfig = [
     }
   },
   {
-    files: ["app/workflow/steps/*.ts"],
+    files: ["lib/workflow/steps/*.ts"],
     rules: {
       // 1. Step structure enforcement
       "workflow/must-export-create-step": "error",

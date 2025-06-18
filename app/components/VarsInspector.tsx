@@ -3,7 +3,7 @@ import {
   VarName,
   WORKFLOW_VARIABLES,
   WorkflowVars
-} from "@/app/workflow/variables";
+} from "@/lib/workflow/variables";
 import { useState } from "react";
 import { Button } from "./ui/button";
 import {

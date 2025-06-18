@@ -1,4 +1,4 @@
-import { EmptyResponseSchema } from "@/app/workflow/utils";
+import { EmptyResponseSchema } from "@/lib/workflow/utils";
 import { ApiEndpoint, SyncTemplateId } from "@/constants";
 import { LogLevel, StepId, Var } from "@/types";
 import { z } from "zod";
