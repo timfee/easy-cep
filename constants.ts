@@ -16,7 +16,8 @@ export const ApiEndpoint = {
     SsoProfiles:
       "https://cloudidentity.googleapis.com/v1/inboundSamlSsoProfiles",
     SsoAssignments:
-      "https://cloudidentity.googleapis.com/v1/inboundSsoAssignments"
+      "https://cloudidentity.googleapis.com/v1/inboundSsoAssignments",
+    SiteVerification: "https://www.googleapis.com/siteVerification/v1"
   },
   GoogleAuth: {
     Authorize: "https://accounts.google.com/o/oauth2/v2/auth",

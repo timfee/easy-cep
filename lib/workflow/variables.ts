@@ -10,6 +10,7 @@ export const WORKFLOW_VARIABLES = {
   // Domain
   primaryDomain: "string",
   isDomainVerified: "boolean",
+  verificationToken: "string",
 
   // Service account
   provisioningUserId: "string",

@@ -6,12 +6,14 @@ import { createStep } from "../create-step";
 interface CheckData {
   isDomainVerified: boolean;
   primaryDomain?: string;
+  verificationToken?: string;
+  verificationMethod?: string;
 }
 
 export default createStep<CheckData>({
   id: StepId.VerifyPrimaryDomain,
   requires: [Var.GoogleAccessToken],
-  provides: [Var.IsDomainVerified, Var.PrimaryDomain],
+  provides: [Var.IsDomainVerified, Var.PrimaryDomain, Var.VerificationToken],
 
   /**
    * GET https://admin.googleapis.com/admin/directory/v1/customer/my_customer/domains
@@ -67,11 +69,44 @@ export default createStep<CheckData>({
           isDomainVerified: true,
           primaryDomain: primary.domainName
         });
+        return;
+      }
+
+      if (primary) {
+        const TokenSchema = z.object({
+          method: z.string(),
+          type: z.string(),
+          site: z.object({ type: z.string(), identifier: z.string() }),
+          token: z.string()
+        });
+
+        try {
+          const verificationData = await fetchGoogle(
+            `${ApiEndpoint.Google.SiteVerification}/token`,
+            TokenSchema,
+            {
+              method: "POST",
+              body: JSON.stringify({
+                site: { type: "INET_DOMAIN", identifier: primary.domainName },
+                verificationMethod: "DNS_TXT"
+              })
+            }
+          );
+
+          markIncomplete("Domain verification pending", {
+            isDomainVerified: false,
+            primaryDomain: primary.domainName,
+            verificationToken: verificationData.token,
+            verificationMethod: "DNS_TXT"
+          });
+        } catch (_error) {
+          markIncomplete("Domain not verified", {
+            isDomainVerified: false,
+            primaryDomain: primary.domainName
+          });
+        }
       } else {
-        markIncomplete(
-          primary ? "Primary domain not verified" : "No primary domain found",
-          { isDomainVerified: false, primaryDomain: primary?.domainName }
-        );
+        markIncomplete("No primary domain found", { isDomainVerified: false });
       }
     } catch (error) {
       log(LogLevel.Error, "Failed to check domains", { error });
@@ -81,22 +116,60 @@ export default createStep<CheckData>({
     }
   },
 
-  async execute({ checkData, markSucceeded, markFailed, log }) {
-    /**
-     * Manual step – no API call. DNS TXT records must be configured
-     * to verify the primary domain.
-     */
+  async execute({
+    fetchGoogle,
+    checkData,
+    markSucceeded,
+    markFailed,
+    markPending,
+    log
+  }) {
     try {
-      // This is a manual step - can't verify domain via API
-      log(
-        LogLevel.Info,
-        "Domain verification requires manual DNS configuration"
-      );
+      if (!checkData.primaryDomain) {
+        markFailed("No primary domain to verify");
+        return;
+      }
 
-      markSucceeded({
-        [Var.IsDomainVerified]: checkData.isDomainVerified,
-        [Var.PrimaryDomain]: checkData.primaryDomain || ""
+      const VerifySchema = z.object({
+        id: z.string(),
+        site: z.object({ type: z.string(), identifier: z.string() })
       });
+
+      try {
+        const verified = await fetchGoogle(
+          `${ApiEndpoint.Google.SiteVerification}/webResource`,
+          VerifySchema,
+          {
+            method: "POST",
+            body: JSON.stringify({
+              site: {
+                type: "INET_DOMAIN",
+                identifier: checkData.primaryDomain
+              },
+              verificationMethod: "DNS_TXT"
+            })
+          }
+        );
+
+        log(LogLevel.Info, "Domain verified successfully", { verified });
+        markSucceeded({
+          [Var.IsDomainVerified]: true,
+          [Var.PrimaryDomain]: checkData.primaryDomain,
+          [Var.VerificationToken]: checkData.verificationToken || ""
+        });
+      } catch (_error) {
+        if (checkData.verificationToken) {
+          markPending(
+            `Add TXT record to DNS: ${checkData.verificationToken}\n`
+              + `Record name: @ or ${checkData.primaryDomain}\n`
+              + `This step will retry automatically once DNS propagates.`
+          );
+        } else {
+          markFailed(
+            "Unable to verify domain - no verification token available"
+          );
+        }
+      }
     } catch (error) {
       log(LogLevel.Error, "Execute failed", { error });
       markFailed(error instanceof Error ? error.message : "Execute failed");
