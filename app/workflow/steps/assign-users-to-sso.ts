@@ -17,7 +17,7 @@ export default createStep<CheckData>({
    * Completed step example response
    *
    * 200
-   * { "inboundSsoAssignments": [ { "targetGroup": { "id": "allUsers" } } ] }
+   * { "inboundSsoAssignments": [ { "targetGroup": "groups/allUsers" } ] }
    *
    * Incomplete step example response
    *
@@ -38,7 +38,7 @@ export default createStep<CheckData>({
         inboundSsoAssignments: z
           .array(
             z.object({
-              targetGroup: z.object({ id: z.string() }).optional(),
+              targetGroup: z.string().optional(),
               targetOrgUnit: z.string().optional(),
               samlSsoInfo: z
                 .object({ inboundSamlSsoProfile: z.string() })
@@ -52,12 +52,14 @@ export default createStep<CheckData>({
 
       const { inboundSsoAssignments = [] } = await fetchGoogle(
         ApiEndpoint.Google.SsoAssignments,
-        AssignSchema
+        AssignSchema,
+        { flatten: true }
       );
 
+      const target = `groups/${GroupId.AllUsers}`;
       const exists = inboundSsoAssignments.some(
         (a) =>
-          a.targetGroup?.id === GroupId.AllUsers
+          a.targetGroup === target
           && a.samlSsoInfo?.inboundSamlSsoProfile === profileId
       );
 
@@ -84,7 +86,7 @@ export default createStep<CheckData>({
     /**
      * POST https://cloudidentity.googleapis.com/v1/inboundSsoAssignments
      * {
-     *   "targetGroup": { "id": "allUsers" },
+     *   "targetGroup": "groups/allUsers",
      *   "samlSsoInfo": { "inboundSamlSsoProfile": "{samlProfileId}" },
      *   "ssoMode": "SAML_SSO"
      * }
@@ -120,7 +122,7 @@ export default createStep<CheckData>({
         {
           method: "POST",
           body: JSON.stringify({
-            targetGroup: { id: GroupId.AllUsers },
+            targetGroup: `groups/${GroupId.AllUsers}`,
             samlSsoInfo: { inboundSamlSsoProfile: profileId },
             ssoMode: "SAML_SSO"
           })

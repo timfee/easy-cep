@@ -34,11 +34,17 @@ export const ApiEndpoint = {
     Synchronization: (spId: string) =>
       `https://graph.microsoft.com/v1.0/servicePrincipals/${spId}/synchronization`,
 
+    SyncTemplates: (spId: string) =>
+      `https://graph.microsoft.com/v1.0/servicePrincipals/${spId}/synchronization/templates`,
+
     SyncJobs: (spId: string) =>
       `https://graph.microsoft.com/v1.0/servicePrincipals/${spId}/synchronization/jobs`,
 
-    StartSync: (spId: string) =>
-      `https://graph.microsoft.com/v1.0/servicePrincipals/${spId}/synchronization/jobs/Initial/start`,
+    SyncSecrets: (spId: string) =>
+      `https://graph.microsoft.com/v1.0/servicePrincipals/${spId}/synchronization/secrets`,
+
+    StartSync: (spId: string, jobId: string) =>
+      `https://graph.microsoft.com/v1.0/servicePrincipals/${spId}/synchronization/jobs/${jobId}/start`,
 
     ClaimsPolicies:
       "https://graph.microsoft.com/beta/policies/claimsMappingPolicies",
@@ -62,6 +68,8 @@ export const TemplateId = {
   GoogleWorkspaceConnector: "01303a13-8322-4e06-bee5-80d612907131",
   GoogleWorkspaceSaml: "8b1025e4-1dd2-430b-a150-2ef79cd700f5"
 };
+
+export const SyncTemplateId = { GoogleWorkspace: "google2provisioningV2" };
 
 export const GroupId = { AllUsers: "allUsers" };
 

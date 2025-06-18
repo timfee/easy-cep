@@ -59,12 +59,14 @@ export default createStep<CheckData>({
 
       const { value: provApps } = await fetchMicrosoft(
         `${ApiEndpoint.Microsoft.Applications}?$filter=${provFilter}`,
-        AppsSchema
+        AppsSchema,
+        { flatten: true }
       );
 
       const { value: ssoApps } = await fetchMicrosoft(
         `${ApiEndpoint.Microsoft.Applications}?$filter=${ssoFilter}`,
-        AppsSchema
+        AppsSchema,
+        { flatten: true }
       );
 
       const provApp = provApps[0];
@@ -81,12 +83,14 @@ export default createStep<CheckData>({
 
         const provRes = await fetchMicrosoft(
           `${ApiEndpoint.Microsoft.ServicePrincipals}?$filter=${provFilter}`,
-          SpSchema
+          SpSchema,
+          { flatten: true }
         );
 
         const ssoRes = await fetchMicrosoft(
           `${ApiEndpoint.Microsoft.ServicePrincipals}?$filter=${ssoFilter}`,
-          SpSchema
+          SpSchema,
+          { flatten: true }
         );
 
         const provId = provRes.value[0]?.id;
