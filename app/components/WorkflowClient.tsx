@@ -1,6 +1,6 @@
 "use client";
 
-import { checkStep, runStep } from "@/lib/workflow/engine";
+import { checkStep, runStep, undoStep } from "@/lib/workflow/engine";
 import { StepIdValue, StepUIState, Var, WorkflowVars } from "@/types";
 import { useCallback, useEffect, useRef, useState } from "react";
 import ProviderLogin from "./ProviderLogin";
@@ -41,6 +41,7 @@ export default function WorkflowClient({ steps }: Props) {
   const updateVars = useCallback((newVars: Partial<WorkflowVars>) => {
     const keys = Object.keys(newVars) as (keyof typeof newVars)[];
     if (keys.length === 0) return;
+    let didChange = false;
     setVars((prev) => {
       let changed = false;
       for (const k of keys) {
@@ -52,9 +53,12 @@ export default function WorkflowClient({ steps }: Props) {
       if (!changed) {
         return prev;
       }
+      didChange = true;
       return { ...prev, ...newVars };
     });
-    checkedSteps.current.clear();
+    if (didChange) {
+      checkedSteps.current.clear();
+    }
   }, []);
 
   const updateStep = useCallback(
@@ -107,18 +111,29 @@ export default function WorkflowClient({ steps }: Props) {
     }
   }
 
-  function handleUndo(id: StepIdValue) {
+  async function handleUndo(id: StepIdValue) {
     const def = steps.find((s) => s.id === id);
     if (!def) return;
-    setStatus((prev) => ({ ...prev, [id]: { status: "idle" } }));
-    setVars((prev) => {
-      const next = { ...prev };
-      for (const v of def.provides) {
-        delete (next as Record<string, unknown>)[v];
+
+    setStatus((prev) => ({ ...prev, [id]: { status: "undoing" } }));
+
+    try {
+      const result = await undoStep(id, vars);
+      updateStep(id, result.state);
+
+      if (result.state.status === "reverted") {
+        setVars((prev) => {
+          const next = { ...prev };
+          for (const v of def.provides) {
+            delete (next as Record<string, unknown>)[v];
+          }
+          return next;
+        });
+        checkedSteps.current.delete(id);
       }
-      return next;
-    });
-    checkedSteps.current.delete(id);
+    } catch (error) {
+      console.error("Failed to undo step:", error);
+    }
   }
 
   function handleForce(id: StepIdValue) {

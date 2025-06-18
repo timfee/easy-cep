@@ -53,7 +53,8 @@ export default createStep<CheckData>({
           primaryEmail: z.string().optional()
         })
         .passthrough();
-      const url = `${ApiEndpoint.Google.Users}/azuread-provisioning@${domain}`;
+      const email = `azuread-provisioning@${domain}`;
+      const url = `${ApiEndpoint.Google.Users}/${encodeURIComponent(email)}`;
 
       const user = await fetchGoogle(url, UserSchema);
 
@@ -129,8 +130,9 @@ export default createStep<CheckData>({
         });
       } catch (error) {
         if (isConflictError(error)) {
+          const fallbackEmail = `azuread-provisioning@${domain}`;
           user = await fetchGoogle(
-            `${ApiEndpoint.Google.Users}/azuread-provisioning@${domain}`,
+            `${ApiEndpoint.Google.Users}/${encodeURIComponent(fallbackEmail)}`,
             CreateSchema
           );
 

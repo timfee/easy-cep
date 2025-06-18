@@ -13,7 +13,7 @@ interface CheckData {
 export default createStep<CheckData>({
   id: StepId.VerifyPrimaryDomain,
   requires: [Var.GoogleAccessToken],
-  provides: [Var.IsDomainVerified, Var.PrimaryDomain, Var.VerificationToken],
+  provides: [Var.IsDomainVerified, Var.PrimaryDomain],
 
   /**
    * GET https://admin.googleapis.com/admin/directory/v1/customer/my_customer/domains
@@ -154,8 +154,7 @@ export default createStep<CheckData>({
         log(LogLevel.Info, "Domain verified successfully", { verified });
         markSucceeded({
           [Var.IsDomainVerified]: true,
-          [Var.PrimaryDomain]: checkData.primaryDomain,
-          [Var.VerificationToken]: checkData.verificationToken || ""
+          [Var.PrimaryDomain]: checkData.primaryDomain
         });
       } catch {
         if (checkData.verificationToken) {

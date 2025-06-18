@@ -268,7 +268,9 @@ Content-Type: application/json
 #### Step 3 Variables Extracted on Success
 
 ```ts
-// No vars provided; step ensures OU existence only
+provisioningUserId = .id
+provisioningUserEmail = .primaryEmail
+generatedPassword = {generatedPassword}
 ```
 
 ## Step 4: `createAdminRoleAndAssignUser`

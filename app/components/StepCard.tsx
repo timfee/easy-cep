@@ -7,6 +7,7 @@ import {
   DocumentPlusIcon as FileStack,
   XMarkIcon as X
 } from "@heroicons/react/24/solid";
+import { StepApiCalls } from "./step-card/step-api-calls";
 import StepLogs from "./StepLogs";
 import { Badge } from "./ui/badge";
 import { Button } from "./ui/button";
@@ -164,6 +165,7 @@ export default function StepCard({
           </div>
         )}
       </div>
+      <StepApiCalls stepId={definition.id} />
 
       <StepLogs logs={state?.logs} />
     </div>
