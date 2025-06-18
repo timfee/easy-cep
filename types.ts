@@ -28,6 +28,7 @@ export interface StepDefinition<
   id: StepIdValue;
   requires: R;
   provides: P;
+  undo?: (ctx: StepUndoContext<unknown>) => Promise<void>;
 }
 
 export interface StepRunResult {
@@ -74,6 +75,25 @@ export interface StepExecuteContext<T> {
   markPending(notes: string): void;
 }
 
+export interface StepUndoContext<T> {
+  fetchGoogle<R>(
+    url: string,
+    schema: z.ZodSchema<R>,
+    init?: RequestInit & { flatten?: boolean }
+  ): Promise<R>;
+  fetchMicrosoft<R>(
+    url: string,
+    schema: z.ZodSchema<R>,
+    init?: RequestInit & { flatten?: boolean }
+  ): Promise<R>;
+  log(level: LogLevel, message: string, data?: unknown): void;
+  vars: Partial<WorkflowVars>;
+  markReverted(): void;
+  markFailed(error: string): void;
+}
+
+export type { StepUndoContext };
+
 export interface StepLogEntry {
   timestamp: number;
   message: string;
@@ -82,7 +102,15 @@ export interface StepLogEntry {
 }
 
 export interface StepUIState {
-  status: "idle" | "checking" | "executing" | "complete" | "failed" | "pending";
+  status:
+    | "idle"
+    | "checking"
+    | "executing"
+    | "complete"
+    | "failed"
+    | "pending"
+    | "undoing"
+    | "reverted";
   summary?: string;
   error?: string;
   notes?: string;

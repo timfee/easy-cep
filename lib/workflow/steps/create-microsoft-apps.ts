@@ -1,4 +1,5 @@
 import { ApiEndpoint, TemplateId } from "@/constants";
+import { EmptyResponseSchema } from "@/lib/workflow/utils";
 import { LogLevel, StepId, Var } from "@/types";
 import { z } from "zod";
 import { createStep } from "../create-step";
@@ -171,6 +172,46 @@ export default createStep<CheckData>({
     } catch (error) {
       log(LogLevel.Error, "Failed to create Microsoft apps", { error });
       markFailed(error instanceof Error ? error.message : "Execute failed");
+    }
+  },
+  undo: async ({ vars, fetchMicrosoft, markReverted, markFailed, log }) => {
+    try {
+      const provSpId = vars[Var.ProvisioningServicePrincipalId] as string | undefined;
+      const ssoSpId = vars[Var.SsoServicePrincipalId] as string | undefined;
+      const appId = vars[Var.SsoAppId] as string | undefined;
+
+      if (provSpId) {
+        await fetchMicrosoft(
+          `${ApiEndpoint.Microsoft.ServicePrincipals}/${provSpId}`,
+          EmptyResponseSchema,
+          { method: "DELETE" }
+        );
+      }
+
+      if (ssoSpId && ssoSpId !== provSpId) {
+        await fetchMicrosoft(
+          `${ApiEndpoint.Microsoft.ServicePrincipals}/${ssoSpId}`,
+          EmptyResponseSchema,
+          { method: "DELETE" }
+        );
+      }
+
+      if (appId) {
+        await fetchMicrosoft(
+          `${ApiEndpoint.Microsoft.Applications}/${appId}`,
+          EmptyResponseSchema,
+          { method: "DELETE" }
+        );
+      }
+
+      markReverted();
+    } catch (error) {
+      if (error instanceof Error && error.message.includes("404")) {
+        markReverted();
+      } else {
+        log(LogLevel.Error, "Failed to delete Microsoft apps", { error });
+        markFailed(error instanceof Error ? error.message : "Undo failed");
+      }
     }
   }
 });

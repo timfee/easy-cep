@@ -23,19 +23,23 @@ const accent: Record<StepUIState["status"], string> = {
   executing: "border-blue-500",
   complete: "border-green-500",
   failed: "border-red-500",
-  pending: "border-amber-500"
+  pending: "border-amber-500",
+  undoing: "border-purple-500",
+  reverted: "border-gray-300"
 };
 
 const badgeColor: Record<
   StepUIState["status"],
-  "zinc" | "blue" | "green" | "red" | "amber"
+  "zinc" | "blue" | "green" | "red" | "amber" | "purple"
 > = {
   idle: "zinc",
   checking: "blue",
   executing: "blue",
   complete: "green",
   failed: "red",
-  pending: "amber"
+  pending: "amber",
+  undoing: "purple",
+  reverted: "zinc"
 };
 
 interface StepCardProps {
@@ -62,7 +66,10 @@ export default function StepCard({
   const missing = definition.requires.filter((v) => !vars[v]);
   const status = state?.status ?? "idle";
   const inProgress =
-    status === "checking" || status === "executing" || status === "pending";
+    status === "checking" ||
+    status === "executing" ||
+    status === "pending" ||
+    status === "undoing";
   const executed = status === "complete" || status === "failed";
 
   return (

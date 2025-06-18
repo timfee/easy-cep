@@ -1,4 +1,4 @@
-import { runStep } from "@/lib/workflow/engine";
+import { runStep, undoStep } from "@/lib/workflow/engine";
 import { StepId, Var } from "@/types";
 import fs from "fs";
 import path from "path";
@@ -72,6 +72,21 @@ if (!process.env.GOOGLE_BEARER_TOKEN || !process.env.MS_BEARER_TOKEN) {
           expect(sanitized).toEqual(expected);
         }
         vars = { ...vars, ...result.newVars };
+      });
+    }
+
+    const undoSteps = [...steps].reverse();
+    for (const step of undoSteps) {
+      it(`${step} undo`, async () => {
+        const result = await undoStep(step, vars);
+        const sanitized = { status: result.state.status };
+        if (process.env.UPDATE_FIXTURES) {
+          saveFixture(`${step}-undo`, sanitized);
+        }
+        const expected = loadFixture(`${step}-undo`);
+        if (expected) {
+          expect(sanitized).toEqual(expected);
+        }
       });
     }
   });

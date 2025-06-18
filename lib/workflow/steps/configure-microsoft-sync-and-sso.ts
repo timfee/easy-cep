@@ -121,5 +121,38 @@ export default createStep<CheckData>({
       log(LogLevel.Error, "Failed to configure sync", { error });
       markFailed(error instanceof Error ? error.message : "Execute failed");
     }
+  },
+  undo: async ({ vars, fetchMicrosoft, markReverted, markFailed, log }) => {
+    try {
+      const spId = vars[Var.ProvisioningServicePrincipalId] as string | undefined;
+      if (!spId) {
+        markFailed("Missing service principal id");
+        return;
+      }
+
+      const JobsSchema = z.object({ value: z.array(z.object({ id: z.string() })) });
+      const { value } = await fetchMicrosoft(
+        ApiEndpoint.Microsoft.SyncJobs(spId),
+        JobsSchema,
+        { flatten: true }
+      );
+
+      for (const job of value) {
+        await fetchMicrosoft(
+          `${ApiEndpoint.Microsoft.SyncJobs(spId)}/${job.id}`,
+          EmptyResponseSchema,
+          { method: "DELETE" }
+        );
+      }
+
+      markReverted();
+    } catch (error) {
+      if (error instanceof Error && error.message.includes("404")) {
+        markReverted();
+      } else {
+        log(LogLevel.Error, "Failed to remove sync job", { error });
+        markFailed(error instanceof Error ? error.message : "Undo failed");
+      }
+    }
   }
 });
