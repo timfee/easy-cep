@@ -45,7 +45,10 @@ export default function StepLogs({ logs }: StepLogsProps) {
                 <TableRow key={idx}>
                   <TableCell className="w-28 text-xs text-zinc-500">
                     {log.level && (
-                      <Badge size="xs" color={levelColor[log.level]} className="mb-1 block">
+                      <Badge
+                        size="xs"
+                        color={levelColor[log.level]}
+                        className="mb-1 block">
                         {log.level}
                       </Badge>
                     )}

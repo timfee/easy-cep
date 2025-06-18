@@ -26,6 +26,7 @@ export default function WorkflowClient({ steps }: Props) {
     Partial<Record<StepIdValue, StepUIState>>
   >({});
   const [executing, setExecuting] = useState<StepIdValue | null>(null);
+  const [varsOpen, setVarsOpen] = useState(true);
 
   // Generate a default password once on the client to avoid SSR mismatches
   useEffect(() => {
@@ -193,10 +194,20 @@ export default function WorkflowClient({ steps }: Props) {
             />
           ))}
         </div>
-        <div className="mt-6 lg:mt-0 lg:w-96 lg:flex-none lg:sticky lg:top-4">
+        {/* static sidebar replaced by overlay drawer */}
+      </div>
+
+      {/* Variables drawer toggle & overlay */}
+      <button
+        onClick={() => setVarsOpen((open) => !open)}
+        className="fixed top-1/2 right-0 z-50 -translate-y-1/2 rounded-l bg-white p-2 shadow border border-gray-200">
+        {varsOpen ? "<" : ">"}
+      </button>
+      {varsOpen && (
+        <div className="fixed inset-y-0 right-0 z-40 w-80 overflow-y-auto border-l border-gray-200 bg-white shadow-lg">
           <VarsInspector vars={vars} onChange={updateVars} />
         </div>
-      </div>
+      )}
     </StackedLayout>
   );
 }
