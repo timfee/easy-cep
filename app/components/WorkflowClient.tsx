@@ -85,18 +85,25 @@ export default function WorkflowClient({ steps }: Props) {
   }
 
   return (
-    <main className="p-4">
-      <ProviderLogin onUpdate={updateVars} />
-      {steps.map((step) => (
-        <StepCard
-          key={step.id}
-          definition={step}
-          state={status[step.id]}
-          vars={vars}
-          executing={executing !== null}
-          onExecute={handleExecute}
-        />
-      ))}
+    <main className="min-h-screen bg-zinc-950 bg-gradient-to-br from-zinc-950 via-zinc-900 to-zinc-950">
+      <header className="sticky top-0 z-10 backdrop-blur-xl bg-zinc-950/80 border-b border-white/[0.08] shadow-[0_1px_3px_rgba(0,0,0,0.3)]">
+        <div className="max-w-7xl mx-auto px-6 py-3">
+          <h1 className="text-white text-sm font-medium">Easy CEP</h1>
+        </div>
+      </header>
+      <div className="max-w-7xl mx-auto px-6 py-8">
+        <ProviderLogin onUpdate={updateVars} />
+        {steps.map((step) => (
+          <StepCard
+            key={step.id}
+            definition={step}
+            state={status[step.id]}
+            vars={vars}
+            executing={executing !== null}
+            onExecute={handleExecute}
+          />
+        ))}
+      </div>
     </main>
   );
 }
