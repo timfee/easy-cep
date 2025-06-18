@@ -74,7 +74,9 @@ export default function StepCard({
 
   return (
     <div
-      className={`relative mb-6 rounded-xl border ${accent[status]} border-l-4 bg-white p-6 shadow-sm hover:shadow-md transition-shadow duration-200`}>
+      className={`relative mb-6 rounded-xl border ${accent[status]} border-l-4 bg-white p-6 shadow-sm hover:shadow-md transition-shadow duration-200${
+        inProgress ? " animate-pulse" : ""
+      }`}>
       {inProgress && (
         <div className="absolute left-0 right-0 top-0 h-1 overflow-hidden rounded-t">
           <div className="animate-indeterminate h-full w-1/2 bg-blue-500" />

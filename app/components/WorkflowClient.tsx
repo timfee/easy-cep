@@ -71,6 +71,7 @@ export default function WorkflowClient({ steps }: Props) {
         const missing = step.requires.filter((v) => !vars[v]);
         if (missing.length === 0) {
           checkedSteps.current.add(step.id);
+          updateStep(step.id, { status: "checking" });
           const result = await checkStep(step.id, vars);
           updateStep(step.id, result.state);
           if (Object.keys(result.newVars).length > 0) {
@@ -94,6 +95,7 @@ export default function WorkflowClient({ steps }: Props) {
     }
 
     setExecuting(id);
+    updateStep(id, { status: "executing" });
     try {
       const result = await runStep(id, vars);
       updateVars(result.newVars);
