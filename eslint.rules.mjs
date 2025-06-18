@@ -28,7 +28,7 @@ function getApiEndpoints(projectRoot) {
 
 // Parse workflow variable names from variables.ts
 function getVarEnumValues(projectRoot) {
-  const varsPath = path.join(projectRoot, "app/workflow/variables.ts");
+  const varsPath = path.join(projectRoot, "lib/workflow/variables.ts");
   if (!fs.existsSync(varsPath)) return new Set();
 
   const content = fs.readFileSync(varsPath, "utf-8");
@@ -522,7 +522,7 @@ export const mustUseContextFetch = createRule({
 
 // Parse StepId values from step-ids.ts
 function getStepIdEnumValues(projectRoot) {
-  const idsPath = path.join(projectRoot, "app/workflow/step-ids.ts");
+  const idsPath = path.join(projectRoot, "lib/workflow/step-ids.ts");
   if (!fs.existsSync(idsPath)) return new Map();
 
   const content = fs.readFileSync(idsPath, "utf-8");

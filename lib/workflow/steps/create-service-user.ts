@@ -1,4 +1,4 @@
-import { isConflictError } from "@/app/workflow/utils";
+import { isConflictError } from "@/lib/workflow/utils";
 import { ApiEndpoint, OrgUnit } from "@/constants";
 import { LogLevel, StepId, Var } from "@/types";
 import crypto from "crypto";

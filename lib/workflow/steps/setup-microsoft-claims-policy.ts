@@ -1,4 +1,4 @@
-import { EmptyResponseSchema, isConflictError } from "@/app/workflow/utils";
+import { EmptyResponseSchema, isConflictError } from "@/lib/workflow/utils";
 import { ApiEndpoint } from "@/constants";
 import { LogLevel, StepId, Var } from "@/types";
 import { z } from "zod";
