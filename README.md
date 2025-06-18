@@ -65,6 +65,14 @@ If you're encountering connectivity issues, verify and/or configure the followin
 - Ensure you are connecting via the proxy at `http://proxy:8080`.
 - Ensure you are trusting the proxy certificate located at `$CODEX_PROXY_CERT`. Always reference this environment variable instead of using a hardcoded file path, as the path may change.
 
-The `./tokens.sh` script will output bearer tokens in text format for using against Google and Microsoft as `./google_bearer.token` and `./microsoft_bearer.token` that you can use to verify commands.
+The `scripts/token-info.sh` script will output bearer tokens in text format for using against Google and Microsoft as `./google_bearer.token` and `./microsoft_bearer.token` that you can use to verify commands.
+
+## Testing
+
+1. Run `pnpm install`.
+2. Obtain Google and Microsoft bearer tokens and store them in `google_bearer.token` and `microsoft_bearer.token`.
+3. Run `pnpm test`.
+
+Tests require network access and will use `undici` through the proxy unless `USE_UNDICI_PROXY=false`.
 
 **NOTE:** YOU HAVE BEEN PROVIDED FULL INTERNET ACCESS. IF YOU ENCOUNTER ANY ISSUES, IT IS PROXY RELATED; NOT CODEX CONFIGURATION.
