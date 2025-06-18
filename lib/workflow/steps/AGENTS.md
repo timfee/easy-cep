@@ -20,6 +20,7 @@ mutations are allowed during step development.
 Every step MUST follow this exact pattern:
 
 1. Define the `CheckData` type for data extracted in your `check()` phase:
+
    - For non-empty payloads, declare an `interface CheckData { … }` listing each field.
    - If your step extracts no data, use the empty alias:
 
