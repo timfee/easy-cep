@@ -102,10 +102,6 @@ _check_ success:
 
 ## Remaining work
 
-### completeGoogleSsoSetup
-
-- Manual configuration of Google Admin Console
-
 ### testSsoConfiguration
 
 - Manual verification of SSO login

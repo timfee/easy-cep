@@ -1,0 +1,11 @@
+{
+  "error": {
+    "code": "Request_ResourceNotFound",
+    "message": "Resource 'tokenSigningCertificates' does not exist or one of its queried reference-property objects are not present.",
+    "innerError": {
+      "date": "2025-06-18T17:37:49",
+      "request-id": "4909fa82-d913-4bab-ba95-a53a753de3e0",
+      "client-request-id": "4909fa82-d913-4bab-ba95-a53a753de3e0"
+    }
+  }
+}

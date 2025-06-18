@@ -725,22 +725,20 @@ Expected Responses:
 
 ### Step 10 Purpose
 
-Manual configuration in Google Admin Console of SSO federation.
+Automatically configure Google SSO using Azure AD metadata.
 
-### Step 10 State Check & Execution
+### Step 10 State Check
 
-Manual step — no API interaction
+Fetch the existing SAML profile and verify `idpConfig` is populated.
 
-#### Step 10 Required Inputs
+### Step 10 Execution
 
-- `samlProfileId`, `entityId`, `acsUrl`
+1. Query Microsoft Graph for tenant ID and token signing certificate
+2. PATCH the Google SAML profile with Azure AD SAML endpoints
+3. Upload the signing certificate to Google
 
-#### Step 10 Instructions
-
-1. Sign in to Google Admin Console
-2. Navigate to _Security → Authentication → SSO with third-party IdP_
-3. Input the values from prior steps and upload certificates
-4. Save configuration
+Example responses can be found in `test/e2e/fixtures/ms-organization.json`
+and `test/e2e/fixtures/ms-token-certs.json`.
 
 ## Step 11: `assignUsersToSso`
 

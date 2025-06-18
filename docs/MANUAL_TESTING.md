@@ -37,10 +37,9 @@ For each step, test:
 
 ## Manual Steps
 
-The following workflow steps cannot be automated and must be completed through the respective admin portals:
+The following workflow step cannot be automated and must be completed through the respective admin portal:
 
-1. **complete-google-sso-setup** – configure SAML SSO settings in Google Admin Console.
-2. **test-sso-configuration** – perform a real sign‑in to verify SSO works end‑to‑end.
+1. **test-sso-configuration** – perform a real sign‑in to verify SSO works end‑to‑end.
 
 ## Verification Steps
 

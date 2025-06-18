@@ -54,6 +54,7 @@ if (!process.env.GOOGLE_BEARER_TOKEN || !process.env.MS_BEARER_TOKEN) {
       StepId.CreateMicrosoftApps,
       StepId.ConfigureMicrosoftSyncAndSso,
       StepId.SetupMicrosoftClaimsPolicy,
+      StepId.CompleteGoogleSsoSetup,
       StepId.AssignUsersToSso
     ] as const;
 

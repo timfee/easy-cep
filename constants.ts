@@ -17,6 +17,10 @@ export const ApiEndpoint = {
       "https://cloudidentity.googleapis.com/v1/inboundSamlSsoProfiles",
     SsoAssignments:
       "https://cloudidentity.googleapis.com/v1/inboundSsoAssignments",
+    SamlProfile: (profileId: string) =>
+      `https://cloudidentity.googleapis.com/v1/${profileId}`,
+    SamlProfileCredentials: (profileId: string) =>
+      `https://cloudidentity.googleapis.com/v1/${profileId}/idpCredentials:add`
     SiteVerification: "https://www.googleapis.com/siteVerification/v1"
   },
   GoogleAuth: {
@@ -55,6 +59,11 @@ export const ApiEndpoint = {
 
     ReadClaimsPolicy: (spId: string) =>
       `https://graph.microsoft.com/beta/servicePrincipals/${spId}/claimsMappingPolicies`,
+
+    TokenSigningCertificates: (spId: string) =>
+      `https://graph.microsoft.com/beta/servicePrincipals/${spId}/tokenSigningCertificates`,
+
+    Organization: "https://graph.microsoft.com/v1.0/organization",
 
     Me: "https://graph.microsoft.com/v1.0/me"
   },
