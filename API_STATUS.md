@@ -72,7 +72,8 @@ _check_ success:
 - complete - sync job active
 - incomplete - no jobs or paused
   _execute_ success:
-- 204 on patch secrets
+- 201 job created
+- 204 on set secrets
 - 204 on start sync
 
 ### setupMicrosoftClaimsPolicy
@@ -86,6 +87,7 @@ _check_ success:
 - 204 assignment success
   _execute_ errors:
 - 409 policy already exists handled
+- 409 assignment already exists handled
 
 ### assignUsersToSso
 

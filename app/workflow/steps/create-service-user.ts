@@ -122,6 +122,12 @@ export default createStep<CheckData>({
             `${ApiEndpoint.Google.Users}/azuread-provisioning@${domain}`,
             CreateSchema
           );
+
+          await fetchGoogle(
+            `${ApiEndpoint.Google.Users}/${user.id}`,
+            z.object({}),
+            { method: "PUT", body: JSON.stringify({ password }) }
+          );
         } else {
           throw error;
         }

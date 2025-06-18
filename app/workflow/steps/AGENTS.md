@@ -609,27 +609,39 @@ At least one `value[].status.code != "Paused"`
 
 #### Step 8 Execution Requests
 
-1. Set Secrets
+1. Create Job
 
 ```http
-PATCH https://graph.microsoft.com/v1.0/servicePrincipals/{provisioningServicePrincipalId}/synchronization
+POST https://graph.microsoft.com/v1.0/servicePrincipals/{provisioningServicePrincipalId}/synchronization/jobs
+Authorization: Bearer {msGraphToken}
+Content-Type: application/json
+
+{ "templateId": "google2provisioningV2" }
+```
+
+Expected: `201 Created` returning job ID
+
+2. Set Secrets
+
+```http
+PUT https://graph.microsoft.com/v1.0/servicePrincipals/{provisioningServicePrincipalId}/synchronization/secrets
 Authorization: Bearer {msGraphToken}
 Content-Type: application/json
 
 {
-  "secrets": [
+  "value": [
     { "key": "BaseAddress", "value": "https://admin.googleapis.com/admin/directory/v1" },
-    { "key": "SecretKey", "value": "{generatedPassword}" }
+    { "key": "SecretToken", "value": "{generatedPassword}" }
   ]
 }
 ```
 
 Expected: `204 No Content`
 
-2. Start Job
+3. Start Job
 
 ```http
-POST https://graph.microsoft.com/v1.0/servicePrincipals/{provisioningServicePrincipalId}/synchronization/jobs/Initial/start
+POST https://graph.microsoft.com/v1.0/servicePrincipals/{provisioningServicePrincipalId}/synchronization/jobs/{jobId}/start
 Authorization: Bearer {msGraphToken}
 ```
 
@@ -685,7 +697,7 @@ Content-Type: application/json
 {
   "definition": ["{\"ClaimsMappingPolicy\":{\"Version\":1,\"IncludeBasicClaimSet\":true,\"ClaimsSchema\":[]}}"],
   "displayName": "Google Workspace Basic Claims",
-  "isOrganizationDefault": false
+ "isOrganizationDefault": false
 }
 ```
 
@@ -704,7 +716,10 @@ Content-Type: application/json
 { "@odata.id": "https://graph.microsoft.com/v1.0/policies/claimsMappingPolicies/{claimsPolicyId}" }
 ```
 
-Expected: `204 No Content`
+Expected Responses:
+
+- `204 No Content`
+- `409 Conflict` if a policy is already assigned (only one allowed)
 
 ## Step 10: `completeGoogleSsoSetup`
 
@@ -748,7 +763,7 @@ Authorization: Bearer {googleAccessToken}
 {
   "inboundSsoAssignments": [
     {
-      "targetGroup": { "id": "allUsers" },
+      "targetGroup": "groups/allUsers",
       "samlSsoInfo": { "inboundSamlSsoProfile": "{samlProfileId}" }
     }
   ]
@@ -757,7 +772,7 @@ Authorization: Bearer {googleAccessToken}
 
 #### Step 11 Completion Criteria
 
-Assignment exists with `targetGroup.id = "allUsers"` and matching `samlProfileId`
+Assignment exists with `targetGroup = "groups/allUsers"` and matching `samlProfileId`
 
 ### Step 11 Execution
 
@@ -774,7 +789,7 @@ Authorization: Bearer {googleAccessToken}
 Content-Type: application/json
 
 {
-  "targetGroup": { "id": "allUsers" },
+  "targetGroup": "groups/allUsers",
   "samlSsoInfo": { "inboundSamlSsoProfile": "{samlProfileId}" },
   "ssoMode": "SAML_SSO"
 }

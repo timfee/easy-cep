@@ -1,4 +1,4 @@
-import { ApiEndpoint } from "@/constants";
+import { ApiEndpoint, SyncTemplateId } from "@/constants";
 import { LogLevel, StepId, Var } from "@/types";
 import { z } from "zod";
 import { createStep, getVar } from "../create-step";
@@ -46,7 +46,8 @@ export default createStep<CheckData>({
 
       const { value } = await fetchMicrosoft(
         ApiEndpoint.Microsoft.SyncJobs(spId),
-        JobsSchema
+        JobsSchema,
+        { flatten: true }
       );
 
       const active = value.some((v) => v.status.code !== "Paused");
@@ -65,47 +66,54 @@ export default createStep<CheckData>({
 
   async execute({ vars, fetchMicrosoft, markSucceeded, markFailed, log }) {
     /**
-     * PATCH https://graph.microsoft.com/v1.0/servicePrincipals/{provisioningServicePrincipalId}/synchronization
-     * {
-     *   "secrets": [
-     *     { "key": "BaseAddress", "value": "https://admin.googleapis.com/admin/directory/v1" },
-     *     { "key": "SecretKey", "value": "{generatedPassword}" }
-     *   ]
-     * }
+     * POST https://graph.microsoft.com/v1.0/servicePrincipals/{provisioningServicePrincipalId}/synchronization/jobs
+     * { "templateId": "google2provisioningV2" }
      *
-     * Success response
+     * PUT https://graph.microsoft.com/v1.0/servicePrincipals/{provisioningServicePrincipalId}/synchronization/secrets
+     * { "value": [ { "key": "BaseAddress", "value": "https://admin.googleapis.com/admin/directory/v1" }, { "key": "SecretToken", "value": "{generatedPassword}" } ] }
      *
-     * 204
-     *
-     * POST https://graph.microsoft.com/v1.0/servicePrincipals/{provisioningServicePrincipalId}/synchronization/jobs/Initial/start
-     *
-     * Success response
-     * 204
+     * POST https://graph.microsoft.com/v1.0/servicePrincipals/{provisioningServicePrincipalId}/synchronization/jobs/{jobId}/start
      */
     try {
       const spId = getVar(vars, Var.ProvisioningServicePrincipalId);
       const password = getVar(vars, Var.GeneratedPassword);
 
-      const PatchSchema = z.object({});
-
       const baseAddress = ApiEndpoint.Google.Users.replace("/users", "");
-      await fetchMicrosoft(
-        ApiEndpoint.Microsoft.Synchronization(spId),
-        PatchSchema,
+
+      const CreateJobSchema = z.object({
+        id: z.string(),
+        templateId: z.string(),
+        status: z.object({ code: z.string() }).optional()
+      });
+
+      const job = await fetchMicrosoft(
+        ApiEndpoint.Microsoft.SyncJobs(spId),
+        CreateJobSchema,
         {
-          method: "PATCH",
+          method: "POST",
+          body: JSON.stringify({ templateId: SyncTemplateId.GoogleWorkspace })
+        }
+      );
+
+      await fetchMicrosoft(
+        ApiEndpoint.Microsoft.SyncSecrets(spId),
+        z.object({}),
+        {
+          method: "PUT",
           body: JSON.stringify({
-            secrets: [
+            value: [
               { key: "BaseAddress", value: baseAddress },
-              { key: "SecretKey", value: password }
+              { key: "SecretToken", value: password }
             ]
           })
         }
       );
 
-      await fetchMicrosoft(ApiEndpoint.Microsoft.StartSync(spId), PatchSchema, {
-        method: "POST"
-      });
+      await fetchMicrosoft(
+        ApiEndpoint.Microsoft.StartSync(spId, job.id),
+        z.object({}),
+        { method: "POST" }
+      );
 
       markSucceeded({});
     } catch (error) {

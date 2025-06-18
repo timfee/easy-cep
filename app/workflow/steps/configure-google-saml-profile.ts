@@ -56,7 +56,8 @@ export default createStep<CheckData>({
 
       const { inboundSamlSsoProfiles = [] } = await fetchGoogle(
         ApiEndpoint.Google.SsoProfiles,
-        ProfilesSchema
+        ProfilesSchema,
+        { flatten: true }
       );
 
       if (inboundSamlSsoProfiles.length > 0) {

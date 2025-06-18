@@ -55,7 +55,8 @@ export default createStep<CheckData>({
 
       const { domains } = await fetchGoogle(
         ApiEndpoint.Google.Domains,
-        DomainsResponse
+        DomainsResponse,
+        { flatten: true }
       );
 
       const primary = domains.find((d) => d.isPrimary);

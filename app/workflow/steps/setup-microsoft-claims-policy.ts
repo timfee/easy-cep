@@ -43,7 +43,8 @@ export default createStep<CheckData>({
 
       const { value } = await fetchMicrosoft(
         ApiEndpoint.Microsoft.ReadClaimsPolicy(spId),
-        PoliciesSchema
+        PoliciesSchema,
+        { flatten: true }
       );
 
       if (value.length > 0) {
@@ -103,7 +104,8 @@ export default createStep<CheckData>({
           });
           const { value } = await fetchMicrosoft(
             ApiEndpoint.Microsoft.ClaimsPolicies,
-            listSchema
+            listSchema,
+            { flatten: true }
           );
           policyId = value[0]?.id;
         } else {
@@ -113,16 +115,23 @@ export default createStep<CheckData>({
 
       if (!policyId) throw new Error("Policy ID unavailable");
 
-      await fetchMicrosoft(
-        ApiEndpoint.Microsoft.AssignClaimsPolicy(spId),
-        z.object({}),
-        {
-          method: "POST",
-          body: JSON.stringify({
-            "@odata.id": `https://graph.microsoft.com/v1.0/policies/claimsMappingPolicies/${policyId}`
-          })
+      try {
+        await fetchMicrosoft(
+          ApiEndpoint.Microsoft.AssignClaimsPolicy(spId),
+          z.object({}),
+          {
+            method: "POST",
+            body: JSON.stringify({
+              "@odata.id": `https://graph.microsoft.com/v1.0/policies/claimsMappingPolicies/${policyId}`
+            })
+          }
+        );
+      } catch (error) {
+        if (!(error instanceof Error) || !error.message.includes("409")) {
+          throw error;
         }
-      );
+        // Policy already assigned
+      }
 
       markSucceeded({ [Var.ClaimsPolicyId]: policyId });
     } catch (error) {

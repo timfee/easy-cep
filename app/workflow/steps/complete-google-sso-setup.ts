@@ -1,5 +1,5 @@
 import { StepId, Var } from "@/types";
-import { createStep, getVar } from "../create-step";
+import { createStep } from "../create-step";
 
 // eslint-disable-next-line @typescript-eslint/no-empty-object-type
 interface CheckData {}
@@ -9,16 +9,9 @@ export default createStep<CheckData>({
   requires: [Var.SamlProfileId, Var.EntityId, Var.AcsUrl, Var.IsDomainVerified],
   provides: [],
 
-  async check({ vars: _vars, markIncomplete, markComplete }) {
+  async check({ markIncomplete }) {
     try {
-      if (
-        getVar(_vars, Var.SsoAppId) /* placeholder: use correct var */
-        === "true"
-      ) {
-        markComplete({});
-      } else {
-        markIncomplete("Manual configuration required", {});
-      }
+      markIncomplete("Manual configuration required", {});
     } catch {
       markIncomplete("Manual configuration required", {});
     }
