@@ -9,11 +9,6 @@ import { LogLevel, StepId, Var } from "@/types";
 import { z } from "zod";
 import { createStep, getVar } from "../create-step";
 
-interface CheckData {
-  adminRoleId?: string;
-  directoryServiceId?: string;
-}
-
 interface AdminPrivilege {
   serviceId: string;
   privilegeName: string;
@@ -28,7 +23,7 @@ const REQUIRED_PRIVS = [
   "GROUPS_ALL"
 ];
 
-export default createStep<CheckData>({
+export default createStep({
   id: StepId.CreateAdminRoleAndAssignUser,
   requires: [
     Var.GoogleAccessToken,
@@ -104,6 +99,12 @@ export default createStep<CheckData>({
           return;
         }
         const userId = getVar(vars, Var.ProvisioningUserId);
+
+        if (!userId) {
+          markIncomplete("Provisioning user ID missing", {});
+          return;
+        }
+
         const AssignmentsSchema = z.object({
           items: z
             .array(z.object({ roleId: z.string(), assignedTo: z.string() }))

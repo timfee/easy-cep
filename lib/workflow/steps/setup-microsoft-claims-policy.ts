@@ -8,11 +8,7 @@ import { LogLevel, StepId, Var } from "@/types";
 import { z } from "zod";
 import { createStep, getVar } from "../create-step";
 
-interface CheckData {
-  claimsPolicyId?: string;
-}
-
-export default createStep<CheckData>({
+export default createStep({
   id: StepId.SetupMicrosoftClaimsPolicy,
   requires: [
     Var.MsGraphToken,
@@ -44,6 +40,10 @@ export default createStep<CheckData>({
   }) {
     try {
       const spId = getVar(vars, Var.SsoServicePrincipalId);
+      if (!spId) {
+        markIncomplete("Missing SSO service principal ID", {});
+        return;
+      }
 
       const PoliciesSchema = z.object({
         value: z.array(z.object({ id: z.string() }))
@@ -122,6 +122,10 @@ export default createStep<CheckData>({
       }
 
       if (!policyId) throw new Error("Policy ID unavailable");
+      if (!spId) {
+        markFailed("Missing SSO service principal ID");
+        return;
+      }
 
       try {
         await fetchMicrosoft(

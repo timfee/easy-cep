@@ -5,13 +5,11 @@ import {
   isNotFoundError
 } from "@/lib/workflow/utils";
 
-import type { WorkflowVars } from "@/types";
 import { LogLevel, StepId, Var } from "@/types";
 import { z } from "zod";
 import { createStep, getVar } from "../create-step";
 
-type CheckData = Partial<Pick<WorkflowVars, never>>;
-export default createStep<CheckData>({
+export default createStep({
   id: StepId.CreateAutomationOU,
   requires: [
     Var.GoogleAccessToken,
@@ -50,6 +48,12 @@ export default createStep<CheckData>({
   }) {
     try {
       const ouName = getVar(vars, Var.AutomationOuName);
+
+      if (!ouName) {
+        markIncomplete("Missing Automation OU name", {});
+        return;
+      }
+
       const OrgUnitSchema = z.object({ orgUnitPath: z.string() });
       await fetchGoogle(
         `${ApiEndpoint.Google.OrgUnits}/${encodeURIComponent(ouName)}`,
@@ -116,6 +120,11 @@ export default createStep<CheckData>({
   undo: async ({ vars, fetchGoogle, markReverted, markFailed, log }) => {
     try {
       const path = getVar(vars, Var.AutomationOuPath);
+      if (!path) {
+        markFailed("Missing Automation OU name");
+        return;
+      }
+
       await fetchGoogle(
         `${ApiEndpoint.Google.OrgUnits}/${encodeURIComponent(path)}`,
         EmptyResponseSchema,

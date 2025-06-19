@@ -3,14 +3,7 @@ import { LogLevel, StepId, Var } from "@/types";
 import { z } from "zod";
 import { createStep } from "../create-step";
 
-interface CheckData {
-  isDomainVerified: boolean;
-  primaryDomain?: string;
-  verificationToken?: string;
-  verificationMethod?: string;
-}
-
-export default createStep<CheckData>({
+export default createStep({
   id: StepId.VerifyPrimaryDomain,
   requires: [Var.GoogleAccessToken],
   provides: [Var.IsDomainVerified, Var.PrimaryDomain],
@@ -63,7 +56,7 @@ export default createStep<CheckData>({
       if (primary?.verified) {
         log(LogLevel.Info, "Primary domain already verified");
         markComplete({
-          isDomainVerified: true,
+          isDomainVerified: "true",
           primaryDomain: primary.domainName
         });
         return;
@@ -91,19 +84,21 @@ export default createStep<CheckData>({
           );
 
           markIncomplete("Domain verification pending", {
-            isDomainVerified: false,
+            isDomainVerified: "false",
             primaryDomain: primary.domainName,
             verificationToken: verificationData.token,
             verificationMethod: "DNS_TXT"
           });
         } catch {
           markIncomplete("Domain not verified", {
-            isDomainVerified: false,
+            isDomainVerified: "false",
             primaryDomain: primary.domainName
           });
         }
       } else {
-        markIncomplete("No primary domain found", { isDomainVerified: false });
+        markIncomplete("No primary domain found", {
+          isDomainVerified: "false"
+        });
       }
     } catch (error) {
       log(LogLevel.Error, "Failed to check domains", { error });
@@ -150,7 +145,7 @@ export default createStep<CheckData>({
 
         log(LogLevel.Info, "Domain verified successfully", { verified });
         markSucceeded({
-          [Var.IsDomainVerified]: true,
+          [Var.IsDomainVerified]: "true",
           [Var.PrimaryDomain]: checkData.primaryDomain
         });
       } catch {

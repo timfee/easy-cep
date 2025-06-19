@@ -7,6 +7,25 @@ export { StepId } from "./lib/workflow/step-ids";
 export { Var } from "./lib/workflow/variables";
 export type { StepIdValue, VarName, WorkflowVars };
 
+// Define StepLogEntry and StepUIState here as they are central to workflow state
+export interface StepLogEntry {
+  timestamp: number;
+  message: string;
+  data?: unknown;
+  level?: LogLevel;
+  apiCall?: {
+    method: string;
+    url: string;
+    request?: { headers?: Record<string, string>; body?: unknown };
+    response?: {
+      status: number;
+      headers?: Record<string, string>;
+      body?: unknown;
+    };
+    duration?: number;
+  };
+}
+
 // Keep only the general types here
 export enum StepOutcome {
   Succeeded = "Succeeded",
@@ -21,13 +40,12 @@ export enum LogLevel {
   Debug = "debug"
 }
 
-export interface StepDefinition<
-  R extends readonly VarName[],
-  P extends readonly VarName[]
-> {
+export interface StepDefinition {
   id: StepIdValue;
-  requires: R;
-  provides: P;
+  name?: string;
+  description?: string;
+  requires: readonly VarName[];
+  provides: readonly VarName[];
   undo?: (ctx: StepUndoContext) => Promise<void>;
 }
 

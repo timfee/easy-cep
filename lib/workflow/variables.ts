@@ -11,7 +11,7 @@ export interface VariableMetadata {
   sensitive?: boolean;
 }
 
-export const WORKFLOW_VARIABLES = {
+export const WORKFLOW_VARIABLES: Record<string, VariableMetadata> = {
   googleAccessToken: {
     type: "string",
     category: "auth",
@@ -47,7 +47,7 @@ export const WORKFLOW_VARIABLES = {
     consumedBy: [StepId.CreateServiceUser]
   },
   isDomainVerified: {
-    type: "boolean",
+    type: "string",
     category: "domain",
     description: "Whether domain is verified",
     producedBy: StepId.VerifyPrimaryDomain,
@@ -216,13 +216,8 @@ export const Var = (
   {} as { [K in keyof typeof WORKFLOW_VARIABLES as Capitalize<K>]: K }
 );
 
-// Auto-generate WorkflowVars type
 export type WorkflowVars = {
-  [K in keyof typeof WORKFLOW_VARIABLES]: (typeof WORKFLOW_VARIABLES)[K]["type"] extends (
-    "string"
-  ) ?
-    string
-  : boolean;
+  [K in keyof typeof WORKFLOW_VARIABLES]: string | undefined;
 };
 
 // Export useful types

@@ -1,12 +1,9 @@
 import { ApiEndpoint } from "@/constants";
-import type { WorkflowVars } from "@/types";
 import { LogLevel, StepId, Var } from "@/types";
 import { z } from "zod";
 import { createStep, getVar } from "../create-step";
 
-type CheckData = Partial<Pick<WorkflowVars, never>>;
-
-export default createStep<CheckData>({
+export default createStep({
   id: StepId.CompleteGoogleSsoSetup,
   requires: [
     Var.GoogleAccessToken,
@@ -26,6 +23,11 @@ export default createStep<CheckData>({
   }) {
     try {
       const profileId = getVar(vars, Var.SamlProfileId);
+
+      if (!profileId) {
+        markIncomplete("SAML profile ID not provided", {});
+        return;
+      }
 
       const ProfileSchema = z.object({
         name: z.string(),
@@ -145,6 +147,9 @@ export default createStep<CheckData>({
           })
         )
       });
+      if (!ssoSpId) {
+        throw new Error("SAML Service Principal ID not provided");
+      }
 
       const certs = await fetchMicrosoft(
         ApiEndpoint.Microsoft.TokenSigningCertificates(ssoSpId),
@@ -197,6 +202,10 @@ export default createStep<CheckData>({
 
       const updateMask =
         "idpConfig.entityId,idpConfig.singleSignOnServiceUri,idpConfig.signOutUri,idpConfig.changePasswordUri";
+
+      if (!profileId) {
+        throw new Error("SAML profile ID not provided");
+      }
 
       const patchUrl = `${ApiEndpoint.Google.SamlProfile(profileId)}?updateMask=${encodeURIComponent(updateMask)}`;
 

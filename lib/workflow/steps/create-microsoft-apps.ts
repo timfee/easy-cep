@@ -4,13 +4,7 @@ import { LogLevel, StepId, Var } from "@/types";
 import { z } from "zod";
 import { createStep, getVar } from "../create-step";
 
-interface CheckData {
-  provisioningServicePrincipalId?: string;
-  ssoServicePrincipalId?: string;
-  ssoAppId?: string;
-}
-
-export default createStep<CheckData>({
+export default createStep({
   id: StepId.CreateMicrosoftApps,
   requires: [
     Var.MsGraphToken,

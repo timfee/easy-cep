@@ -4,13 +4,7 @@ import { LogLevel, StepId, Var } from "@/types";
 import { z } from "zod";
 import { createStep, getVar } from "../create-step";
 
-interface CheckData {
-  samlProfileId?: string;
-  entityId?: string;
-  acsUrl?: string;
-}
-
-export default createStep<CheckData>({
+export default createStep({
   id: StepId.ConfigureGoogleSamlProfile,
   requires: [
     Var.GoogleAccessToken,

@@ -1,10 +1,7 @@
-import type { WorkflowVars } from "@/types";
 import { StepId } from "@/types";
 import { createStep } from "../create-step";
 
-type CheckData = Partial<Pick<WorkflowVars, never>>;
-
-export default createStep<CheckData>({
+export default createStep({
   id: StepId.TestSsoConfiguration,
   requires: [],
   provides: [],

@@ -11,12 +11,7 @@ import crypto from "crypto";
 import { z } from "zod";
 import { createStep, getVar } from "../create-step";
 
-interface CheckData {
-  provisioningUserId?: string;
-  provisioningUserEmail?: string;
-}
-
-export default createStep<CheckData>({
+export default createStep({
   id: StepId.CreateServiceUser,
   requires: [
     Var.GoogleAccessToken,

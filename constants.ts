@@ -102,8 +102,24 @@ export const WORKFLOW_CONSTANTS = {
   TOKEN_REFRESH_BUFFER_MS: 5 * MINUTE * 1000
 };
 
+export const API_PREFIXES = {
+  GOOGLE_ADMIN: "https://admin.googleapis.com/admin/directory/v1",
+  GOOGLE_CLOUD_IDENTITY: "https://cloudidentity.googleapis.com/v1",
+  GOOGLE_SITE_VERIFICATION: "https://www.googleapis.com/siteVerification/v1",
+  MS_GRAPH: "https://graph.microsoft.com",
+  MS_GRAPH_BETA: "https://graph.microsoft.com/beta",
+  MS_GRAPH_V1: "https://graph.microsoft.com/v1.0"
+} as const;
+
 export const OAuthScope = {
   Google:
     "openid https://www.googleapis.com/auth/admin.directory.user.readonly",
   Microsoft: "https://graph.microsoft.com/.default offline_access"
 };
+
+export const categoryTitles = {
+  auth: "Auth",
+  domain: "Domain",
+  config: "Config",
+  state: "State"
+} as const;

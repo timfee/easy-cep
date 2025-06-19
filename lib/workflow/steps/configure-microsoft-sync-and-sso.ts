@@ -1,13 +1,10 @@
 import { ApiEndpoint, SyncTemplateId } from "@/constants";
 import { EmptyResponseSchema, isNotFoundError } from "@/lib/workflow/utils";
-import type { WorkflowVars } from "@/types";
 import { LogLevel, StepId, Var } from "@/types";
 import { z } from "zod";
 import { createStep, getVar } from "../create-step";
 
-type CheckData = Partial<Pick<WorkflowVars, never>>;
-
-export default createStep<CheckData>({
+export default createStep({
   id: StepId.ConfigureMicrosoftSyncAndSso,
   requires: [
     Var.MsGraphToken,
@@ -39,6 +36,10 @@ export default createStep<CheckData>({
   }) {
     try {
       const spId = getVar(vars, Var.ProvisioningServicePrincipalId);
+      if (!spId) {
+        markIncomplete("Missing provisioning service principal ID", {});
+        return;
+      }
 
       const JobsSchema = z.object({
         value: z.array(z.object({ status: z.object({ code: z.string() }) }))
@@ -85,6 +86,10 @@ export default createStep<CheckData>({
         templateId: z.string(),
         status: z.object({ code: z.string() }).optional()
       });
+      if (!spId) {
+        markFailed("Missing provisioning service principal ID");
+        return;
+      }
 
       const job = await fetchMicrosoft(
         ApiEndpoint.Microsoft.SyncJobs(spId),
