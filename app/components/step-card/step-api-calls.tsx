@@ -48,34 +48,30 @@ export function StepApiCalls({ stepId }: StepApiCallsProps) {
   };
 
   return (
-    <div className="mt-4 rounded-lg bg-gray-50 dark:bg-gray-800 p-4">
-      <h4 className="mb-3 text-sm font-medium text-gray-800 dark:text-gray-200">
-        API Calls
-      </h4>
-      <div className="space-y-2">
+    <div className="mt-4 rounded-lg bg-gray-50 p-3">
+      <h4 className="mb-2 text-xs font-medium text-gray-800">API Calls</h4>
+      <div className="space-y-1.5">
         {calls.map((call, index) => (
           <div
             key={index}
-            className="relative group cursor-pointer hover:bg-gray-100 dark:hover:bg-white/5 rounded-md p-1"
+            className="relative group cursor-pointer hover:bg-gray-100 rounded-md p-1"
             onMouseEnter={() => setHoveredIndex(index)}
             onMouseLeave={() => setHoveredIndex(null)}>
-            <div className="flex items-start gap-3 text-sm">
+            <div className="flex items-start gap-3 text-xs">
               <span
                 className={`font-mono font-medium px-2 py-0.5 rounded text-xs ${getMethodColor(call.method)}`}>
                 {call.method}
               </span>
               <div className="flex-1">
-                <p className="font-mono text-xs text-gray-700 dark:text-gray-300 break-all">
+                <p className="font-mono text-xs text-gray-700 break-all">
                   {call.endpoint}
                 </p>
-                <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
-                  {call.description}
-                </p>
+                <p className="mt-1 text-xs text-gray-500">{call.description}</p>
               </div>
             </div>
 
             {hoveredIndex === index && (
-              <div className="absolute z-10 left-0 mt-2 p-3 bg-gray-900/90 dark:bg-gray-700/90 text-white rounded-lg shadow-lg text-xs max-w-xl">
+              <div className="absolute z-10 left-0 mt-2 p-3 bg-gray-900/90 text-white rounded-lg shadow-lg text-xs max-w-xl">
                 <p className="font-mono mb-2 break-all">
                   {getFullUrl(call.endpoint)}
                 </p>

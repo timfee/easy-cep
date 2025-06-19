@@ -5,8 +5,7 @@ import {
   WORKFLOW_VAR_GROUPS,
   WorkflowVars
 } from "@/lib/workflow/variables";
-import { Fragment, useState } from "react";
-import { Badge } from "./ui/badge";
+import { useState } from "react";
 import { Button } from "./ui/button";
 import {
   Dialog,
@@ -18,14 +17,6 @@ import {
 import { Field, Label } from "./ui/fieldset";
 import { Input } from "./ui/input";
 import { Switch } from "./ui/switch";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow
-} from "./ui/table";
 
 interface Props {
   vars: Partial<WorkflowVars>;
@@ -47,64 +38,40 @@ export default function VarsInspector({ vars, onChange }: Props) {
   };
 
   return (
-    <div className="flex h-full flex-col bg-gray-50">
-      {/* Header - fixed */}
-      <div className="flex-shrink-0 border-b border-gray-200 bg-white px-4 py-3">
-        <h2 className="text-lg font-semibold text-gray-900">Variables</h2>
+    <div className="flex h-full flex-col bg-white">
+      {/* Header */}
+      <div className="flex-shrink-0 border-b border-gray-200 px-3 py-2">
+        <h2 className="text-sm font-semibold text-gray-900">Variables</h2>
       </div>
 
-      {/* Scrollable content - single scroll context */}
-      <div className="flex-1 overflow-y-auto">
-        <Table dense className="!whitespace-normal">
-          <TableHead>
-            <TableRow>
-              <TableHeader className="w-2/5">Name</TableHeader>
-              <TableHeader>Value</TableHeader>
-            </TableRow>
-          </TableHead>
-          <TableBody>
-            {groups.map((group) => (
-              <Fragment key={group.title}>
-                <TableRow>
-                  <TableCell
-                    colSpan={2}
-                    className="bg-zinc-50 font-semibold text-zinc-700">
-                    {group.title}
-                  </TableCell>
-                </TableRow>
-                {group.vars.map((name) => {
-                  const value = vars[name];
-                  const type = WORKFLOW_VARIABLES[name];
-                  const hasValue = value !== undefined && value !== null;
-
-                  return (
-                    <TableRow key={name}>
-                      <TableCell className="text-xs font-medium text-zinc-800">
-                        {name}
-                      </TableCell>
-                      <TableCell
-                        onClick={() =>
-                          setEditingVar({ name, value: value ?? "" })
-                        }
-                        className="cursor-pointer text-xs font-mono text-blue-700 underline decoration-dotted">
-                        {hasValue ?
-                          type === "boolean" ?
-                            <Badge color={value ? "green" : "zinc"}>
-                              {String(value)}
-                            </Badge>
-                          : <span className="truncate max-w-[260px] block">
-                              {String(value)}
-                            </span>
-
-                        : <span className="italic text-zinc-400">Not set</span>}
-                      </TableCell>
-                    </TableRow>
-                  );
-                })}
-              </Fragment>
-            ))}
-          </TableBody>
-        </Table>
+      {/* Scrollable content */}
+      <div className="flex-1 overflow-y-auto overflow-x-hidden">
+        <div className="text-xs">
+          {groups.map((group) => (
+            <div key={group.title}>
+              <div className="bg-gray-50 px-3 py-1.5 text-xs font-medium text-gray-700 sticky top-0">
+                {group.title}
+              </div>
+              {group.vars.map((name) => (
+                <div
+                  key={name}
+                  className="flex items-center border-b border-gray-100 px-3 py-2 hover:bg-gray-50 cursor-pointer"
+                  onClick={() =>
+                    setEditingVar({ name, value: vars[name] ?? "" })
+                  }>
+                  <div className="flex-1 min-w-0">
+                    <div className="text-xs font-medium text-gray-700 truncate">
+                      {name}
+                    </div>
+                  </div>
+                  <div className="ml-2 text-xs text-gray-600 truncate max-w-[120px]">
+                    {vars[name] !== undefined ? String(vars[name]) : "Not set"}
+                  </div>
+                </div>
+              ))}
+            </div>
+          ))}
+        </div>
       </div>
 
       <Dialog open={!!editingVar} onClose={() => setEditingVar(null)}>
