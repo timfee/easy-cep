@@ -35,7 +35,7 @@ export default defineStep(StepId.ConfigureMicrosoftSyncAndSso)
       log
     }) => {
       try {
-        const spId = vars.require("provisioningServicePrincipalId");
+        const spId = vars.require(Var.ProvisioningServicePrincipalId);
         if (!spId) {
           markIncomplete("Missing provisioning service principal ID", {});
           return;
@@ -78,8 +78,8 @@ export default defineStep(StepId.ConfigureMicrosoftSyncAndSso)
      * POST https://graph.microsoft.com/v1.0/servicePrincipals/{provisioningServicePrincipalId}/synchronization/jobs/{jobId}/start
      */
     try {
-      const spId = vars.require("provisioningServicePrincipalId");
-      const password = vars.require("generatedPassword");
+      const spId = vars.require(Var.ProvisioningServicePrincipalId);
+      const password = vars.require(Var.GeneratedPassword);
 
       const baseAddress = ApiEndpoint.Google.Users.replace("/users", "");
 
@@ -123,7 +123,7 @@ export default defineStep(StepId.ConfigureMicrosoftSyncAndSso)
   })
   .undo(async ({ vars, microsoft, markReverted, markFailed, log }) => {
     try {
-      const spId = vars.get("provisioningServicePrincipalId");
+      const spId = vars.get(Var.ProvisioningServicePrincipalId);
       if (!spId) {
         markFailed("Missing service principal id");
         return;

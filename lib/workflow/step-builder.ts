@@ -230,11 +230,15 @@ function createVarStore(vars: Partial<WorkflowVars>): VarStore {
   };
 }
 
-function wrapContext<C extends {
-  fetchGoogle: StepCheckContext<unknown>["fetchGoogle"];
-  fetchMicrosoft: StepCheckContext<unknown>["fetchMicrosoft"];
-  vars: Partial<WorkflowVars>;
-}>(ctx: C): Omit<C, "fetchGoogle" | "fetchMicrosoft" | "vars"> & {
+function wrapContext<
+  C extends {
+    fetchGoogle: StepCheckContext<unknown>["fetchGoogle"];
+    fetchMicrosoft: StepCheckContext<unknown>["fetchMicrosoft"];
+    vars: Partial<WorkflowVars>;
+  }
+>(
+  ctx: C
+): Omit<C, "fetchGoogle" | "fetchMicrosoft" | "vars"> & {
   vars: VarStore;
   google: HttpClient;
   microsoft: HttpClient;

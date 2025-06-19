@@ -110,13 +110,6 @@ export interface StepUndoContext {
   markFailed(error: string): void;
 }
 
-export interface StepLogEntry {
-  timestamp: number;
-  message: string;
-  data?: unknown;
-  level?: LogLevel;
-}
-
 export interface StepUIState {
   status:
     | "idle"

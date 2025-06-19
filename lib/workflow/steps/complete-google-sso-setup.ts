@@ -22,7 +22,7 @@ export default defineStep(StepId.CompleteGoogleSsoSetup)
       log
     }) => {
       try {
-        const profileId = vars.require("samlProfileId");
+        const profileId = vars.require(Var.SamlProfileId);
 
         if (!profileId) {
           markIncomplete("SAML profile ID not provided", {});
@@ -70,8 +70,8 @@ export default defineStep(StepId.CompleteGoogleSsoSetup)
   )
   .execute(async ({ vars, google, microsoft, output, markFailed, log }) => {
     try {
-      const profileId = vars.require("samlProfileId");
-      const ssoSpId = vars.require("ssoServicePrincipalId");
+      const profileId = vars.require(Var.SamlProfileId);
+      const ssoSpId = vars.require(Var.SsoServicePrincipalId);
 
       log(LogLevel.Info, "Fetching SAML metadata from Microsoft");
 

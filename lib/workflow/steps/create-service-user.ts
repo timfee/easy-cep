@@ -48,8 +48,8 @@ export default defineStep(StepId.CreateServiceUser)
       log
     }) => {
       try {
-        vars.require("primaryDomain");
-        vars.require("provisioningUserPrefix");
+        vars.require(Var.PrimaryDomain);
+        vars.require(Var.ProvisioningUserPrefix);
 
         const UserSchema = z
           .object({
@@ -114,7 +114,7 @@ export default defineStep(StepId.CreateServiceUser)
        * { "error": { "message": "Entity already exists." } }
        */
       try {
-        vars.require("primaryDomain");
+        vars.require(Var.PrimaryDomain);
 
         const BYTES = 4;
         const password = `Temp${crypto.randomBytes(BYTES).toString("hex")}!`;
@@ -125,8 +125,8 @@ export default defineStep(StepId.CreateServiceUser)
 
         let user;
         try {
-          vars.require("provisioningUserPrefix");
-          const ouPath = vars.require("automationOuPath");
+          vars.require(Var.ProvisioningUserPrefix);
+          const ouPath = vars.require(Var.AutomationOuPath);
           user = await google.post(ApiEndpoint.Google.Users, CreateSchema, {
             primaryEmail: vars.build(
               "{provisioningUserPrefix}@{primaryDomain}"
@@ -168,7 +168,7 @@ export default defineStep(StepId.CreateServiceUser)
   )
   .undo(async ({ vars, google, markReverted, markFailed, log }) => {
     try {
-      const id = vars.get("provisioningUserId");
+      const id = vars.get(Var.ProvisioningUserId);
       if (!id) {
         markFailed("Missing provisioning user id");
         return;
