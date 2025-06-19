@@ -40,10 +40,6 @@ export default defineStep(StepId.SetupMicrosoftClaimsPolicy)
     }) => {
       try {
         const spId = vars.require(Var.SsoServicePrincipalId);
-        if (!spId) {
-          markIncomplete("Missing SSO service principal ID", {});
-          return;
-        }
 
         const PoliciesSchema = z.object({
           value: z.array(z.object({ id: z.string() }))
@@ -121,10 +117,6 @@ export default defineStep(StepId.SetupMicrosoftClaimsPolicy)
       }
 
       if (!policyId) throw new Error("Policy ID unavailable");
-      if (!spId) {
-        markFailed("Missing SSO service principal ID");
-        return;
-      }
 
       try {
         await microsoft.post(

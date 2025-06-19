@@ -99,3 +99,10 @@ export interface StepUIState {
   notes?: string;
   logs?: StepLogEntry[];
 }
+
+export interface StepLogEntry {
+  timestamp: number;
+  message: string;
+  level: LogLevel;
+  data?: unknown;
+}

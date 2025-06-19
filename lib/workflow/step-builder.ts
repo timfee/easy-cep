@@ -9,6 +9,7 @@ import {
 } from "@/types";
 import { z } from "zod";
 import { createStep } from "./create-step";
+import { createVarStore, type BasicVarStore } from "./var-store";
 
 interface StepBuilder<
   TData extends Partial<WorkflowVars> = Partial<WorkflowVars>
@@ -60,14 +61,8 @@ interface HttpClient {
   ): Promise<R>;
 }
 
-interface VarStore {
-  get<K extends VarName>(key: K): WorkflowVars[K] | undefined;
-  require<K extends VarName>(key: K): NonNullable<WorkflowVars[K]>;
-  build(template: string): string;
-}
-
 interface BuilderCheckContext<T> {
-  vars: VarStore;
+  vars: BasicVarStore;
   google: HttpClient;
   microsoft: HttpClient;
   log: StepCheckContext<T>["log"];
@@ -77,7 +72,7 @@ interface BuilderCheckContext<T> {
 }
 
 interface BuilderExecuteContext<T> {
-  vars: VarStore;
+  vars: BasicVarStore;
   google: HttpClient;
   microsoft: HttpClient;
   checkData: T;
@@ -88,7 +83,7 @@ interface BuilderExecuteContext<T> {
 }
 
 interface BuilderUndoContext {
-  vars: VarStore;
+  vars: BasicVarStore;
   google: HttpClient;
   microsoft: HttpClient;
   log: StepUndoContext["log"];
@@ -210,26 +205,6 @@ function createHttpClient(
   };
 }
 
-function createVarStore(vars: Partial<WorkflowVars>): VarStore {
-  return {
-    get: <K extends VarName>(key: K) => vars[key],
-    require: <K extends VarName>(key: K) => {
-      const value = vars[key];
-      if (value === undefined)
-        throw new Error(`Required variable ${key} is missing`);
-      return value;
-    },
-    build: (template: string) => {
-      return template.replace(/\{(\w+)\}/g, (_, key) => {
-        const value = vars[key as VarName];
-        if (value === undefined)
-          throw new Error(`Template variable ${key} is missing`);
-        return String(value);
-      });
-    }
-  };
-}
-
 function wrapContext<
   C extends {
     fetchGoogle: StepCheckContext<unknown>["fetchGoogle"];
@@ -239,7 +214,7 @@ function wrapContext<
 >(
   ctx: C
 ): Omit<C, "fetchGoogle" | "fetchMicrosoft" | "vars"> & {
-  vars: VarStore;
+  vars: BasicVarStore;
   google: HttpClient;
   microsoft: HttpClient;
 } {

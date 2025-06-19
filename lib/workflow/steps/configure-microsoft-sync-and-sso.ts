@@ -36,10 +36,6 @@ export default defineStep(StepId.ConfigureMicrosoftSyncAndSso)
     }) => {
       try {
         const spId = vars.require(Var.ProvisioningServicePrincipalId);
-        if (!spId) {
-          markIncomplete("Missing provisioning service principal ID", {});
-          return;
-        }
 
         const JobsSchema = z.object({
           value: z.array(z.object({ status: z.object({ code: z.string() }) }))
@@ -88,10 +84,6 @@ export default defineStep(StepId.ConfigureMicrosoftSyncAndSso)
         templateId: z.string(),
         status: z.object({ code: z.string() }).optional()
       });
-      if (!spId) {
-        markFailed("Missing provisioning service principal ID");
-        return;
-      }
 
       const job = await microsoft.post(
         ApiEndpoint.Microsoft.SyncJobs(spId),
