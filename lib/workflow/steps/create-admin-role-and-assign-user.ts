@@ -39,31 +39,23 @@ export default createStep<CheckData>({
   /**
    * GET https://admin.googleapis.com/admin/directory/v1/customer/my_customer/roles
    *
-   * Completed step example response
-   *
-   * 200
+   * Example success (200)
    * {
    *   "kind": "admin#directory#roles",
    *   "items": [
    *     {
-   *       "roleId": "91447453409035723",
-   *       "roleName": "Microsoft Entra Provisioning",
-   *       "rolePrivileges": [
-   *         { "privilegeName": "USERS_CREATE", "serviceId": "00haapch16h1ysv" },
-   *         { "privilegeName": "USERS_RETRIEVE", "serviceId": "00haapch16h1ysv" },
-   *         { "privilegeName": "USERS_UPDATE", "serviceId": "00haapch16h1ysv" }
-   *       ]
+   *       "roleId": "91447453409034818",
+   *       "roleName": "_GROUPS_ADMIN_ROLE",
+   *       "roleDescription": "Grou..."
    *     }
    *   ]
    * }
    *
-   * Incomplete step example response
-   *
-   * 200
+   * Example incomplete (200)
    * {
    *   "kind": "admin#directory#roles",
-   *   "items": [ { "roleId": "91447453409034818", "roleName": "_GROUPS_ADMIN_ROLE" } ],
-   *   "nextPageToken": "91447453409035177"
+   *   "items": [],
+   *   "nextPageToken": "..."
    * }
    */
 

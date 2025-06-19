@@ -18,10 +18,9 @@ export default createStep<CheckData>({
   /**
    * GET https://admin.googleapis.com/admin/directory/v1/customer/my_customer/domains
    *
-   * Completed step example response
-   *
-   * 200
+   * Example success (200)
    * {
+   *   "kind": "admin#directory#domains",
    *   "domains": [
    *     {
    *       "domainName": "cep-netnew.cc",
@@ -31,9 +30,7 @@ export default createStep<CheckData>({
    *   ]
    * }
    *
-   * Incomplete step example response
-   *
-   * 200
+   * Example incomplete (200)
    * { "domains": [] }
    */
 

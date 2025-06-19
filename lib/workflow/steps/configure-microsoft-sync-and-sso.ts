@@ -19,15 +19,14 @@ export default createStep<CheckData>({
   /**
    * GET https://graph.microsoft.com/v1.0/servicePrincipals/{provisioningServicePrincipalId}/synchronization/jobs
    *
-   * Completed step example response
-   *
-   * 200
+   * Example success (200)
    * { "value": [ { "status": { "code": "Active" } } ] }
    *
-   * Incomplete step example response
-   *
-   * 200
+   * Example none found (200)
    * { "value": [] }
+   *
+   * Example invalid token (401)
+   * { "error": { "code": "InvalidAuthenticationToken" } }
    */
 
   async check({

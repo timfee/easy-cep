@@ -22,17 +22,13 @@ export default createStep<CheckData>({
   /**
    * GET https://admin.googleapis.com/admin/directory/v1/users/azuread-provisioning@{primaryDomain}
    *
-   * Completed step example response
-   *
-   * 200
+   * Example success (200)
    * {
-   *   "id": "103898700330622175095",
+   *   "id": "102354298977995584115",
    *   "primaryEmail": "azuread-provisioning@cep-netnew.cc"
    * }
    *
-   * Incomplete step example response
-   *
-   * 404
+   * Example not found (404)
    * { "error": { "code": 404 } }
    */
 

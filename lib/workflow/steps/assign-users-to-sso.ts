@@ -15,14 +15,20 @@ export default createStep<CheckData>({
   /**
    * GET https://cloudidentity.googleapis.com/v1/inboundSsoAssignments
    *
-   * Completed step example response
+   * Example success (200)
+   * {
+   *   "inboundSsoAssignments": [
+   *     {
+   *       "name": "inboundSsoAssignments/aQzAxYjFlNjViLU8wM3BoOGEyejIzeWp1aTY",
+   *       "ssoMode": "SAML_SSO",
+   *       "samlSsoInfo": {
+   *         "inboundSamlSsoProfile": "inboundSamlSsoProfiles/010xi5tr1szon40"
+   *       }
+   *     }
+   *   ]
+   * }
    *
-   * 200
-   * { "inboundSsoAssignments": [ { "targetGroup": "groups/allUsers" } ] }
-   *
-   * Incomplete step example response
-   *
-   * 200
+   * Example incomplete (200)
    * { "inboundSsoAssignments": [] }
    */
 

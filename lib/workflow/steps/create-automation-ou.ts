@@ -13,21 +13,19 @@ export default createStep<CheckData>({
 
   /**
    * GET https://admin.googleapis.com/admin/directory/v1/customer/my_customer/orgunits/Automation
-   * Authorization: Bearer {googleAccessToken}
    *
-   * Success response (`200 OK`):
+   * Example success (200)
    * {
    *   "orgUnitPath": "/Automation",
    *   "name": "Automation",
-   *   …
+   *   "orgUnitId": "id:03ph8a2z1s3ovsg"
    * }
    *
-   * Not found response (`404 Not Found`):
+   * Example not found (404)
    * {
    *   "error": {
    *     "code": 404,
-   *     "message": "Org unit not found",
-   *     "errors": [...]
+   *     "message": "Org unit not found"
    *   }
    * }
    */
