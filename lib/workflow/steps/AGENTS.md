@@ -29,36 +29,38 @@ Every step MUST follow this exact pattern:
      type CheckData = Partial<Pick<WorkflowVars, never>>;
      ```
 
-2. Call `createStep<CheckData>({...})` with your `id`, `requires`, and `provides`.
-3. In `check()`: wrap in `try/catch`, then call exactly one of:
-   `markComplete`, `markIncomplete`, or `markCheckFailed`.
-4. In `execute()`: wrap in `try/catch`, then call exactly one of:
-   `markSucceeded`, `markFailed`, or `markPending`.
+2. Start with `defineStep(StepId.X)` then chain `.requires()`, `.provides()`,
+   `.check()` and `.execute()`. Finish by calling `.build()`.
+3. In `check()`: wrap in `try/catch`, then call exactly one of `markComplete`,
+   `markIncomplete`, or `markCheckFailed`.
+4. In `execute()`: wrap in `try/catch`, then call exactly one of `output`,
+   `markFailed`, or `markPending`.
 5. Use `ApiEndpoint` constants for ALL URLs.
 6. Define Zod schemas inline before API calls (never use `z.any()`).
-7. You do _not_ need manual token/var checks—`createStep` now automatically fails the check if any declared `requires` variable is missing.
+7. You do _not_ need manual token/var checks—`defineStep` automatically fails
+   the check if any declared `requires` variable is missing.
 
 ### Environment Variables in Steps
 
 Steps must not read directly from `process.env`. Any required environment variables
 must be declared in `env.ts` and accessed via the `env` import. All other runtime
-state must use workflow `vars` (via the `Var` enum and `getVar(vars, Var.X)` helper)
+state must use workflow `vars` (via the `Var` enum and `vars.require('x')`)
 to ensure type safety and consistency.
 
 Examples of URL usage:
 
 ```ts
 // Static URLs
-await fetchGoogle(ApiEndpoint.Google.Domains, DomainsSchema);
+await google.get(ApiEndpoint.Google.Domains, DomainsSchema);
 
 // Parameterized URLs
-const email = "user@example.com";
-await fetchGoogle(ApiEndpoint.Google.user(email), UserSchema);
+const email = vars.build("{prefix}@{domain}");
+await google.get(ApiEndpoint.Google.user(email), UserSchema);
 
 // With POST body
-await fetchGoogle(ApiEndpoint.Google.Users, CreateUserSchema, {
-  method: "POST",
-  body: JSON.stringify({ name: "Test User", email })
+await google.post(ApiEndpoint.Google.Users, CreateUserSchema, {
+  primaryEmail: email,
+  name: { givenName: "Test", familyName: "User" }
 });
 ```
 
@@ -69,15 +71,15 @@ interface CheckData {
   fieldFromCheck?: string;
 }
 
-export default createStep<CheckData>({
-  id: StepId.MyStep,
-  requires: [Var.GoogleAccessToken],
-  provides: [Var.Something],
-
-  async check({ fetchGoogle, markComplete, markIncomplete, markCheckFailed }) {
+export default defineStep(StepId.MyStep)
+  .requires(Var.GoogleAccessToken)
+  .provides(Var.Something)
+  .check(async ({ google, markComplete, markIncomplete, markCheckFailed }) => {
     try {
-      const Schema = z.object({ ... });
-      const data = await fetchGoogle(ApiEndpoint.Google.Something, Schema);
+      const Schema = z.object({
+        /* ... */
+      });
+      const data = await google.get(ApiEndpoint.Google.Something, Schema);
 
       if (alreadyDone) {
         markComplete({ fieldFromCheck: data.field });
@@ -85,19 +87,18 @@ export default createStep<CheckData>({
         markIncomplete("Need to do work", { fieldFromCheck: data.field });
       }
     } catch (error) {
-      markCheckFailed(error.message);
+      markCheckFailed(error instanceof Error ? error.message : String(error));
     }
-  },
-
-  async execute({ fetchGoogle, checkData, markSucceeded, markFailed }) {
+  })
+  .execute(async ({ google, output, markFailed }) => {
     try {
       // Do work
-      markSucceeded({ [Var.Something]: result });
+      output({ something: result });
     } catch (error) {
-      markFailed(error.message);
+      markFailed(error instanceof Error ? error.message : String(error));
     }
-  }
-});
+  })
+  .build();
 ```
 
 ### Step 1 Purpose
