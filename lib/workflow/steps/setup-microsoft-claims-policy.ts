@@ -10,7 +10,11 @@ interface CheckData {
 
 export default createStep<CheckData>({
   id: StepId.SetupMicrosoftClaimsPolicy,
-  requires: [Var.MsGraphToken, Var.SsoServicePrincipalId],
+  requires: [
+    Var.MsGraphToken,
+    Var.SsoServicePrincipalId,
+    Var.ClaimsPolicyDisplayName
+  ],
   provides: [Var.ClaimsPolicyId],
 
   /**
@@ -91,7 +95,7 @@ export default createStep<CheckData>({
               definition: [
                 '{"ClaimsMappingPolicy":{"Version":1,"IncludeBasicClaimSet":true,"ClaimsSchema":[]}}'
               ],
-              displayName: "Google Workspace Basic Claims",
+              displayName: getVar(vars, Var.ClaimsPolicyDisplayName),
               isOrganizationDefault: false
             })
           }

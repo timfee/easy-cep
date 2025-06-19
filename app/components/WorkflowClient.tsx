@@ -36,7 +36,16 @@ export default function WorkflowClient({ steps }: Props) {
       initialized.current = true;
       setVars((prev) => ({
         ...prev,
-        [Var.GeneratedPassword]: Math.random().toString(36).slice(-12)
+        [Var.GeneratedPassword]: Math.random().toString(36).slice(-12),
+        // Add default configuration values
+        [Var.AutomationOuName]: "Automation",
+        [Var.AutomationOuPath]: "/Automation",
+        [Var.ProvisioningUserPrefix]: "azuread-provisioning",
+        [Var.AdminRoleName]: "Microsoft Entra Provisioning",
+        [Var.SamlProfileDisplayName]: "Azure AD",
+        [Var.ProvisioningAppDisplayName]: "Google Workspace Provisioning",
+        [Var.SsoAppDisplayName]: "Google Workspace SSO",
+        [Var.ClaimsPolicyDisplayName]: "Google Workspace Basic Claims"
       }));
     }
   }, []);

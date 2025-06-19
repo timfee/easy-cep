@@ -84,11 +84,6 @@ export const SyncTemplateId = { GoogleWorkspace: "google2provisioningV2" };
 
 export const GroupId = { AllUsers: "allUsers" };
 
-export const OrgUnit = {
-  AutomationName: "Automation",
-  AutomationPath: "/Automation",
-  RootPath: "/"
-};
 
 export const PROVIDERS = { GOOGLE: "google", MICROSOFT: "microsoft" } as const;
 
