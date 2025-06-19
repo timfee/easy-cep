@@ -88,7 +88,6 @@ export function WorkflowClient({ steps }: WorkflowClientProps) {
     [steps, status]
   );
 
-  // Auto-check steps when ready
   const checkSteps = useCallback(async () => {
     for (const step of steps) {
       if (
@@ -240,7 +239,7 @@ function Sidebar({
   onVarsUpdate: (vars: Partial<WorkflowVars>) => void;
 }) {
   return (
-    <div className="w-80 border-r bg-slate-50/50 flex flex-col">
+    <div className="border-r bg-slate-50/50 flex flex-col">
       <div className="p-6 border-b bg-white">
         <div className="flex items-center gap-2 mb-4">
           <div className="p-2 bg-blue-100 rounded-lg">
@@ -366,7 +365,7 @@ function SidebarSection({
   children: React.ReactNode;
 }) {
   return (
-    <div>
+    <div className="w-80">
       <h3 className="font-medium mb-4 flex items-center gap-2 text-slate-900">
         <div className={`p-1 ${bgColor} rounded`}>{icon}</div>
         {title}

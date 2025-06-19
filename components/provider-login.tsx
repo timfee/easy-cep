@@ -1,8 +1,9 @@
 "use client";
+
 import { Button } from "@/components/ui/button";
 import { type Provider } from "@/constants";
 import { Var, WorkflowVars } from "@/types";
-import { BoxesIcon, CheckCircle, Chrome, XCircle } from "lucide-react";
+import { CheckCircle, XCircle } from "lucide-react";
 import { redirect } from "next/navigation";
 import { useCallback, useEffect, useState } from "react";
 
@@ -88,9 +89,6 @@ export function ProviderLogin({ onUpdate }: Props) {
         {isConnected ?
           <>
             <CheckCircle className="h-4 w-4 text-green-500" />
-            <span className="text-xs text-green-600 font-medium">
-              Connected
-            </span>
             <Button
               size="sm"
               variant="ghost"
@@ -102,7 +100,6 @@ export function ProviderLogin({ onUpdate }: Props) {
           </>
         : <>
             <XCircle className="h-4 w-4 text-slate-400" />
-            <span className="text-xs text-slate-500">Not Connected</span>
             <Button
               size="sm"
               variant="outline"
@@ -119,7 +116,7 @@ export function ProviderLogin({ onUpdate }: Props) {
   return (
     <div className="space-y-1 divide-y divide-slate-100">
       <ProviderItem
-        Icon={Chrome}
+        Icon={Google}
         name={"Google"}
         isConnected={tokens.googleAccessToken !== undefined}
         onConnectClick={() => (window.location.href = "/api/auth/google")}
@@ -127,7 +124,7 @@ export function ProviderLogin({ onUpdate }: Props) {
         iconColorClass="text-blue-500"
       />
       <ProviderItem
-        Icon={BoxesIcon}
+        Icon={Microsoft}
         name="Microsoft"
         isConnected={tokens.msGraphToken !== undefined}
         onConnectClick={() => redirect("/api/auth/microsoft")}
@@ -137,3 +134,26 @@ export function ProviderLogin({ onUpdate }: Props) {
     </div>
   );
 }
+
+const Google = ({ className }: { className?: string }) => (
+  <svg
+    xmlns="http://www.w3.org/2000/svg"
+    viewBox="0 0 20 20"
+    className={className}>
+    <path
+      fill="#000"
+      fillRule="evenodd"
+      d="M19.822 8.004h-9.61c0 1 0 2.998-.007 3.998h5.569c-.213.999-.97 2.398-2.039 3.103-.001-.001-.002.006-.004.005-1.421.938-3.297 1.151-4.69.871-2.183-.433-3.91-2.016-4.612-4.027.004-.003.007-.031.01-.033C4 10.673 4 9.003 4.44 8.004c.565-1.837 2.345-3.513 4.53-3.972 1.759-.373 3.743.031 5.202 1.396.194-.19 2.685-2.622 2.872-2.82C12.058-1.907 4.077-.318 1.09 5.51l-.006.011a9.767 9.767 0 0 0 .01 8.964l-.01.008a10.18 10.18 0 0 0 6.48 5.165c3.01.79 6.843.25 9.41-2.072l.003.003c2.175-1.958 3.529-5.296 2.845-9.586"
+    />
+  </svg>
+);
+
+const Microsoft = ({ className }: { className?: string }) => (
+  <svg
+    xmlns="http://www.w3.org/2000/svg"
+    viewBox="0 0 24 24"
+    className={className}>
+    <path fill="none" d="M0 0h24v24H0z" />
+    <path d="M3 12V6.75l6-1.32v6.48L3 12m17-9v8.75l-10 .15V5.21L20 3M3 13l6 .09v6.81l-6-1.15V13m17 .25V22l-10-1.91v-7Z" />
+  </svg>
+);
