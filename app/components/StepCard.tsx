@@ -32,18 +32,15 @@ const accent: Record<StepUIState["status"], string> = {
   reverted: "border-gray-300"
 };
 
-const badgeColor: Record<
-  StepUIState["status"],
-  "zinc" | "blue" | "green" | "red" | "amber" | "purple"
-> = {
-  idle: "zinc",
-  checking: "blue",
-  executing: "blue",
-  complete: "green",
-  failed: "red",
-  pending: "amber",
-  undoing: "purple",
-  reverted: "zinc"
+const badgeClass: Record<StepUIState["status"], string> = {
+  idle: "bg-zinc-100 text-zinc-700",
+  checking: "bg-blue-100 text-blue-700",
+  executing: "bg-blue-100 text-blue-700",
+  complete: "bg-green-100 text-green-700",
+  failed: "bg-red-100 text-red-700",
+  pending: "bg-amber-100 text-amber-700",
+  undoing: "bg-purple-100 text-purple-700",
+  reverted: "bg-zinc-100 text-zinc-700"
 };
 
 const textColor: Record<StepUIState["status"], string> = {
@@ -115,8 +112,7 @@ export default function StepCard({
             </h3>
           </div>
           <Badge
-            color={badgeColor[status]}
-            className="px-3 py-1 text-xs font-medium capitalize">
+            className={`px-3 py-1 text-xs font-medium capitalize ${badgeClass[status]}`}>
             {status}
           </Badge>
         </div>
@@ -175,8 +171,7 @@ export default function StepCard({
 
         <div className="mt-4 flex items-center gap-2">
           <Button
-            color="blue"
-            className="inline-flex items-center gap-2"
+            className="inline-flex items-center gap-2 bg-blue-600 text-white hover:bg-blue-700"
             onClick={() => onExecute(definition.id)}
             disabled={executing || missing.length > 0}
             data-complete={executed}

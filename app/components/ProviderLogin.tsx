@@ -73,7 +73,7 @@ export default function ProviderLogin({ onUpdate }: Props) {
             {tokens.googleAccessToken ?
               <>
                 <Button
-                  plain
+                  variant="ghost"
                   className="w-full justify-center items-center"
                   onClick={() => signOut(PROVIDERS.GOOGLE)}>
                   Sign out of Google
@@ -89,8 +89,7 @@ export default function ProviderLogin({ onUpdate }: Props) {
                 </div>
               </>
             : <Button
-                color="blue"
-                className="w-full justify-center items-center"
+                className="w-full justify-center items-center bg-blue-600 text-white hover:bg-blue-700"
                 onClick={() =>
                   (window.location.href = `/api/auth/${PROVIDERS.GOOGLE}`)
                 }>
@@ -122,7 +121,7 @@ export default function ProviderLogin({ onUpdate }: Props) {
             {tokens.msGraphToken ?
               <>
                 <Button
-                  plain
+                  variant="ghost"
                   className="w-full justify-center items-center"
                   onClick={() => signOut(PROVIDERS.MICROSOFT)}>
                   Sign out of Microsoft
@@ -138,8 +137,7 @@ export default function ProviderLogin({ onUpdate }: Props) {
                 </div>
               </>
             : <Button
-                color="blue"
-                className="w-full justify-center items-center"
+                className="w-full justify-center items-center bg-blue-600 text-white hover:bg-blue-700"
                 onClick={() =>
                   (window.location.href = `/api/auth/${PROVIDERS.MICROSOFT}`)
                 }>

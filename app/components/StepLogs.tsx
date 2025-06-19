@@ -13,11 +13,11 @@ export default function StepLogs({ logs }: StepLogsProps) {
   const [expanded, setExpanded] = useState(false);
   if (!logs || logs.length === 0) return null;
 
-  const levelColor: Record<LogLevel, "blue" | "amber" | "red" | "zinc"> = {
-    [LogLevel.Info]: "blue",
-    [LogLevel.Warn]: "amber",
-    [LogLevel.Error]: "red",
-    [LogLevel.Debug]: "zinc"
+  const levelClass: Record<LogLevel, string> = {
+    [LogLevel.Info]: "bg-blue-100 text-blue-700",
+    [LogLevel.Warn]: "bg-amber-100 text-amber-700",
+    [LogLevel.Error]: "bg-red-100 text-red-700",
+    [LogLevel.Debug]: "bg-zinc-100 text-zinc-700"
   };
 
   return (
@@ -32,7 +32,7 @@ export default function StepLogs({ logs }: StepLogsProps) {
           )}
         />
         <span>Logs</span>
-        <Badge color="zinc" className="ml-auto">
+        <Badge className="ml-auto bg-zinc-100 text-zinc-700">
           {logs.length}
         </Badge>
       </button>
@@ -46,9 +46,7 @@ export default function StepLogs({ logs }: StepLogsProps) {
                 <div className="w-24 shrink-0 text-zinc-500">
                   {log.level && (
                     <Badge
-                      size="xs"
-                      color={levelColor[log.level]}
-                      className="mb-1">
+                      className={`mb-1 ${levelClass[log.level]} text-[10px] px-1.5`}>
                       {log.level}
                     </Badge>
                   )}

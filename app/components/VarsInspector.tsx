@@ -167,10 +167,12 @@ export default function VarsInspector({ vars, onChange }: Props) {
           </Field>
         </DialogBody>
         <DialogActions>
-          <Button plain onClick={() => setEditingVar(null)}>
+          <Button variant="ghost" onClick={() => setEditingVar(null)}>
             Cancel
           </Button>
-          <Button color="blue" onClick={handleSave}>
+          <Button
+            className="bg-blue-600 text-white hover:bg-blue-700"
+            onClick={handleSave}>
             Save
           </Button>
         </DialogActions>
