@@ -55,20 +55,15 @@ export default createStep<CheckData>({
         })
         .passthrough();
       const email = `azuread-provisioning@${domain}`;
-      const url = `${ApiEndpoint.Google.Users}/${encodeURIComponent(email)}`;
+      const url = `${ApiEndpoint.Google.Users}/${encodeURIComponent(email)}?fields=id,primaryEmail`;
       const user = await fetchGoogle(url, UserSchema);
 
       if (user.id && user.primaryEmail) {
-        if (user.orgUnitPath !== OrgUnit.AutomationPath) {
-          log(LogLevel.Info, "Service user in wrong org unit", { user });
-          markIncomplete("Service user in wrong org unit", {});
-        } else {
-          log(LogLevel.Info, "Service user already exists");
-          markComplete({
-            provisioningUserId: user.id,
-            provisioningUserEmail: user.primaryEmail
-          });
-        }
+        log(LogLevel.Info, "Service user already exists");
+        markComplete({
+          provisioningUserId: user.id,
+          provisioningUserEmail: user.primaryEmail
+        });
       } else {
         log(LogLevel.Error, "Unexpected user response", { user });
         markCheckFailed("Malformed user object returned");
@@ -136,10 +131,8 @@ export default createStep<CheckData>({
       } catch (error) {
         if (isConflictError(error)) {
           const fallbackEmail = `azuread-provisioning@${domain}`;
-          user = await fetchGoogle(
-            `${ApiEndpoint.Google.Users}/${encodeURIComponent(fallbackEmail)}`,
-            CreateSchema
-          );
+          const getUrl = `${ApiEndpoint.Google.Users}/${encodeURIComponent(fallbackEmail)}?fields=id,primaryEmail`;
+          user = await fetchGoogle(getUrl, CreateSchema);
 
           await fetchGoogle(
             `${ApiEndpoint.Google.Users}/${user.id}`,
