@@ -173,9 +173,9 @@ export default function WorkflowClient({ steps }: Props) {
   return (
     <StackedLayout navbar={navbar} sidebar={sidebar}>
       {/* Container for all content - single scroll context */}
-      <div className="min-h-screen">
+      <div className="min-h-screen overflow-x-hidden">
         {/* Header section - fixed width, centered */}
-        <div className="mx-auto max-w-2xl px-6 pt-8 pb-6">
+        <div className="mx-auto max-w-2xl px-4 py-6">
           <h1 className="mb-4 text-2xl font-bold text-gray-900">Workflow</h1>
           <p className="mb-6 text-gray-600">
             Run each step to configure the environment.
@@ -191,7 +191,7 @@ export default function WorkflowClient({ steps }: Props) {
         {/* Steps section - full width for cards */}
         <div className="pb-8">
           {steps.map((step, idx) => (
-            <div key={step.id} className="mx-auto max-w-4xl px-6">
+            <div key={step.id} className="mx-auto max-w-3xl px-4">
               <StepCard
                 index={idx}
                 definition={step}
@@ -210,16 +210,17 @@ export default function WorkflowClient({ steps }: Props) {
       {/* Variables Panel - fixed position slide-out */}
       <div
         className={clsx(
-          "fixed right-0 top-0 h-full w-80 transform bg-white shadow-xl transition-transform duration-300 z-50",
+          "fixed right-0 top-0 h-screen w-64 bg-white border-l border-gray-200 shadow-lg transition-transform duration-300 z-50",
           varsOpen ? "translate-x-0" : "translate-x-full"
-        )}>
+        )}
+        style={{ maxHeight: "100vh" }}>
         {/* Toggle button attached to panel */}
         <button
           onClick={() => setVarsOpen(!varsOpen)}
-          className="absolute -left-10 top-24 bg-white border border-r-0 border-gray-200 rounded-l-lg p-2 shadow-sm">
+          className="absolute -left-12 top-1/2 -translate-y-1/2 bg-white border border-gray-200 rounded-l-lg p-1.5 shadow-sm hover:shadow-md transition-shadow">
           {varsOpen ?
-            <ChevronRightIcon className="h-5 w-5 text-gray-600" />
-          : <ChevronLeftIcon className="h-5 w-5 text-gray-600" />}
+            <ChevronRightIcon className="h-4 w-4 text-gray-500" />
+          : <ChevronLeftIcon className="h-4 w-4 text-gray-500" />}
         </button>
 
         <VarsInspector vars={vars} onChange={updateVars} />
