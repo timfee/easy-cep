@@ -41,7 +41,8 @@
     --popover-foreground: 210 40% 98%;
     --primary: 210 40% 98%;
     --primary-foreground: 222.2 47.4% 11.2%;
-    --primary-rgb: 239, 246, 255; /* For primary color based animations in dark mode */
+    --primary-rgb:
+      239, 246, 255; /* For primary color based animations in dark mode */
     --secondary: 217.2 32.6% 17.5%;
     --secondary-foreground: 210 40% 98%;
     --muted: 217.2 32.6% 17.5%;
@@ -75,13 +76,17 @@
     0%,
     100% {
       /* Use a more prominent shadow color based on primary, and slightly larger spread */
-      box-shadow: 0 0 0 0px rgba(var(--primary-rgb), 0.3), 0 1px 3px 0 rgb(0 0 0 / 0.07), 0 1px 2px -1px
-        rgb(0 0 0 / 0.07);
+      box-shadow:
+        0 0 0 0px rgba(var(--primary-rgb), 0.3),
+        0 1px 3px 0 rgb(0 0 0 / 0.07),
+        0 1px 2px -1px rgb(0 0 0 / 0.07);
       opacity: 1;
     }
     50% {
-      box-shadow: 0 0 0 5px rgba(var(--primary-rgb), 0.15), 0 1px 3px 0 rgb(0 0 0 / 0.07), 0 1px 2px -1px
-        rgb(0 0 0 / 0.07);
+      box-shadow:
+        0 0 0 5px rgba(var(--primary-rgb), 0.15),
+        0 1px 3px 0 rgb(0 0 0 / 0.07),
+        0 1px 2px -1px rgb(0 0 0 / 0.07);
       opacity: 0.95;
     }
   }
