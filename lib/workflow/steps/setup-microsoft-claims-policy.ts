@@ -16,15 +16,14 @@ export default createStep<CheckData>({
   /**
    * GET https://graph.microsoft.com/beta/servicePrincipals/{ssoServicePrincipalId}/claimsMappingPolicies
    *
-   * Completed step example response
-   *
-   * 200
+   * Example success (200)
    * { "value": [ { "id": "policy123" } ] }
    *
-   * Incomplete step example response
-   *
-   * 200
+   * Example none found (200)
    * { "value": [] }
+   *
+   * Example invalid token (401)
+   * { "error": { "code": "InvalidAuthenticationToken" } }
    */
 
   async check({

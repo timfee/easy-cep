@@ -18,18 +18,17 @@ export default createStep<CheckData>({
   /**
    * GET https://cloudidentity.googleapis.com/v1/inboundSamlSsoProfiles
    *
-   * Completed step example response
-   *
-   * 200
+   * Example success (200)
    * {
    *   "inboundSamlSsoProfiles": [
-   *     { "name": "inboundSamlSsoProfiles/01vopt8u1nhy22o" }
+   *     {
+   *       "name": "inboundSamlSsoProfiles/03rr0y8q3klp6gw",
+   *       "displayName": "Test SAML 1750028141404"
+   *     }
    *   ]
    * }
    *
-   * Incomplete step example response
-   *
-   * 200
+   * Example none found (200)
    * { "inboundSamlSsoProfiles": [] }
    */
 

@@ -22,15 +22,14 @@ export default createStep<CheckData>({
   /**
    * GET https://graph.microsoft.com/beta/applications?$filter=applicationTemplateId eq '{templateId}'
    *
-   * Completed step example response
-   *
-   * 200
+   * Example success (200)
    * { "value": [ { "servicePrincipalId": "004f09c3-8e2b-4308-bfb5-38f2f2a83980", "appId": "7b33..." } ] }
    *
-   * Incomplete step example response
-   *
-   * 200
+   * Example none found (200)
    * { "value": [] }
+   *
+   * Example invalid token (401)
+   * { "error": { "code": "InvalidAuthenticationToken" } }
    */
 
   async check({
