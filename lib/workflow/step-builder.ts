@@ -230,11 +230,15 @@ function createVarStore(vars: Partial<WorkflowVars>): VarStore {
   };
 }
 
-function wrapContext<C extends {
-  fetchGoogle: StepCheckContext<unknown>["fetchGoogle"];
-  fetchMicrosoft: StepCheckContext<unknown>["fetchMicrosoft"];
-  vars: Partial<WorkflowVars>;
-}>(ctx: C): Omit<C, "fetchGoogle" | "fetchMicrosoft" | "vars"> & {
+function wrapContext<
+  C extends {
+    fetchGoogle: StepCheckContext<unknown>["fetchGoogle"];
+    fetchMicrosoft: StepCheckContext<unknown>["fetchMicrosoft"];
+    vars: Partial<WorkflowVars>;
+  }
+>(
+  ctx: C
+): Omit<C, "fetchGoogle" | "fetchMicrosoft" | "vars"> & {
   vars: VarStore;
   google: HttpClient;
   microsoft: HttpClient;
@@ -247,16 +251,4 @@ function wrapContext<C extends {
     google: createHttpClient(fetchGoogle),
     microsoft: createHttpClient(fetchMicrosoft)
   };
-}
-
-// Keep getVar for migration purposes only
-export function getVar<K extends VarName>(
-  vars: Partial<WorkflowVars>,
-  key: K
-): WorkflowVars[K] {
-  const value = vars[key];
-  if (value === undefined) {
-    throw new Error(`Required variable ${key} is not available`);
-  }
-  return value;
 }
