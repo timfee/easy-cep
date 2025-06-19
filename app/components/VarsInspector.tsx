@@ -142,7 +142,8 @@ export default function VarsInspector({ vars, onChange }: Props) {
           <Field>
             <Label>Value</Label>
             {(
-              WORKFLOW_VARIABLES[editingVar?.name as VarName].type === "boolean"
+              WORKFLOW_VARIABLES[editingVar?.name as VarName]?.type
+              === "boolean"
             ) ?
               <Switch
                 checked={
