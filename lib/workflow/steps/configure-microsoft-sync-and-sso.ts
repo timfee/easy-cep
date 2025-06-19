@@ -2,16 +2,15 @@ import { ApiEndpoint, SyncTemplateId } from "@/constants";
 import { EmptyResponseSchema, isNotFoundError } from "@/lib/workflow/utils";
 import { LogLevel, StepId, Var } from "@/types";
 import { z } from "zod";
-import { createStep, getVar } from "../create-step";
+import { defineStep } from "../step-builder";
 
-export default createStep({
-  id: StepId.ConfigureMicrosoftSyncAndSso,
-  requires: [
+export default defineStep(StepId.ConfigureMicrosoftSyncAndSso)
+  .requires(
     Var.MsGraphToken,
     Var.ProvisioningServicePrincipalId,
     Var.GeneratedPassword
-  ],
-  provides: [],
+  )
+  .provides()
 
   /**
    * GET https://graph.microsoft.com/v1.0/servicePrincipals/{provisioningServicePrincipalId}/synchronization/jobs
@@ -26,46 +25,49 @@ export default createStep({
    * { "error": { "code": "InvalidAuthenticationToken" } }
    */
 
-  async check({
-    vars,
-    fetchMicrosoft,
-    markComplete,
-    markIncomplete,
-    markCheckFailed,
-    log
-  }) {
-    try {
-      const spId = getVar(vars, Var.ProvisioningServicePrincipalId);
-      if (!spId) {
-        markIncomplete("Missing provisioning service principal ID", {});
-        return;
+  .check(
+    async ({
+      vars,
+      microsoft,
+      markComplete,
+      markIncomplete,
+      markCheckFailed,
+      log
+    }) => {
+      try {
+        const spId = vars.require("provisioningServicePrincipalId");
+        if (!spId) {
+          markIncomplete("Missing provisioning service principal ID", {});
+          return;
+        }
+
+        const JobsSchema = z.object({
+          value: z.array(z.object({ status: z.object({ code: z.string() }) }))
+        });
+
+        const { value } = await microsoft.get(
+          ApiEndpoint.Microsoft.SyncJobs(spId),
+          JobsSchema,
+          { flatten: true }
+        );
+
+        const active = value.some((v) => v.status.code !== "Paused");
+
+        if (active) {
+          log(LogLevel.Info, "Synchronization already active");
+          markComplete({});
+        } else {
+          markIncomplete("Synchronization not started", {});
+        }
+      } catch (error) {
+        log(LogLevel.Error, "Failed to check sync jobs", { error });
+        markCheckFailed(
+          error instanceof Error ? error.message : "Check failed"
+        );
       }
-
-      const JobsSchema = z.object({
-        value: z.array(z.object({ status: z.object({ code: z.string() }) }))
-      });
-
-      const { value } = await fetchMicrosoft(
-        ApiEndpoint.Microsoft.SyncJobs(spId),
-        JobsSchema,
-        { flatten: true }
-      );
-
-      const active = value.some((v) => v.status.code !== "Paused");
-
-      if (active) {
-        log(LogLevel.Info, "Synchronization already active");
-        markComplete({});
-      } else {
-        markIncomplete("Synchronization not started", {});
-      }
-    } catch (error) {
-      log(LogLevel.Error, "Failed to check sync jobs", { error });
-      markCheckFailed(error instanceof Error ? error.message : "Check failed");
     }
-  },
-
-  async execute({ vars, fetchMicrosoft, markSucceeded, markFailed, log }) {
+  )
+  .execute(async ({ vars, microsoft, output, markFailed, log }) => {
     /**
      * POST https://graph.microsoft.com/v1.0/servicePrincipals/{provisioningServicePrincipalId}/synchronization/jobs
      * { "templateId": "google2provisioningV2" }
@@ -76,8 +78,8 @@ export default createStep({
      * POST https://graph.microsoft.com/v1.0/servicePrincipals/{provisioningServicePrincipalId}/synchronization/jobs/{jobId}/start
      */
     try {
-      const spId = getVar(vars, Var.ProvisioningServicePrincipalId);
-      const password = getVar(vars, Var.GeneratedPassword);
+      const spId = vars.require("provisioningServicePrincipalId");
+      const password = vars.require("generatedPassword");
 
       const baseAddress = ApiEndpoint.Google.Users.replace("/users", "");
 
@@ -91,46 +93,37 @@ export default createStep({
         return;
       }
 
-      const job = await fetchMicrosoft(
+      const job = await microsoft.post(
         ApiEndpoint.Microsoft.SyncJobs(spId),
         CreateJobSchema,
-        {
-          method: "POST",
-          body: JSON.stringify({ templateId: SyncTemplateId.GoogleWorkspace })
-        }
+        { templateId: SyncTemplateId.GoogleWorkspace }
       );
 
-      await fetchMicrosoft(
+      await microsoft.put(
         ApiEndpoint.Microsoft.SyncSecrets(spId),
         EmptyResponseSchema,
         {
-          method: "PUT",
-          body: JSON.stringify({
-            value: [
-              { key: "BaseAddress", value: baseAddress },
-              { key: "SecretToken", value: password }
-            ]
-          })
+          value: [
+            { key: "BaseAddress", value: baseAddress },
+            { key: "SecretToken", value: password }
+          ]
         }
       );
 
-      await fetchMicrosoft(
+      await microsoft.post(
         ApiEndpoint.Microsoft.StartSync(spId, job.id),
-        EmptyResponseSchema,
-        { method: "POST" }
+        EmptyResponseSchema
       );
 
-      markSucceeded({});
+      output({});
     } catch (error) {
       log(LogLevel.Error, "Failed to configure sync", { error });
       markFailed(error instanceof Error ? error.message : "Execute failed");
     }
-  },
-  undo: async ({ vars, fetchMicrosoft, markReverted, markFailed, log }) => {
+  })
+  .undo(async ({ vars, microsoft, markReverted, markFailed, log }) => {
     try {
-      const spId = vars[Var.ProvisioningServicePrincipalId] as
-        | string
-        | undefined;
+      const spId = vars.get("provisioningServicePrincipalId");
       if (!spId) {
         markFailed("Missing service principal id");
         return;
@@ -139,17 +132,16 @@ export default createStep({
       const JobsSchema = z.object({
         value: z.array(z.object({ id: z.string() }))
       });
-      const { value } = await fetchMicrosoft(
+      const { value } = await microsoft.get(
         ApiEndpoint.Microsoft.SyncJobs(spId),
         JobsSchema,
         { flatten: true }
       );
 
       for (const job of value) {
-        await fetchMicrosoft(
+        await microsoft.delete(
           `${ApiEndpoint.Microsoft.SyncJobs(spId)}/${job.id}`,
-          EmptyResponseSchema,
-          { method: "DELETE" }
+          EmptyResponseSchema
         );
       }
 
@@ -162,5 +154,5 @@ export default createStep({
         markFailed(error instanceof Error ? error.message : "Undo failed");
       }
     }
-  }
-});
+  })
+  .build();

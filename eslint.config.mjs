@@ -34,7 +34,7 @@ const eslintConfig = [
     files: ["lib/workflow/steps/*.ts"],
     rules: {
       // 1. Step structure enforcement
-      "workflow/must-export-create-step": "error",
+      "workflow/must-export-create-step": "off",
       "workflow/must-destructure-context": "error",
       "workflow/must-use-try-catch": "error",
       "workflow/must-call-required-callbacks": "error",

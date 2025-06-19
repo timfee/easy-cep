@@ -7,14 +7,13 @@ import {
 import type { WorkflowVars } from "@/types";
 import { LogLevel, StepId, Var } from "@/types";
 import { z } from "zod";
-import { createStep, getVar } from "../create-step";
+import { defineStep } from "../step-builder";
 
 type CheckData = Partial<Pick<WorkflowVars, never>>;
 
-export default createStep<CheckData>({
-  id: StepId.AssignUsersToSso,
-  requires: [Var.GoogleAccessToken, Var.SamlProfileId, Var.IsDomainVerified],
-  provides: [],
+export default defineStep<CheckData>(StepId.AssignUsersToSso)
+  .requires(Var.GoogleAccessToken, Var.SamlProfileId, Var.IsDomainVerified)
+  .provides()
 
   /**
    * GET https://cloudidentity.googleapis.com/v1/inboundSsoAssignments
@@ -36,64 +35,60 @@ export default createStep<CheckData>({
    * { "inboundSsoAssignments": [] }
    */
 
-  async check({
-    vars,
-    fetchGoogle,
-    markComplete,
-    markIncomplete,
-    markCheckFailed,
-    log
-  }) {
-    try {
-      const AssignSchema = z.object({
-        inboundSsoAssignments: z
-          .array(
-            z.object({
-              targetGroup: z.string().optional(),
-              targetOrgUnit: z.string().optional(),
-              ssoMode: z.string().optional(),
-              samlSsoInfo: z
-                .object({ inboundSamlSsoProfile: z.string() })
-                .optional()
-            })
-          )
-          .optional()
-      });
+  .check(
+    async ({
+      vars,
+      google,
+      markComplete,
+      markIncomplete,
+      markCheckFailed,
+      log
+    }) => {
+      try {
+        const AssignSchema = z.object({
+          inboundSsoAssignments: z
+            .array(
+              z.object({
+                targetGroup: z.string().optional(),
+                targetOrgUnit: z.string().optional(),
+                ssoMode: z.string().optional(),
+                samlSsoInfo: z
+                  .object({ inboundSamlSsoProfile: z.string() })
+                  .optional()
+              })
+            )
+            .optional()
+        });
 
-      const profileId = getVar(vars, Var.SamlProfileId);
+        const profileId = vars.require("samlProfileId");
 
-      const { inboundSsoAssignments = [] } = await fetchGoogle(
-        ApiEndpoint.Google.SsoAssignments,
-        AssignSchema,
-        { flatten: true }
-      );
+        const { inboundSsoAssignments = [] } = await google.get(
+          ApiEndpoint.Google.SsoAssignments,
+          AssignSchema,
+          { flatten: true }
+        );
 
-      const exists = inboundSsoAssignments.some(
-        (a) =>
-          a.samlSsoInfo?.inboundSamlSsoProfile === profileId
-          && a.ssoMode === "SAML_SSO"
-      );
+        const exists = inboundSsoAssignments.some(
+          (a) =>
+            a.samlSsoInfo?.inboundSamlSsoProfile === profileId
+            && a.ssoMode === "SAML_SSO"
+        );
 
-      if (exists) {
-        log(LogLevel.Info, "All users already assigned to SSO");
-        markComplete({});
-      } else {
-        markIncomplete("Users not assigned to SSO", {});
+        if (exists) {
+          log(LogLevel.Info, "All users already assigned to SSO");
+          markComplete({});
+        } else {
+          markIncomplete("Users not assigned to SSO", {});
+        }
+      } catch (error) {
+        log(LogLevel.Error, "Failed to check SSO assignment", { error });
+        markCheckFailed(
+          error instanceof Error ? error.message : "Check failed"
+        );
       }
-    } catch (error) {
-      log(LogLevel.Error, "Failed to check SSO assignment", { error });
-      markCheckFailed(error instanceof Error ? error.message : "Check failed");
     }
-  },
-
-  async execute({
-    vars,
-    fetchGoogle,
-    markSucceeded,
-    markFailed,
-    markPending,
-    log
-  }) {
+  )
+  .execute(async ({ vars, google, output, markFailed, markPending, log }) => {
     /**
      * POST https://cloudidentity.googleapis.com/v1/inboundSsoAssignments
      * {
@@ -113,7 +108,7 @@ export default createStep<CheckData>({
      * { "error": { "message": "Assignment already exists" } }
      */
     try {
-      const profileId = getVar(vars, Var.SamlProfileId);
+      const profileId = vars.require("samlProfileId");
 
       const OpSchema = z.object({
         name: z.string(),
@@ -127,16 +122,13 @@ export default createStep<CheckData>({
           .optional()
       });
 
-      const op = await fetchGoogle(
+      const op = await google.post(
         ApiEndpoint.Google.SsoAssignments,
         OpSchema,
         {
-          method: "POST",
-          body: JSON.stringify({
-            targetGroup: `groups/${GroupId.AllUsers}`,
-            samlSsoInfo: { inboundSamlSsoProfile: profileId },
-            ssoMode: "SAML_SSO"
-          })
+          targetGroup: `groups/${GroupId.AllUsers}`,
+          samlSsoInfo: { inboundSamlSsoProfile: profileId },
+          ssoMode: "SAML_SSO"
         }
       );
       if (!op.done) {
@@ -150,19 +142,19 @@ export default createStep<CheckData>({
         return;
       }
 
-      markSucceeded({});
+      output({});
     } catch (error) {
       if (isConflictError(error)) {
-        markSucceeded({});
+        output({});
       } else {
         log(LogLevel.Error, "Failed to assign users to SSO", { error });
         markFailed(error instanceof Error ? error.message : "Execute failed");
       }
     }
-  },
-  undo: async ({ vars, fetchGoogle, markReverted, markFailed, log }) => {
+  })
+  .undo(async ({ vars, google, markReverted, markFailed, log }) => {
     try {
-      const profileId = vars[Var.SamlProfileId] as string | undefined;
+      const profileId = vars.get("samlProfileId");
       if (!profileId) {
         markFailed("Missing samlProfileId");
         return;
@@ -183,7 +175,7 @@ export default createStep<CheckData>({
           .optional()
       });
 
-      const { inboundSsoAssignments = [] } = await fetchGoogle(
+      const { inboundSsoAssignments = [] } = await google.get(
         ApiEndpoint.Google.SsoAssignments,
         AssignSchema,
         { flatten: true }
@@ -196,10 +188,9 @@ export default createStep<CheckData>({
       );
 
       if (assignment) {
-        await fetchGoogle(
+        await google.delete(
           `${ApiEndpoint.Google.SsoAssignments}/${encodeURIComponent(assignment.name)}`,
-          EmptyResponseSchema,
-          { method: "DELETE" }
+          EmptyResponseSchema
         );
       }
 
@@ -212,5 +203,5 @@ export default createStep<CheckData>({
         markFailed(error instanceof Error ? error.message : "Undo failed");
       }
     }
-  }
-});
+  })
+  .build();

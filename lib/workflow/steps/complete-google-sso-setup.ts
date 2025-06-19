@@ -1,82 +1,77 @@
 import { ApiEndpoint } from "@/constants";
 import { LogLevel, StepId, Var } from "@/types";
 import { z } from "zod";
-import { createStep, getVar } from "../create-step";
+import { defineStep } from "../step-builder";
 
-export default createStep({
-  id: StepId.CompleteGoogleSsoSetup,
-  requires: [
+export default defineStep(StepId.CompleteGoogleSsoSetup)
+  .requires(
     Var.GoogleAccessToken,
     Var.MsGraphToken,
     Var.SamlProfileId,
     Var.SsoServicePrincipalId
-  ],
-  provides: [],
+  )
+  .provides()
 
-  async check({
-    vars,
-    fetchGoogle,
-    markComplete,
-    markIncomplete,
-    markCheckFailed,
-    log
-  }) {
-    try {
-      const profileId = getVar(vars, Var.SamlProfileId);
+  .check(
+    async ({
+      vars,
+      google,
+      markComplete,
+      markIncomplete,
+      markCheckFailed,
+      log
+    }) => {
+      try {
+        const profileId = vars.require("samlProfileId");
 
-      if (!profileId) {
-        markIncomplete("SAML profile ID not provided", {});
-        return;
-      }
+        if (!profileId) {
+          markIncomplete("SAML profile ID not provided", {});
+          return;
+        }
 
-      const ProfileSchema = z.object({
-        name: z.string(),
-        idpConfig: z
-          .object({
+        const ProfileSchema = z.object({
+          name: z.string(),
+          idpConfig: z
+            .object({
+              entityId: z.string(),
+              singleSignOnServiceUri: z.string(),
+              signOutUri: z.string().optional()
+            })
+            .optional(),
+          spConfig: z.object({
             entityId: z.string(),
-            singleSignOnServiceUri: z.string(),
-            signOutUri: z.string().optional()
+            assertionConsumerServiceUri: z.string()
           })
-          .optional(),
-        spConfig: z.object({
-          entityId: z.string(),
-          assertionConsumerServiceUri: z.string()
-        })
-      });
+        });
 
-      const profile = await fetchGoogle(
-        ApiEndpoint.Google.SamlProfile(profileId),
-        ProfileSchema
-      );
+        const profile = await google.get(
+          ApiEndpoint.Google.SamlProfile(profileId),
+          ProfileSchema
+        );
 
-      if (
-        profile.idpConfig?.entityId
-        && profile.idpConfig.singleSignOnServiceUri
-        && profile.idpConfig.entityId !== ""
-        && profile.idpConfig.singleSignOnServiceUri !== ""
-      ) {
-        log(LogLevel.Info, "Google SSO already configured");
-        markComplete({});
-      } else {
-        markIncomplete("Google SSO configuration incomplete", {});
+        if (
+          profile.idpConfig?.entityId
+          && profile.idpConfig.singleSignOnServiceUri
+          && profile.idpConfig.entityId !== ""
+          && profile.idpConfig.singleSignOnServiceUri !== ""
+        ) {
+          log(LogLevel.Info, "Google SSO already configured");
+          markComplete({});
+        } else {
+          markIncomplete("Google SSO configuration incomplete", {});
+        }
+      } catch (error) {
+        log(LogLevel.Error, "Failed to check SSO configuration", { error });
+        markCheckFailed(
+          error instanceof Error ? error.message : "Check failed"
+        );
       }
-    } catch (error) {
-      log(LogLevel.Error, "Failed to check SSO configuration", { error });
-      markCheckFailed(error instanceof Error ? error.message : "Check failed");
     }
-  },
-
-  async execute({
-    vars,
-    fetchGoogle,
-    fetchMicrosoft,
-    markSucceeded,
-    markFailed,
-    log
-  }) {
+  )
+  .execute(async ({ vars, google, microsoft, output, markFailed, log }) => {
     try {
-      const profileId = getVar(vars, Var.SamlProfileId);
-      const ssoSpId = getVar(vars, Var.SsoServicePrincipalId);
+      const profileId = vars.require("samlProfileId");
+      const ssoSpId = vars.require("ssoServicePrincipalId");
 
       log(LogLevel.Info, "Fetching SAML metadata from Microsoft");
 
@@ -92,7 +87,7 @@ export default createStep({
         identifierUris: z.array(z.string())
       });
 
-      await fetchMicrosoft(
+      await microsoft.get(
         `${ApiEndpoint.Microsoft.ServicePrincipals}/${ssoSpId}?$select=samlSingleSignOnSettings,preferredSingleSignOnMode,identifierUris`,
         AppDetailsSchema
       );
@@ -108,7 +103,7 @@ export default createStep({
         )
       });
 
-      const tenantInfo = await fetchMicrosoft(
+      const tenantInfo = await microsoft.get(
         ApiEndpoint.Microsoft.Organization,
         TenantSchema
       );
@@ -151,7 +146,7 @@ export default createStep({
         throw new Error("SAML Service Principal ID not provided");
       }
 
-      const certs = await fetchMicrosoft(
+      const certs = await microsoft.get(
         ApiEndpoint.Microsoft.TokenSigningCertificates(ssoSpId),
         CertSchema
       );
@@ -209,16 +204,13 @@ export default createStep({
 
       const patchUrl = `${ApiEndpoint.Google.SamlProfile(profileId)}?updateMask=${encodeURIComponent(updateMask)}`;
 
-      const updateOp = await fetchGoogle(patchUrl, UpdateSchema, {
-        method: "PATCH",
-        body: JSON.stringify({
-          idpConfig: {
-            entityId: idpEntityId,
-            singleSignOnServiceUri: ssoServiceUri,
-            signOutUri: signOutUri,
-            changePasswordUri: `https://account.activedirectory.windowsazure.com/ChangePassword.aspx`
-          }
-        })
+      const updateOp = await google.patch(patchUrl, UpdateSchema, {
+        idpConfig: {
+          entityId: idpEntityId,
+          singleSignOnServiceUri: ssoServiceUri,
+          signOutUri: signOutUri,
+          changePasswordUri: `https://account.activedirectory.windowsazure.com/ChangePassword.aspx`
+        }
       });
 
       if (!updateOp.done) {
@@ -244,9 +236,8 @@ export default createStep({
 
       const certUrl = ApiEndpoint.Google.SamlProfileCredentials(profileId);
 
-      const certOp = await fetchGoogle(certUrl, CertUploadSchema, {
-        method: "POST",
-        body: JSON.stringify({ pemData: pemCert })
+      const certOp = await google.post(certUrl, CertUploadSchema, {
+        pemData: pemCert
       });
 
       if (!certOp.done) {
@@ -263,13 +254,13 @@ export default createStep({
       }
 
       log(LogLevel.Info, "Google SSO configuration completed successfully");
-      markSucceeded({});
+      output({});
     } catch (error) {
       log(LogLevel.Error, "Failed to configure Google SSO", { error });
       markFailed(error instanceof Error ? error.message : "Execute failed");
     }
-  },
-  undo: async ({ markReverted }) => {
+  })
+  .undo(async ({ markReverted }) => {
     markReverted();
-  }
-});
+  })
+  .build();

@@ -7,17 +7,16 @@ import {
 
 import { LogLevel, StepId, Var } from "@/types";
 import { z } from "zod";
-import { createStep, getVar } from "../create-step";
+import { defineStep } from "../step-builder";
 
-export default createStep({
-  id: StepId.CreateAutomationOU,
-  requires: [
+export default defineStep(StepId.CreateAutomationOU)
+  .requires(
     Var.GoogleAccessToken,
     Var.IsDomainVerified,
     Var.AutomationOuName,
     Var.AutomationOuPath
-  ],
-  provides: [],
+  )
+  .provides()
 
   /**
    * GET https://admin.googleapis.com/admin/directory/v1/customer/my_customer/orgunits/Automation
@@ -38,42 +37,39 @@ export default createStep({
    * }
    */
 
-  async check({
-    vars,
-    fetchGoogle,
-    markComplete,
-    markIncomplete,
-    markCheckFailed,
-    log
-  }) {
-    try {
-      const ouName = getVar(vars, Var.AutomationOuName);
+  .check(
+    async ({
+      vars,
+      google,
+      markComplete,
+      markIncomplete,
+      markCheckFailed,
+      log
+    }) => {
+      try {
+        const ouName = vars.require("automationOuName");
 
-      if (!ouName) {
-        markIncomplete("Missing Automation OU name", {});
-        return;
-      }
-
-      const OrgUnitSchema = z.object({ orgUnitPath: z.string() });
-      await fetchGoogle(
-        `${ApiEndpoint.Google.OrgUnits}/${encodeURIComponent(ouName)}`,
-        OrgUnitSchema
-      );
-      log(LogLevel.Info, "Automation OU already exists");
-      markComplete({});
-    } catch (error) {
-      if (isNotFoundError(error)) {
-        markIncomplete("Automation OU missing", {});
-      } else {
-        log(LogLevel.Error, "Failed to check OU", { error });
-        markCheckFailed(
-          error instanceof Error ? error.message : "Failed to check OU"
+        const OrgUnitSchema = z.object({ orgUnitPath: z.string() });
+        await google.get(
+          `${ApiEndpoint.Google.OrgUnits}/${encodeURIComponent(ouName)}`,
+          OrgUnitSchema
         );
+        log(LogLevel.Info, "Automation OU already exists");
+        markComplete({});
+      } catch (error) {
+        if (isNotFoundError(error)) {
+          markIncomplete("Automation OU missing", {});
+        } else {
+          log(LogLevel.Error, "Failed to check OU", { error });
+          markCheckFailed(
+            error instanceof Error ? error.message : "Failed to check OU"
+          );
+        }
       }
     }
-  },
+  )
 
-  async execute({ vars, fetchGoogle, markSucceeded, markFailed, log }) {
+  .execute(async ({ vars, google, output, markFailed, log }) => {
     /**
      * POST https://admin.googleapis.com/admin/directory/v1/customer/my_customer/orgunits
      * {
@@ -98,37 +94,33 @@ export default createStep({
         parentOrgUnitId: z.string()
       });
 
-      await fetchGoogle(ApiEndpoint.Google.OrgUnits, CreateSchema, {
-        method: "POST",
-        body: JSON.stringify({
-          name: getVar(vars, Var.AutomationOuName),
-          parentOrgUnitPath: "/"
-        })
+      await google.post(ApiEndpoint.Google.OrgUnits, CreateSchema, {
+        name: vars.require("automationOuName"),
+        parentOrgUnitPath: "/"
       });
 
       log(LogLevel.Info, "Automation OU created or already exists");
-      markSucceeded({});
+      output({});
     } catch (error) {
       log(LogLevel.Error, "Failed to create Automation OU", { error });
       if (isConflictError(error)) {
-        markSucceeded({});
+        output({});
       } else {
         markFailed(error instanceof Error ? error.message : "Create failed");
       }
     }
-  },
-  undo: async ({ vars, fetchGoogle, markReverted, markFailed, log }) => {
+  })
+  .undo(async ({ vars, google, markReverted, markFailed, log }) => {
     try {
-      const path = getVar(vars, Var.AutomationOuPath);
+      const path = vars.require("automationOuPath");
       if (!path) {
         markFailed("Missing Automation OU name");
         return;
       }
 
-      await fetchGoogle(
+      await google.delete(
         `${ApiEndpoint.Google.OrgUnits}/${encodeURIComponent(path)}`,
-        EmptyResponseSchema,
-        { method: "DELETE" }
+        EmptyResponseSchema
       );
       markReverted();
     } catch (error) {
@@ -139,5 +131,5 @@ export default createStep({
         markFailed(error instanceof Error ? error.message : "Undo failed");
       }
     }
-  }
-});
+  })
+  .build();
