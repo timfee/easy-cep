@@ -2,20 +2,19 @@ import { ApiEndpoint, TemplateId } from "@/constants";
 import { EmptyResponseSchema, isNotFoundError } from "@/lib/workflow/utils";
 import { LogLevel, StepId, Var } from "@/types";
 import { z } from "zod";
-import { createStep, getVar } from "../create-step";
+import { defineStep } from "../step-builder";
 
-export default createStep({
-  id: StepId.CreateMicrosoftApps,
-  requires: [
+export default defineStep(StepId.CreateMicrosoftApps)
+  .requires(
     Var.MsGraphToken,
     Var.ProvisioningAppDisplayName,
     Var.SsoAppDisplayName
-  ],
-  provides: [
+  )
+  .provides(
     Var.ProvisioningServicePrincipalId,
     Var.SsoServicePrincipalId,
     Var.SsoAppId
-  ],
+  )
 
   /**
    * GET https://graph.microsoft.com/beta/applications?$filter=applicationTemplateId eq '{templateId}'
@@ -30,96 +29,100 @@ export default createStep({
    * { "error": { "code": "InvalidAuthenticationToken" } }
    */
 
-  async check({
-    fetchMicrosoft,
-    markComplete,
-    markIncomplete,
-    markCheckFailed,
-    log
-  }) {
-    try {
-      const AppsSchema = z.object({
-        value: z.array(
-          z.object({
-            id: z.string(),
-            appId: z.string(),
-            displayName: z.string()
-          })
-        )
-      });
-
-      const provFilter = encodeURIComponent(
-        `applicationTemplateId eq '${TemplateId.GoogleWorkspaceConnector}'`
-      );
-      const ssoFilter = encodeURIComponent(
-        `applicationTemplateId eq '${TemplateId.GoogleWorkspaceSaml}'`
-      );
-
-      const { value: provApps } = await fetchMicrosoft(
-        `${ApiEndpoint.Microsoft.Applications}?$filter=${provFilter}`,
-        AppsSchema,
-        { flatten: true }
-      );
-
-      const { value: ssoApps } = await fetchMicrosoft(
-        `${ApiEndpoint.Microsoft.Applications}?$filter=${ssoFilter}`,
-        AppsSchema,
-        { flatten: true }
-      );
-
-      const provApp = provApps[0];
-      const ssoApp = ssoApps[0] ?? provApp;
-      const sameApp = provApp?.appId === ssoApp?.appId;
-
-      if (provApp && ssoApp) {
-        const SpSchema = z.object({
-          value: z.array(z.object({ id: z.string() }))
+  .check(
+    async ({
+      microsoft,
+      markComplete,
+      markIncomplete,
+      markCheckFailed,
+      log
+    }) => {
+      try {
+        const AppsSchema = z.object({
+          value: z.array(
+            z.object({
+              id: z.string(),
+              appId: z.string(),
+              displayName: z.string()
+            })
+          )
         });
 
-        const provFilter = encodeURIComponent(`appId eq '${provApp.appId}'`);
-        const ssoFilter = encodeURIComponent(`appId eq '${ssoApp.appId}'`);
+        const provFilter = encodeURIComponent(
+          `applicationTemplateId eq '${TemplateId.GoogleWorkspaceConnector}'`
+        );
+        const ssoFilter = encodeURIComponent(
+          `applicationTemplateId eq '${TemplateId.GoogleWorkspaceSaml}'`
+        );
 
-        const provRes = await fetchMicrosoft(
-          `${ApiEndpoint.Microsoft.ServicePrincipals}?$filter=${provFilter}`,
-          SpSchema,
+        const { value: provApps } = await microsoft.get(
+          `${ApiEndpoint.Microsoft.Applications}?$filter=${provFilter}`,
+          AppsSchema,
           { flatten: true }
         );
 
-        const ssoRes = await fetchMicrosoft(
-          `${ApiEndpoint.Microsoft.ServicePrincipals}?$filter=${ssoFilter}`,
-          SpSchema,
+        const { value: ssoApps } = await microsoft.get(
+          `${ApiEndpoint.Microsoft.Applications}?$filter=${ssoFilter}`,
+          AppsSchema,
           { flatten: true }
         );
 
-        const provId = provRes.value[0]?.id;
-        const ssoId = ssoRes.value[0]?.id;
+        const provApp = provApps[0];
+        const ssoApp = ssoApps[0] ?? provApp;
+        const sameApp = provApp?.appId === ssoApp?.appId;
 
-        if (provId && ssoId) {
-          log(
-            LogLevel.Info,
-            sameApp ?
-              "Provisioning and SSO use the same app"
-            : "Provisioning and SSO use separate apps"
-          );
-          log(LogLevel.Info, "Microsoft apps already exist");
-          markComplete({
-            provisioningServicePrincipalId: provId,
-            ssoServicePrincipalId: ssoId,
-            ssoAppId: ssoApp.appId
+        if (provApp && ssoApp) {
+          const SpSchema = z.object({
+            value: z.array(z.object({ id: z.string() }))
           });
-        } else {
-          markIncomplete("Microsoft service principals not found", {});
-        }
-      } else {
-        markIncomplete("Microsoft apps not found", {});
-      }
-    } catch (error) {
-      log(LogLevel.Error, "Failed to check Microsoft apps", { error });
-      markCheckFailed(error instanceof Error ? error.message : "Check failed");
-    }
-  },
 
-  async execute({ vars, fetchMicrosoft, markSucceeded, markFailed, log }) {
+          const provFilter = encodeURIComponent(`appId eq '${provApp.appId}'`);
+          const ssoFilter = encodeURIComponent(`appId eq '${ssoApp.appId}'`);
+
+          const provRes = await microsoft.get(
+            `${ApiEndpoint.Microsoft.ServicePrincipals}?$filter=${provFilter}`,
+            SpSchema,
+            { flatten: true }
+          );
+
+          const ssoRes = await microsoft.get(
+            `${ApiEndpoint.Microsoft.ServicePrincipals}?$filter=${ssoFilter}`,
+            SpSchema,
+            { flatten: true }
+          );
+
+          const provId = provRes.value[0]?.id;
+          const ssoId = ssoRes.value[0]?.id;
+
+          if (provId && ssoId) {
+            log(
+              LogLevel.Info,
+              sameApp ?
+                "Provisioning and SSO use the same app"
+              : "Provisioning and SSO use separate apps"
+            );
+            log(LogLevel.Info, "Microsoft apps already exist");
+            markComplete({
+              provisioningServicePrincipalId: provId,
+              ssoServicePrincipalId: ssoId,
+              ssoAppId: ssoApp.appId
+            });
+          } else {
+            markIncomplete("Microsoft service principals not found", {});
+          }
+        } else {
+          markIncomplete("Microsoft apps not found", {});
+        }
+      } catch (error) {
+        log(LogLevel.Error, "Failed to check Microsoft apps", { error });
+        markCheckFailed(
+          error instanceof Error ? error.message : "Check failed"
+        );
+      }
+    }
+  )
+
+  .execute(async ({ vars, microsoft, output, markFailed, log }) => {
     /**
      * POST https://graph.microsoft.com/v1.0/applicationTemplates/{templateId}/instantiate
      * { "displayName": "Google Workspace Provisioning" }
@@ -143,67 +146,52 @@ export default createStep({
         application: z.object({ appId: z.string() })
       });
 
-      const res1 = await fetchMicrosoft(
+      const res1 = await microsoft.post(
         ApiEndpoint.Microsoft.Templates(TemplateId.GoogleWorkspaceConnector),
         CreateSchema,
-        {
-          method: "POST",
-          body: JSON.stringify({
-            displayName: getVar(vars, Var.ProvisioningAppDisplayName)
-          })
-        }
+        { displayName: vars.require("provisioningAppDisplayName") }
       );
 
-      const res2 = await fetchMicrosoft(
+      const res2 = await microsoft.post(
         ApiEndpoint.Microsoft.Templates(TemplateId.GoogleWorkspaceSaml),
         CreateSchema,
-        {
-          method: "POST",
-          body: JSON.stringify({
-            displayName: getVar(vars, Var.SsoAppDisplayName)
-          })
-        }
+        { displayName: vars.require("ssoAppDisplayName") }
       );
 
-      markSucceeded({
-        [Var.ProvisioningServicePrincipalId]: res1.servicePrincipal.id,
-        [Var.SsoServicePrincipalId]: res2.servicePrincipal.id,
-        [Var.SsoAppId]: res2.application.appId
+      output({
+        provisioningServicePrincipalId: res1.servicePrincipal.id,
+        ssoServicePrincipalId: res2.servicePrincipal.id,
+        ssoAppId: res2.application.appId
       });
     } catch (error) {
       log(LogLevel.Error, "Failed to create Microsoft apps", { error });
       markFailed(error instanceof Error ? error.message : "Execute failed");
     }
-  },
-  undo: async ({ vars, fetchMicrosoft, markReverted, markFailed, log }) => {
+  })
+  .undo(async ({ vars, microsoft, markReverted, markFailed, log }) => {
     try {
-      const provSpId = vars[Var.ProvisioningServicePrincipalId] as
-        | string
-        | undefined;
-      const ssoSpId = vars[Var.SsoServicePrincipalId] as string | undefined;
-      const appId = vars[Var.SsoAppId] as string | undefined;
+      const provSpId = vars.get("provisioningServicePrincipalId");
+      const ssoSpId = vars.get("ssoServicePrincipalId");
+      const appId = vars.get("ssoAppId");
 
       if (provSpId) {
-        await fetchMicrosoft(
+        await microsoft.delete(
           `${ApiEndpoint.Microsoft.ServicePrincipals}/${provSpId}`,
-          EmptyResponseSchema,
-          { method: "DELETE" }
+          EmptyResponseSchema
         );
       }
 
       if (ssoSpId && ssoSpId !== provSpId) {
-        await fetchMicrosoft(
+        await microsoft.delete(
           `${ApiEndpoint.Microsoft.ServicePrincipals}/${ssoSpId}`,
-          EmptyResponseSchema,
-          { method: "DELETE" }
+          EmptyResponseSchema
         );
       }
 
       if (appId) {
-        await fetchMicrosoft(
+        await microsoft.delete(
           `${ApiEndpoint.Microsoft.Applications}/${appId}`,
-          EmptyResponseSchema,
-          { method: "DELETE" }
+          EmptyResponseSchema
         );
       }
 
@@ -216,5 +204,5 @@ export default createStep({
         markFailed(error instanceof Error ? error.message : "Undo failed");
       }
     }
-  }
-});
+  })
+  .build();

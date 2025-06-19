@@ -6,16 +6,15 @@ import {
 } from "@/lib/workflow/utils";
 import { LogLevel, StepId, Var } from "@/types";
 import { z } from "zod";
-import { createStep, getVar } from "../create-step";
+import { defineStep } from "../step-builder";
 
-export default createStep({
-  id: StepId.SetupMicrosoftClaimsPolicy,
-  requires: [
+export default defineStep(StepId.SetupMicrosoftClaimsPolicy)
+  .requires(
     Var.MsGraphToken,
     Var.SsoServicePrincipalId,
     Var.ClaimsPolicyDisplayName
-  ],
-  provides: [Var.ClaimsPolicyId],
+  )
+  .provides(Var.ClaimsPolicyId)
 
   /**
    * GET https://graph.microsoft.com/beta/servicePrincipals/{ssoServicePrincipalId}/claimsMappingPolicies
@@ -30,44 +29,47 @@ export default createStep({
    * { "error": { "code": "InvalidAuthenticationToken" } }
    */
 
-  async check({
-    vars,
-    fetchMicrosoft,
-    markComplete,
-    markIncomplete,
-    markCheckFailed,
-    log
-  }) {
-    try {
-      const spId = getVar(vars, Var.SsoServicePrincipalId);
-      if (!spId) {
-        markIncomplete("Missing SSO service principal ID", {});
-        return;
+  .check(
+    async ({
+      vars,
+      microsoft,
+      markComplete,
+      markIncomplete,
+      markCheckFailed,
+      log
+    }) => {
+      try {
+        const spId = vars.require("ssoServicePrincipalId");
+        if (!spId) {
+          markIncomplete("Missing SSO service principal ID", {});
+          return;
+        }
+
+        const PoliciesSchema = z.object({
+          value: z.array(z.object({ id: z.string() }))
+        });
+
+        const { value } = await microsoft.get(
+          ApiEndpoint.Microsoft.ReadClaimsPolicy(spId),
+          PoliciesSchema,
+          { flatten: true }
+        );
+
+        if (value.length > 0) {
+          log(LogLevel.Info, "Claims policy already assigned");
+          markComplete({ claimsPolicyId: value[0].id });
+        } else {
+          markIncomplete("Claims policy not assigned", {});
+        }
+      } catch (error) {
+        log(LogLevel.Error, "Failed to check claims policy", { error });
+        markCheckFailed(
+          error instanceof Error ? error.message : "Check failed"
+        );
       }
-
-      const PoliciesSchema = z.object({
-        value: z.array(z.object({ id: z.string() }))
-      });
-
-      const { value } = await fetchMicrosoft(
-        ApiEndpoint.Microsoft.ReadClaimsPolicy(spId),
-        PoliciesSchema,
-        { flatten: true }
-      );
-
-      if (value.length > 0) {
-        log(LogLevel.Info, "Claims policy already assigned");
-        markComplete({ claimsPolicyId: value[0].id });
-      } else {
-        markIncomplete("Claims policy not assigned", {});
-      }
-    } catch (error) {
-      log(LogLevel.Error, "Failed to check claims policy", { error });
-      markCheckFailed(error instanceof Error ? error.message : "Check failed");
     }
-  },
-
-  async execute({ vars, fetchMicrosoft, markSucceeded, markFailed, log }) {
+  )
+  .execute(async ({ vars, microsoft, output, markFailed, log }) => {
     /**
      * POST https://graph.microsoft.com/beta/policies/claimsMappingPolicies
      * { "displayName": "Google Workspace Basic Claims", ... }
@@ -84,24 +86,21 @@ export default createStep({
      * 204
      */
     try {
-      const spId = getVar(vars, Var.SsoServicePrincipalId);
+      const spId = vars.require("ssoServicePrincipalId");
 
       const PolicySchema = z.object({ id: z.string() });
 
       let policyId: string | undefined;
       try {
-        const created = await fetchMicrosoft(
+        const created = await microsoft.post(
           ApiEndpoint.Microsoft.ClaimsPolicies,
           PolicySchema,
           {
-            method: "POST",
-            body: JSON.stringify({
-              definition: [
-                '{"ClaimsMappingPolicy":{"Version":1,"IncludeBasicClaimSet":true,"ClaimsSchema":[]}}'
-              ],
-              displayName: getVar(vars, Var.ClaimsPolicyDisplayName),
-              isOrganizationDefault: false
-            })
+            definition: [
+              '{"ClaimsMappingPolicy":{"Version":1,"IncludeBasicClaimSet":true,"ClaimsSchema":[]}}'
+            ],
+            displayName: vars.require("claimsPolicyDisplayName"),
+            isOrganizationDefault: false
           }
         );
         policyId = created.id;
@@ -110,7 +109,7 @@ export default createStep({
           const listSchema = z.object({
             value: z.array(z.object({ id: z.string() }))
           });
-          const { value } = await fetchMicrosoft(
+          const { value } = await microsoft.get(
             ApiEndpoint.Microsoft.ClaimsPolicies,
             listSchema,
             { flatten: true }
@@ -128,14 +127,11 @@ export default createStep({
       }
 
       try {
-        await fetchMicrosoft(
+        await microsoft.post(
           ApiEndpoint.Microsoft.AssignClaimsPolicy(spId),
           EmptyResponseSchema,
           {
-            method: "POST",
-            body: JSON.stringify({
-              "@odata.id": `https://graph.microsoft.com/v1.0/policies/claimsMappingPolicies/${policyId}`
-            })
+            "@odata.id": `https://graph.microsoft.com/v1.0/policies/claimsMappingPolicies/${policyId}`
           }
         );
       } catch (error) {
@@ -145,33 +141,31 @@ export default createStep({
         // Policy already assigned
       }
 
-      markSucceeded({ [Var.ClaimsPolicyId]: policyId });
+      output({ claimsPolicyId: policyId });
     } catch (error) {
       log(LogLevel.Error, "Failed to setup claims policy", { error });
       markFailed(error instanceof Error ? error.message : "Execute failed");
     }
-  },
-  undo: async ({ vars, fetchMicrosoft, markReverted, markFailed, log }) => {
+  })
+  .undo(async ({ vars, microsoft, markReverted, markFailed, log }) => {
     try {
-      const spId = vars[Var.SsoServicePrincipalId] as string | undefined;
-      const policyId = vars[Var.ClaimsPolicyId] as string | undefined;
+      const spId = vars.get("ssoServicePrincipalId");
+      const policyId = vars.get("claimsPolicyId");
       if (!policyId) {
         markFailed("Missing claims policy id");
         return;
       }
 
       if (spId) {
-        await fetchMicrosoft(
+        await microsoft.delete(
           ApiEndpoint.Microsoft.UnassignClaimsPolicy(spId, policyId),
-          EmptyResponseSchema,
-          { method: "DELETE" }
+          EmptyResponseSchema
         );
       }
 
-      await fetchMicrosoft(
+      await microsoft.delete(
         `${ApiEndpoint.Microsoft.ClaimsPolicies}/${policyId}`,
-        EmptyResponseSchema,
-        { method: "DELETE" }
+        EmptyResponseSchema
       );
 
       markReverted();
@@ -183,5 +177,5 @@ export default createStep({
         markFailed(error instanceof Error ? error.message : "Undo failed");
       }
     }
-  }
-});
+  })
+  .build();
