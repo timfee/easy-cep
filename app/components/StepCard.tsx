@@ -13,6 +13,7 @@ import { stepDescriptions } from "./step-card/step-descriptions";
 import StepLogs from "./StepLogs";
 import { Badge } from "./ui/badge";
 import { Button } from "./ui/button";
+import { StepVariables } from "./step-card/StepVariables";
 
 export interface StepInfo {
   id: StepIdValue;
@@ -65,6 +66,7 @@ interface StepCardProps {
   onExecute(id: StepIdValue): void;
   onUndo(id: StepIdValue): void;
   onForce(id: StepIdValue): void;
+  onVarChange(key: VarName, value: unknown): void;
 }
 
 export default function StepCard({
@@ -75,7 +77,8 @@ export default function StepCard({
   executing,
   onExecute,
   onUndo,
-  onForce
+  onForce,
+  onVarChange
 }: StepCardProps) {
   const missing = definition.requires.filter((v) => !vars[v]);
   const status = state?.status ?? "idle";
@@ -163,6 +166,12 @@ export default function StepCard({
             </ul>
           </div>
         </div>
+
+        <StepVariables
+          stepId={definition.id}
+          vars={vars}
+          onChange={onVarChange}
+        />
 
         <div className="mt-4 flex items-center gap-2">
           <Button

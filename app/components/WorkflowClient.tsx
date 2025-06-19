@@ -210,6 +210,7 @@ export default function WorkflowClient({ steps }: Props) {
                 onExecute={handleExecute}
                 onUndo={handleUndo}
                 onForce={handleForce}
+                onVarChange={(k, v) => updateVars({ [k]: v } as Partial<WorkflowVars>)}
               />
             </div>
           ))}
