@@ -14,22 +14,19 @@ There is an `AGENTS.md` file in `./lib/workflow/steps` that will provide the API
 
 ## ✅ Required Format
 
-Each file must export a `createStep()` call:
+Each file must export the result of the step builder:
 
 ```ts
-createStep({
-  id: StepId.X,
-  requires: [Var.X],
-  provides: [Var.Y],
-
-  async check(vars, ctx): Promise<StepCheckResult> {
-    ...
-  },
-
-  async execute(vars, ctx, prev): Promise<StepExecuteResult<typeof provides[number]>> {
-    ...
-  }
-})
+export default defineStep(StepId.X)
+  .requires(Var.X)
+  .provides(Var.Y)
+  .check(async ({ vars, google }) => {
+    // ...
+  })
+  .execute(async ({ vars, google }) => {
+    // ...
+  })
+  .build();
 ```
 
 ## ✅ Allowed Enums
@@ -51,11 +48,10 @@ ctx.log(LogLevel.Info, "Created SSO assignment");
 
 ## ✅ Fetching
 
-Use `ctx.fetch(...)` and `.json()` explicitly:
+Use the `google` and `microsoft` HTTP clients provided by the step builder:
 
 ```ts
-const res = await ctx.fetch("https://...", { headers: { ... } });
-const json = await res.json();
+const user = await google.get(ApiEndpoint.Google.Users, UserSchema);
 ```
 
 ## ✅ Type Contracts
@@ -82,7 +78,7 @@ interface StepExecuteResult<K extends Var> {
 - No `any`
 - No `as` or casting
 - No console.log
-- No default exports other than `createStep()`
+- No default exports other than the result of `defineStep(...).build()`
 
 ## ✅ Required Checks
 
