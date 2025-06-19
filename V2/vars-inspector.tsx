@@ -1,56 +1,62 @@
-"use client"
+"use client";
 
-import { useState } from "react"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { ScrollArea } from "@/components/ui/scroll-area"
-import { Edit3, Database } from "lucide-react"
+import { Database, Edit3 } from "lucide-react";
+import { useState } from "react";
+import { Button } from "./ui/button";
+import { Input } from "./ui/input";
+import { ScrollArea } from "./ui/scroll-area";
 import {
   WORKFLOW_VARIABLES,
-  type VarName,
-  type VariableMetadata,
-  categoryTitles,
   camelToTitle,
-} from "@/lib/workflow-variables"
+  categoryTitles,
+  type VarName,
+  type VariableMetadata
+} from "./workflow-variables";
 
 interface VarsInspectorProps {
-  vars: Partial<Record<VarName, any>>
-  onChange: (updatedVars: Partial<Record<VarName, any>>) => void
+  vars: Partial<Record<VarName, unknown>>;
+  onChange: (updatedVars: Partial<Record<VarName, unknown>>) => void;
 }
 
 export function VarsInspector({ vars, onChange }: VarsInspectorProps) {
-  const [editingVar, setEditingVar] = useState<{ key: VarName; value: string } | null>(null)
+  const [editingVar, setEditingVar] = useState<{
+    key: VarName;
+    value: string;
+  } | null>(null);
 
   const handleValueChange = (key: VarName, value: string) => {
-    let parsedValue: any = value
-    const meta = WORKFLOW_VARIABLES[key]
+    let parsedValue: unknown = value;
+    const meta = WORKFLOW_VARIABLES[key];
     if (meta) {
-      if (meta.type === "boolean") parsedValue = value === "true"
-      else if (meta.type === "number") parsedValue = Number.parseFloat(value)
+      if (meta.type === "boolean") parsedValue = value === "true";
+      else if (meta.type === "number") parsedValue = Number.parseFloat(value);
     }
-    onChange({ [key]: parsedValue })
-  }
+    onChange({ [key]: parsedValue });
+  };
 
-  const startEditing = (key: VarName, currentValue: any) => {
-    setEditingVar({ key, value: currentValue !== undefined ? String(currentValue) : "" })
-  }
+  const startEditing = (key: VarName, currentValue: unknown) => {
+    setEditingVar({
+      key,
+      value: currentValue !== undefined ? String(currentValue) : ""
+    });
+  };
 
   const saveEdit = () => {
     if (editingVar) {
-      handleValueChange(editingVar.key, editingVar.value)
-      setEditingVar(null)
+      handleValueChange(editingVar.key, editingVar.value);
+      setEditingVar(null);
     }
-  }
+  };
 
   const groupedVars = Object.entries(WORKFLOW_VARIABLES).reduce(
     (acc, [key, meta]) => {
-      const category = meta.category
-      if (!acc[category]) acc[category] = []
-      acc[category].push({ key: key as VarName, ...meta })
-      return acc
+      const category = meta.category;
+      if (!acc[category]) acc[category] = [];
+      acc[category].push({ key: key as VarName, ...meta });
+      return acc;
     },
-    {} as Record<string, Array<{ key: VarName } & VariableMetadata>>,
-  )
+    {} as Record<string, Array<{ key: VarName } & VariableMetadata>>
+  );
 
   return (
     <div className="flex flex-col h-full bg-white border border-slate-200 rounded-lg">
@@ -65,13 +71,18 @@ export function VarsInspector({ vars, onChange }: VarsInspectorProps) {
                 <div
                   key={key}
                   className={`px-3 py-2 group hover:bg-slate-50/50 transition-colors duration-150 ${meta.configurable ? "cursor-pointer" : ""}`}
-                  onClick={() => meta.configurable && !editingVar && startEditing(key, vars[key])}
-                >
+                  onClick={() =>
+                    meta.configurable
+                    && !editingVar
+                    && startEditing(key, vars[key])
+                  }>
                   <div className="flex flex-col gap-0.5">
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-1.5">
                         <Database className="h-2.5 w-2.5 text-purple-500" />
-                        <span className="text-xs font-medium text-slate-800">{camelToTitle(key)}</span>
+                        <span className="text-xs font-medium text-slate-800">
+                          {camelToTitle(key)}
+                        </span>
                       </div>
                       {meta.configurable && editingVar?.key !== key && (
                         <Button
@@ -79,36 +90,41 @@ export function VarsInspector({ vars, onChange }: VarsInspectorProps) {
                           size="sm"
                           className="h-5 w-5 p-0 text-slate-400 opacity-0 group-hover:opacity-100 focus:opacity-100 transition-opacity"
                           onClick={(e) => {
-                            e.stopPropagation()
-                            startEditing(key, vars[key])
+                            e.stopPropagation();
+                            startEditing(key, vars[key]);
                           }}
-                          aria-label={`Edit ${camelToTitle(key)}`}
-                        >
+                          aria-label={`Edit ${camelToTitle(key)}`}>
                           <Edit3 className="h-2.5 w-2.5" />
                         </Button>
                       )}
                     </div>
                     <div>
-                      {editingVar?.key === key ? (
+                      {editingVar?.key === key ?
                         <Input
                           autoFocus
                           value={editingVar.value}
-                          onChange={(e) => setEditingVar({ ...editingVar, value: e.target.value })}
+                          onChange={(e) =>
+                            setEditingVar({
+                              ...editingVar,
+                              value: e.target.value
+                            })
+                          }
                           onBlur={saveEdit}
                           onKeyDown={(e) => {
-                            if (e.key === "Enter") saveEdit()
-                            if (e.key === "Escape") setEditingVar(null)
+                            if (e.key === "Enter") saveEdit();
+                            if (e.key === "Escape") setEditingVar(null);
                           }}
                           onClick={(e) => e.stopPropagation()}
                           className="h-7 text-xs w-full rounded-md"
                         />
-                      ) : vars[key] !== undefined ? (
+                      : vars[key] !== undefined ?
                         <code className="font-mono text-xs text-slate-600 bg-slate-100 px-1.5 py-0.5 rounded-md block truncate">
                           {meta.sensitive ? "••••••••" : String(vars[key])}
                         </code>
-                      ) : (
-                        <span className="italic text-slate-400 text-xs">Not set</span>
-                      )}
+                      : <span className="italic text-slate-400 text-xs">
+                          Not set
+                        </span>
+                      }
                     </div>
                   </div>
                 </div>
@@ -117,9 +133,11 @@ export function VarsInspector({ vars, onChange }: VarsInspectorProps) {
           </div>
         ))}
         {Object.keys(groupedVars).length === 0 && (
-          <p className="p-4 text-sm text-slate-500 text-center">No variables in this category.</p>
+          <p className="p-4 text-sm text-slate-500 text-center">
+            No variables in this category.
+          </p>
         )}
       </ScrollArea>
     </div>
-  )
+  );
 }

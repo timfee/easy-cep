@@ -1,63 +1,73 @@
-"use client"
+"use client";
 
-import { Input } from "@/components/ui/input"
-import { WORKFLOW_VARIABLES, type VarName, type StepIdValue, camelToTitle } from "@/lib/workflow-variables"
-import { Database } from "lucide-react"
+import { Database } from "lucide-react";
+import { Input } from "./ui/input";
+import {
+  camelToTitle,
+  WORKFLOW_VARIABLES,
+  type StepIdValue,
+  type VarName
+} from "./workflow-variables";
 
 interface StepVariablesProps {
-  stepId: StepIdValue
-  vars: Partial<Record<VarName, any>>
-  onVarChange: (key: VarName, value: unknown) => void
+  stepId: StepIdValue;
+  vars: Partial<Record<VarName, unknown>>;
+  onVarChange: (key: VarName, value: unknown) => void;
 }
 
-export function StepVariables({ stepId, vars, onVarChange }: StepVariablesProps) {
+export function StepVariables({
+  stepId,
+  vars,
+  onVarChange
+}: StepVariablesProps) {
   const allStepVars = Object.entries(WORKFLOW_VARIABLES)
-    .filter(([, meta]) => meta.consumedBy?.includes(stepId) || meta.producedBy === stepId)
-    .map(([key, meta]) => ({ key: key as VarName, ...meta }))
+    .filter(
+      ([, meta]) =>
+        meta.consumedBy?.includes(stepId) || meta.producedBy === stepId
+    )
+    .map(([key, meta]) => ({ key: key as VarName, ...meta }));
 
-  const requiredVars = allStepVars.filter((v) => v.consumedBy?.includes(stepId) && v.producedBy !== stepId)
-  const providedVars = allStepVars.filter((v) => v.producedBy === stepId)
+  const requiredVars = allStepVars.filter(
+    (v) => v.consumedBy?.includes(stepId) && v.producedBy !== stepId
+  );
+  const providedVars = allStepVars.filter((v) => v.producedBy === stepId);
 
   const VariableItem = ({
     varKey,
     meta,
-    isEditable,
+    isEditable
   }: {
-    varKey: VarName
-    meta: (typeof allStepVars)[0]
-    isEditable: boolean
+    varKey: VarName;
+    meta: (typeof allStepVars)[number];
+    isEditable: boolean;
   }) => (
     <div className="space-y-1.5">
       <label
         htmlFor={`var-${varKey}-${stepId}`}
-        className="text-xs font-medium text-slate-700 flex items-center gap-1.5"
-      >
+        className="text-xs font-medium text-slate-700 flex items-center gap-1.5">
         <Database className="h-3 w-3 text-purple-500" />
         <span>{camelToTitle(varKey)}</span>
       </label>
-      {isEditable ? (
+      {isEditable ?
         <Input
           id={`var-${varKey}-${stepId}`}
-          value={vars[varKey] ?? meta.defaultValue ?? ""}
+          value={String(vars[varKey] ?? meta.defaultValue ?? "")}
           onChange={(e) => onVarChange(varKey, e.target.value)}
           placeholder={meta.description || "Enter value"}
           className="text-xs border-slate-300 bg-white h-8 px-2 py-1 w-full rounded-md" // Changed from rounded-lg to rounded-md to match screenshot
           type={meta.type === "number" ? "number" : "text"}
         />
-      ) : (
-        <div className="text-xs text-slate-600 bg-slate-100 border border-slate-300 rounded-md px-2 py-1.5 min-h-[32px] flex items-center w-full">
+      : <div className="text-xs text-slate-600 bg-slate-100 border border-slate-300 rounded-md px-2 py-1.5 min-h-[32px] flex items-center w-full">
           {/* Matched screenshot style for value display */}
-          {vars[varKey] !== undefined ? (
+          {vars[varKey] !== undefined ?
             <code className="font-mono text-xs block truncate w-full">
               {meta.sensitive ? "••••••••" : String(vars[varKey])}
             </code>
-          ) : (
-            <span className="italic text-slate-400 text-2xs">Not set</span>
-          )}
+          : <span className="italic text-slate-400 text-2xs">Not set</span>}
         </div>
-      )}
+      }
     </div>
-  )
+  );
 
   return (
     <div className="grid md:grid-cols-2 gap-4">
@@ -68,13 +78,19 @@ export function StepVariables({ stepId, vars, onVarChange }: StepVariablesProps)
           {/* Added mb-3 for spacing */}
           Requires
         </h4>
-        {requiredVars.length > 0 ? (
+        {requiredVars.length > 0 ?
           requiredVars.map(({ key, ...meta }) => (
-            <VariableItem key={key} varKey={key} meta={meta} isEditable={meta.configurable} />
+            <VariableItem
+              key={key}
+              varKey={key}
+              meta={{ key, ...meta }}
+              isEditable={meta.configurable ?? false}
+            />
           ))
-        ) : (
-          <p className="text-xs text-slate-500 text-center py-4">No required inputs for this step.</p>
-        )}
+        : <p className="text-xs text-slate-500 text-center py-4">
+            No required inputs for this step.
+          </p>
+        }
       </div>
 
       {/* Provides Column */}
@@ -84,12 +100,20 @@ export function StepVariables({ stepId, vars, onVarChange }: StepVariablesProps)
           {/* Added mb-3 for spacing */}
           Provides
         </h4>
-        {providedVars.length > 0 ? (
-          providedVars.map(({ key, ...meta }) => <VariableItem key={key} varKey={key} meta={meta} isEditable={false} />)
-        ) : (
-          <p className="text-xs text-slate-500 text-center py-4">No provided outputs for this step.</p>
-        )}
+        {providedVars.length > 0 ?
+          providedVars.map(({ key, ...meta }) => (
+            <VariableItem
+              key={key}
+              varKey={key}
+              meta={{ key, ...meta }}
+              isEditable={false}
+            />
+          ))
+        : <p className="text-xs text-slate-500 text-center py-4">
+            No provided outputs for this step.
+          </p>
+        }
       </div>
     </div>
-  )
+  );
 }

@@ -1,192 +1,229 @@
-"use client"
+"use client";
 
-import { useState, useCallback } from "react"
-import { Button } from "@/components/ui/button"
-import { Badge } from "@/components/ui/badge"
-import { Separator } from "@/components/ui/separator"
-import { ScrollArea } from "@/components/ui/scroll-area"
-import { ProviderLogin } from "@/components/provider-login"
-import { StepCard } from "@/components/step-card"
-import { VarsInspector } from "@/components/vars-inspector"
-import { Play, Settings, Activity, Variable } from "lucide-react"
-import type { VarName, StepIdValue } from "@/lib/workflow-variables" // Import types
-import { WORKFLOW_VARIABLES } from "@/lib/workflow-variables"
+import { LogLevel } from "@/types";
+import { Activity, Play, Settings, Variable } from "lucide-react";
+import { useCallback, useState } from "react";
+import { ProviderLogin } from "./provider-login";
+import { StepCard } from "./step-card";
+import { Badge } from "./ui/badge";
+import { Button } from "./ui/button";
+import { ScrollArea } from "./ui/scroll-area";
+import { Separator } from "./ui/separator";
+import { VarsInspector } from "./vars-inspector";
+import type { StepIdValue, VarName } from "./workflow-variables"; // Import types
+import { WORKFLOW_VARIABLES } from "./workflow-variables";
 
 // Define StepInfo based on your actual step definitions
 interface StepInfo {
-  id: StepIdValue
+  id: StepIdValue;
   // Conceptual requires/provides, actual data flow is via WORKFLOW_VARIABLES
-  requires: readonly VarName[]
-  provides: readonly VarName[]
+  requires: readonly VarName[];
+  provides: readonly VarName[];
   // Add other step-specific properties if needed
-  name?: string // e.g., "Authenticate Google"
-  description?: string
-}
-
-// Define StepLogEntry and StepUIState here as they are central to workflow state
-export interface StepLogEntry {
-  timestamp: number
-  message: string
-  data?: unknown
-  level?: "info" | "warn" | "error" | "debug"
-  apiCall?: {
-    method: string
-    url: string
-    request?: {
-      headers?: Record<string, string>
-      body?: any
-    }
-    response?: {
-      status: number
-      headers?: Record<string, string>
-      body?: any
-    }
-    duration?: number
-  }
-}
-
-export interface StepUIState {
-  status: "idle" | "checking" | "executing" | "complete" | "failed" | "pending" | "undoing" | "reverted"
-  summary?: string
-  error?: string
-  notes?: string
-  logs?: StepLogEntry[]
+  name?: string; // e.g., "Authenticate Google"
+  description?: string;
 }
 
 interface WorkflowClientProps {
-  steps: ReadonlyArray<StepInfo>
+  steps: ReadonlyArray<StepInfo>;
 }
 
-type WorkflowVars = Partial<Record<VarName, any>>
+export interface StepLogEntry {
+  timestamp: number;
+  message: string;
+  data?: Record<string, unknown>;
+  level?: LogLevel;
+  apiCall?: {
+    method: string;
+    url: string;
+    request?: { headers?: Record<string, string> };
+    response?: {
+      status: number;
+      body?: unknown;
+      headers?: Record<string, string>;
+    };
+    duration?: number;
+  };
+}
+
+export interface StepState {
+  status:
+    | "idle"
+    | "checking"
+    | "executing"
+    | "complete"
+    | "failed"
+    | "pending"
+    | "undoing"
+    | "reverted";
+  summary?: string;
+  error?: string;
+  notes?: string;
+  logs?: StepLogEntry[];
+}
+
+type WorkflowVars = Partial<Record<VarName, unknown>>;
 
 export function WorkflowClient({ steps }: WorkflowClientProps) {
-  const initialVars = Object.entries(WORKFLOW_VARIABLES).reduce((acc, [key, meta]) => {
-    if (meta.defaultValue !== undefined) {
-      acc[key as VarName] = meta.defaultValue
-    }
-    return acc
-  }, {} as WorkflowVars)
+  const initialVars = Object.entries(WORKFLOW_VARIABLES).reduce(
+    (acc, [key, meta]) => {
+      if (meta.defaultValue !== undefined) {
+        acc[key as VarName] = meta.defaultValue;
+      }
+      return acc;
+    },
+    {} as WorkflowVars
+  );
 
-  const [vars, setVars] = useState<WorkflowVars>(initialVars)
-  const [stepStates, setStepStates] = useState<Record<string, StepUIState>>({})
-  const [executingSteps, setExecutingSteps] = useState<Set<string>>(new Set())
+  const [vars, setVars] = useState<WorkflowVars>(initialVars);
+  const [stepStates, setStepStates] = useState<Record<string, StepState>>({});
+  const [executingSteps, setExecutingSteps] = useState<Set<string>>(new Set());
 
   const handleVarsUpdate = useCallback((newVars: Partial<WorkflowVars>) => {
-    setVars((prev) => ({ ...prev, ...newVars }))
-  }, [])
+    setVars((prev) => ({ ...prev, ...newVars }));
+  }, []);
 
   const handleSingleVarChange = useCallback((key: VarName, value: unknown) => {
-    setVars((prev) => ({ ...prev, [key]: value }))
-  }, [])
+    setVars((prev) => ({ ...prev, [key]: value }));
+  }, []);
 
   const handleExecuteStep = useCallback(
     (stepId: StepIdValue) => {
-      setExecutingSteps((prev) => new Set([...prev, stepId]))
-      setStepStates((prev) => ({
-        ...prev,
-        [stepId]: { status: "executing", summary: "Step is running..." },
-      }))
+      setExecutingSteps((prev) => new Set([...prev, stepId]));
+      setStepStates(
+        (prev): Record<string, StepState> => ({
+          ...prev,
+          [stepId]: { status: "executing", summary: "Step is running..." }
+        })
+      );
 
       // Simulate step execution with mixed log types
       setTimeout(() => {
         setExecutingSteps((prev) => {
-          const next = new Set(prev)
-          next.delete(stepId)
-          return next
-        })
+          const next = new Set(prev);
+          next.delete(stepId);
+          return next;
+        });
 
-        const shouldFail = Math.random() < 0.3
+        const shouldFail = Math.random() < 0.3;
 
         // Simulate variable production
-        const producedVarsUpdate: WorkflowVars = {}
+        const producedVarsUpdate: WorkflowVars = {};
         Object.entries(WORKFLOW_VARIABLES).forEach(([varKey, meta]) => {
           if (meta.producedBy === stepId) {
-            if (meta.type === "string") producedVarsUpdate[varKey as VarName] = `${varKey}-value-${Date.now()}`
-            if (meta.type === "boolean") producedVarsUpdate[varKey as VarName] = Math.random() > 0.5
+            if (meta.type === "string")
+              producedVarsUpdate[varKey as VarName] =
+                `${varKey}-value-${Date.now()}`;
+            if (meta.type === "boolean")
+              producedVarsUpdate[varKey as VarName] = Math.random() > 0.5;
             // Add other types as needed
           }
-        })
+        });
         if (Object.keys(producedVarsUpdate).length > 0) {
-          handleVarsUpdate(producedVarsUpdate)
+          handleVarsUpdate(producedVarsUpdate);
         }
 
-        setStepStates((prev) => ({
-          ...prev,
-          [stepId]: shouldFail
-            ? {
-                status: "failed",
-                summary: "Step execution failed",
-                error: "Connection timeout after 30 seconds",
-                logs: [
-                  { timestamp: Date.now(), message: `Step ${stepId} started`, level: "info" },
-                  {
-                    timestamp: Date.now() + 1000,
-                    message: "API call failed",
-                    level: "error",
-                    apiCall: {
-                      method: "GET",
-                      url: "https://api.example.com/data",
-                      request: { headers: { Authorization: "Bearer ***" } },
-                      response: { status: 500, body: { error: "Internal Server Error" } },
-                      duration: 2500,
+        setStepStates(
+          (prev): Record<string, StepState> => ({
+            ...prev,
+            [stepId]:
+              shouldFail ?
+                {
+                  status: "failed",
+                  summary: "Step execution failed",
+                  error: "Connection timeout after 30 seconds",
+                  logs: [
+                    {
+                      timestamp: Date.now(),
+                      message: `Step ${stepId} started`,
+                      level: LogLevel.Info
                     },
-                  },
-                ],
-              }
-            : {
-                status: "complete",
-                summary: "Step completed successfully",
-                logs: [
-                  { timestamp: Date.now(), message: `Step ${stepId} started`, level: "info" },
-                  {
-                    timestamp: Date.now() + 1000,
-                    message: "API call successful",
-                    level: "info",
-                    apiCall: {
-                      method: "GET",
-                      url: "https://api.example.com/data",
-                      request: { headers: { Authorization: "Bearer ***" } },
-                      response: {
-                        status: 200,
-                        body: { data: [{ id: 1, name: "Example" }] },
-                        headers: { "Content-Type": "application/json" },
-                      },
-                      duration: 245,
+                    {
+                      timestamp: Date.now() + 1000,
+                      message: "API call failed",
+                      level: LogLevel.Error,
+                      apiCall: {
+                        method: "GET",
+                        url: "https://api.example.com/data",
+                        request: { headers: { Authorization: "Bearer ***" } },
+                        response: {
+                          status: 500,
+                          body: { error: "Internal Server Error" }
+                        },
+                        duration: 2500
+                      }
+                    }
+                  ]
+                }
+              : {
+                  status: "complete",
+                  summary: "Step completed successfully",
+                  logs: [
+                    {
+                      timestamp: Date.now(),
+                      message: `Step ${stepId} started`,
+                      level: LogLevel.Info
                     },
-                  },
-                  { timestamp: Date.now() + 2000, message: `Step ${stepId} completed`, level: "info" },
-                ],
-              },
-        }))
-      }, 3000)
+                    {
+                      timestamp: Date.now() + 1000,
+                      message: "API call successful",
+                      level: LogLevel.Info,
+                      apiCall: {
+                        method: "GET",
+                        url: "https://api.example.com/data",
+                        request: { headers: { Authorization: "Bearer ***" } },
+                        response: {
+                          status: 200,
+                          body: { data: [{ id: 1, name: "Example" }] },
+                          headers: { "Content-Type": "application/json" }
+                        },
+                        duration: 245
+                      }
+                    },
+                    {
+                      timestamp: Date.now() + 2000,
+                      message: `Step ${stepId} completed`,
+                      level: LogLevel.Info
+                    }
+                  ]
+                }
+          })
+        );
+      }, 3000);
     },
-    [handleVarsUpdate],
-  )
+    [handleVarsUpdate]
+  );
 
   const handleUndoStep = useCallback((stepId: StepIdValue) => {
-    setStepStates((prev) => ({
-      ...prev,
-      [stepId]: { status: "undoing", summary: "Reverting step..." },
-    }))
+    setStepStates(
+      (prev): Record<string, StepState> => ({
+        ...prev,
+        [stepId]: { status: "undoing", summary: "Reverting step..." }
+      })
+    );
 
     setTimeout(() => {
-      setStepStates((prev) => ({
-        ...prev,
-        [stepId]: { status: "reverted", summary: "Step reverted" },
-      }))
-    }, 1500)
-  }, [])
+      setStepStates(
+        (prev): Record<string, StepState> => ({
+          ...prev,
+          [stepId]: { status: "reverted", summary: "Step reverted" }
+        })
+      );
+    }, 1500);
+  }, []);
 
   const handleForceStep = useCallback(
     (stepId: StepIdValue) => {
-      handleExecuteStep(stepId)
+      handleExecuteStep(stepId);
     },
-    [handleExecuteStep],
-  )
+    [handleExecuteStep]
+  );
 
-  const completedSteps = Object.values(stepStates).filter((state) => state.status === "complete").length
-  const totalSteps = steps.length
-  const isWorkflowRunning = executingSteps.size > 0
+  const completedSteps = Object.values(stepStates).filter(
+    (state) => state.status === "complete"
+  ).length;
+  const totalSteps = steps.length;
+  const isWorkflowRunning = executingSteps.size > 0;
 
   return (
     <div className="flex h-screen bg-background">
@@ -197,13 +234,18 @@ export function WorkflowClient({ steps }: WorkflowClientProps) {
             <div className="p-2 bg-blue-100 rounded-lg">
               <Activity className="h-5 w-5 text-blue-600" />
             </div>
-            <h1 className="text-xl font-semibold text-slate-900">Workflow Orchestrator</h1>
+            <h1 className="text-xl font-semibold text-slate-900">
+              Workflow Orchestrator
+            </h1>
           </div>
           <div className="flex items-center gap-3 text-sm">
             <Badge
               variant={isWorkflowRunning ? "default" : "secondary"}
-              className={isWorkflowRunning ? "bg-green-100 text-green-800 border-green-200" : ""}
-            >
+              className={
+                isWorkflowRunning ?
+                  "bg-green-100 text-green-800 border-green-200"
+                : ""
+              }>
               {isWorkflowRunning ? "Running" : "Idle"}
             </Badge>
             <span className="text-slate-600">
@@ -246,11 +288,18 @@ export function WorkflowClient({ steps }: WorkflowClientProps) {
         <div className="border-b p-6 bg-white">
           <div className="flex items-center justify-between">
             <div>
-              <h2 className="text-xl font-semibold text-slate-900 mb-1">Workflow Steps</h2>
-              <p className="text-sm text-slate-600">Execute steps in sequence or manage them individually</p>
+              <h2 className="text-xl font-semibold text-slate-900 mb-1">
+                Workflow Steps
+              </h2>
+              <p className="text-sm text-slate-600">
+                Execute steps in sequence or manage them individually
+              </p>
             </div>
             <div className="flex items-center gap-3">
-              <Button size="sm" disabled={isWorkflowRunning} className="bg-blue-600 hover:bg-blue-700">
+              <Button
+                size="sm"
+                disabled={isWorkflowRunning}
+                className="bg-blue-600 hover:bg-blue-700">
                 <Play className="h-4 w-4 mr-2" />
                 Run All
               </Button>
@@ -280,5 +329,5 @@ export function WorkflowClient({ steps }: WorkflowClientProps) {
         </div>
       </div>
     </div>
-  )
+  );
 }
