@@ -7,6 +7,13 @@ export { StepId } from "./lib/workflow/step-ids";
 export { Var } from "./lib/workflow/variables";
 export type { StepIdValue, VarName, WorkflowVars };
 
+export interface StepLogEntry {
+  timestamp: number;
+  message: string;
+  data?: unknown;
+  level?: LogLevel;
+}
+
 export enum LogLevel {
   Info = "info",
   Warn = "warn",
