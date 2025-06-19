@@ -89,17 +89,17 @@ async function processStep<T extends StepIdValue>(
     await step.check({
       ...baseContext,
       vars,
-      markComplete: (data) => {
+      markComplete: (data: CheckType) => {
         checkData = data;
         isComplete = true;
         pushState({ status: "complete", summary: "Already complete" });
       },
-      markIncomplete: (summary, data) => {
+      markIncomplete: (summary: string, data: CheckType) => {
         checkData = data;
         isComplete = false;
         pushState({ status: "idle", summary });
       },
-      markCheckFailed: (error) => {
+      markCheckFailed: (error: string) => {
         checkFailed = true;
         pushState({ status: "failed", error: `Check failed: ${error}` });
       }
@@ -132,14 +132,14 @@ async function processStep<T extends StepIdValue>(
         ...baseContext,
         vars,
         checkData,
-        markSucceeded: (newVars) => {
+        markSucceeded: (newVars: Partial<WorkflowVars>) => {
           finalVars = newVars;
           pushState({ status: "complete", summary: "Succeeded" });
         },
-        markFailed: (error) => {
+        markFailed: (error: string) => {
           pushState({ status: "failed", error });
         },
-        markPending: (notes) => {
+        markPending: (notes: string) => {
           pushState({ status: "pending", notes });
         }
       });

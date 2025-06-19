@@ -323,12 +323,16 @@ export function StepCard({
               </p>
             )}
 
-            <StepApiCalls stepId={definition.id} />
-            <StepVariables
-              stepId={definition.id}
-              vars={vars}
-              onChange={onVarChange}
-            />
+            <div className="overflow-x-auto">
+              <StepApiCalls stepId={definition.id} />
+            </div>
+            <div className="overflow-x-auto">
+              <StepVariables
+                stepId={definition.id}
+                vars={vars}
+                onChange={onVarChange}
+              />
+            </div>
 
             <Collapsible open={logsOpen} onOpenChange={setLogsOpen}>
               <CollapsibleTrigger className="w-full flex items-center justify-between text-sm font-medium text-slate-700 hover:bg-slate-100 p-3 rounded-lg bg-slate-50 border border-slate-200 transition-colors">

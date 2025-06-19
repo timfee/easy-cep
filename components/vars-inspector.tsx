@@ -1,6 +1,5 @@
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { ScrollArea } from "@/components/ui/scroll-area";
 import { categoryTitles } from "@/constants";
 import {
   VariableMetadata,
@@ -51,8 +50,8 @@ export function VarsInspector({ vars, onChange }: VarsInspectorProps) {
   );
 
   return (
-    <div className="flex flex-col h-full bg-white border border-slate-200 rounded-lg">
-      <ScrollArea className="flex-1">
+    <div className="h-full bg-white border border-slate-200 rounded-lg overflow-hidden flex flex-col">
+      <div className="flex-1 overflow-y-auto">
         {Object.entries(groupedVars).map(([category, variables]) => (
           <div key={category}>
             <h4 className="bg-slate-50 px-3 py-1.5 text-xs font-semibold text-slate-700 sticky top-0 border-b border-slate-200">
@@ -129,7 +128,7 @@ export function VarsInspector({ vars, onChange }: VarsInspectorProps) {
             No variables in this category.
           </p>
         )}
-      </ScrollArea>
+      </div>
     </div>
   );
 }

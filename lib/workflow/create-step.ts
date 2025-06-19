@@ -58,7 +58,7 @@ export function createStep<
    */
   execute: (ctx: StepExecuteContext<D>) => Promise<void>;
   undo?: (ctx: StepUndoContext) => Promise<void>;
-}): StepDefinition<R, P> & {
+}): StepDefinition & {
   check(ctx: StepCheckContext<D>): Promise<void>;
   check<T2 extends Partial<WorkflowVars>>(
     ctx: StepCheckContext<T2>
