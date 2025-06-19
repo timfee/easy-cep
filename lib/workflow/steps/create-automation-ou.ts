@@ -47,7 +47,7 @@ export default defineStep(StepId.CreateAutomationOU)
       log
     }) => {
       try {
-        const ouName = vars.require("automationOuName");
+        const ouName = vars.require(Var.AutomationOuName);
 
         const OrgUnitSchema = z.object({ orgUnitPath: z.string() });
         await google.get(
@@ -95,7 +95,7 @@ export default defineStep(StepId.CreateAutomationOU)
       });
 
       await google.post(ApiEndpoint.Google.OrgUnits, CreateSchema, {
-        name: vars.require("automationOuName"),
+        name: vars.require(Var.AutomationOuName),
         parentOrgUnitPath: "/"
       });
 
@@ -112,7 +112,7 @@ export default defineStep(StepId.CreateAutomationOU)
   })
   .undo(async ({ vars, google, markReverted, markFailed, log }) => {
     try {
-      const path = vars.require("automationOuPath");
+      const path = vars.require(Var.AutomationOuPath);
       if (!path) {
         markFailed("Missing Automation OU name");
         return;

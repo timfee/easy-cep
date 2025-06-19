@@ -149,13 +149,13 @@ export default defineStep(StepId.CreateMicrosoftApps)
       const res1 = await microsoft.post(
         ApiEndpoint.Microsoft.Templates(TemplateId.GoogleWorkspaceConnector),
         CreateSchema,
-        { displayName: vars.require("provisioningAppDisplayName") }
+        { displayName: vars.require(Var.ProvisioningAppDisplayName) }
       );
 
       const res2 = await microsoft.post(
         ApiEndpoint.Microsoft.Templates(TemplateId.GoogleWorkspaceSaml),
         CreateSchema,
-        { displayName: vars.require("ssoAppDisplayName") }
+        { displayName: vars.require(Var.SsoAppDisplayName) }
       );
 
       output({
@@ -170,9 +170,9 @@ export default defineStep(StepId.CreateMicrosoftApps)
   })
   .undo(async ({ vars, microsoft, markReverted, markFailed, log }) => {
     try {
-      const provSpId = vars.get("provisioningServicePrincipalId");
-      const ssoSpId = vars.get("ssoServicePrincipalId");
-      const appId = vars.get("ssoAppId");
+      const provSpId = vars.get(Var.ProvisioningServicePrincipalId);
+      const ssoSpId = vars.get(Var.SsoServicePrincipalId);
+      const appId = vars.get(Var.SsoAppId);
 
       if (provSpId) {
         await microsoft.delete(

@@ -60,7 +60,7 @@ export default defineStep<CheckData>(StepId.AssignUsersToSso)
             .optional()
         });
 
-        const profileId = vars.require("samlProfileId");
+        const profileId = vars.require(Var.SamlProfileId);
 
         const { inboundSsoAssignments = [] } = await google.get(
           ApiEndpoint.Google.SsoAssignments,
@@ -108,7 +108,7 @@ export default defineStep<CheckData>(StepId.AssignUsersToSso)
      * { "error": { "message": "Assignment already exists" } }
      */
     try {
-      const profileId = vars.require("samlProfileId");
+      const profileId = vars.require(Var.SamlProfileId);
 
       const OpSchema = z.object({
         name: z.string(),
@@ -154,7 +154,7 @@ export default defineStep<CheckData>(StepId.AssignUsersToSso)
   })
   .undo(async ({ vars, google, markReverted, markFailed, log }) => {
     try {
-      const profileId = vars.get("samlProfileId");
+      const profileId = vars.get(Var.SamlProfileId);
       if (!profileId) {
         markFailed("Missing samlProfileId");
         return;

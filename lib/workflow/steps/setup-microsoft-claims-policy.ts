@@ -39,7 +39,7 @@ export default defineStep(StepId.SetupMicrosoftClaimsPolicy)
       log
     }) => {
       try {
-        const spId = vars.require("ssoServicePrincipalId");
+        const spId = vars.require(Var.SsoServicePrincipalId);
         if (!spId) {
           markIncomplete("Missing SSO service principal ID", {});
           return;
@@ -86,7 +86,7 @@ export default defineStep(StepId.SetupMicrosoftClaimsPolicy)
      * 204
      */
     try {
-      const spId = vars.require("ssoServicePrincipalId");
+      const spId = vars.require(Var.SsoServicePrincipalId);
 
       const PolicySchema = z.object({ id: z.string() });
 
@@ -99,7 +99,7 @@ export default defineStep(StepId.SetupMicrosoftClaimsPolicy)
             definition: [
               '{"ClaimsMappingPolicy":{"Version":1,"IncludeBasicClaimSet":true,"ClaimsSchema":[]}}'
             ],
-            displayName: vars.require("claimsPolicyDisplayName"),
+            displayName: vars.require(Var.ClaimsPolicyDisplayName),
             isOrganizationDefault: false
           }
         );
@@ -149,8 +149,8 @@ export default defineStep(StepId.SetupMicrosoftClaimsPolicy)
   })
   .undo(async ({ vars, microsoft, markReverted, markFailed, log }) => {
     try {
-      const spId = vars.get("ssoServicePrincipalId");
-      const policyId = vars.get("claimsPolicyId");
+      const spId = vars.get(Var.SsoServicePrincipalId);
+      const policyId = vars.get(Var.ClaimsPolicyId);
       if (!policyId) {
         markFailed("Missing claims policy id");
         return;

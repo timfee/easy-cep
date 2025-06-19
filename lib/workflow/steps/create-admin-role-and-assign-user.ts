@@ -85,7 +85,7 @@ export default defineStep(StepId.CreateAdminRoleAndAssignUser)
           RolesSchema,
           { flatten: true }
         );
-        const roleName = vars.require("adminRoleName");
+        const roleName = vars.require(Var.AdminRoleName);
         const role = items.find((r) => r.roleName === roleName);
         if (role) {
           const privNames = role.rolePrivileges.map((p) => p.privilegeName);
@@ -98,7 +98,7 @@ export default defineStep(StepId.CreateAdminRoleAndAssignUser)
             });
             return;
           }
-          const userId = vars.require("provisioningUserId");
+          const userId = vars.require(Var.ProvisioningUserId);
 
           const AssignmentsSchema = z.object({
             items: z
@@ -216,7 +216,7 @@ export default defineStep(StepId.CreateAdminRoleAndAssignUser)
       let roleId = checkData.adminRoleId;
       try {
         const res = await google.post(ApiEndpoint.Google.Roles, CreateSchema, {
-          roleName: vars.require("adminRoleName"),
+          roleName: vars.require(Var.AdminRoleName),
           roleDescription: "Custom role for Microsoft provisioning",
           rolePrivileges: [
             { serviceId, privilegeName: "ORGANIZATION_UNITS_RETRIEVE" },
@@ -251,7 +251,7 @@ export default defineStep(StepId.CreateAdminRoleAndAssignUser)
               RolesSchema,
               { flatten: true }
             );
-            const roleName = vars.require("adminRoleName");
+            const roleName = vars.require(Var.AdminRoleName);
             roleId = rolesList.find((r) => r.roleName === roleName)?.roleId;
           }
         } else {
@@ -261,7 +261,7 @@ export default defineStep(StepId.CreateAdminRoleAndAssignUser)
 
       if (!roleId) throw new Error("Role ID unavailable after create");
 
-      const userId = vars.require("provisioningUserId");
+      const userId = vars.require(Var.ProvisioningUserId);
       const AssignSchema = z.object({ kind: z.string().optional() });
       try {
         /**
@@ -305,8 +305,8 @@ export default defineStep(StepId.CreateAdminRoleAndAssignUser)
   })
   .undo(async ({ vars, google, markReverted, markFailed, log }) => {
     try {
-      const roleId = vars.get("adminRoleId");
-      const userId = vars.get("provisioningUserId");
+      const roleId = vars.get(Var.AdminRoleId);
+      const userId = vars.get(Var.ProvisioningUserId);
       if (!roleId || !userId) {
         markFailed("Missing role or user id");
         return;

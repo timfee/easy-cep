@@ -116,7 +116,7 @@ export default defineStep(StepId.ConfigureGoogleSamlProfile)
         "/customers/my_customer/inboundSamlSsoProfiles"
       )}`;
       const op = await google.post(createUrl, opSchema, {
-        displayName: vars.require("samlProfileDisplayName"),
+        displayName: vars.require(Var.SamlProfileDisplayName),
         idpConfig: { entityId: "", singleSignOnServiceUri: "" }
       });
 
@@ -150,7 +150,7 @@ export default defineStep(StepId.ConfigureGoogleSamlProfile)
   })
   .undo(async ({ vars, google, markReverted, markFailed, log }) => {
     try {
-      const id = vars.get("samlProfileId");
+      const id = vars.get(Var.SamlProfileId);
       if (!id) {
         markFailed("Missing samlProfileId");
         return;
