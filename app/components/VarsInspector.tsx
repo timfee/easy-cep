@@ -6,8 +6,8 @@ import {
   WORKFLOW_VARIABLES,
   WorkflowVars
 } from "@/lib/workflow/variables";
-import { PencilSquareIcon as EditIcon } from "@heroicons/react/24/solid";
 import clsx from "clsx";
+import { Database, Edit3 } from "lucide-react";
 import { useState } from "react";
 import { Button } from "./ui/button";
 import {
@@ -201,11 +201,12 @@ function VariableRow({
       onClick={onEdit}>
       <div className="flex-1 min-w-0">
         <div className="flex items-center gap-2">
-          <div className="text-xs font-medium text-gray-700 truncate">
+          <Database className="h-2.5 w-2.5 text-purple-500" />
+          <span className="text-xs font-medium text-gray-700 truncate">
             {camelToTitle(name)}
-          </div>
+          </span>
           {metadata.configurable && (
-            <EditIcon className="h-3 w-3 text-gray-400" />
+            <Edit3 className="h-3 w-3 text-slate-400" />
           )}
         </div>
         {relationships.length > 0 && (

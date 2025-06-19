@@ -2,8 +2,8 @@
 
 import { checkStep, runStep, undoStep } from "@/lib/workflow/engine";
 import { StepIdValue, StepUIState, Var, WorkflowVars } from "@/types";
-import { ChevronLeftIcon, ChevronRightIcon } from "@heroicons/react/24/outline";
 import clsx from "clsx";
+import { ChevronLeft, ChevronRight } from "lucide-react";
 import { useCallback, useEffect, useRef, useState } from "react";
 import ProviderLogin from "./ProviderLogin";
 import StepCard, { StepInfo } from "./StepCard";
@@ -231,8 +231,8 @@ export default function WorkflowClient({ steps }: Props) {
           onClick={() => setVarsOpen(!varsOpen)}
           className="absolute -left-12 top-1/2 -translate-y-1/2 bg-white border border-gray-200 rounded-l-lg p-1.5 shadow-sm hover:shadow-md transition-shadow">
           {varsOpen ?
-            <ChevronRightIcon className="h-4 w-4 text-gray-500" />
-          : <ChevronLeftIcon className="h-4 w-4 text-gray-500" />}
+            <ChevronRight className="h-4 w-4 text-gray-500" />
+          : <ChevronLeft className="h-4 w-4 text-gray-500" />}
         </button>
 
         <VarsInspector vars={vars} onChange={updateVars} />

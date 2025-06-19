@@ -1,19 +1,14 @@
 "use client";
 import { StepIdValue, StepUIState, VarName, WorkflowVars } from "@/types";
-import {
-  ArrowRightIcon as ArrowRight,
-  Square3Stack3DIcon as Boxes,
-  CheckIcon as Check,
-  DocumentPlusIcon as FileStack,
-  XMarkIcon as X
-} from "@heroicons/react/24/solid";
 import clsx from "clsx";
+import { Boxes, Check, FileStack, Play, RotateCcw, X, Zap } from "lucide-react";
 import { StepApiCalls } from "./step-card/step-api-calls";
 import { stepDescriptions } from "./step-card/step-descriptions";
 import { StepVariables } from "./step-card/StepVariables";
 import StepLogs from "./StepLogs";
 import { Badge } from "./ui/badge";
 import { Button } from "./ui/button";
+import { Card, CardContent, CardHeader } from "./ui/card";
 
 export interface StepInfo {
   id: StepIdValue;
@@ -90,21 +85,18 @@ export default function StepCard({
   const executed = status === "complete" || status === "failed";
 
   return (
-    <div
+    <Card
       className={clsx(
         "relative mb-6 overflow-hidden",
-        "rounded-xl",
-        "border border-l-4",
         accent[status],
-        "bg-white shadow-sm hover:shadow-md transition-shadow duration-200",
-        inProgress ? "animate-pulse" : ""
+        inProgress && "animate-pulse"
       )}>
       {inProgress && (
         <div className="absolute left-0 right-0 top-0 h-1 overflow-hidden">
           <div className="animate-indeterminate h-full w-1/2 bg-blue-500" />
         </div>
       )}
-      <div className="p-6">
+      <CardHeader className="p-6 pb-3">
         <div className="flex items-start justify-between">
           <div className="flex items-center gap-2">
             <span className="flex h-6 w-6 items-center justify-center rounded-full bg-gray-100 text-xs font-medium text-gray-700">
@@ -133,7 +125,8 @@ export default function StepCard({
             </span>
           )}
         </div>
-
+      </CardHeader>
+      <CardContent className="pt-0">
         <div className="mt-4 grid grid-cols-1 gap-4 sm:grid-cols-2">
           <div className="bg-gray-50 p-4">
             <h4 className="mb-2 flex items-center gap-1 text-sm font-medium text-gray-800">
@@ -175,35 +168,42 @@ export default function StepCard({
 
         <div className="mt-4 flex items-center gap-2">
           <Button
-            color="blue"
-            className="inline-flex items-center gap-2"
+            size="sm"
+            className="bg-blue-600 hover:bg-blue-700 text-white disabled:opacity-50"
             onClick={() => onExecute(definition.id)}
             disabled={executing || missing.length > 0}
             data-complete={executed}
             style={{ opacity: executed ? 0.5 : 1 }}>
-            Execute <ArrowRight className="h-4 w-4" />
+            <Play className="h-3.5 w-3.5 mr-1.5" />
+            Execute
           </Button>
           {executed && (
             <div className="ml-auto flex items-center gap-2">
-              <button
-                className="text-sm text-blue-700 hover:underline disabled:text-gray-300"
+              <Button
+                size="sm"
+                variant="outline"
                 onClick={() => onUndo(definition.id)}
-                disabled={executing}>
+                disabled={executing}
+                className="border-amber-300 text-amber-700 hover:bg-amber-50 hover:text-amber-800">
+                <RotateCcw className="h-3.5 w-3.5 mr-1.5" />
                 Undo
-              </button>
-              <button
-                className="text-sm text-blue-700 hover:underline disabled:text-gray-300"
+              </Button>
+              <Button
+                size="sm"
+                variant="outline"
                 onClick={() => onForce(definition.id)}
-                disabled={executing}>
+                disabled={executing}
+                className="border-orange-300 text-orange-700 hover:bg-orange-50 hover:text-orange-800 disabled:opacity-50">
+                <Zap className="h-3.5 w-3.5 mr-1.5" />
                 Force
-              </button>
+              </Button>
             </div>
           )}
         </div>
         <StepApiCalls stepId={definition.id} />
 
         <StepLogs logs={state?.logs} />
-      </div>
-    </div>
+      </CardContent>
+    </Card>
   );
 }
