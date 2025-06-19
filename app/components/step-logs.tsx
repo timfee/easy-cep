@@ -28,8 +28,12 @@ interface StepLogEntry {
   apiCall?: {
     method: string;
     url: string;
-    request?: { headers?: Record<string, string>; body?: any };
-    response?: { status: number; headers?: Record<string, string>; body?: any };
+    request?: { headers?: Record<string, string>; body?: unknown };
+    response?: {
+      status: number;
+      headers?: Record<string, string>;
+      body?: unknown;
+    };
     duration?: number;
   };
 }

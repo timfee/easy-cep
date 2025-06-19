@@ -11,8 +11,8 @@ import {
   CollapsibleTrigger
 } from "@/components/ui/collapsible";
 import { cn } from "@/lib/utils";
-import type { StepIdValue, VarName } from "@/lib/workflow-variables";
-import { WORKFLOW_VARIABLES } from "@/lib/workflow-variables";
+import { WORKFLOW_VARIABLES } from "@/lib/workflow/variables";
+import type { StepIdValue, StepUIState, VarName, WorkflowVars } from "@/types";
 import {
   AlertTriangle,
   CheckCircle,
@@ -29,10 +29,7 @@ import {
 } from "lucide-react";
 import { useEffect, useState } from "react";
 
-type StepLogEntry = import("./workflow-client").StepLogEntry;
-type StepUIState = import("./workflow-client").StepUIState;
-
-interface StepInfo {
+export interface StepInfo {
   id: StepIdValue;
   name?: string;
   description?: string;
@@ -44,7 +41,7 @@ interface StepCardProps {
   index: number;
   definition: StepInfo;
   state?: StepUIState;
-  vars: Partial<Record<VarName, any>>;
+  vars: Partial<WorkflowVars>;
   executing: boolean;
   onExecute(id: StepIdValue): void;
   onUndo(id: StepIdValue): void;

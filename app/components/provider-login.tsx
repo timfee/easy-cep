@@ -12,7 +12,7 @@ import type React from "react";
 import { useState } from "react";
 
 interface ProviderLoginProps {
-  onUpdate(vars: Partial<Record<string, any>>): void;
+  onUpdate(vars: Partial<Record<string, unknown>>): void;
 }
 
 export function ProviderLogin({ onUpdate }: ProviderLoginProps) {

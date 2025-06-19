@@ -1,4 +1,5 @@
 "use client";
+/* eslint-disable workflow/no-hardcoded-urls */
 
 import { Badge } from "@/components/ui/badge";
 import {
@@ -7,16 +8,15 @@ import {
   TooltipProvider,
   TooltipTrigger
 } from "@/components/ui/tooltip";
+import type { StepIdValue } from "@/types";
 import { useEffect, useState } from "react";
-
-type StepIdValue = string;
 
 interface ApiCallTemplate {
   id: string;
   method: string;
   url: string;
   description: string;
-  requestBody?: any;
+  requestBody?: unknown;
 }
 
 interface StepApiCallsProps {

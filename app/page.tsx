@@ -1,6 +1,6 @@
 import { getAllSteps } from "@/lib/workflow/step-registry";
-import type { StepInfo } from "./components/StepCard";
-import WorkflowClient from "./components/WorkflowClient";
+import type { StepInfo } from "./components/step-card";
+import { WorkflowClient } from "./components/workflow-client";
 
 export const dynamic = "force-dynamic";
 

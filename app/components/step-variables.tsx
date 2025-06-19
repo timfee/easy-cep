@@ -5,13 +5,14 @@ import {
   camelToTitle,
   WORKFLOW_VARIABLES,
   type StepIdValue,
-  type VarName
-} from "@/lib/workflow-variables";
+  type VarName,
+  type WorkflowVars
+} from "@/lib/workflow/variables";
 import { Database } from "lucide-react";
 
 interface StepVariablesProps {
   stepId: StepIdValue;
-  vars: Partial<Record<VarName, any>>;
+  vars: Partial<WorkflowVars>;
   onVarChange: (key: VarName, value: unknown) => void;
 }
 

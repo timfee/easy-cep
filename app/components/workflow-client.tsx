@@ -7,8 +7,9 @@ import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Separator } from "@/components/ui/separator";
 import { VarsInspector } from "@/components/vars-inspector";
-import type { StepIdValue, VarName } from "@/lib/workflow-variables"; // Import types
-import { WORKFLOW_VARIABLES } from "@/lib/workflow-variables";
+import { WORKFLOW_VARIABLES } from "@/lib/workflow/variables";
+import type { StepIdValue, StepUIState, VarName } from "@/types";
+import { LogLevel } from "@/types";
 import { Activity, Play, Settings, Variable } from "lucide-react";
 import { useCallback, useState } from "react";
 
@@ -23,42 +24,11 @@ interface StepInfo {
   description?: string;
 }
 
-// Define StepLogEntry and StepUIState here as they are central to workflow state
-export interface StepLogEntry {
-  timestamp: number;
-  message: string;
-  data?: unknown;
-  level?: "info" | "warn" | "error" | "debug";
-  apiCall?: {
-    method: string;
-    url: string;
-    request?: { headers?: Record<string, string>; body?: any };
-    response?: { status: number; headers?: Record<string, string>; body?: any };
-    duration?: number;
-  };
-}
-
-export interface StepUIState {
-  status:
-    | "idle"
-    | "checking"
-    | "executing"
-    | "complete"
-    | "failed"
-    | "pending"
-    | "undoing"
-    | "reverted";
-  summary?: string;
-  error?: string;
-  notes?: string;
-  logs?: StepLogEntry[];
-}
+type WorkflowVars = Record<VarName, unknown>;
 
 interface WorkflowClientProps {
   steps: ReadonlyArray<StepInfo>;
 }
-
-type WorkflowVars = Partial<Record<VarName, any>>;
 
 export function WorkflowClient({ steps }: WorkflowClientProps) {
   const initialVars = Object.entries(WORKFLOW_VARIABLES).reduce(
@@ -68,10 +38,10 @@ export function WorkflowClient({ steps }: WorkflowClientProps) {
       }
       return acc;
     },
-    {} as WorkflowVars
+    {} as Partial<WorkflowVars>
   );
 
-  const [vars, setVars] = useState<WorkflowVars>(initialVars);
+  const [vars, setVars] = useState<Partial<WorkflowVars>>(initialVars);
   const [stepStates, setStepStates] = useState<Record<string, StepUIState>>({});
   const [executingSteps, setExecutingSteps] = useState<Set<string>>(new Set());
 
@@ -102,7 +72,7 @@ export function WorkflowClient({ steps }: WorkflowClientProps) {
         const shouldFail = Math.random() < 0.3;
 
         // Simulate variable production
-        const producedVarsUpdate: WorkflowVars = {};
+        const producedVarsUpdate: Partial<WorkflowVars> = {};
         Object.entries(WORKFLOW_VARIABLES).forEach(([varKey, meta]) => {
           if (meta.producedBy === stepId) {
             if (meta.type === "string")
@@ -129,12 +99,12 @@ export function WorkflowClient({ steps }: WorkflowClientProps) {
                   {
                     timestamp: Date.now(),
                     message: `Step ${stepId} started`,
-                    level: "info"
+                    level: LogLevel.Info
                   },
                   {
                     timestamp: Date.now() + 1000,
                     message: "API call failed",
-                    level: "error",
+                    level: LogLevel.Error,
                     apiCall: {
                       method: "GET",
                       url: "https://api.example.com/data",
@@ -155,12 +125,12 @@ export function WorkflowClient({ steps }: WorkflowClientProps) {
                   {
                     timestamp: Date.now(),
                     message: `Step ${stepId} started`,
-                    level: "info"
+                    level: LogLevel.Info
                   },
                   {
                     timestamp: Date.now() + 1000,
                     message: "API call successful",
-                    level: "info",
+                    level: LogLevel.Info,
                     apiCall: {
                       method: "GET",
                       url: "https://api.example.com/data",
@@ -176,7 +146,7 @@ export function WorkflowClient({ steps }: WorkflowClientProps) {
                   {
                     timestamp: Date.now() + 2000,
                     message: `Step ${stepId} completed`,
-                    level: "info"
+                    level: LogLevel.Info
                   }
                 ]
               }

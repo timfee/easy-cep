@@ -8,14 +8,15 @@ import {
   camelToTitle,
   categoryTitles,
   type VarName,
-  type VariableMetadata
-} from "@/lib/workflow-variables";
+  type VariableMetadata,
+  type WorkflowVars
+} from "@/lib/workflow/variables";
 import { Database, Edit3 } from "lucide-react";
 import { useState } from "react";
 
 interface VarsInspectorProps {
-  vars: Partial<Record<VarName, any>>;
-  onChange: (updatedVars: Partial<Record<VarName, any>>) => void;
+  vars: Partial<WorkflowVars>;
+  onChange: (updatedVars: Partial<WorkflowVars>) => void;
 }
 
 export function VarsInspector({ vars, onChange }: VarsInspectorProps) {
@@ -25,7 +26,7 @@ export function VarsInspector({ vars, onChange }: VarsInspectorProps) {
   } | null>(null);
 
   const handleValueChange = (key: VarName, value: string) => {
-    let parsedValue: any = value;
+    let parsedValue: unknown = value;
     const meta = WORKFLOW_VARIABLES[key];
     if (meta) {
       if (meta.type === "boolean") parsedValue = value === "true";
@@ -34,7 +35,7 @@ export function VarsInspector({ vars, onChange }: VarsInspectorProps) {
     onChange({ [key]: parsedValue });
   };
 
-  const startEditing = (key: VarName, currentValue: any) => {
+  const startEditing = (key: VarName, currentValue: unknown) => {
     setEditingVar({
       key,
       value: currentValue !== undefined ? String(currentValue) : ""
