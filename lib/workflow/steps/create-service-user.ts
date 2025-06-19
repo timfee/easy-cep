@@ -50,32 +50,25 @@ export default createStep<CheckData>({
       const UserSchema = z
         .object({
           id: z.string().optional(),
-          primaryEmail: z.string().optional()
+          primaryEmail: z.string().optional(),
+          orgUnitPath: z.string().optional()
         })
         .passthrough();
       const email = `azuread-provisioning@${domain}`;
-      // If we already have a provisioning user recorded, skip the API check
-      const existingId = vars[Var.ProvisioningUserId] as string | undefined;
-      const existingEmail = vars[Var.ProvisioningUserEmail] as
-        | string
-        | undefined;
-      if (existingId && existingEmail) {
-        log(LogLevel.Info, "Service user recorded from previous run");
-        markComplete({
-          provisioningUserId: existingId,
-          provisioningUserEmail: existingEmail
-        });
-        return;
-      }
       const url = `${ApiEndpoint.Google.Users}/${encodeURIComponent(email)}`;
       const user = await fetchGoogle(url, UserSchema);
 
       if (user.id && user.primaryEmail) {
-        log(LogLevel.Info, "Service user already exists");
-        markComplete({
-          provisioningUserId: user.id,
-          provisioningUserEmail: user.primaryEmail
-        });
+        if (user.orgUnitPath !== OrgUnit.AutomationPath) {
+          log(LogLevel.Info, "Service user in wrong org unit", { user });
+          markIncomplete("Service user in wrong org unit", {});
+        } else {
+          log(LogLevel.Info, "Service user already exists");
+          markComplete({
+            provisioningUserId: user.id,
+            provisioningUserEmail: user.primaryEmail
+          });
+        }
       } else {
         log(LogLevel.Error, "Unexpected user response", { user });
         markCheckFailed("Malformed user object returned");

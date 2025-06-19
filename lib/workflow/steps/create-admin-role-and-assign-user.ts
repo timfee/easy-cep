@@ -19,6 +19,14 @@ interface AdminPrivilege {
   childPrivileges?: AdminPrivilege[];
 }
 
+const REQUIRED_PRIVS = [
+  "ORGANIZATION_UNITS_RETRIEVE",
+  "USERS_RETRIEVE",
+  "USERS_CREATE",
+  "USERS_UPDATE",
+  "GROUPS_ALL"
+];
+
 export default createStep<CheckData>({
   id: StepId.CreateAdminRoleAndAssignUser,
   requires: [
@@ -90,6 +98,16 @@ export default createStep<CheckData>({
         (r) => r.roleName === "Microsoft Entra Provisioning"
       );
       if (role) {
+        const privNames = role.rolePrivileges.map((p) => p.privilegeName);
+        const hasPrivs = REQUIRED_PRIVS.every((p) => privNames.includes(p));
+        if (!hasPrivs) {
+          log(LogLevel.Info, "Role missing required privileges");
+          markIncomplete("Role privileges incorrect", {
+            adminRoleId: role.roleId,
+            directoryServiceId: role.rolePrivileges[0]?.serviceId
+          });
+          return;
+        }
         const userId = getVar(vars, Var.ProvisioningUserId);
         const AssignmentsSchema = z.object({
           items: z
