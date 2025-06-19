@@ -21,14 +21,14 @@ GOOGLE_TOKEN=$(cat "$GOOGLE_TOKEN_FILE")
 MS_TOKEN=$(cat "$MS_TOKEN_FILE")
 
 # ISO timestamp for 10 days ago
-THRESHOLD_DATE=$(date -u -d '10 days ago' +%Y-%m-%dT%H:%M:%SZ)
+THRESHOLD_DATE=$(date -u -v-10d +%Y-%m-%dT%H:%M:%SZ)
 
 urlencode() {
   local raw="$1"
-  python3 - <<PY
+  /usr/bin/python3 - "$raw" <<PY
 import urllib.parse, sys
 print(urllib.parse.quote(sys.argv[1]))
-PY "$raw"
+PY
 }
 
 FILTER=$(urlencode "createdDateTime ge $THRESHOLD_DATE")
