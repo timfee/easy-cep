@@ -2,7 +2,7 @@
  * Creates specific test states for each step
  */
 
-import { ApiEndpoint, OrgUnit, TemplateId } from "@/constants";
+import { ApiEndpoint, TemplateId } from "@/constants";
 import { fetch, ProxyAgent, setGlobalDispatcher } from "undici";
 
 if (process.env.USE_UNDICI_PROXY !== "false") {
@@ -57,7 +57,7 @@ export async function createPartiallyCompletedState(step: string) {
         primaryEmail: `azuread-provisioning@${TEST_DOMAIN}`,
         name: { givenName: "Test", familyName: "User" },
         password: TEST_USER_PASSWORD,
-        orgUnitPath: OrgUnit.RootPath
+        orgUnitPath: "/"
       });
       break;
     case "configure-microsoft-sync-and-sso":
@@ -131,7 +131,7 @@ export async function createErrorState(step: string) {
     }
     case "assign-users-to-sso":
       await createSsoAssignment({
-        targetOrgUnit: OrgUnit.RootPath,
+        targetOrgUnit: "/",
         samlSsoInfo: { inboundSamlSsoProfile: "different-profile" },
         ssoMode: "SSO_OFF"
       });

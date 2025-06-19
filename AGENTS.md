@@ -83,3 +83,15 @@ interface StepExecuteResult<K extends Var> {
 - No `as` or casting
 - No console.log
 - No default exports other than `createStep()`
+
+## ✅ Required Checks
+
+All PRs must pass the following commands before submission:
+
+```
+pnpm lint
+pnpm check
+pnpm build
+```
+
+These commands should run without any warnings or TypeScript errors.

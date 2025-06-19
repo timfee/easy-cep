@@ -1,8 +1,3 @@
-/**
- * Single source of truth for all workflow variables.
- * To add a new variable, just add it here.
- */
-
 import { StepId } from "./step-ids";
 import type { StepIdValue } from "./step-ids";
 
