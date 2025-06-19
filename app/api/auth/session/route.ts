@@ -1,14 +1,14 @@
 import { PROVIDERS } from "@/constants";
-import { getToken } from "@/lib/auth";
+import { refreshTokenIfNeeded } from "@/lib/auth";
 import { NextResponse } from "next/server";
 
 export async function GET() {
-  const google = await getToken(PROVIDERS.GOOGLE);
-  const microsoft = await getToken(PROVIDERS.MICROSOFT);
+  const googleToken = await refreshTokenIfNeeded(PROVIDERS.GOOGLE);
+  const microsoftToken = await refreshTokenIfNeeded(PROVIDERS.MICROSOFT);
   return NextResponse.json({
-    googleAccessToken: google?.accessToken,
-    googleExpiresAt: google?.expiresAt,
-    msGraphToken: microsoft?.accessToken,
-    msGraphExpiresAt: microsoft?.expiresAt
+    googleAccessToken: googleToken?.accessToken,
+    googleExpiresAt: googleToken?.expiresAt,
+    msGraphToken: microsoftToken?.accessToken,
+    msGraphExpiresAt: microsoftToken?.expiresAt
   });
 }

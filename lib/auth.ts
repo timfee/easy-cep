@@ -212,6 +212,59 @@ export async function getToken(provider: Provider): Promise<Token | null> {
   }
 }
 
+export async function refreshTokenIfNeeded(
+  provider: Provider,
+  response?: NextResponse
+): Promise<Token | null> {
+  const token = await getToken(provider);
+  if (!token) return null;
+
+  const expiresIn = token.expiresAt - Date.now();
+  if (expiresIn > WORKFLOW_CONSTANTS.TOKEN_REFRESH_BUFFER_MS) {
+    return token;
+  }
+
+  if (!token.refreshToken) {
+    return null;
+  }
+
+  try {
+    const config = getOAuthConfig(provider);
+    const params = new URLSearchParams({
+      client_id: config.clientId,
+      client_secret: config.clientSecret,
+      refresh_token: token.refreshToken,
+      grant_type: "refresh_token"
+    });
+
+    const res = await fetch(config.tokenUrl, {
+      method: "POST",
+      headers: { "Content-Type": "application/x-www-form-urlencoded" },
+      body: params.toString()
+    });
+
+    if (!res.ok) {
+      return null;
+    }
+
+    const data = await res.json();
+    const newToken: Token = {
+      accessToken: data.access_token,
+      refreshToken: data.refresh_token || token.refreshToken,
+      expiresAt: Date.now() + data.expires_in * MS_IN_SECOND,
+      scope: data.scope?.split(" ") || token.scope
+    };
+
+    if (response) {
+      await setToken(response, provider, newToken);
+    }
+
+    return newToken;
+  } catch {
+    return null;
+  }
+}
+
 /** Store an encrypted token in cookies. */
 /** Store an encrypted token in chunked cookies. */
 export async function setToken(

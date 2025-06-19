@@ -1,5 +1,9 @@
 import { ApiEndpoint, GroupId } from "@/constants";
-import { EmptyResponseSchema, isConflictError } from "@/lib/workflow/utils";
+import {
+  EmptyResponseSchema,
+  isConflictError,
+  isNotFoundError
+} from "@/lib/workflow/utils";
 import type { WorkflowVars } from "@/types";
 import { LogLevel, StepId, Var } from "@/types";
 import { z } from "zod";
@@ -201,7 +205,7 @@ export default createStep<CheckData>({
 
       markReverted();
     } catch (error) {
-      if (error instanceof Error && error.message.startsWith("HTTP 404")) {
+      if (isNotFoundError(error)) {
         markReverted();
       } else {
         log(LogLevel.Error, "Failed to delete SSO assignment", { error });

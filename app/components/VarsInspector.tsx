@@ -1,4 +1,5 @@
 "use client";
+import { validateVariableRelationships } from "@/lib/workflow/variable-validators";
 import {
   VarName,
   WORKFLOW_VARIABLES,
@@ -29,6 +30,7 @@ export default function VarsInspector({ vars, onChange }: Props) {
     value: unknown;
   } | null>(null);
   const groups = WORKFLOW_VAR_GROUPS;
+  const validationErrors = validateVariableRelationships(vars);
 
   const handleSave = () => {
     if (editingVar) {
@@ -43,6 +45,18 @@ export default function VarsInspector({ vars, onChange }: Props) {
       <div className="flex-shrink-0 border-b border-gray-200 px-3 py-2">
         <h2 className="text-sm font-semibold text-gray-900">Variables</h2>
       </div>
+      {validationErrors.length > 0 && (
+        <div className="border-b border-zinc-200 bg-red-50 p-2">
+          <h3 className="text-sm font-medium text-red-800 mb-1">
+            Variable Validation Errors
+          </h3>
+          <ul className="text-xs text-red-700 space-y-1">
+            {validationErrors.map((error, i) => (
+              <li key={i}>• {error}</li>
+            ))}
+          </ul>
+        </div>
+      )}
 
       {/* Scrollable content */}
       <div className="flex-1 overflow-y-auto overflow-x-hidden">

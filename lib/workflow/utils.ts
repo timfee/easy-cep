@@ -1,10 +1,38 @@
 import { z } from "zod";
 
 /**
- * Check if an error is a 409 Conflict error
+ * HTTP error detection utilities
  */
+export function isHttpError(error: unknown, statusCode: number): boolean {
+  if (!(error instanceof Error)) return false;
+  const patterns = [
+    `HTTP ${statusCode}`,
+    `${statusCode}:`,
+    `code": ${statusCode}`,
+    `"code":${statusCode}`
+  ];
+  return patterns.some((pattern) => error.message.includes(pattern));
+}
+
+export function isNotFoundError(error: unknown): boolean {
+  return isHttpError(error, 404);
+}
+
 export function isConflictError(error: unknown): boolean {
-  return error instanceof Error && error.message.includes("409");
+  return isHttpError(error, 409);
+}
+
+export function isPreconditionFailedError(error: unknown): boolean {
+  return isHttpError(error, 412);
+}
+
+export function getErrorStatusCode(error: unknown): number | null {
+  if (!(error instanceof Error)) return null;
+  const match = error.message.match(/HTTP (\d{3})|(\d{3}):|code":\s*(\d{3})/);
+  if (match) {
+    return parseInt(match[1] || match[2] || match[3], 10);
+  }
+  return null;
 }
 
 /**

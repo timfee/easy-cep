@@ -25,6 +25,7 @@ export const WORKFLOW_VARIABLES = {
   // Service account
   provisioningUserId: "string",
   provisioningUserEmail: "string",
+  provisioningUserPrefix: "string",
   generatedPassword: "string",
 
   // Roles
@@ -66,7 +67,12 @@ export const WORKFLOW_VAR_GROUPS = [
   },
   {
     title: "Service Account",
-    vars: ["provisioningUserId", "provisioningUserEmail", "generatedPassword"]
+    vars: [
+      "provisioningUserId",
+      "provisioningUserEmail",
+      "provisioningUserPrefix",
+      "generatedPassword"
+    ]
   },
   { title: "Roles", vars: ["adminRoleId", "directoryServiceId"] },
   {

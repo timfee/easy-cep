@@ -1,5 +1,10 @@
-import { ApiEndpoint } from "@/constants";
-import { EmptyResponseSchema, isConflictError } from "@/lib/workflow/utils";
+import { ApiEndpoint, OrgUnit } from "@/constants";
+import {
+  EmptyResponseSchema,
+  isConflictError,
+  isNotFoundError
+} from "@/lib/workflow/utils";
+
 import type { WorkflowVars } from "@/types";
 import { LogLevel, StepId, Var } from "@/types";
 import { z } from "zod";
@@ -53,7 +58,7 @@ export default createStep<CheckData>({
       log(LogLevel.Info, "Automation OU already exists");
       markComplete({});
     } catch (error) {
-      if (error instanceof Error && error.message.startsWith("HTTP 404")) {
+      if (isNotFoundError(error)) {
         markIncomplete("Automation OU missing", {});
       } else {
         log(LogLevel.Error, "Failed to check OU", { error });
@@ -118,7 +123,7 @@ export default createStep<CheckData>({
       );
       markReverted();
     } catch (error) {
-      if (error instanceof Error && error.message.startsWith("HTTP 404")) {
+      if (isNotFoundError(error)) {
         markReverted();
       } else {
         log(LogLevel.Error, "Failed to delete OU", { error });

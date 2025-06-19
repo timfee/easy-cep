@@ -1,5 +1,9 @@
 import { ApiEndpoint } from "@/constants";
-import { EmptyResponseSchema, isConflictError } from "@/lib/workflow/utils";
+import {
+  EmptyResponseSchema,
+  isConflictError,
+  isNotFoundError
+} from "@/lib/workflow/utils";
 import { LogLevel, StepId, Var } from "@/types";
 import { z } from "zod";
 import { createStep, getVar } from "../create-step";
@@ -168,7 +172,7 @@ export default createStep<CheckData>({
 
       markReverted();
     } catch (error) {
-      if (error instanceof Error && error.message.includes("404")) {
+      if (isNotFoundError(error)) {
         markReverted();
       } else {
         log(LogLevel.Error, "Failed to delete claims policy", { error });

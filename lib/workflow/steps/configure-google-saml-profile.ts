@@ -1,5 +1,5 @@
 import { ApiEndpoint } from "@/constants";
-import { EmptyResponseSchema } from "@/lib/workflow/utils";
+import { EmptyResponseSchema, isNotFoundError } from "@/lib/workflow/utils";
 import { LogLevel, StepId, Var } from "@/types";
 import { z } from "zod";
 import { createStep, getVar } from "../create-step";
@@ -175,7 +175,7 @@ export default createStep<CheckData>({
       );
       markReverted();
     } catch (error) {
-      if (error instanceof Error && error.message.startsWith("HTTP 404")) {
+      if (isNotFoundError(error)) {
         markReverted();
       } else {
         log(LogLevel.Error, "Failed to delete SAML profile", { error });
