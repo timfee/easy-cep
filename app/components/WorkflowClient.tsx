@@ -7,6 +7,8 @@ import ProviderLogin from "./ProviderLogin";
 import StepCard, { StepInfo } from "./StepCard";
 import VarsInspector from "./VarsInspector";
 import { Navbar, NavbarLabel, NavbarSection } from "./ui/navbar";
+import { ChevronLeftIcon, ChevronRightIcon } from "@heroicons/react/24/outline";
+import clsx from "clsx";
 import {
   Sidebar,
   SidebarBody,
@@ -200,14 +202,20 @@ export default function WorkflowClient({ steps }: Props) {
       {/* Variables drawer toggle & overlay */}
       <button
         onClick={() => setVarsOpen((open) => !open)}
-        className="fixed top-1/2 right-0 z-50 -translate-y-1/2 rounded-l bg-white p-2 shadow border border-gray-200">
-        {varsOpen ? "<" : ">"}
+        className="fixed top-1/2 right-0 z-50 -translate-y-1/2 rounded-l border border-gray-200 bg-white p-2 shadow">
+        {varsOpen ? (
+          <ChevronRightIcon className="h-4 w-4" />
+        ) : (
+          <ChevronLeftIcon className="h-4 w-4" />
+        )}
       </button>
-      {varsOpen && (
-        <div className="fixed inset-y-0 right-0 z-40 w-80 overflow-y-auto border-l border-gray-200 bg-white shadow-lg">
-          <VarsInspector vars={vars} onChange={updateVars} />
-        </div>
-      )}
+      <div
+        className={clsx(
+          "fixed right-0 top-16 bottom-4 z-40 w-80 overflow-y-auto border-l border-gray-200 bg-white shadow-lg transition-transform duration-300",
+          varsOpen ? "translate-x-0" : "translate-x-full"
+        )}>
+        <VarsInspector vars={vars} onChange={updateVars} />
+      </div>
     </StackedLayout>
   );
 }

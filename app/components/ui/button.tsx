@@ -180,19 +180,29 @@ export const Button = forwardRef(function Button(
     : clsx(styles.solid, styles.colors[color ?? "dark/zinc"])
   );
 
-  return "href" in props ?
+  if ("href" in props) {
+    return (
       <Link
         {...props}
         className={classes}
         ref={ref as React.ForwardedRef<HTMLAnchorElement>}>
         <TouchTarget>{children}</TouchTarget>
       </Link>
-    : <Headless.Button
-        {...props}
-        className={clsx(classes, "cursor-default")}
-        ref={ref}>
-        <TouchTarget>{children}</TouchTarget>
-      </Headless.Button>;
+    );
+  }
+
+  const { disabled, ...rest } = props as Headless.ButtonProps;
+
+  return (
+    <Headless.Button
+      {...rest}
+      disabled={disabled}
+      data-disabled={disabled ? "" : undefined}
+      className={clsx(classes, "cursor-default")}
+      ref={ref}>
+      <TouchTarget>{children}</TouchTarget>
+    </Headless.Button>
+  );
 });
 
 /**
