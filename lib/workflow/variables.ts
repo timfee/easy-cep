@@ -25,7 +25,6 @@ export const WORKFLOW_VARIABLES = {
   // Service account
   provisioningUserId: "string",
   provisioningUserEmail: "string",
-  provisioningUserPrefix: "string",
   generatedPassword: "string",
 
   // Roles

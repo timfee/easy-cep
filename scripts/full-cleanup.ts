@@ -48,9 +48,7 @@ async function cleanupGoogleAssignments() {
   const res = await fetch(ApiEndpoint.Google.SsoAssignments, {
     headers: { Authorization: `Bearer ${GOOGLE_TOKEN}` }
   });
-  const { inboundSsoAssignments = [] } = (await res.json()) as z.infer<
-    typeof AssignSchema
-  >;
+  const { inboundSsoAssignments = [] } = AssignSchema.parse(await res.json());
 
   for (const assign of inboundSsoAssignments) {
     await fetch(
@@ -84,9 +82,7 @@ async function cleanupGoogleRoles() {
     const res = await fetch(url, {
       headers: { Authorization: `Bearer ${GOOGLE_TOKEN}` }
     });
-    const { items = [], nextPageToken } = (await res.json()) as z.infer<
-      typeof RolesSchema
-    >;
+    const { items = [], nextPageToken } = RolesSchema.parse(await res.json());
     pageToken = nextPageToken;
     for (const role of items) {
       if (
@@ -103,7 +99,7 @@ async function cleanupGoogleRoles() {
           headers: { Authorization: `Bearer ${GOOGLE_TOKEN}` }
         });
         const { items: assignments = [], nextPageToken: nextAssign } =
-          (await aRes.json()) as z.infer<typeof AssignSchema>;
+          AssignSchema.parse(await aRes.json());
         assignToken = nextAssign;
         for (const a of assignments) {
           await fetch(
@@ -119,9 +115,9 @@ async function cleanupGoogleRoles() {
         `${ApiEndpoint.Google.RoleAssignments}?userKey=${encodeURIComponent(PROVISIONING_EMAIL)}`,
         { headers: { Authorization: `Bearer ${GOOGLE_TOKEN}` } }
       );
-      const { items: userAssignments = [] } = (await userRes.json()) as z.infer<
-        typeof AssignSchema
-      >;
+      const { items: userAssignments = [] } = AssignSchema.parse(
+        await userRes.json()
+      );
       for (const ua of userAssignments) {
         if (ua.roleId === role.roleId) {
           await fetch(
@@ -153,7 +149,7 @@ async function cleanupMicrosoftApps() {
   const appsRes = await fetch(ApiEndpoint.Microsoft.Applications, {
     headers: { Authorization: `Bearer ${MS_TOKEN}` }
   });
-  const { value = [] } = (await appsRes.json()) as z.infer<typeof AppsSchema>;
+  const { value = [] } = AppsSchema.parse(await appsRes.json());
 
   for (const app of value) {
     if (KEEP_MS_APP_IDS.includes(app.appId)) continue;
@@ -203,7 +199,7 @@ async function cleanupClaimsPolicies() {
   const res = await fetch(ApiEndpoint.Microsoft.ClaimsPolicies, {
     headers: { Authorization: `Bearer ${MS_TOKEN}` }
   });
-  const { value = [] } = (await res.json()) as z.infer<typeof PoliciesSchema>;
+  const { value = [] } = PoliciesSchema.parse(await res.json());
 
   for (const policy of value) {
     await fetch(`${ApiEndpoint.Microsoft.ClaimsPolicies}/${policy.id}`, {
