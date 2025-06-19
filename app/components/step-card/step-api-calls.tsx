@@ -56,7 +56,7 @@ export function StepApiCalls({ stepId }: StepApiCallsProps) {
         {calls.map((call, index) => (
           <div
             key={index}
-            className="relative group"
+            className="relative group cursor-pointer hover:bg-gray-100 dark:hover:bg-white/5 rounded-md p-1"
             onMouseEnter={() => setHoveredIndex(index)}
             onMouseLeave={() => setHoveredIndex(null)}>
             <div className="flex items-start gap-3 text-sm">
@@ -75,7 +75,7 @@ export function StepApiCalls({ stepId }: StepApiCallsProps) {
             </div>
 
             {hoveredIndex === index && (
-              <div className="absolute z-10 left-0 right-0 mt-2 p-3 bg-gray-900 dark:bg-gray-700 text-white rounded-lg shadow-lg text-xs">
+              <div className="absolute z-10 left-0 mt-2 p-3 bg-gray-900/90 dark:bg-gray-700/90 text-white rounded-lg shadow-lg text-xs max-w-xl">
                 <p className="font-mono mb-2 break-all">
                   {getFullUrl(call.endpoint)}
                 </p>
