@@ -1,14 +1,19 @@
-import { ApiEndpoint, OrgUnit } from "@/constants";
+import { ApiEndpoint } from "@/constants";
 import { EmptyResponseSchema, isConflictError } from "@/lib/workflow/utils";
 import type { WorkflowVars } from "@/types";
 import { LogLevel, StepId, Var } from "@/types";
 import { z } from "zod";
-import { createStep } from "../create-step";
+import { createStep, getVar } from "../create-step";
 
 type CheckData = Partial<Pick<WorkflowVars, never>>;
 export default createStep<CheckData>({
   id: StepId.CreateAutomationOU,
-  requires: [Var.GoogleAccessToken, Var.IsDomainVerified],
+  requires: [
+    Var.GoogleAccessToken,
+    Var.IsDomainVerified,
+    Var.AutomationOuName,
+    Var.AutomationOuPath
+  ],
   provides: [],
 
   /**
@@ -31,7 +36,7 @@ export default createStep<CheckData>({
    */
 
   async check({
-    vars: _vars,
+    vars,
     fetchGoogle,
     markComplete,
     markIncomplete,
@@ -39,7 +44,7 @@ export default createStep<CheckData>({
     log
   }) {
     try {
-      const ouName = OrgUnit.AutomationName;
+      const ouName = getVar(vars, Var.AutomationOuName);
       const OrgUnitSchema = z.object({ orgUnitPath: z.string() });
       await fetchGoogle(
         `${ApiEndpoint.Google.OrgUnits}/${encodeURIComponent(ouName)}`,
@@ -59,7 +64,7 @@ export default createStep<CheckData>({
     }
   },
 
-  async execute({ vars: _vars, fetchGoogle, markSucceeded, markFailed, log }) {
+  async execute({ vars, fetchGoogle, markSucceeded, markFailed, log }) {
     /**
      * POST https://admin.googleapis.com/admin/directory/v1/customer/my_customer/orgunits
      * {
@@ -87,8 +92,8 @@ export default createStep<CheckData>({
       await fetchGoogle(ApiEndpoint.Google.OrgUnits, CreateSchema, {
         method: "POST",
         body: JSON.stringify({
-          name: OrgUnit.AutomationName,
-          parentOrgUnitPath: OrgUnit.RootPath
+          name: getVar(vars, Var.AutomationOuName),
+          parentOrgUnitPath: "/"
         })
       });
 
@@ -103,10 +108,11 @@ export default createStep<CheckData>({
       }
     }
   },
-  undo: async ({ fetchGoogle, markReverted, markFailed, log }) => {
+  undo: async ({ vars, fetchGoogle, markReverted, markFailed, log }) => {
     try {
+      const path = getVar(vars, Var.AutomationOuPath);
       await fetchGoogle(
-        `${ApiEndpoint.Google.OrgUnits}/${encodeURIComponent(OrgUnit.AutomationName)}`,
+        `${ApiEndpoint.Google.OrgUnits}/${encodeURIComponent(path)}`,
         EmptyResponseSchema,
         { method: "DELETE" }
       );

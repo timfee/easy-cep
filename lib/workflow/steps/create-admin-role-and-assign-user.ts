@@ -32,7 +32,8 @@ export default createStep<CheckData>({
   requires: [
     Var.GoogleAccessToken,
     Var.IsDomainVerified,
-    Var.ProvisioningUserId
+    Var.ProvisioningUserId,
+    Var.AdminRoleName
   ],
   provides: [Var.AdminRoleId, Var.DirectoryServiceId],
 
@@ -88,9 +89,8 @@ export default createStep<CheckData>({
         RolesSchema,
         { flatten: true }
       );
-      const role = items.find(
-        (r) => r.roleName === "Microsoft Entra Provisioning"
-      );
+      const roleName = getVar(vars, Var.AdminRoleName);
+      const role = items.find((r) => r.roleName === roleName);
       if (role) {
         const privNames = role.rolePrivileges.map((p) => p.privilegeName);
         const hasPrivs = REQUIRED_PRIVS.every((p) => privNames.includes(p));
@@ -226,7 +226,7 @@ export default createStep<CheckData>({
         const res = await fetchGoogle(ApiEndpoint.Google.Roles, CreateSchema, {
           method: "POST",
           body: JSON.stringify({
-            roleName: "Microsoft Entra Provisioning",
+            roleName: getVar(vars, Var.AdminRoleName),
             roleDescription: "Custom role for Microsoft provisioning",
             rolePrivileges: [
               { serviceId, privilegeName: "ORGANIZATION_UNITS_RETRIEVE" },
@@ -259,9 +259,8 @@ export default createStep<CheckData>({
               RolesSchema,
               { flatten: true }
             );
-            roleId = rolesList.find(
-              (r) => r.roleName === "Microsoft Entra Provisioning"
-            )?.roleId;
+            const roleName = getVar(vars, Var.AdminRoleName);
+            roleId = rolesList.find((r) => r.roleName === roleName)?.roleId;
           }
         } else {
           throw error;
