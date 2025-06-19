@@ -41,6 +41,7 @@ export default createStep<CheckData>({
             z.object({
               targetGroup: z.string().optional(),
               targetOrgUnit: z.string().optional(),
+              ssoMode: z.string().optional(),
               samlSsoInfo: z
                 .object({ inboundSamlSsoProfile: z.string() })
                 .optional()
@@ -57,11 +58,10 @@ export default createStep<CheckData>({
         { flatten: true }
       );
 
-      const target = `groups/${GroupId.AllUsers}`;
       const exists = inboundSsoAssignments.some(
         (a) =>
-          a.targetGroup === target
-          && a.samlSsoInfo?.inboundSamlSsoProfile === profileId
+          a.samlSsoInfo?.inboundSamlSsoProfile === profileId
+          && a.ssoMode === "SAML_SSO"
       );
 
       if (exists) {
@@ -163,6 +163,8 @@ export default createStep<CheckData>({
             z.object({
               name: z.string(),
               targetGroup: z.string().optional(),
+              targetOrgUnit: z.string().optional(),
+              ssoMode: z.string().optional(),
               samlSsoInfo: z
                 .object({ inboundSamlSsoProfile: z.string() })
                 .optional()
@@ -177,11 +179,10 @@ export default createStep<CheckData>({
         { flatten: true }
       );
 
-      const target = `groups/${GroupId.AllUsers}`;
       const assignment = inboundSsoAssignments.find(
         (a) =>
-          a.targetGroup === target
-          && a.samlSsoInfo?.inboundSamlSsoProfile === profileId
+          a.samlSsoInfo?.inboundSamlSsoProfile === profileId
+          && a.ssoMode === "SAML_SSO"
       );
 
       if (assignment) {
