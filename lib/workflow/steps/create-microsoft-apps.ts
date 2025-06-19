@@ -2,7 +2,7 @@ import { ApiEndpoint, TemplateId } from "@/constants";
 import { EmptyResponseSchema, isNotFoundError } from "@/lib/workflow/utils";
 import { LogLevel, StepId, Var } from "@/types";
 import { z } from "zod";
-import { createStep } from "../create-step";
+import { createStep, getVar } from "../create-step";
 
 interface CheckData {
   provisioningServicePrincipalId?: string;
@@ -12,7 +12,11 @@ interface CheckData {
 
 export default createStep<CheckData>({
   id: StepId.CreateMicrosoftApps,
-  requires: [Var.MsGraphToken],
+  requires: [
+    Var.MsGraphToken,
+    Var.ProvisioningAppDisplayName,
+    Var.SsoAppDisplayName
+  ],
   provides: [
     Var.ProvisioningServicePrincipalId,
     Var.SsoServicePrincipalId,
@@ -121,7 +125,7 @@ export default createStep<CheckData>({
     }
   },
 
-  async execute({ fetchMicrosoft, markSucceeded, markFailed, log }) {
+  async execute({ vars, fetchMicrosoft, markSucceeded, markFailed, log }) {
     /**
      * POST https://graph.microsoft.com/v1.0/applicationTemplates/{templateId}/instantiate
      * { "displayName": "Google Workspace Provisioning" }
@@ -150,7 +154,9 @@ export default createStep<CheckData>({
         CreateSchema,
         {
           method: "POST",
-          body: JSON.stringify({ displayName: "Google Workspace Provisioning" })
+          body: JSON.stringify({
+            displayName: getVar(vars, Var.ProvisioningAppDisplayName)
+          })
         }
       );
 
@@ -159,7 +165,9 @@ export default createStep<CheckData>({
         CreateSchema,
         {
           method: "POST",
-          body: JSON.stringify({ displayName: "Google Workspace SSO" })
+          body: JSON.stringify({
+            displayName: getVar(vars, Var.SsoAppDisplayName)
+          })
         }
       );
 

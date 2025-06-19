@@ -5,6 +5,7 @@ import {
   isNotFoundError,
   isPreconditionFailedError
 } from "@/lib/workflow/utils";
+
 import { LogLevel, StepId, Var } from "@/types";
 import crypto from "crypto";
 import { z } from "zod";
@@ -17,7 +18,13 @@ interface CheckData {
 
 export default createStep<CheckData>({
   id: StepId.CreateServiceUser,
-  requires: [Var.GoogleAccessToken, Var.IsDomainVerified, Var.PrimaryDomain],
+  requires: [
+    Var.GoogleAccessToken,
+    Var.IsDomainVerified,
+    Var.PrimaryDomain,
+    Var.ProvisioningUserPrefix,
+    Var.AutomationOuPath
+  ],
   provides: [
     Var.ProvisioningUserId,
     Var.ProvisioningUserEmail,
@@ -47,6 +54,7 @@ export default createStep<CheckData>({
   }) {
     try {
       const domain = getVar(vars, Var.PrimaryDomain);
+      const prefix = getVar(vars, Var.ProvisioningUserPrefix);
 
       const UserSchema = z
         .object({
@@ -55,7 +63,7 @@ export default createStep<CheckData>({
           orgUnitPath: z.string().optional()
         })
         .passthrough();
-      const email = `azuread-provisioning@${domain}`;
+      const email = `${prefix}@${domain}`;
       const url = `${ApiEndpoint.Google.Users}/${encodeURIComponent(email)}?fields=id,primaryEmail`;
       const user = await fetchGoogle(url, UserSchema);
 
@@ -120,18 +128,20 @@ export default createStep<CheckData>({
 
       let user;
       try {
+        const prefix = getVar(vars, Var.ProvisioningUserPrefix);
+        const ouPath = getVar(vars, Var.AutomationOuPath);
         user = await fetchGoogle(ApiEndpoint.Google.Users, CreateSchema, {
           method: "POST",
           body: JSON.stringify({
-            primaryEmail: `azuread-provisioning@${domain}`,
+            primaryEmail: `${prefix}@${domain}`,
             name: { givenName: "Microsoft", familyName: "Provisioning" },
             password,
-            orgUnitPath: OrgUnit.AutomationPath
+            orgUnitPath: ouPath
           })
         });
       } catch (error) {
         if (isConflictError(error)) {
-          const fallbackEmail = `azuread-provisioning@${domain}`;
+          const fallbackEmail = `${getVar(vars, Var.ProvisioningUserPrefix)}@${domain}`;
           const getUrl = `${ApiEndpoint.Google.Users}/${encodeURIComponent(fallbackEmail)}?fields=id,primaryEmail`;
           user = await fetchGoogle(getUrl, CreateSchema);
 

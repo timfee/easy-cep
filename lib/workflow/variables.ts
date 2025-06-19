@@ -12,6 +12,16 @@ export const WORKFLOW_VARIABLES = {
   isDomainVerified: "boolean",
   verificationToken: "string",
 
+  // Configuration variables
+  automationOuName: "string",
+  automationOuPath: "string",
+  provisioningUserPrefix: "string",
+  adminRoleName: "string",
+  samlProfileDisplayName: "string",
+  provisioningAppDisplayName: "string",
+  ssoAppDisplayName: "string",
+  claimsPolicyDisplayName: "string",
+
   // Service account
   provisioningUserId: "string",
   provisioningUserEmail: "string",
@@ -41,6 +51,19 @@ export const WORKFLOW_VAR_GROUPS = [
   {
     title: "Domain",
     vars: ["primaryDomain", "isDomainVerified", "verificationToken"]
+  },
+  {
+    title: "Configuration",
+    vars: [
+      "automationOuName",
+      "automationOuPath",
+      "provisioningUserPrefix",
+      "adminRoleName",
+      "samlProfileDisplayName",
+      "provisioningAppDisplayName",
+      "ssoAppDisplayName",
+      "claimsPolicyDisplayName"
+    ]
   },
   {
     title: "Service Account",

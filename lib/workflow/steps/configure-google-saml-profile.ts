@@ -2,7 +2,7 @@ import { ApiEndpoint } from "@/constants";
 import { EmptyResponseSchema, isNotFoundError } from "@/lib/workflow/utils";
 import { LogLevel, StepId, Var } from "@/types";
 import { z } from "zod";
-import { createStep } from "../create-step";
+import { createStep, getVar } from "../create-step";
 
 interface CheckData {
   samlProfileId?: string;
@@ -12,7 +12,11 @@ interface CheckData {
 
 export default createStep<CheckData>({
   id: StepId.ConfigureGoogleSamlProfile,
-  requires: [Var.GoogleAccessToken, Var.IsDomainVerified],
+  requires: [
+    Var.GoogleAccessToken,
+    Var.IsDomainVerified,
+    Var.SamlProfileDisplayName
+  ],
   provides: [Var.SamlProfileId, Var.EntityId, Var.AcsUrl],
 
   /**
@@ -77,7 +81,7 @@ export default createStep<CheckData>({
     }
   },
 
-  async execute({ fetchGoogle, markSucceeded, markFailed, markPending, log }) {
+  async execute({ vars, fetchGoogle, markSucceeded, markFailed, markPending, log }) {
     /**
      * POST https://cloudidentity.googleapis.com/v1/customers/my_customer/inboundSamlSsoProfiles
      * {
@@ -124,7 +128,7 @@ export default createStep<CheckData>({
       const op = await fetchGoogle(createUrl, opSchema, {
         method: "POST",
         body: JSON.stringify({
-          displayName: "Azure AD",
+          displayName: getVar(vars, Var.SamlProfileDisplayName),
           idpConfig: { entityId: "", singleSignOnServiceUri: "" }
         })
       });
