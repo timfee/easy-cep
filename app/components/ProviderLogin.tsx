@@ -63,12 +63,12 @@ export default function ProviderLogin({ onUpdate }: Props) {
   }, []);
 
   return (
-    <div className="mb-6 rounded-xl border border-blue-100 bg-gradient-to-r from-blue-50 to-indigo-50 p-6 shadow-sm">
+    <div className="rounded-xl border border-gray-200 bg-gray-50 p-6">
       <h2 className="mb-4 text-lg font-semibold text-gray-900">
         Provider Login
       </h2>
-      <div className="flex gap-4">
-        <div className="flex-1 rounded-lg border border-zinc-200 bg-white p-4 shadow-sm">
+      <div className="grid grid-cols-2 gap-4">
+        <div className="rounded-lg border border-gray-200 bg-white p-4">
           <div className="flex flex-col gap-2">
             {tokens.googleAccessToken ?
               <>
@@ -117,7 +117,7 @@ export default function ProviderLogin({ onUpdate }: Props) {
             }
           </div>
         </div>
-        <div className="flex-1 rounded-lg border border-zinc-200 bg-white p-4 shadow-sm">
+        <div className="rounded-lg border border-gray-200 bg-white p-4">
           <div className="flex flex-col gap-2">
             {tokens.msGraphToken ?
               <>

@@ -172,49 +172,56 @@ export default function WorkflowClient({ steps }: Props) {
 
   return (
     <StackedLayout navbar={navbar} sidebar={sidebar}>
-      <h1 className="mb-8 text-2xl font-bold text-gray-900">Workflow</h1>
-      <p className="mb-6 text-gray-600">
-        Run each step to configure the environment.
-      </p>
-      <div className="mb-4 text-sm text-gray-600">
-        {completed} of {steps.length} steps complete
-      </div>
-      <div className="lg:flex lg:items-start lg:gap-6">
-        <div className="flex-1">
+      {/* Container for all content - single scroll context */}
+      <div className="min-h-screen">
+        {/* Header section - fixed width, centered */}
+        <div className="mx-auto max-w-2xl px-6 pt-8 pb-6">
+          <h1 className="mb-4 text-2xl font-bold text-gray-900">Workflow</h1>
+          <p className="mb-6 text-gray-600">
+            Run each step to configure the environment.
+          </p>
+          <div className="mb-6 text-sm text-gray-600">
+            {completed} of {steps.length} steps complete
+          </div>
+
+          {/* Provider Login - keep in centered container */}
           <ProviderLogin onUpdate={updateVars} />
+        </div>
+
+        {/* Steps section - full width for cards */}
+        <div className="pb-8">
           {steps.map((step, idx) => (
-            <StepCard
-              key={step.id}
-              index={idx}
-              definition={step}
-              state={status[step.id]}
-              vars={vars}
-              executing={executing !== null}
-              onExecute={handleExecute}
-              onUndo={handleUndo}
-              onForce={handleForce}
-            />
+            <div key={step.id} className="mx-auto max-w-4xl px-6">
+              <StepCard
+                index={idx}
+                definition={step}
+                state={status[step.id]}
+                vars={vars}
+                executing={executing !== null}
+                onExecute={handleExecute}
+                onUndo={handleUndo}
+                onForce={handleForce}
+              />
+            </div>
           ))}
         </div>
-        {/* static sidebar replaced by overlay drawer */}
       </div>
 
-      {/* Variables drawer toggle & overlay */}
-      <button
-        onClick={() => setVarsOpen((open) => !open)}
-        className={clsx(
-          "fixed top-1/2 z-50 -translate-y-1/2 rounded-l border border-gray-200 bg-white p-2 shadow transition-[right] duration-300",
-          varsOpen ? "right-96" : "right-0"
-        )}>
-        {varsOpen ?
-          <ChevronRightIcon className="h-4 w-4" />
-        : <ChevronLeftIcon className="h-4 w-4" />}
-      </button>
+      {/* Variables Panel - fixed position slide-out */}
       <div
         className={clsx(
-          "fixed right-0 top-24 bottom-8 z-40 w-96 overflow-y-auto rounded-tl-xl border-l border-gray-200 bg-white shadow-lg transition-transform duration-300",
+          "fixed right-0 top-0 h-full w-80 transform bg-white shadow-xl transition-transform duration-300 z-50",
           varsOpen ? "translate-x-0" : "translate-x-full"
         )}>
+        {/* Toggle button attached to panel */}
+        <button
+          onClick={() => setVarsOpen(!varsOpen)}
+          className="absolute -left-10 top-24 bg-white border border-r-0 border-gray-200 rounded-l-lg p-2 shadow-sm">
+          {varsOpen ?
+            <ChevronRightIcon className="h-5 w-5 text-gray-600" />
+          : <ChevronLeftIcon className="h-5 w-5 text-gray-600" />}
+        </button>
+
         <VarsInspector vars={vars} onChange={updateVars} />
       </div>
     </StackedLayout>
