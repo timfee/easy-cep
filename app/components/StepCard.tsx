@@ -8,6 +8,7 @@ import {
   XMarkIcon as X
 } from "@heroicons/react/24/solid";
 import { StepApiCalls } from "./step-card/step-api-calls";
+import { stepDescriptions } from "./step-card/step-descriptions";
 import StepLogs from "./StepLogs";
 import { Badge } from "./ui/badge";
 import { Button } from "./ui/button";
@@ -41,6 +42,17 @@ const badgeColor: Record<
   pending: "amber",
   undoing: "purple",
   reverted: "zinc"
+};
+
+const textColor: Record<StepUIState["status"], string> = {
+  idle: "text-zinc-700",
+  checking: "text-blue-700",
+  executing: "text-blue-700",
+  complete: "text-green-700",
+  failed: "text-red-700",
+  pending: "text-amber-700",
+  undoing: "text-purple-700",
+  reverted: "text-zinc-700"
 };
 
 interface StepCardProps {
@@ -99,11 +111,18 @@ export default function StepCard({
         </Badge>
       </div>
 
-      {(state?.summary || state?.error || state?.notes) && (
-        <p className="mt-2 text-sm text-gray-700">
-          {state.summary || state.error || state.notes}
+      <div className="mt-2 flex items-start justify-between gap-4 text-sm">
+        <p className="text-gray-700 flex-1">
+          {stepDescriptions[definition.id]}
         </p>
-      )}
+        {(state?.summary || state?.error || state?.notes) && (
+          <span className={`${textColor[status]} shrink-0 whitespace-nowrap`}>
+            {state.error
+              || (state.summary === "Already complete" ? "" : state.summary)
+              || state.notes}
+          </span>
+        )}
+      </div>
 
       <div className="mt-4 grid grid-cols-1 gap-4 sm:grid-cols-2">
         <div className="rounded-lg bg-gray-50 p-4">
