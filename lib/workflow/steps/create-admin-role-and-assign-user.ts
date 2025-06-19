@@ -2,7 +2,8 @@ import { ApiEndpoint } from "@/constants";
 import {
   EmptyResponseSchema,
   findInTree,
-  isConflictError
+  isConflictError,
+  isNotFoundError
 } from "@/lib/workflow/utils";
 import { LogLevel, StepId, Var } from "@/types";
 import { z } from "zod";
@@ -248,7 +249,10 @@ export default createStep<CheckData>({
                     roleId: z.string(),
                     roleName: z.string(),
                     rolePrivileges: z.array(
-                      z.object({ serviceId: z.string(), privilegeName: z.string() })
+                      z.object({
+                        serviceId: z.string(),
+                        privilegeName: z.string()
+                      })
                     )
                   })
                 )
@@ -358,7 +362,7 @@ export default createStep<CheckData>({
       );
       markReverted();
     } catch (error) {
-      if (error instanceof Error && error.message.startsWith("HTTP 404")) {
+      if (isNotFoundError(error)) {
         markReverted();
       } else {
         log(LogLevel.Error, "Failed to undo admin role", { error });

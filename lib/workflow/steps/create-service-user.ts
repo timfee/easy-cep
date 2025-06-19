@@ -1,5 +1,10 @@
 import { ApiEndpoint, OrgUnit } from "@/constants";
-import { EmptyResponseSchema, isConflictError } from "@/lib/workflow/utils";
+import {
+  EmptyResponseSchema,
+  isConflictError,
+  isNotFoundError,
+  isPreconditionFailedError
+} from "@/lib/workflow/utils";
 import { LogLevel, StepId, Var } from "@/types";
 import crypto from "crypto";
 import { z } from "zod";
@@ -65,7 +70,7 @@ export default createStep<CheckData>({
         markCheckFailed("Malformed user object returned");
       }
     } catch (error) {
-      if (error instanceof Error && error.message.startsWith("HTTP 404")) {
+      if (isNotFoundError(error)) {
         markIncomplete("Service user missing", {});
       } else {
         log(LogLevel.Error, "Failed to check service user", { error });
@@ -164,11 +169,7 @@ export default createStep<CheckData>({
       );
       markReverted();
     } catch (error) {
-      if (
-        error instanceof Error
-        && (error.message.startsWith("HTTP 404")
-          || error.message.startsWith("HTTP 412"))
-      ) {
+      if (isNotFoundError(error) || isPreconditionFailedError(error)) {
         markReverted();
       } else {
         log(LogLevel.Error, "Failed to delete service user", { error });

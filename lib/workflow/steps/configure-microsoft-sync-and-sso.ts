@@ -1,5 +1,5 @@
 import { ApiEndpoint, SyncTemplateId } from "@/constants";
-import { EmptyResponseSchema } from "@/lib/workflow/utils";
+import { EmptyResponseSchema, isNotFoundError } from "@/lib/workflow/utils";
 import type { WorkflowVars } from "@/types";
 import { LogLevel, StepId, Var } from "@/types";
 import { z } from "zod";
@@ -150,7 +150,7 @@ export default createStep<CheckData>({
 
       markReverted();
     } catch (error) {
-      if (error instanceof Error && error.message.includes("404")) {
+      if (isNotFoundError(error)) {
         markReverted();
       } else {
         log(LogLevel.Error, "Failed to remove sync job", { error });
