@@ -50,14 +50,33 @@ const eslintConfig = [
       // 4. Step-specific patterns
       "workflow/check-data-type-required": "error",
       "workflow/no-state-mutations": "error",
-      "workflow/no-process-env": "error"
+      "workflow/no-process-env": "error",
+
+      // 5. Configuration enforcement
+      "workflow/no-hardcoded-config": "error",
+      "workflow/require-var-enum-in-steps": "error",
+
+      // 6. Error handling consistency
+      "workflow/use-error-utils": "error"
+    }
+  },
+  {
+    files: ["lib/workflow/engine.ts", "lib/workflow/fetch-utils.ts"],
+    rules: {
+      // Engine-specific rules
+      "workflow/no-duplicate-code-blocks": [
+        "error",
+        { minLines: 20, threshold: 0.8 }
+      ],
+      "workflow/require-token-refresh": "error"
     }
   },
   {
     files: ["**/__tests__/**", "test/**"],
     rules: {
       "no-magic-numbers": "off",
-      "@typescript-eslint/no-explicit-any": "off"
+      "@typescript-eslint/no-explicit-any": "off",
+      "workflow/no-hardcoded-config": "off"
     }
   },
   {
@@ -66,7 +85,8 @@ const eslintConfig = [
       "test/**",
       "constants.ts",
       "**/api-prefixes.ts",
-      "types.ts"
+      "types.ts",
+      "app/components/WorkflowClient.tsx" // Allow default values here
     ],
     rules: {
       "@typescript-eslint/no-unused-vars": [
@@ -75,6 +95,7 @@ const eslintConfig = [
       ],
       // 1. Constant usage
       "workflow/no-hardcoded-urls": "error",
+      "workflow/no-hardcoded-config": "error",
 
       // 2. Type safety
       "workflow/use-var-enum": "error",
@@ -83,7 +104,25 @@ const eslintConfig = [
 
       // 3. Import rules
       "workflow/import-types-from-types": "error",
-      "workflow/import-constants-from-constants": "error"
+      "workflow/import-constants-from-constants": "error",
+
+      // 4. Error handling
+      "workflow/use-error-utils": "error",
+
+      // 5. Code quality
+      "workflow/no-duplicate-code-blocks": [
+        "warn",
+        { minLines: 15, threshold: 0.7 }
+      ]
+    }
+  },
+  {
+    files: ["scripts/**/*.ts", "scripts/**/*.js"],
+    rules: {
+      // Scripts can have more lenient rules
+      "workflow/no-hardcoded-config": "off",
+      "workflow/no-process-env": "off",
+      "@typescript-eslint/no-explicit-any": "off"
     }
   }
 ];

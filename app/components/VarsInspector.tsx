@@ -1,14 +1,14 @@
 "use client";
 import { validateVariableRelationships } from "@/lib/workflow/variable-validators";
 import {
+  VariableMetadata,
   VarName,
   WORKFLOW_VARIABLES,
-  VariableMetadata,
   WorkflowVars
 } from "@/lib/workflow/variables";
-import { useState } from "react";
-import clsx from "clsx";
 import { PencilSquareIcon as EditIcon } from "@heroicons/react/24/solid";
+import clsx from "clsx";
+import { useState } from "react";
 import { Button } from "./ui/button";
 import {
   Dialog,
@@ -38,17 +38,23 @@ export default function VarsInspector({ vars, onChange }: Props) {
     name: VarName;
     value: unknown;
   } | null>(null);
-  const [filter, setFilter] = useState<'all' | 'config' | 'state'>('all');
+  const [filter, setFilter] = useState<"all" | "config" | "state">("all");
   const validationErrors = validateVariableRelationships(vars);
 
   const groupedVars = Object.entries(WORKFLOW_VARIABLES)
-    .filter(([_, meta]) => filter === 'all' || meta.category === filter)
-    .reduce((acc, [key, meta]) => {
-      const category = meta.category;
-      if (!acc[category]) acc[category] = [];
-      acc[category].push({ key: key as VarName, ...(meta as VariableMetadata) });
-      return acc;
-    }, {} as Record<string, Array<{ key: VarName } & VariableMetadata>>);
+    .filter(([_, meta]) => filter === "all" || meta.category === filter)
+    .reduce(
+      (acc, [key, meta]) => {
+        const category = meta.category;
+        if (!acc[category]) acc[category] = [];
+        acc[category].push({
+          key: key as VarName,
+          ...(meta as VariableMetadata)
+        });
+        return acc;
+      },
+      {} as Record<string, Array<{ key: VarName } & VariableMetadata>>
+    );
 
   const handleSave = () => {
     if (editingVar) {
@@ -64,30 +70,29 @@ export default function VarsInspector({ vars, onChange }: Props) {
         <h2 className="text-sm font-semibold text-gray-900">Variables</h2>
         <div className="mt-2 flex gap-2">
           <button
-            onClick={() => setFilter('all')}
+            onClick={() => setFilter("all")}
             className={clsx(
-              'text-xs px-2 py-1 rounded',
-              filter === 'all' ? 'bg-blue-100 text-blue-700' : 'text-gray-600'
-            )}
-          >
+              "text-xs px-2 py-1 rounded",
+              filter === "all" ? "bg-blue-100 text-blue-700" : "text-gray-600"
+            )}>
             All
           </button>
           <button
-            onClick={() => setFilter('config')}
+            onClick={() => setFilter("config")}
             className={clsx(
-              'text-xs px-2 py-1 rounded',
-              filter === 'config' ? 'bg-blue-100 text-blue-700' : 'text-gray-600'
-            )}
-          >
+              "text-xs px-2 py-1 rounded",
+              filter === "config" ?
+                "bg-blue-100 text-blue-700"
+              : "text-gray-600"
+            )}>
             Config
           </button>
           <button
-            onClick={() => setFilter('state')}
+            onClick={() => setFilter("state")}
             className={clsx(
-              'text-xs px-2 py-1 rounded',
-              filter === 'state' ? 'bg-blue-100 text-blue-700' : 'text-gray-600'
-            )}
-          >
+              "text-xs px-2 py-1 rounded",
+              filter === "state" ? "bg-blue-100 text-blue-700" : "text-gray-600"
+            )}>
             State
           </button>
         </div>
@@ -118,7 +123,9 @@ export default function VarsInspector({ vars, onChange }: Props) {
                 name={key}
                 value={vars[key]}
                 metadata={meta}
-                onEdit={() => setEditingVar({ name: key, value: vars[key] ?? "" })}
+                onEdit={() =>
+                  setEditingVar({ name: key, value: vars[key] ?? "" })
+                }
               />
             ))}
           </div>
@@ -128,33 +135,40 @@ export default function VarsInspector({ vars, onChange }: Props) {
       <Dialog open={!!editingVar} onClose={() => setEditingVar(null)}>
         <DialogTitle>Edit Variable</DialogTitle>
         <DialogDescription>
-          Update the value for{' '}
+          Update the value for{" "}
           <code className="font-mono">{editingVar?.name}</code>
         </DialogDescription>
         <DialogBody>
           <Field>
             <Label>Value</Label>
-            {WORKFLOW_VARIABLES[editingVar?.name as VarName].type === 'boolean' ? (
+            {(
+              WORKFLOW_VARIABLES[editingVar?.name as VarName].type === "boolean"
+            ) ?
               <Switch
-                checked={editingVar?.value === true || editingVar?.value === 'true'}
+                checked={
+                  editingVar?.value === true || editingVar?.value === "true"
+                }
                 onChange={(checked) =>
-                  setEditingVar((prev) => (prev ? { ...prev, value: checked } : null))
+                  setEditingVar((prev) =>
+                    prev ? { ...prev, value: checked } : null
+                  )
                 }
               />
-            ) : (
-              <Input
-                value={String(editingVar?.value || '')}
+            : <Input
+                value={String(editingVar?.value || "")}
                 onChange={(e) =>
                   setEditingVar((prev) =>
                     prev ? { ...prev, value: e.target.value } : null
                   )
                 }
               />
-            )}
+            }
           </Field>
         </DialogBody>
         <DialogActions>
-          <Button plain onClick={() => setEditingVar(null)}>Cancel</Button>
+          <Button plain onClick={() => setEditingVar(null)}>
+            Cancel
+          </Button>
           <Button color="blue" onClick={handleSave}>
             Save
           </Button>
@@ -164,7 +178,12 @@ export default function VarsInspector({ vars, onChange }: Props) {
   );
 }
 
-function VariableRow({ name, value, metadata, onEdit }: {
+function VariableRow({
+  name,
+  value,
+  metadata,
+  onEdit
+}: {
   name: VarName;
   value: unknown;
   metadata: VariableMetadata;
@@ -173,13 +192,12 @@ function VariableRow({ name, value, metadata, onEdit }: {
   const relationships = [] as string[];
   if (metadata.producedBy) relationships.push(`↘ from ${metadata.producedBy}`);
   if (metadata.consumedBy?.length)
-    relationships.push(`↗ to ${metadata.consumedBy.join(', ')}`);
+    relationships.push(`↗ to ${metadata.consumedBy.join(", ")}`);
 
   return (
     <div
       className="flex items-center border-b border-gray-100 px-3 py-2 hover:bg-gray-50 cursor-pointer"
-      onClick={onEdit}
-    >
+      onClick={onEdit}>
       <div className="flex-1 min-w-0">
         <div className="flex items-center gap-2">
           <div className="text-xs font-medium text-gray-700 truncate">
@@ -191,19 +209,17 @@ function VariableRow({ name, value, metadata, onEdit }: {
         </div>
         {relationships.length > 0 && (
           <div className="text-xs text-gray-500 mt-0.5">
-            {relationships.join(' ')}
+            {relationships.join(" ")}
           </div>
         )}
       </div>
       <div className="ml-2 text-xs text-gray-600 truncate max-w-[120px]">
-        {value !== undefined ? String(value) : 'Not set'}
+        {value !== undefined ? String(value) : "Not set"}
       </div>
     </div>
   );
 }
 
 function camelToTitle(str: string): string {
-  return str
-    .replace(/([A-Z])/g, ' $1')
-    .replace(/^./, (c) => c.toUpperCase());
+  return str.replace(/([A-Z])/g, " $1").replace(/^./, (c) => c.toUpperCase());
 }

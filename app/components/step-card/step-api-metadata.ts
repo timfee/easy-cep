@@ -1,5 +1,5 @@
 import { ApiEndpoint } from "@/constants";
-import { StepIdValue } from "@/types";
+import { StepIdValue, Var } from "@/types";
 
 interface ApiCallMetadata {
   method: "GET" | "POST" | "PUT" | "PATCH" | "DELETE";
@@ -52,7 +52,10 @@ export const stepApiMetadata: Record<StepIdValue, ApiCallMetadata[]> = {
       method: "POST",
       endpoint: extractPath(ApiEndpoint.Google.OrgUnits),
       description: "Create Automation OU",
-      body: { name: "Automation", parentOrgUnitPath: "/" }
+      body: {
+        name: Var.AutomationOuName,
+        parentOrgUnitPath: Var.AutomationOuPath
+      }
     }
   ],
 
@@ -72,7 +75,7 @@ export const stepApiMetadata: Record<StepIdValue, ApiCallMetadata[]> = {
         primaryEmail: "azuread-provisioning@{primaryDomain}",
         name: { givenName: "Microsoft", familyName: "Provisioning" },
         password: "{generatedPassword}",
-        orgUnitPath: "/Automation"
+        orgUnitPath: Var.AutomationOuPath
       }
     }
   ],
@@ -116,7 +119,7 @@ export const stepApiMetadata: Record<StepIdValue, ApiCallMetadata[]> = {
       endpoint: "/cloudidentity/customers/my_customer/inboundSamlSsoProfiles",
       description: "Create SAML profile",
       body: {
-        displayName: "Azure AD",
+        displayName: Var.SamlProfileDisplayName,
         idpConfig: { entityId: "", singleSignOnServiceUri: "" }
       }
     }

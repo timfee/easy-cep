@@ -1,5 +1,5 @@
-import { StepId } from "./step-ids";
 import type { StepIdValue } from "./step-ids";
+import { StepId } from "./step-ids";
 
 export interface VariableMetadata {
   type: "string" | "boolean";
@@ -159,7 +159,10 @@ export const WORKFLOW_VARIABLES = {
     category: "state",
     description: "Service principal for SSO app",
     producedBy: StepId.CreateMicrosoftApps,
-    consumedBy: [StepId.SetupMicrosoftClaimsPolicy, StepId.CompleteGoogleSsoSetup]
+    consumedBy: [
+      StepId.SetupMicrosoftClaimsPolicy,
+      StepId.CompleteGoogleSsoSetup
+    ]
   },
   provisioningServicePrincipalId: {
     type: "string",
@@ -215,9 +218,11 @@ export const Var = (
 
 // Auto-generate WorkflowVars type
 export type WorkflowVars = {
-  [K in keyof typeof WORKFLOW_VARIABLES]: typeof WORKFLOW_VARIABLES[K]["type"] extends "string"
-    ? string
-    : boolean;
+  [K in keyof typeof WORKFLOW_VARIABLES]: (typeof WORKFLOW_VARIABLES)[K]["type"] extends (
+    "string"
+  ) ?
+    string
+  : boolean;
 };
 
 // Export useful types

@@ -81,7 +81,14 @@ export default createStep<CheckData>({
     }
   },
 
-  async execute({ vars, fetchGoogle, markSucceeded, markFailed, markPending, log }) {
+  async execute({
+    vars,
+    fetchGoogle,
+    markSucceeded,
+    markFailed,
+    markPending,
+    log
+  }) {
     /**
      * POST https://cloudidentity.googleapis.com/v1/customers/my_customer/inboundSamlSsoProfiles
      * {

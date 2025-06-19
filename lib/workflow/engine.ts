@@ -15,6 +15,8 @@ import "server-only";
  * side-effect free *until* it calls the chosen step’s own implementation.
  */
 
+import { PROVIDERS } from "@/constants";
+import { refreshTokenIfNeeded } from "@/lib/auth";
 import {
   LogLevel,
   StepCheckContext,
@@ -52,13 +54,19 @@ async function processStep<T extends StepIdValue>(
     pushState({});
   };
 
+  // Refresh tokens if needed
+  const googleTokenObj = await refreshTokenIfNeeded(PROVIDERS.GOOGLE);
+  const microsoftTokenObj = await refreshTokenIfNeeded(PROVIDERS.MICROSOFT);
+
   const baseContext = {
     fetchGoogle: createAuthenticatedFetch(
-      vars[Var.GoogleAccessToken] as string | undefined,
+      googleTokenObj?.accessToken
+        ?? (vars[Var.GoogleAccessToken] as string | undefined),
       { addLog }
     ),
     fetchMicrosoft: createAuthenticatedFetch(
-      vars[Var.MsGraphToken] as string | undefined,
+      microsoftTokenObj?.accessToken
+        ?? (vars[Var.MsGraphToken] as string | undefined),
       { addLog }
     ),
     log: (level: LogLevel, message: string, data?: unknown) => {
@@ -187,13 +195,19 @@ async function processUndoStep<T extends StepIdValue>(
     pushState({});
   };
 
+  // Refresh tokens if needed
+  const googleTokenObj = await refreshTokenIfNeeded(PROVIDERS.GOOGLE);
+  const microsoftTokenObj = await refreshTokenIfNeeded(PROVIDERS.MICROSOFT);
+
   const baseContext = {
     fetchGoogle: createAuthenticatedFetch(
-      vars[Var.GoogleAccessToken] as string | undefined,
+      googleTokenObj?.accessToken
+        ?? (vars[Var.GoogleAccessToken] as string | undefined),
       { addLog }
     ),
     fetchMicrosoft: createAuthenticatedFetch(
-      vars[Var.MsGraphToken] as string | undefined,
+      microsoftTokenObj?.accessToken
+        ?? (vars[Var.MsGraphToken] as string | undefined),
       { addLog }
     ),
     log: (level: LogLevel, message: string, data?: unknown) => {

@@ -1,4 +1,4 @@
-import { ApiEndpoint, OrgUnit } from "@/constants";
+import { ApiEndpoint } from "@/constants";
 import {
   EmptyResponseSchema,
   isConflictError,

@@ -10,10 +10,10 @@ import {
 import clsx from "clsx";
 import { StepApiCalls } from "./step-card/step-api-calls";
 import { stepDescriptions } from "./step-card/step-descriptions";
+import { StepVariables } from "./step-card/StepVariables";
 import StepLogs from "./StepLogs";
 import { Badge } from "./ui/badge";
 import { Button } from "./ui/button";
-import { StepVariables } from "./step-card/StepVariables";
 
 export interface StepInfo {
   id: StepIdValue;

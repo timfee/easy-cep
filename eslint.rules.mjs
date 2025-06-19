@@ -1,4 +1,5 @@
-// eslint-rules/workflow-rules.ts
+/* eslint-disable workflow/no-hardcoded-config, workflow/no-duplicate-code-blocks */
+// eslint.rules.mjs
 import { ESLintUtils } from "@typescript-eslint/utils";
 import * as fs from "fs";
 import * as path from "path";
@@ -44,6 +45,358 @@ function getVarEnumValues(projectRoot) {
 
   return vars;
 }
+
+// Replace the current getConfigVarNames function (lines 49-58) with:
+function getConfigVarNames(projectRoot) {
+  const varsPath = path.join(projectRoot, "lib/workflow/variables.ts");
+  if (!fs.existsSync(varsPath)) return new Map();
+
+  const content = fs.readFileSync(varsPath, "utf-8");
+  const configVarNames = new Set([
+    "automationOuName",
+    "automationOuPath",
+    "provisioningUserPrefix",
+    "adminRoleName",
+    "samlProfileDisplayName",
+    "provisioningAppDisplayName",
+    "ssoAppDisplayName",
+    "claimsPolicyDisplayName"
+  ]);
+
+  // Map of default values to their variable names
+  const valueToVar = new Map();
+
+  // Parse WORKFLOW_VARIABLES to find default values
+  const varMatch = content.match(
+    /WORKFLOW_VARIABLES\s*=\s*{([\s\S]*?)}\s*as\s*const/
+  );
+  if (varMatch) {
+    // For each config var, try to find its default value in comments or nearby code
+    configVarNames.forEach((varName) => {
+      const enumName = varName.charAt(0).toUpperCase() + varName.slice(1);
+      valueToVar.set(varName, `Var.${enumName}`);
+    });
+  }
+
+  // Return a map of common hardcoded values to their suggested variable
+  return new Map([
+    ["Automation", "Var.AutomationOuName"],
+    ["/Automation", "Var.AutomationOuPath"],
+    ["azuread-provisioning", "Var.ProvisioningUserPrefix"],
+    ["Microsoft Entra Provisioning", "Var.AdminRoleName"],
+    ["Azure AD", "Var.SamlProfileDisplayName"],
+    ["Google Workspace Provisioning", "Var.ProvisioningAppDisplayName"],
+    ["Google Workspace SSO", "Var.SsoAppDisplayName"],
+    ["Google Workspace Basic Claims", "Var.ClaimsPolicyDisplayName"]
+  ]);
+}
+export const noHardcodedConfig = createRule({
+  name: "no-hardcoded-config",
+  meta: {
+    type: "problem",
+    docs: {
+      description:
+        "Enforce using configuration variables instead of hardcoded values"
+    },
+    messages: {
+      useConfigVar:
+        "Use {{suggestion}} from workflow variables instead of hardcoded '{{value}}'"
+    },
+    schema: []
+  },
+  defaultOptions: [],
+  create(context) {
+    const projectRoot = context.getCwd();
+    const hardcodedPatterns = getConfigVarNames(projectRoot);
+
+    return {
+      Literal(node) {
+        if (
+          typeof node.value === "string"
+          && hardcodedPatterns.has(node.value)
+        ) {
+          // Skip if it's in a constant definition or default value assignment
+          const parent = node.parent;
+          if (
+            parent?.type === "Property"
+            && parent.parent?.parent?.type === "VariableDeclarator"
+          ) {
+            const varName = parent.parent.parent.id?.name;
+            if (
+              varName === "WORKFLOW_VARIABLES"
+              || varName === "defaultValues"
+            ) {
+              return;
+            }
+          }
+
+          // Skip if it's in WorkflowClient.tsx setting default values
+          const filename = context.getFilename();
+          if (
+            filename.includes("WorkflowClient.tsx")
+            && parent?.type === "Property"
+            && parent.key?.type === "MemberExpression"
+            && parent.key?.object?.name === "Var"
+          ) {
+            return;
+          }
+
+          context.report({
+            node,
+            messageId: "useConfigVar",
+            data: {
+              value: node.value,
+              suggestion: hardcodedPatterns.get(node.value)
+            }
+          });
+        }
+      }
+    };
+  }
+});
+
+export const useErrorUtils = createRule({
+  name: "use-error-utils",
+  meta: {
+    type: "problem",
+    docs: {
+      description:
+        "Enforce using error utility functions instead of direct error message checks"
+    },
+    messages: {
+      useErrorUtil:
+        "Use {{util}}(error) instead of checking error.message directly"
+    },
+    schema: []
+  },
+  defaultOptions: [],
+  create(context) {
+    const errorPatterns = new Map([
+      ["404", "isNotFoundError"],
+      ["409", "isConflictError"],
+      ["412", "isPreconditionFailedError"]
+    ]);
+
+    return {
+      MemberExpression(node) {
+        // Check for error.message.startsWith or error.message.includes
+        if (
+          node.object.type === "Identifier"
+          && node.object.name === "error"
+          && node.property.type === "Identifier"
+          && node.property.name === "message"
+        ) {
+          const parent = node.parent;
+          if (
+            parent?.type === "CallExpression"
+            && parent.callee.type === "MemberExpression"
+            && parent.callee.object === node
+            && parent.callee.property.type === "Identifier"
+            && (parent.callee.property.name === "includes"
+              || parent.callee.property.name === "startsWith")
+          ) {
+            const arg = parent.arguments[0];
+            if (arg?.type === "Literal" && typeof arg.value === "string") {
+              for (const [pattern, util] of errorPatterns) {
+                if (arg.value.includes(pattern)) {
+                  context.report({
+                    node: parent,
+                    messageId: "useErrorUtil",
+                    data: { util }
+                  });
+                  break;
+                }
+              }
+            }
+          }
+        }
+      }
+    };
+  }
+});
+
+export const noDuplicateCodeBlocks = createRule({
+  name: "no-duplicate-code-blocks",
+  meta: {
+    type: "suggestion",
+    docs: {
+      description:
+        "Detect duplicate code blocks that should be extracted to utilities"
+    },
+    messages: {
+      duplicateCode:
+        "This code block appears to be duplicated. Consider extracting to a shared utility."
+    },
+    schema: [
+      {
+        type: "object",
+        properties: {
+          minLines: { type: "number" },
+          threshold: { type: "number" }
+        }
+      }
+    ]
+  },
+  defaultOptions: [{ minLines: 10, threshold: 0.8 }],
+  create(context) {
+    const sourceCode = context.getSourceCode();
+    const functionBodies = [];
+
+    return {
+      FunctionExpression(node) {
+        if (node.body.type === "BlockStatement") {
+          functionBodies.push(node.body);
+        }
+      },
+      ArrowFunctionExpression(node) {
+        if (node.body.type === "BlockStatement") {
+          functionBodies.push(node.body);
+        }
+      },
+      "Program:exit"() {
+        // Compare function bodies for similarity
+        for (let i = 0; i < functionBodies.length; i++) {
+          for (let j = i + 1; j < functionBodies.length; j++) {
+            const body1 = sourceCode.getText(functionBodies[i]);
+            const body2 = sourceCode.getText(functionBodies[j]);
+
+            // Skip small functions
+            const lines1 = body1.split("\n").length;
+            if (lines1 < context.options[0].minLines) continue;
+
+            // Very basic similarity check - in production you'd want something more sophisticated
+            if (body1.length > 500 && body2.length > 500) {
+              const similarity = calculateSimilarity(body1, body2);
+              if (similarity > context.options[0].threshold) {
+                context.report({
+                  node: functionBodies[j],
+                  messageId: "duplicateCode"
+                });
+              }
+            }
+          }
+        }
+      }
+    };
+  }
+});
+
+// Simple similarity calculation (Jaccard similarity on tokens)
+function calculateSimilarity(str1, str2) {
+  const tokens1 = new Set(str1.match(/\b\w+\b/g) || []);
+  const tokens2 = new Set(str2.match(/\b\w+\b/g) || []);
+
+  const intersection = new Set([...tokens1].filter((x) => tokens2.has(x)));
+  const union = new Set([...tokens1, ...tokens2]);
+
+  return intersection.size / union.size;
+}
+
+export const requireTokenRefresh = createRule({
+  name: "require-token-refresh",
+  meta: {
+    type: "problem",
+    docs: {
+      description:
+        "Ensure token refresh logic is implemented where tokens are used"
+    },
+    messages: {
+      missingRefreshCheck:
+        "Token usage should check expiration and refresh if needed"
+    },
+    schema: []
+  },
+  defaultOptions: [],
+  create(context) {
+    return {
+      MemberExpression(node) {
+        // Look for vars[Var.GoogleAccessToken] or vars[Var.MsGraphToken]
+        if (
+          node.object.type === "Identifier"
+          && node.object.name === "vars"
+          && node.property.type === "MemberExpression"
+          && node.property.object.type === "Identifier"
+          && node.property.object.name === "Var"
+          && node.property.property.type === "Identifier"
+          && (node.property.property.name === "GoogleAccessToken"
+            || node.property.property.name === "MsGraphToken")
+        ) {
+          // Check if this is inside a function that has refresh logic
+          let currentScope = node;
+          let hasRefreshCheck = false;
+
+          while (currentScope.parent) {
+            currentScope = currentScope.parent;
+            if (
+              currentScope.type === "FunctionDeclaration"
+              || currentScope.type === "ArrowFunctionExpression"
+            ) {
+              const funcBody = context.getSourceCode().getText(currentScope);
+              if (
+                funcBody.includes("refreshTokenIfNeeded")
+                || funcBody.includes("expiresAt")
+              ) {
+                hasRefreshCheck = true;
+                break;
+              }
+            }
+          }
+
+          if (!hasRefreshCheck) {
+            context.report({ node, messageId: "missingRefreshCheck" });
+          }
+        }
+      }
+    };
+  }
+});
+
+export const requireVarEnumInSteps = createRule({
+  name: "require-var-enum-in-steps",
+  meta: {
+    type: "problem",
+    docs: {
+      description: "Step files must use Var enum for all variable references"
+    },
+    messages: {
+      useVarEnum:
+        "Use Var.{{suggestion}} instead of string literal '{{value}}' for variable access"
+    },
+    schema: []
+  },
+  defaultOptions: [],
+  create(context) {
+    const projectRoot = context.getCwd();
+    const varNames = getVarEnumValues(projectRoot);
+
+    return {
+      // Check array literals in requires/provides
+      Property(node) {
+        if (
+          node.key.type === "Identifier"
+          && (node.key.name === "requires" || node.key.name === "provides")
+          && node.value.type === "ArrayExpression"
+        ) {
+          node.value.elements.forEach((element) => {
+            if (
+              element?.type === "Literal"
+              && typeof element.value === "string"
+              && varNames.has(element.value)
+            ) {
+              const enumName =
+                element.value.charAt(0).toUpperCase() + element.value.slice(1);
+              context.report({
+                node: element,
+                messageId: "useVarEnum",
+                data: { value: element.value, suggestion: enumName }
+              });
+            }
+          });
+        }
+      }
+    };
+  }
+});
 
 export const noHardcodedUrls = createRule({
   name: "no-hardcoded-urls",
@@ -145,7 +498,9 @@ export const mustUseTryCatch = createRule({
       PropertyDefinition(node) {
         if (
           node.key.type === "Identifier"
-          && (node.key.name === "check" || node.key.name === "execute")
+          && (node.key.name === "check"
+            || node.key.name === "execute"
+            || node.key.name === "undo")
           && node.value
           && node.value.type === "ArrowFunctionExpression"
         ) {
@@ -187,6 +542,7 @@ export const mustCallRequiredCallbacks = createRule({
       "markCheckFailed"
     ];
     const executeCallbacks = ["markSucceeded", "markFailed", "markPending"];
+    const undoCallbacks = ["markReverted", "markFailed"];
 
     function checkForCallbacks(node, method, requiredCallbacks) {
       const calledFunctions = new Set();
@@ -229,13 +585,17 @@ export const mustCallRequiredCallbacks = createRule({
       PropertyDefinition(node) {
         if (
           node.key.type === "Identifier"
-          && (node.key.name === "check" || node.key.name === "execute")
+          && (node.key.name === "check"
+            || node.key.name === "execute"
+            || node.key.name === "undo")
           && node.value
           && node.value.type === "ArrowFunctionExpression"
           && node.value.body.type === "BlockStatement"
         ) {
           const callbacks =
-            node.key.name === "check" ? checkCallbacks : executeCallbacks;
+            node.key.name === "check" ? checkCallbacks
+            : node.key.name === "execute" ? executeCallbacks
+            : undoCallbacks;
           checkForCallbacks(node.value.body, node.key.name, callbacks);
         }
       }
@@ -390,7 +750,6 @@ export const useVarEnum = createRule({
     };
   }
 });
-// Additional rules for eslint-rules/workflow-rules.ts
 
 export const mustExportCreateStep = createRule({
   name: "must-export-create-step",
@@ -516,8 +875,6 @@ export const mustUseContextFetch = createRule({
     };
   }
 });
-
-// Add these to eslint-rules/workflow-rules.ts
 
 // Parse StepId values from step-ids.ts
 function getStepIdEnumValues(projectRoot) {
@@ -816,7 +1173,13 @@ export const rules = {
   "no-string-step-ids": noStringStepIds,
   "use-step-id-enum": useStepIdEnum,
   "use-var-enum": useVarEnum,
-  "no-process-env": noProcessEnv
+  "no-process-env": noProcessEnv,
+  // New rules
+  "no-hardcoded-config": noHardcodedConfig,
+  "use-error-utils": useErrorUtils,
+  "no-duplicate-code-blocks": noDuplicateCodeBlocks,
+  "require-token-refresh": requireTokenRefresh,
+  "require-var-enum-in-steps": requireVarEnumInSteps
 };
 
 // eslint-disable-next-line import/no-anonymous-default-export
