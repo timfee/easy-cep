@@ -82,7 +82,9 @@ export default createStep<CheckData>({
             z.object({
               roleId: z.string(),
               roleName: z.string(),
-              rolePrivileges: z.array(z.object({ serviceId: z.string() }))
+              rolePrivileges: z.array(
+                z.object({ serviceId: z.string(), privilegeName: z.string() })
+              )
             })
           )
           .optional(),
@@ -253,7 +255,9 @@ export default createStep<CheckData>({
                   z.object({
                     roleId: z.string(),
                     roleName: z.string(),
-                    rolePrivileges: z.array(z.object({ serviceId: z.string() }))
+                    rolePrivileges: z.array(
+                      z.object({ serviceId: z.string(), privilegeName: z.string() })
+                    )
                   })
                 )
                 .optional()

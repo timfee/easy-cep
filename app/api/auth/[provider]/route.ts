@@ -11,9 +11,9 @@ import { NextRequest, NextResponse } from "next/server";
 
 export async function GET(
   request: NextRequest,
-  { params }: { params: { provider: Provider } }
+  { params }: { params: Promise<{ provider: Provider }> }
 ) {
-  const provider = params.provider;
+  const { provider } = await params;
 
   if (provider !== PROVIDERS.GOOGLE && provider !== PROVIDERS.MICROSOFT) {
     return NextResponse.json({ error: "Invalid provider" }, { status: 400 });

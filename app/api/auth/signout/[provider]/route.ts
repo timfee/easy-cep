@@ -7,16 +7,16 @@ import { NextRequest, NextResponse } from "next/server";
  */
 export async function GET(
   request: NextRequest,
-  context: { params: { provider: Provider } }
+  context: { params: Promise<{ provider: Provider }> }
 ) {
   return POST(request, context);
 }
 
 export async function POST(
   request: NextRequest,
-  { params }: { params: { provider: Provider } }
+  { params }: { params: Promise<{ provider: Provider }> }
 ) {
-  const provider = params.provider;
+  const { provider } = await params;
   const cookieName = `${provider}_token`;
   const baseUrl = request.nextUrl.origin;
   const response = NextResponse.redirect(`${baseUrl}/`);
