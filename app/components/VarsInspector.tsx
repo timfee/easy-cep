@@ -47,15 +47,18 @@ export default function VarsInspector({ vars, onChange }: Props) {
   };
 
   return (
-    <div className="rounded-xl rounded-tl-none border border-zinc-200 bg-white shadow-sm text-xs">
-      <div className="border-b border-zinc-200 p-2">
-        <h2 className="text-base font-semibold text-gray-900">Variables</h2>
+    <div className="flex h-full flex-col bg-gray-50">
+      {/* Header - fixed */}
+      <div className="flex-shrink-0 border-b border-gray-200 bg-white px-4 py-3">
+        <h2 className="text-lg font-semibold text-gray-900">Variables</h2>
       </div>
-      <div className="max-h-[600px] overflow-y-auto">
-        <Table dense bleed className="!whitespace-normal">
+
+      {/* Scrollable content - single scroll context */}
+      <div className="flex-1 overflow-y-auto">
+        <Table dense className="!whitespace-normal">
           <TableHead>
             <TableRow>
-              <TableHeader className="w-32">Name</TableHeader>
+              <TableHeader className="w-2/5">Name</TableHeader>
               <TableHeader>Value</TableHeader>
             </TableRow>
           </TableHead>

@@ -7,6 +7,7 @@ import {
   DocumentPlusIcon as FileStack,
   XMarkIcon as X
 } from "@heroicons/react/24/solid";
+import clsx from "clsx";
 import { StepApiCalls } from "./step-card/step-api-calls";
 import { stepDescriptions } from "./step-card/step-descriptions";
 import StepLogs from "./StepLogs";
@@ -87,106 +88,113 @@ export default function StepCard({
 
   return (
     <div
-      className={`relative mb-6 rounded-xl border ${accent[status]} border-l-4 bg-white p-6 shadow-sm hover:shadow-md transition-shadow duration-200${
-        inProgress ? " animate-pulse" : ""
-      }`}>
+      className={clsx(
+        "relative mb-6 overflow-hidden",
+        "rounded-xl",
+        "border border-l-4",
+        accent[status],
+        "bg-white shadow-sm hover:shadow-md transition-shadow duration-200",
+        inProgress ? "animate-pulse" : ""
+      )}>
       {inProgress && (
-        <div className="absolute left-0 right-0 top-0 h-1 overflow-hidden rounded-t">
+        <div className="absolute left-0 right-0 top-0 h-1 overflow-hidden">
           <div className="animate-indeterminate h-full w-1/2 bg-blue-500" />
         </div>
       )}
-      <div className="flex items-start justify-between">
-        <div className="flex items-center gap-2">
-          <span className="flex h-6 w-6 items-center justify-center rounded-full bg-gray-100 text-xs font-medium text-gray-700">
-            {index + 1}
-          </span>
-          <h3 className="text-lg font-semibold text-gray-900">
-            {definition.id}
-          </h3>
-        </div>
-        <Badge
-          color={badgeColor[status]}
-          className="px-3 py-1 text-xs font-medium capitalize">
-          {status}
-        </Badge>
-      </div>
-
-      <div className="mt-2 flex items-start justify-between gap-4 text-sm">
-        <p className="text-gray-700 flex-1">
-          {stepDescriptions[definition.id]}
-        </p>
-        {(state?.summary || state?.error || state?.notes) && (
-          <span className={`${textColor[status]} shrink-0 whitespace-nowrap`}>
-            {state.error
-              || (state.summary === "Already complete" ? "" : state.summary)
-              || state.notes}
-          </span>
-        )}
-      </div>
-
-      <div className="mt-4 grid grid-cols-1 gap-4 sm:grid-cols-2">
-        <div className="rounded-lg bg-gray-50 p-4">
-          <h4 className="mb-2 flex items-center gap-1 text-sm font-medium text-gray-800">
-            <FileStack className="h-4 w-4" /> Requires
-          </h4>
-          <ul className="space-y-1 text-sm">
-            {definition.requires.map((v) => (
-              <li key={v} className="flex items-center gap-2">
-                <span className="font-mono text-gray-800">{v}</span>
-                {vars[v] ?
-                  <Check className="h-4 w-4 text-green-600" />
-                : <X className="h-4 w-4 text-gray-400" />}
-              </li>
-            ))}
-          </ul>
-        </div>
-        <div className="rounded-lg bg-gray-50 p-4">
-          <h4 className="mb-2 flex items-center gap-1 text-sm font-medium text-gray-800">
-            <Boxes className="h-4 w-4" /> Provides
-          </h4>
-          <ul className="space-y-1 text-sm">
-            {definition.provides.map((v) => (
-              <li key={v} className="flex items-center gap-2">
-                <span className="font-mono text-gray-800">{v}</span>
-                {vars[v] ?
-                  <Check className="h-4 w-4 text-green-600" />
-                : <X className="h-4 w-4 text-gray-400" />}
-              </li>
-            ))}
-          </ul>
-        </div>
-      </div>
-
-      <div className="mt-4 flex items-center gap-2">
-        <Button
-          color="blue"
-          className="inline-flex items-center gap-2"
-          onClick={() => onExecute(definition.id)}
-          disabled={executing || missing.length > 0}
-          data-complete={executed}
-          style={{ opacity: executed ? 0.5 : 1 }}>
-          Execute <ArrowRight className="h-4 w-4" />
-        </Button>
-        {executed && (
-          <div className="ml-auto flex items-center gap-2">
-            <button
-              className="text-sm text-blue-700 hover:underline disabled:text-gray-300"
-              onClick={() => onUndo(definition.id)}
-              disabled={executing}>
-              Undo
-            </button>
-            <button
-              className="text-sm text-blue-700 hover:underline disabled:text-gray-300"
-              onClick={() => onForce(definition.id)}
-              disabled={executing}>
-              Force
-            </button>
+      <div className="p-6">
+        <div className="flex items-start justify-between">
+          <div className="flex items-center gap-2">
+            <span className="flex h-6 w-6 items-center justify-center rounded-full bg-gray-100 text-xs font-medium text-gray-700">
+              {index + 1}
+            </span>
+            <h3 className="text-lg font-semibold text-gray-900">
+              {definition.id}
+            </h3>
           </div>
-        )}
-      </div>
-      <StepApiCalls stepId={definition.id} />
+          <Badge
+            color={badgeColor[status]}
+            className="px-3 py-1 text-xs font-medium capitalize">
+            {status}
+          </Badge>
+        </div>
 
-      <StepLogs logs={state?.logs} />
+        <div className="mt-2 flex items-start justify-between gap-4 text-sm">
+          <p className="text-gray-700 flex-1">
+            {stepDescriptions[definition.id]}
+          </p>
+          {(state?.summary || state?.error || state?.notes) && (
+            <span className={`${textColor[status]} shrink-0 whitespace-nowrap`}>
+              {state.error
+                || (state.summary === "Already complete" ? "" : state.summary)
+                || state.notes}
+            </span>
+          )}
+        </div>
+
+        <div className="mt-4 grid grid-cols-1 gap-4 sm:grid-cols-2">
+          <div className="bg-gray-50 p-4">
+            <h4 className="mb-2 flex items-center gap-1 text-sm font-medium text-gray-800">
+              <FileStack className="h-4 w-4" /> Requires
+            </h4>
+            <ul className="space-y-1 text-sm">
+              {definition.requires.map((v) => (
+                <li key={v} className="flex items-center gap-2">
+                  <span className="font-mono text-gray-800">{v}</span>
+                  {vars[v] ?
+                    <Check className="h-4 w-4 text-green-600" />
+                  : <X className="h-4 w-4 text-gray-400" />}
+                </li>
+              ))}
+            </ul>
+          </div>
+          <div className="bg-gray-50 p-4">
+            <h4 className="mb-2 flex items-center gap-1 text-sm font-medium text-gray-800">
+              <Boxes className="h-4 w-4" /> Provides
+            </h4>
+            <ul className="space-y-1 text-sm">
+              {definition.provides.map((v) => (
+                <li key={v} className="flex items-center gap-2">
+                  <span className="font-mono text-gray-800">{v}</span>
+                  {vars[v] ?
+                    <Check className="h-4 w-4 text-green-600" />
+                  : <X className="h-4 w-4 text-gray-400" />}
+                </li>
+              ))}
+            </ul>
+          </div>
+        </div>
+
+        <div className="mt-4 flex items-center gap-2">
+          <Button
+            color="blue"
+            className="inline-flex items-center gap-2"
+            onClick={() => onExecute(definition.id)}
+            disabled={executing || missing.length > 0}
+            data-complete={executed}
+            style={{ opacity: executed ? 0.5 : 1 }}>
+            Execute <ArrowRight className="h-4 w-4" />
+          </Button>
+          {executed && (
+            <div className="ml-auto flex items-center gap-2">
+              <button
+                className="text-sm text-blue-700 hover:underline disabled:text-gray-300"
+                onClick={() => onUndo(definition.id)}
+                disabled={executing}>
+                Undo
+              </button>
+              <button
+                className="text-sm text-blue-700 hover:underline disabled:text-gray-300"
+                onClick={() => onForce(definition.id)}
+                disabled={executing}>
+                Force
+              </button>
+            </div>
+          )}
+        </div>
+        <StepApiCalls stepId={definition.id} />
+
+        <StepLogs logs={state?.logs} />
+      </div>
     </div>
   );
 }
