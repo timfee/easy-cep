@@ -74,7 +74,7 @@ export default function ProviderLogin({ onUpdate }: Props) {
               <>
                 <Button
                   plain
-                  className="w-full justify-center"
+                  className="w-full justify-center items-center"
                   onClick={() => signOut(PROVIDERS.GOOGLE)}>
                   Sign out of Google
                 </Button>
@@ -90,7 +90,7 @@ export default function ProviderLogin({ onUpdate }: Props) {
               </>
             : <Button
                 color="blue"
-                className="w-full justify-center"
+                className="w-full justify-center items-center"
                 onClick={() =>
                   (window.location.href = `/api/auth/${PROVIDERS.GOOGLE}`)
                 }>
@@ -123,7 +123,7 @@ export default function ProviderLogin({ onUpdate }: Props) {
               <>
                 <Button
                   plain
-                  className="w-full justify-center"
+                  className="w-full justify-center items-center"
                   onClick={() => signOut(PROVIDERS.MICROSOFT)}>
                   Sign out of Microsoft
                 </Button>
@@ -139,7 +139,7 @@ export default function ProviderLogin({ onUpdate }: Props) {
               </>
             : <Button
                 color="blue"
-                className="w-full justify-center"
+                className="w-full justify-center items-center"
                 onClick={() =>
                   (window.location.href = `/api/auth/${PROVIDERS.MICROSOFT}`)
                 }>

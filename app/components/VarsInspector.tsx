@@ -2,9 +2,10 @@
 import {
   VarName,
   WORKFLOW_VARIABLES,
+  WORKFLOW_VAR_GROUPS,
   WorkflowVars
 } from "@/lib/workflow/variables";
-import { useState } from "react";
+import { Fragment, useState } from "react";
 import { Badge } from "./ui/badge";
 import { Button } from "./ui/button";
 import {
@@ -36,7 +37,7 @@ export default function VarsInspector({ vars, onChange }: Props) {
     name: VarName;
     value: unknown;
   } | null>(null);
-  const entries = Object.keys(WORKFLOW_VARIABLES) as VarName[];
+  const groups = WORKFLOW_VAR_GROUPS;
 
   const handleSave = () => {
     if (editingVar) {
@@ -46,7 +47,7 @@ export default function VarsInspector({ vars, onChange }: Props) {
   };
 
   return (
-    <div className="rounded-xl border border-zinc-200 bg-white shadow-sm text-xs">
+    <div className="rounded-xl rounded-tl-none border border-zinc-200 bg-white shadow-sm text-xs">
       <div className="border-b border-zinc-200 p-2">
         <h2 className="text-base font-semibold text-gray-900">Variables</h2>
       </div>
@@ -59,33 +60,46 @@ export default function VarsInspector({ vars, onChange }: Props) {
             </TableRow>
           </TableHead>
           <TableBody>
-            {entries.map((name) => {
-              const value = vars[name];
-              const type = WORKFLOW_VARIABLES[name];
-              const hasValue = value !== undefined && value !== null;
-
-              return (
-                <TableRow key={name}>
-                  <TableCell className="text-xs font-medium text-zinc-800">
-                    {name}
-                  </TableCell>
+            {groups.map((group) => (
+              <Fragment key={group.title}>
+                <TableRow>
                   <TableCell
-                    onClick={() => setEditingVar({ name, value: value ?? "" })}
-                    className="cursor-pointer text-xs font-mono text-blue-700 underline decoration-dotted">
-                    {hasValue ?
-                      type === "boolean" ?
-                        <Badge color={value ? "green" : "zinc"}>
-                          {String(value)}
-                        </Badge>
-                      : <span className="truncate max-w-[260px] block">
-                          {String(value)}
-                        </span>
-
-                    : <span className="italic text-zinc-400">Not set</span>}
+                    colSpan={2}
+                    className="bg-zinc-50 font-semibold text-zinc-700">
+                    {group.title}
                   </TableCell>
                 </TableRow>
-              );
-            })}
+                {group.vars.map((name) => {
+                  const value = vars[name];
+                  const type = WORKFLOW_VARIABLES[name];
+                  const hasValue = value !== undefined && value !== null;
+
+                  return (
+                    <TableRow key={name}>
+                      <TableCell className="text-xs font-medium text-zinc-800">
+                        {name}
+                      </TableCell>
+                      <TableCell
+                        onClick={() =>
+                          setEditingVar({ name, value: value ?? "" })
+                        }
+                        className="cursor-pointer text-xs font-mono text-blue-700 underline decoration-dotted">
+                        {hasValue ?
+                          type === "boolean" ?
+                            <Badge color={value ? "green" : "zinc"}>
+                              {String(value)}
+                            </Badge>
+                          : <span className="truncate max-w-[260px] block">
+                              {String(value)}
+                            </span>
+
+                        : <span className="italic text-zinc-400">Not set</span>}
+                      </TableCell>
+                    </TableRow>
+                  );
+                })}
+              </Fragment>
+            ))}
           </TableBody>
         </Table>
       </div>

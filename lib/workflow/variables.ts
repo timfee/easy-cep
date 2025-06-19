@@ -35,6 +35,29 @@ export const WORKFLOW_VARIABLES = {
   claimsPolicyId: "string"
 } as const;
 
+export const WORKFLOW_VAR_GROUPS = [
+  { title: "Tokens", vars: ["googleAccessToken", "msGraphToken"] },
+  {
+    title: "Domain",
+    vars: ["primaryDomain", "isDomainVerified", "verificationToken"]
+  },
+  {
+    title: "Service Account",
+    vars: ["provisioningUserId", "provisioningUserEmail", "generatedPassword"]
+  },
+  { title: "Roles", vars: ["adminRoleId", "directoryServiceId"] },
+  {
+    title: "Microsoft Apps",
+    vars: [
+      "ssoServicePrincipalId",
+      "provisioningServicePrincipalId",
+      "ssoAppId"
+    ]
+  },
+  { title: "SAML", vars: ["samlProfileId", "entityId", "acsUrl"] },
+  { title: "Policy", vars: ["claimsPolicyId"] }
+] as const;
+
 // Auto-generate Var enum with PascalCase keys
 function toPascalCase<S extends string>(str: S): Capitalize<S> {
   return (str.charAt(0).toUpperCase() + str.slice(1)) as Capitalize<S>;
