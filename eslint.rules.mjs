@@ -997,7 +997,6 @@ export const importTypesFromTypes = createRule({
     const coreTypes = new Set([
       "Var",
       "StepId",
-      "StepOutcome",
       "LogLevel",
       "WorkflowVars",
       "StepCheckContext",

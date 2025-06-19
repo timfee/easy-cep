@@ -35,7 +35,6 @@ Use only values from these enums — no string literals allowed:
 
 - `Var` (e.g. `Var.GoogleAccessToken`)
 - `StepId` (e.g. `StepId.CreateServiceUser`)
-- `StepOutcome` (e.g. `StepOutcome.Succeeded`)
 - `LogLevel` (e.g. `LogLevel.Info`)
 
 ## ✅ Logging
@@ -66,7 +65,7 @@ interface StepCheckResult {
 }
 
 interface StepExecuteResult<K extends Var> {
-  status: StepOutcome;
+  status: StepUIState["status"];
   output?: Partial<Pick<WorkflowVars, K>>;
   notes?: string;
   error?: string;

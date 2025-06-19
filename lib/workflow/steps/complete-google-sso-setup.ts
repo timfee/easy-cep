@@ -24,11 +24,6 @@ export default defineStep(StepId.CompleteGoogleSsoSetup)
       try {
         const profileId = vars.require(Var.SamlProfileId);
 
-        if (!profileId) {
-          markIncomplete("SAML profile ID not provided", {});
-          return;
-        }
-
         const ProfileSchema = z.object({
           name: z.string(),
           idpConfig: z
@@ -197,10 +192,6 @@ export default defineStep(StepId.CompleteGoogleSsoSetup)
 
       const updateMask =
         "idpConfig.entityId,idpConfig.singleSignOnServiceUri,idpConfig.signOutUri,idpConfig.changePasswordUri";
-
-      if (!profileId) {
-        throw new Error("SAML profile ID not provided");
-      }
 
       const patchUrl = `${ApiEndpoint.Google.SamlProfile(profileId)}?updateMask=${encodeURIComponent(updateMask)}`;
 

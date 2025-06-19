@@ -2,6 +2,7 @@
 /* eslint-disable workflow/no-duplicate-code-blocks */
 
 import { checkStep, runStep, undoStep } from "@/lib/workflow/engine";
+import { createVarStore, type BasicVarStore } from "@/lib/workflow/var-store";
 import {
   StepDefinition,
   StepIdValue,
@@ -18,12 +19,9 @@ import {
   useState
 } from "react";
 
-interface VarStore {
-  get<K extends VarName>(key: K): WorkflowVars[K] | undefined;
-  require<K extends VarName>(key: K): NonNullable<WorkflowVars[K]>;
+interface VarStore extends BasicVarStore {
   set(updates: Partial<WorkflowVars>): void;
   has(key: VarName): boolean;
-  build(template: string): string;
   subscribe(key: VarName, callback: (value: unknown) => void): () => void;
 }
 
@@ -73,15 +71,11 @@ export function WorkflowProvider({
   // Create VarStore implementation
   const varStore: VarStore = {
     get<K extends VarName>(key: K): WorkflowVars[K] | undefined {
-      return vars[key];
+      return createVarStore(vars).get(key);
     },
 
     require<K extends VarName>(key: K): NonNullable<WorkflowVars[K]> {
-      const value = vars[key];
-      if (value === undefined) {
-        throw new Error(`Required variable ${key} is not available`);
-      }
-      return value as NonNullable<WorkflowVars[K]>;
+      return createVarStore(vars).require(key);
     },
 
     set(updates: Partial<WorkflowVars>) {
@@ -93,13 +87,7 @@ export function WorkflowProvider({
     },
 
     build(template: string): string {
-      return template.replace(/\{(\w+)\}/g, (_, key) => {
-        const value = vars[key as VarName];
-        if (value === undefined) {
-          throw new Error(`Template variable ${key} is not available`);
-        }
-        return String(value);
-      });
+      return createVarStore(vars).build(template);
     },
 
     subscribe(key: VarName, callback: (value: unknown) => void): () => void {
