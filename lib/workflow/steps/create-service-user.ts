@@ -48,8 +48,8 @@ export default defineStep(StepId.CreateServiceUser)
       log
     }) => {
       try {
-        const domain = vars.require("primaryDomain");
-        const prefix = vars.require("provisioningUserPrefix");
+        vars.require("primaryDomain");
+        vars.require("provisioningUserPrefix");
 
         const UserSchema = z
           .object({
@@ -58,7 +58,7 @@ export default defineStep(StepId.CreateServiceUser)
             orgUnitPath: z.string().optional()
           })
           .passthrough();
-        const email = `${prefix}@${domain}`;
+        const email = vars.build("{provisioningUserPrefix}@{primaryDomain}");
         const url = `${ApiEndpoint.Google.Users}/${encodeURIComponent(email)}?fields=id,primaryEmail`;
         const user = await google.get(url, UserSchema);
 
@@ -114,7 +114,7 @@ export default defineStep(StepId.CreateServiceUser)
        * { "error": { "message": "Entity already exists." } }
        */
       try {
-        const domain = vars.require("primaryDomain");
+        vars.require("primaryDomain");
 
         const BYTES = 4;
         const password = `Temp${crypto.randomBytes(BYTES).toString("hex")}!`;
@@ -125,18 +125,24 @@ export default defineStep(StepId.CreateServiceUser)
 
         let user;
         try {
-          const prefix = vars.require("provisioningUserPrefix");
+          vars.require("provisioningUserPrefix");
           const ouPath = vars.require("automationOuPath");
           user = await google.post(ApiEndpoint.Google.Users, CreateSchema, {
-            primaryEmail: `${prefix}@${domain}`,
+            primaryEmail: vars.build(
+              "{provisioningUserPrefix}@{primaryDomain}"
+            ),
             name: { givenName: "Microsoft", familyName: "Provisioning" },
             password,
             orgUnitPath: ouPath
           });
         } catch (error) {
           if (isConflictError(error)) {
-            const fallbackEmail = `${vars.require("provisioningUserPrefix")}@${domain}`;
-            const getUrl = `${ApiEndpoint.Google.Users}/${encodeURIComponent(fallbackEmail)}?fields=id,primaryEmail`;
+            const fallbackEmail = vars.build(
+              "{provisioningUserPrefix}@{primaryDomain}"
+            );
+            const getUrl = `${ApiEndpoint.Google.Users}/${encodeURIComponent(
+              fallbackEmail
+            )}?fields=id,primaryEmail`;
             user = await google.get(getUrl, CreateSchema);
 
             await google.put(
