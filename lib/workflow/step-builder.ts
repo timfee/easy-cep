@@ -252,15 +252,3 @@ function wrapContext<
     microsoft: createHttpClient(fetchMicrosoft)
   };
 }
-
-// Keep getVar for migration purposes only
-export function getVar<K extends VarName>(
-  vars: Partial<WorkflowVars>,
-  key: K
-): WorkflowVars[K] {
-  const value = vars[key];
-  if (value === undefined) {
-    throw new Error(`Required variable ${key} is not available`);
-  }
-  return value;
-}
