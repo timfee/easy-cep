@@ -4,7 +4,6 @@ import { ChevronRightIcon } from "@heroicons/react/24/outline";
 import clsx from "clsx";
 import { useState } from "react";
 import { Badge } from "./ui/badge";
-import { Table, TableBody, TableCell, TableRow } from "./ui/table";
 
 interface StepLogsProps {
   logs: StepLogEntry[] | undefined;
@@ -38,39 +37,37 @@ export default function StepLogs({ logs }: StepLogsProps) {
         </Badge>
       </button>
       {expanded && (
-        <div className="mt-2 max-h-80 overflow-y-auto overflow-x-hidden">
-          <Table dense>
-            <TableBody>
-              {logs.map((log, idx) => (
-                <TableRow key={idx}>
-                  <TableCell className="w-28 text-xs text-zinc-500">
-                    {log.level && (
-                      <Badge
-                        size="xs"
-                        color={levelColor[log.level]}
-                        className="mb-1 block">
-                        {log.level}
-                      </Badge>
-                    )}
-                    <div>{new Date(log.timestamp).toLocaleTimeString()}</div>
-                  </TableCell>
-                  <TableCell className="py-2">
-                    <details className="group">
-                      <summary className="cursor-pointer text-xs">
-                        {log.message}
-                      </summary>
-                      {log.data !== undefined && (
-                        <pre className="mt-2 max-h-48 whitespace-pre-wrap break-words rounded bg-zinc-50 p-2 text-xs">
-                          {JSON.stringify(log.data, null, 2)}
-                        </pre>
-                      )}
-                    </details>
-                  </TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
-        </div>
+        <ul className="mt-2 max-h-80 space-y-2 overflow-y-auto pr-1">
+          {logs.map((log, idx) => (
+            <li
+              key={idx}
+              className="rounded border border-zinc-200 bg-white p-2 shadow-sm">
+              <div className="flex items-start gap-3">
+                <div className="w-24 shrink-0 text-zinc-500">
+                  {log.level && (
+                    <Badge
+                      size="xs"
+                      color={levelColor[log.level]}
+                      className="mb-1">
+                      {log.level}
+                    </Badge>
+                  )}
+                  <div className="font-mono">
+                    {new Date(log.timestamp).toLocaleTimeString()}
+                  </div>
+                </div>
+                <div className="flex-1">
+                  <p className="font-mono break-words">{log.message}</p>
+                  {log.data !== undefined && (
+                    <pre className="mt-2 max-h-48 overflow-auto rounded bg-zinc-50 p-2">
+                      {JSON.stringify(log.data, null, 2)}
+                    </pre>
+                  )}
+                </div>
+              </div>
+            </li>
+          ))}
+        </ul>
       )}
     </div>
   );
