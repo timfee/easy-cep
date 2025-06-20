@@ -2,7 +2,7 @@
 @import "tw-animate-css";
 
 :root {
-  --primary: oklch(0.205 0 0);
+  --primary: rgb(26, 115, 232);
   --success: #00c853;
   --warning: #ff6d00;
   --error: #d32f2f;
@@ -11,8 +11,8 @@
   --foreground: oklch(0.145 0 0);
   --card: oklch(1 0 0);
   --card-foreground: oklch(0.145 0 0);
-  --popover: oklch(1 0 0);
-  --popover-foreground: oklch(0.145 0 0);
+  --popover: rgb(232, 234, 237);
+  --popover-foreground: rgb(23, 78, 166);
   --primary-foreground: oklch(0.985 0 0);
   --secondary: oklch(0.97 0 0);
   --secondary-foreground: oklch(0.205 0 0);
@@ -110,6 +110,9 @@
 }
 
 @layer utilities {
+  button {
+    cursor: pointer !important;
+  }
   .text-balance {
     text-wrap: balance;
   }
@@ -128,19 +131,7 @@
   }
 
   .api-scrollbar {
-    scrollbar-width: thin;
-    scrollbar-color: var(--border) var(--muted);
-  }
-  .api-scrollbar::-webkit-scrollbar {
-    width: 6px;
-    height: 6px;
-  }
-  .api-scrollbar::-webkit-scrollbar-track {
-    background: var(--muted);
-  }
-  .api-scrollbar::-webkit-scrollbar-thumb {
-    background: var(--border);
-    border-radius: 3px;
+    scrollbar-width: none;
   }
 }
 

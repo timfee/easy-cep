@@ -35,7 +35,6 @@ import {
   ChevronDown,
   ChevronRight,
   Clock,
-  FileText,
   Loader2,
   Play,
   RotateCcw,
@@ -292,23 +291,25 @@ export function StepCard({
 
       <Collapsible open={isExpanded}>
         <CollapsibleContent className="overflow-hidden transition-all duration-300 ease-out data-[state=closed]:animate-accordion-up data-[state=open]:animate-accordion-down">
-          <CardContent className="pt-0 pb-3 px-3 md:pb-4 md:px-4 space-y-4 md:space-y-5">
+          <CardContent className="px-6">
             {/* Action Buttons */}
             {detail?.description && (
               <p
-                className="text-sm text-slate-700 leading-relaxed"
+                className=" text-slate-700 px-7"
                 onClick={(e) => e.stopPropagation()}>
-                {detail.description}
+                {detail.description.split("\n").map((line, i) => (
+                  <p key={i}>{line}</p>
+                ))}
               </p>
             )}
 
             <div
-              className="overflow-x-auto"
+              className="overflow-x-auto px-7 my-2"
               onClick={(e) => e.stopPropagation()}>
               <StepApiCalls stepId={definition.id} />
             </div>
 
-            <div className="flex items-center justify-between">
+            <div className="flex items-center justify-between my-6">
               <div className="flex items-center gap-2">
                 <Button
                   size="sm"
@@ -317,35 +318,11 @@ export function StepCard({
                     onExecute(definition.id);
                   }}
                   disabled={!canExecute || executing}
-                  className="bg-blue-600 hover:bg-blue-700 text-white disabled:opacity-50">
+                  variant="default">
                   <Play className="h-3.5 w-3.5 mr-1.5" />
                   Execute
                 </Button>
-                {canUndo && (
-                  <Button
-                    size="sm"
-                    variant="outline"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      onUndo(definition.id);
-                    }}
-                    className="border-amber-300 text-amber-700 hover:bg-amber-50 hover:text-amber-800">
-                    <RotateCcw className="h-3.5 w-3.5 mr-1.5" />
-                    Undo
-                  </Button>
-                )}
-                <Button
-                  size="sm"
-                  variant="outline"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    onForce(definition.id);
-                  }}
-                  disabled={executing}
-                  className="border-orange-300 text-orange-700 hover:bg-orange-50 hover:text-orange-800 disabled:opacity-50">
-                  <Zap className="h-3.5 w-3.5 mr-1.5" />
-                  Force
-                </Button>
+
                 {definition.id === StepId.CreateAutomationOU && (
                   <OuInfoButton />
                 )}
@@ -363,16 +340,32 @@ export function StepCard({
                   <ClaimsInfoButton />
                 )}
               </div>
-              {state?.logs && state.logs.length > 0 && (
-                <Badge
-                  variant="outline"
-                  className="text-slate-600 border-slate-300 text-xs">
-                  <FileText className="h-3 w-3 mr-1" />
-                  {state.logs.length} logs
-                </Badge>
-              )}
+              <div className="space-x-2">
+                {canUndo && (
+                  <Button
+                    size="sm"
+                    variant="destructive"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      onUndo(definition.id);
+                    }}>
+                    <RotateCcw className="h-3.5 w-3.5 mr-1.5" />
+                    Undo
+                  </Button>
+                )}
+                <Button
+                  size="sm"
+                  variant="secondary"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    onForce(definition.id);
+                  }}
+                  disabled={executing}>
+                  <Zap className="h-3.5 w-3.5 mr-1.5" />
+                  Force
+                </Button>
+              </div>
             </div>
-
             <div
               className="overflow-x-auto"
               onClick={(e) => e.stopPropagation()}>
@@ -384,7 +377,7 @@ export function StepCard({
             </div>
 
             <Collapsible open={logsOpen} onOpenChange={setLogsOpen}>
-              <CollapsibleTrigger className="w-full flex items-center justify-between text-sm font-medium text-slate-700 hover:bg-slate-100 p-3 rounded-lg bg-slate-50 border border-slate-200 transition-colors">
+              <CollapsibleTrigger className="w-full flex items-center justify-between mt-4 font-medium text-slate-700 hover:bg-slate-100 p-3 rounded-lg bg-slate-50 border border-slate-200 transition-colors">
                 <div className="flex items-center gap-2">
                   <Terminal className="h-4 w-4 text-green-600" />
                   Execution Logs

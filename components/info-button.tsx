@@ -209,7 +209,7 @@ export function InfoButton({
           variant="outline"
           onClick={(e) => e.stopPropagation()}
           className="border-slate-300 text-slate-700">
-          <Info className="h-3.5 w-3.5 mr-1.5" /> Info
+          <Info className="h-3.5 w-3.5 mr-1.5" /> Inspect
         </Button>
       </DialogTrigger>
       <DialogContent className="max-w-2xl max-h-[600px] flex flex-col">
