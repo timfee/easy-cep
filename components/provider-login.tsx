@@ -139,7 +139,7 @@ export function ProviderLogin({ onUpdate }: Props) {
     : 0;
 
   return (
-    <div className="space-x-4 divide-x divide-slate-100 flex">
+    <div className="space-x-4 flex mr-2">
       <ProviderItem
         Icon={Google}
         name={"Google"}

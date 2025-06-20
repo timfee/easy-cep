@@ -109,7 +109,7 @@ export function VarsInspector({ vars, onChange }: VarsInspectorProps) {
                           className="h-7 text-xs w-full rounded-md"
                         />
                       : vars[key] !== undefined ?
-                        <code className="font-mono text-xs text-slate-500  px-4 py-0.5 rounded-md block truncate">
+                        <code className="font-mono text-xs text-slate-500 px-4 py-0.5 rounded-md block truncate">
                           {meta.sensitive ? "••••••••" : String(vars[key])}
                         </code>
                       : <span className="italic px-4 text-slate-300 text-xs">

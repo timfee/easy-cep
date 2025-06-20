@@ -37,7 +37,7 @@ export default function RootLayout({
   };
 
   return (
-    <html lang="en">
+    <html lang="en" className="antialiased scroll-smooth">
       <body className="h-screen overflow-hidden">
         <WorkflowProvider steps={allSteps} initialVars={DEFAULT_CONFIG}>
           <WorkflowHeader />
