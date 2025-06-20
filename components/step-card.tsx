@@ -130,7 +130,7 @@ export function StepCard({
 
   const getStepIndexDisplay = () => {
     const baseClasses =
-      "flex items-center justify-center w-7 h-7 rounded-full text-xs font-semibold flex-shrink-0 transition-colors duration-200";
+      "flex items-center justify-center w-7 h-7 rounded-sm text-xs font-semibold flex-shrink-0 transition-colors duration-200";
     const iconClasses = "h-4 w-4";
 
     if (executing) {

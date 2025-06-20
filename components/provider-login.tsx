@@ -139,7 +139,7 @@ export function ProviderLogin({ onUpdate }: Props) {
     : 0;
 
   return (
-    <div className="space-x-4 flex mr-2">
+    <>
       <ProviderItem
         Icon={Google}
         name={"Google"}
@@ -158,7 +158,7 @@ export function ProviderLogin({ onUpdate }: Props) {
         onDisconnectClick={() => signOut("microsoft")}
         iconColorClass="text-purple-500"
       />
-    </div>
+    </>
   );
 }
 
