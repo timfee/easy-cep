@@ -740,7 +740,7 @@ Authorization: Bearer {googleAccessToken}
 {
   "inboundSsoAssignments": [
     {
-      "targetOrgUnit": "/",
+      "targetOrgUnit": "orgUnits/{rootOrgUnitId}",
       "samlSsoInfo": { "inboundSamlSsoProfile": "{samlProfileId}" },
       "ssoMode": "SAML_SSO"
     },
@@ -753,7 +753,7 @@ Authorization: Bearer {googleAccessToken}
 
 Assignments exist for both:
 
-1. `targetOrgUnit = "/"` with `ssoMode = "SAML_SSO"` and matching `samlProfileId`
+1. `targetOrgUnit = "orgUnits/{rootOrgUnitId}"` with `ssoMode = "SAML_SSO"` and matching `samlProfileId`
 2. `targetOrgUnit = "{automationOuPath}"` with `ssoMode = "SSO_OFF"`
 
 ### Step 10 Execution
@@ -771,7 +771,7 @@ Authorization: Bearer {googleAccessToken}
 Content-Type: application/json
 
 {
-  "targetOrgUnit": "/",
+  "targetOrgUnit": "orgUnits/{rootOrgUnitId}",
   "samlSsoInfo": { "inboundSamlSsoProfile": "{samlProfileId}" },
   "ssoMode": "SAML_SSO"
 }

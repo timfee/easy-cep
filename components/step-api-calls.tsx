@@ -342,7 +342,7 @@ export const stepApiMetadata: Record<StepIdValue, ApiCallMetadata[]> = {
       endpoint: extractPath(ApiEndpoint.Google.SsoAssignments),
       description: "Assign all users to SSO",
       body: {
-        targetGroup: "groups/allUsers",
+        targetOrgUnit: "orgUnits/{rootOrgUnitId}",
         samlSsoInfo: { inboundSamlSsoProfile: "{samlProfileId}" },
         ssoMode: "SAML_SSO"
       }
