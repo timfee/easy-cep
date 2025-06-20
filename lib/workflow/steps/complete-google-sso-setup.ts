@@ -6,11 +6,19 @@ import { defineStep } from "../step-builder";
 export default defineStep(StepId.CompleteGoogleSsoSetup)
   .requires(
     Var.GoogleAccessToken,
-    Var.MsGraphToken,
     Var.SamlProfileId,
-    Var.SsoServicePrincipalId
+    Var.MsSigningCertificate,
+    Var.MsSsoLoginUrl,
+    Var.MsSsoEntityId
   )
   .provides()
+  /**
+   * GET https://cloudidentity.googleapis.com/v1/inboundSamlSsoProfiles/{samlProfileId}
+   * Headers: { Authorization: Bearer {googleAccessToken} }
+   *
+   * Success response (200)
+   * { "name": "profiles/{id}", "idpConfig": { ... }, "spConfig": { ... } }
+   */
 
   .check(
     async ({
@@ -62,134 +70,23 @@ export default defineStep(StepId.CompleteGoogleSsoSetup)
         );
       }
     }
+    /**
+     * PATCH https://cloudidentity.googleapis.com/v1/{samlProfile}?updateMask=idpConfig.entityId,idpConfig.singleSignOnServiceUri,idpConfig.signOutUri,idpConfig.changePasswordUri
+     * Headers: { Authorization: Bearer {googleAccessToken} }
+     * Body: { idpConfig: { entityId, singleSignOnServiceUri, signOutUri, changePasswordUri } }
+     *
+     * POST https://cloudidentity.googleapis.com/v1/{samlProfile}/certificates
+     * Headers: { Authorization: Bearer {googleAccessToken} }
+     * Body: { pemData: "-----BEGIN CERTIFICATE-----..." }
+     * Success response: { "done": true }
+     */
   )
-  .execute(async ({ vars, google, microsoft, output, markFailed, log }) => {
+  .execute(async ({ vars, google, output, markFailed, log }) => {
     try {
       const profileId = vars.require(Var.SamlProfileId);
-      const ssoSpId = vars.require(Var.SsoServicePrincipalId);
-
-      log(LogLevel.Info, "Fetching SAML metadata from Microsoft");
-
-      const AppDetailsSchema = z.object({
-        samlSingleSignOnSettings: z
-          .object({
-            loginUrl: z.string().nullable(),
-            logoutUrl: z.string().nullable(),
-            relayState: z.string().nullable()
-          })
-          .nullable(),
-        preferredSingleSignOnMode: z.string().nullable(),
-        identifierUris: z.array(z.string())
-      });
-
-      await microsoft.get(
-        `${ApiEndpoint.Microsoft.ServicePrincipals}/${ssoSpId}?$select=samlSingleSignOnSettings,preferredSingleSignOnMode,identifierUris`,
-        AppDetailsSchema
-      );
-
-      const TenantSchema = z.object({
-        value: z.array(
-          z.object({
-            id: z.string(),
-            verifiedDomains: z.array(
-              z.object({ name: z.string(), isDefault: z.boolean() })
-            )
-          })
-        )
-      });
-
-      /**
-       * GET https://graph.microsoft.com/v1.0/organization
-       * Headers: { Authorization: Bearer {msGraphToken} }
-       *
-       * Success response (200)
-       * { "value": [ { "id": "tenant", "verifiedDomains": [] } ] }
-       */
-      const tenantInfo = await microsoft.get(
-        ApiEndpoint.Microsoft.Organization,
-        TenantSchema
-      );
-      // Extract: tenantId = tenantInfo.value[0]?.id
-
-      // Example tenantInfo structure:
-      // {
-      //   id: "ef36b7bd-231b-421e-ac50-8f2995a39eee",
-      //   verifiedDomains: [
-      //     { name: "timcepnetnew.onmicrosoft.com", isDefault: false },
-      //     { name: "cep-netnew.cc", isDefault: true }
-      //   ]
-      // }
-
-      const tenantId = tenantInfo.value[0]?.id;
-      if (!tenantId) {
-        throw new Error("Unable to determine Microsoft tenant ID");
-      }
-
-      const idpEntityId = `https://sts.windows.net/${tenantId}/`;
-      const ssoServiceUri = `https://login.microsoftonline.com/${tenantId}/saml2`;
-      const signOutUri = `https://login.microsoftonline.com/${tenantId}/saml2`;
-
-      log(LogLevel.Info, "Fetching SAML certificate from Microsoft");
-
-      const CertSchema = z.object({
-        value: z.array(
-          z.object({
-            customKeyIdentifier: z.string(),
-            displayName: z.string().nullable(),
-            endDateTime: z.string(),
-            key: z.string().nullable(),
-            keyId: z.string(),
-            startDateTime: z.string(),
-            type: z.string(),
-            usage: z.string()
-          })
-        )
-      });
-      if (!ssoSpId) {
-        throw new Error("SAML Service Principal ID not provided");
-      }
-
-      /**
-       * GET https://graph.microsoft.com/v1.0/servicePrincipals/{ssoServicePrincipalId}/tokenSigningCertificates
-       * Headers: { Authorization: Bearer {msGraphToken} }
-       *
-       * Success response (200)
-       * { "value": [ { "startDateTime": "...", "endDateTime": "...", "key": "..." } ] }
-       */
-      const certs = await microsoft.get(
-        ApiEndpoint.Microsoft.TokenSigningCertificates(ssoSpId),
-        CertSchema
-      );
-
-      // Example certs value (when certificates exist):
-      // {
-      //   value: [
-      //     {
-      //       keyId: "...",
-      //       startDateTime: "2024-01-01T00:00:00Z",
-      //       endDateTime: "2025-01-01T00:00:00Z",
-      //       key: "MII...base64...",
-      //       usage: "Signing"
-      //     }
-      //   ]
-      // }
-
-      const now = new Date();
-      const activeCert = certs.value.find((cert) => {
-        const start = new Date(cert.startDateTime);
-        const end = new Date(cert.endDateTime);
-        return start <= now && now <= end && cert.key;
-      });
-
-      if (!activeCert || !activeCert.key) {
-        throw new Error("No active SAML signing certificate found");
-      }
-
-      const certData = activeCert.key;
-      const pemCert =
-        certData.includes("BEGIN CERTIFICATE") ? certData : (
-          `-----BEGIN CERTIFICATE-----\n${certData}\n-----END CERTIFICATE-----`
-        );
+      const signingCert = vars.require(Var.MsSigningCertificate);
+      const loginUrl = vars.require(Var.MsSsoLoginUrl);
+      const entityId = vars.require(Var.MsSsoEntityId);
 
       log(
         LogLevel.Info,
@@ -210,19 +107,11 @@ export default defineStep(StepId.CompleteGoogleSsoSetup)
 
       const patchUrl = `${ApiEndpoint.Google.SamlProfile(profileId)}?updateMask=${encodeURIComponent(updateMask)}`;
 
-      /**
-       * PATCH https://cloudidentity.googleapis.com/v1/{samlProfile}?updateMask=idpConfig.entityId,...
-       * Headers: { Authorization: Bearer {googleAccessToken} }
-       * Body: { idpConfig: { entityId: "..." } }
-       *
-       * Success response (200)
-       * { "done": true }
-       */
       const updateOp = await google.patch(patchUrl, UpdateSchema, {
         idpConfig: {
-          entityId: idpEntityId,
-          singleSignOnServiceUri: ssoServiceUri,
-          signOutUri: signOutUri,
+          entityId: entityId,
+          singleSignOnServiceUri: loginUrl,
+          signOutUri: loginUrl,
           changePasswordUri: `https://account.activedirectory.windowsazure.com/ChangePassword.aspx`
         }
       });
@@ -241,6 +130,11 @@ export default defineStep(StepId.CompleteGoogleSsoSetup)
       }
 
       log(LogLevel.Info, "Uploading SAML certificate to Google");
+
+      const pemCert =
+        signingCert.includes("BEGIN CERTIFICATE") ? signingCert : (
+          `-----BEGIN CERTIFICATE-----\n${signingCert}\n-----END CERTIFICATE-----`
+        );
 
       const CertUploadSchema = z.object({
         name: z.string(),
@@ -274,6 +168,9 @@ export default defineStep(StepId.CompleteGoogleSsoSetup)
       markFailed(error instanceof Error ? error.message : "Execute failed");
     }
   })
+  /**
+   * No revert actions for Google configuration
+   */
   .undo(async ({ markReverted }) => {
     markReverted();
   })

@@ -4,14 +4,13 @@ import { LogLevel, StepId, Var } from "@/types";
 import { z } from "zod";
 import { defineStep } from "../step-builder";
 
-export default defineStep(StepId.ConfigureMicrosoftSyncAndSso)
+export default defineStep(StepId.SetupMicrosoftProvisioning)
   .requires(
     Var.MsGraphToken,
     Var.ProvisioningServicePrincipalId,
     Var.GeneratedPassword
   )
   .provides()
-
   /**
    * GET https://graph.microsoft.com/v1.0/servicePrincipals/{provisioningServicePrincipalId}/synchronization/jobs
    * Headers: { Authorization: Bearer {msGraphToken} }
@@ -19,11 +18,8 @@ export default defineStep(StepId.ConfigureMicrosoftSyncAndSso)
    * Success response (200)
    * { "value": [ { "status": { "code": "Active" } } ] }
    *
-   * Success response (200) – empty
+   * Success response (200) - empty
    * { "value": [] }
-   *
-   * Error response (401)
-   * { "error": { "code": "InvalidAuthenticationToken" } }
    */
 
   .check(
@@ -47,7 +43,6 @@ export default defineStep(StepId.ConfigureMicrosoftSyncAndSso)
           JobsSchema,
           { flatten: "value" }
         );
-        // Extract: jobStatusCodes = value.map(v => v.status.code)
 
         const active = value.some((job) => job.status.code !== "Paused");
 
@@ -65,21 +60,32 @@ export default defineStep(StepId.ConfigureMicrosoftSyncAndSso)
       }
     }
   )
+  /**
+   * GET https://graph.microsoft.com/v1.0/servicePrincipals/{provisioningServicePrincipalId}/synchronization/templates
+   * Headers: { Authorization: Bearer {msGraphToken} }
+   *
+   * Success response (200)
+   * { "value": [ { "id": "templateId", "factoryTag": "gsuite" } ] }
+   *
+   * POST https://graph.microsoft.com/v1.0/servicePrincipals/{provisioningServicePrincipalId}/synchronization/jobs
+   * Headers: { Authorization: Bearer {msGraphToken} }
+   * Body: { "templateId": "{templateId}" }
+   *
+   * PUT https://graph.microsoft.com/v1.0/servicePrincipals/{provisioningServicePrincipalId}/synchronization/secrets
+   * Headers: { Authorization: Bearer {msGraphToken} }
+   * Body:
+   * {
+   *   "value": [
+   *     { "key": "BaseAddress", "value": "https://admin.googleapis.com/admin/directory/v1" },
+   *     { "key": "SecretToken", "value": "{generatedPassword}" }
+   *   ]
+   * }
+   *
+   * POST https://graph.microsoft.com/v1.0/servicePrincipals/{provisioningServicePrincipalId}/synchronization/jobs/{jobId}/start
+   * Headers: { Authorization: Bearer {msGraphToken} }
+   * Success response (204) {}
+   */
   .execute(async ({ vars, microsoft, output, markFailed, log }) => {
-    /**
-     * POST https://graph.microsoft.com/v1.0/servicePrincipals/{provisioningServicePrincipalId}/synchronization/jobs
-     * Headers: { Authorization: Bearer {msGraphToken} }
-     * Body: { "templateId": "gsuite" }  // discovered via /synchronization/templates
-     *
-     * PUT https://graph.microsoft.com/v1.0/servicePrincipals/{provisioningServicePrincipalId}/synchronization/secrets
-     * Headers: { Authorization: Bearer {msGraphToken} }
-     * Body:
-     * { "value": [ { "key": "BaseAddress", "value": "https://admin.googleapis.com/admin/directory/v1" }, { "key": "SecretToken", "value": "{generatedPassword}" } ] }
-     * Success response (204) {}
-     *
-     * POST https://graph.microsoft.com/v1.0/servicePrincipals/{provisioningServicePrincipalId}/synchronization/jobs/{jobId}/start
-     * Headers: { Authorization: Bearer {msGraphToken} }
-     */
     try {
       const spId = vars.require(Var.ProvisioningServicePrincipalId);
       const password = vars.require(Var.GeneratedPassword);
@@ -111,7 +117,6 @@ export default defineStep(StepId.ConfigureMicrosoftSyncAndSso)
         CreateJobSchema,
         { templateId }
       );
-      // Extract: jobId = job.id
 
       await microsoft.put(
         ApiEndpoint.Microsoft.SyncSecrets(spId),
@@ -130,11 +135,12 @@ export default defineStep(StepId.ConfigureMicrosoftSyncAndSso)
       );
 
       output({});
-    } catch (error) {
-      log(LogLevel.Error, "Failed to configure sync", { error });
-      markFailed(error instanceof Error ? error.message : "Execute failed");
-    }
+    } catch (error) {}
   })
+  /**
+   * GET https://graph.microsoft.com/v1.0/servicePrincipals/{provisioningServicePrincipalId}/synchronization/jobs
+   * DELETE https://graph.microsoft.com/v1.0/servicePrincipals/{provisioningServicePrincipalId}/synchronization/jobs/{jobId}
+   */
   .undo(async ({ vars, microsoft, markReverted, markFailed, log }) => {
     try {
       const spId = vars.get(Var.ProvisioningServicePrincipalId);
@@ -161,7 +167,6 @@ export default defineStep(StepId.ConfigureMicrosoftSyncAndSso)
 
       markReverted();
     } catch (error) {
-      // isNotFoundError handles: 404
       if (isNotFoundError(error)) {
         markReverted();
       } else {

@@ -9,7 +9,8 @@ export const StepId = {
   CreateAdminRoleAndAssignUser: "create-admin-role-and-assign-user",
   ConfigureGoogleSamlProfile: "configure-google-saml-profile",
   CreateMicrosoftApps: "create-microsoft-apps",
-  ConfigureMicrosoftSyncAndSso: "configure-microsoft-sync-and-sso",
+  SetupMicrosoftProvisioning: "setup-microsoft-provisioning",
+  ConfigureMicrosoftSso: "configure-microsoft-sso",
   SetupMicrosoftClaimsPolicy: "setup-microsoft-claims-policy",
   CompleteGoogleSsoSetup: "complete-google-sso-setup",
   AssignUsersToSso: "assign-users-to-sso"

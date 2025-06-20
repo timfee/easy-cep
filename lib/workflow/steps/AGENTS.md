@@ -601,81 +601,32 @@ ssoServicePrincipalId = .servicePrincipal.id
 ssoAppId = .application.appId
 ```
 
-## Step 7: `configureMicrosoftSyncAndSso`
+## Step 7: `setupMicrosoftProvisioning`
 
 ### Step 7 Purpose
 
-Configure Azure AD provisioning and SSO settings.
-
-### Step 7 State Check
-
-#### Step 7 Check Request
-
-```http
-GET https://graph.microsoft.com/v1.0/servicePrincipals/{provisioningServicePrincipalId}/synchronization/jobs
-Authorization: Bearer {msGraphToken}
-```
-
-#### Step 7 Success Response (`200 OK`)
-
-```json
-{ "value": [ { "status": { "code": "Active" } }, ... ] }
-```
-
-#### Step 7 Completion Criteria
-
-At least one `value[].status.code != "Paused"`
+Configure Azure AD provisioning to sync users to Google Workspace.
 
 ### Step 7 Execution
 
-#### Step 7 Prerequisites
+1. Get sync template ID
+2. Create synchronization job
+3. Set credentials (BaseAddress and SecretToken)
+4. Start synchronization
 
-- `msGraphToken`
-- `provisioningServicePrincipalId`, `generatedPassword`
+## Step 8: `configureMicrosoftSso`
 
-#### Step 7 Execution Requests
+### Step 8 Purpose
 
-1. Create Job
+Configure Microsoft SAML SSO settings and generate signing certificate.
 
-```http
-POST https://graph.microsoft.com/v1.0/servicePrincipals/{provisioningServicePrincipalId}/synchronization/jobs
-Authorization: Bearer {msGraphToken}
-Content-Type: application/json
+### Step 8 Execution
 
-{ "templateId": "gsuite" }
-```
-
-Lookup the template ID via `GET /servicePrincipals/{provisioningServicePrincipalId}/synchronization/templates` and match on `factoryTag` `gsuite`.
-
-Expected: `201 Created` returning job ID
-
-1. Set Secrets
-
-```http
-PUT https://graph.microsoft.com/v1.0/servicePrincipals/{provisioningServicePrincipalId}/synchronization/secrets
-Authorization: Bearer {msGraphToken}
-Content-Type: application/json
-
-{
-  "value": [
-    { "key": "BaseAddress", "value": "https://admin.googleapis.com/admin/directory/v1" },
-    { "key": "SecretToken", "value": "{generatedPassword}" }
-  ]
-}
-```
-
-Expected: `204 No Content`
-
-1. Start Job
-
-```http
-POST https://graph.microsoft.com/v1.0/servicePrincipals/{provisioningServicePrincipalId}/synchronization/jobs/{jobId}/start
-Authorization: Bearer {msGraphToken}
-```
-
-Expected: `204 No Content`
-
-## Step 8: `setupMicrosoftClaimsPolicy`
+1. Set preferredSingleSignOnMode to "saml" on service principal
+2. Configure SAML URLs on service principal
+3. Set identifierUris and redirectUris on application object
+4. Generate token signing certificate
+5. Extract certificate and SSO URLs for Google configuration
 
 ### Step 8 Purpose
 
