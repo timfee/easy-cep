@@ -18,6 +18,7 @@ import {
   CollapsibleTrigger
 } from "@/components/ui/collapsible";
 import { cn } from "@/lib/utils";
+import { STEP_DETAILS } from "@/lib/workflow/step-details";
 import { WORKFLOW_VARIABLES } from "@/lib/workflow/variables";
 import { StepId } from "@/types";
 
@@ -69,6 +70,15 @@ export function StepCard({
 }: StepCardProps) {
   const [isExpanded, setIsExpanded] = useState(false);
   const [logsOpen, setLogsOpen] = useState(false);
+  const detail = STEP_DETAILS[definition.id];
+
+  const title =
+    detail?.title
+    || definition.name
+    || definition.id
+      .split("-")
+      .map((w) => w.charAt(0).toUpperCase() + w.slice(1))
+      .join(" ");
 
   useEffect(() => {
     if (!isExpanded) {
@@ -188,7 +198,8 @@ export function StepCard({
   };
 
   const getCardClassName = () => {
-    const baseClass = "transition-all duration-300 ease-out bg-white border"; // Use single border for simplicity
+    const baseClass =
+      "transition-all duration-300 ease-out bg-white border cursor-pointer py-4";
     const shadowClass = isExpanded ? "shadow-xl" : "hover:shadow-lg";
     let borderColorClass = "border-slate-200 hover:border-slate-300";
     const animationClass = "";
@@ -229,18 +240,23 @@ export function StepCard({
   };
 
   return (
-    <Card className={getCardClassName()}>
+    <Card
+      className={getCardClassName()}
+      onClick={handleHeaderClick}
+      role="button"
+      aria-expanded={isExpanded}>
       <CardHeader
-        className="p-4 cursor-pointer transition-colors duration-200"
-        onClick={handleHeaderClick}
-        role="button"
-        aria-expanded={isExpanded}>
+        className="p-3 cursor-pointer transition-colors duration-200"
+        onClick={(e) => {
+          e.stopPropagation();
+          handleHeaderClick();
+        }}>
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3 flex-1">
             {getStepIndexDisplay()}
             <div className="flex-1 min-w-0">
               <h3 className="font-semibold text-slate-900 text-sm md:text-base leading-tight">
-                {definition.name || definition.id}
+                {title}
               </h3>
               <p className="text-xs md:text-sm text-slate-600 mt-0.5 leading-tight">
                 {state?.summary || "Ready to execute"}
@@ -273,8 +289,22 @@ export function StepCard({
 
       <Collapsible open={isExpanded}>
         <CollapsibleContent className="overflow-hidden transition-all duration-300 ease-out data-[state=closed]:animate-accordion-up data-[state=open]:animate-accordion-down">
-          <CardContent className="pt-0 pb-4 px-4 md:pb-5 md:px-5 space-y-5 md:space-y-6">
+          <CardContent className="pt-0 pb-3 px-3 md:pb-4 md:px-4 space-y-4 md:space-y-5">
             {/* Action Buttons */}
+            {detail?.description && (
+              <p
+                className="text-sm text-slate-700 leading-relaxed"
+                onClick={(e) => e.stopPropagation()}>
+                {detail.description}
+              </p>
+            )}
+
+            <div
+              className="overflow-x-auto"
+              onClick={(e) => e.stopPropagation()}>
+              <StepApiCalls stepId={definition.id} />
+            </div>
+
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
                 <Button
@@ -340,16 +370,9 @@ export function StepCard({
               )}
             </div>
 
-            {definition.description && (
-              <p className="text-sm text-slate-700 leading-relaxed">
-                {definition.description}
-              </p>
-            )}
-
-            <div className="overflow-x-auto">
-              <StepApiCalls stepId={definition.id} />
-            </div>
-            <div className="overflow-x-auto">
+            <div
+              className="overflow-x-auto"
+              onClick={(e) => e.stopPropagation()}>
               <StepVariables
                 stepId={definition.id}
                 vars={vars}

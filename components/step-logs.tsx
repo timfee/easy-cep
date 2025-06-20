@@ -61,7 +61,9 @@ export function StepLogs({ logs }: StepLogsProps) {
   };
 
   return (
-    <ScrollArea className="h-[250px] -mx-2">
+    <ScrollArea
+      className="h-[250px] -mx-2"
+      onClick={(e) => e.stopPropagation()}>
       <div className="space-y-1.5 px-2">
         {logs.map((log) => (
           <div
