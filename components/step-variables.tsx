@@ -25,12 +25,14 @@ export function StepVariables({ stepId, vars, onChange }: StepVariablesProps) {
   const requiredVars = useMemo(
     () =>
       allStepVars.filter(
-        (v) => v.consumedBy?.includes(stepId) && v.producedBy !== stepId
+        (variable) =>
+          variable.consumedBy?.includes(stepId)
+          && variable.producedBy !== stepId
       ),
     [allStepVars, stepId]
   );
   const providedVars = useMemo(
-    () => allStepVars.filter((v) => v.producedBy === stepId),
+    () => allStepVars.filter((variable) => variable.producedBy === stepId),
     [allStepVars, stepId]
   );
 

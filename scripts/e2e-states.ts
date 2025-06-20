@@ -2,7 +2,7 @@
  * Creates specific test states for each step
  */
 
-import { ApiEndpoint, TemplateId, SyncTemplateTag } from "@/constants";
+import { ApiEndpoint, SyncTemplateTag, TemplateId } from "@/constants";
 import { fetch, ProxyAgent, setGlobalDispatcher } from "undici";
 
 if (process.env.USE_UNDICI_PROXY !== "false") {
@@ -104,7 +104,7 @@ async function getSyncTemplateId(spId: string, tag: string) {
   const json = (await res.json()) as {
     value: Array<{ id: string; factoryTag: string }>;
   };
-  return json.value.find((t) => t.factoryTag === tag)?.id ?? tag;
+  return json.value.find((template) => template.factoryTag === tag)?.id ?? tag;
 }
 
 async function setSyncJobToQuarantine(spId: string) {
