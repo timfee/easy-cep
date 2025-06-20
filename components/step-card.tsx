@@ -96,6 +96,12 @@ export function StepCard({
         return state?.summary || "Ready to execute";
     }
   };
+  useEffect(() => {
+    if (executing || state?.status === "pending") {
+      setIsExpanded(true);
+      setLogsOpen(true);
+    }
+  }, [executing, state?.status]);
 
   const getStepIndexDisplay = () => {
     const baseClasses =
@@ -319,6 +325,14 @@ export function StepCard({
           </div>
         )}
       </CardHeader>
+
+      {(executing || state?.status === "pending") && (
+        <div className="px-6">
+          <div className="relative h-1 bg-slate-200 overflow-hidden rounded">
+            <div className="absolute inset-0 bg-blue-500 animate-indeterminate" />
+          </div>
+        </div>
+      )}
 
       <Collapsible open={isExpanded}>
         <CollapsibleContent className="overflow-hidden transition-all duration-300 ease-out data-[state=closed]:animate-accordion-up data-[state=open]:animate-accordion-down">
