@@ -1,6 +1,7 @@
 "use client";
 
 import { ProviderLogin } from "@/components/provider-login";
+import { StepProgress } from "@/components/step-progress";
 import { Badge } from "@/components/ui/badge";
 import Image from "next/image";
 import { useWorkflow } from "./workflow-context";
@@ -28,17 +29,16 @@ export function WorkflowHeader() {
             <h1 className="text-xl font-semibold text-blue-700">Easy CEP</h1>
           </div>
           <div className="flex items-center gap-3 text-sm -mx-1">
-            <Badge
-              variant={isRunning ? "default" : "secondary"}
-              className={
-                isRunning ? "bg-green-100 text-green-800 border-green-200" : ""
-              }>
-              {isRunning ? "Running" : "Idle"}
-            </Badge>
+            {isRunning && (
+              <Badge className="bg-green-100 text-green-800 border-green-200">
+                Running
+              </Badge>
+            )}
             <span className="text-slate-600">
               {completedSteps}/{steps.length} steps completed
             </span>
           </div>
+          <StepProgress />
         </div>
         <ProviderLogin onUpdate={updateVars} />
       </div>
