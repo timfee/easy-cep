@@ -1,4 +1,4 @@
-import { ApiEndpoint, SyncTemplateId } from "@/constants";
+import { ApiEndpoint, SyncTemplateTag } from "@/constants";
 import { EmptyResponseSchema, isNotFoundError } from "@/lib/workflow/utils";
 import { LogLevel, StepId, Var } from "@/types";
 import { z } from "zod";
@@ -67,9 +67,9 @@ export default defineStep(StepId.ConfigureMicrosoftSyncAndSso)
   )
   .execute(async ({ vars, microsoft, output, markFailed, log }) => {
     /**
-     * POST https://graph.microsoft.com/v1.0/servicePrincipals/{provisioningServicePrincipalId}/synchronization/jobs
+    * POST https://graph.microsoft.com/v1.0/servicePrincipals/{provisioningServicePrincipalId}/synchronization/jobs
      * Headers: { Authorization: Bearer {msGraphToken} }
-     * Body: { "templateId": "google2provisioningV2" }
+     * Body: { "templateId": "gsuite" }  // discovered via /synchronization/templates
      *
      * PUT https://graph.microsoft.com/v1.0/servicePrincipals/{provisioningServicePrincipalId}/synchronization/secrets
      * Headers: { Authorization: Bearer {msGraphToken} }
@@ -86,6 +86,19 @@ export default defineStep(StepId.ConfigureMicrosoftSyncAndSso)
 
       const baseAddress = ApiEndpoint.Google.Users.replace("/users", "");
 
+      const TemplatesSchema = z.object({
+        value: z.array(z.object({ id: z.string(), factoryTag: z.string() }))
+      });
+
+      const { value: templates } = await microsoft.get(
+        ApiEndpoint.Microsoft.SyncTemplates(spId),
+        TemplatesSchema,
+        { flatten: "value" }
+      );
+      const templateId =
+        templates.find((t) => t.factoryTag === SyncTemplateTag.GoogleWorkspace)
+          ?.id ?? SyncTemplateTag.GoogleWorkspace;
+
       const CreateJobSchema = z.object({
         id: z.string(),
         templateId: z.string(),
@@ -95,7 +108,7 @@ export default defineStep(StepId.ConfigureMicrosoftSyncAndSso)
       const job = await microsoft.post(
         ApiEndpoint.Microsoft.SyncJobs(spId),
         CreateJobSchema,
-        { templateId: SyncTemplateId.GoogleWorkspace }
+        { templateId }
       );
       // Extract: jobId = job.id
 

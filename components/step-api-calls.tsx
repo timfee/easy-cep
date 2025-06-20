@@ -248,7 +248,7 @@ export const stepApiMetadata: Record<StepIdValue, ApiCallMetadata[]> = {
       endpoint:
         "/graph/v1.0/servicePrincipals/{provisioningServicePrincipalId}/synchronization/jobs",
       description: "Create sync job",
-      body: { templateId: "google2provisioningV2" }
+      body: { templateId: "gsuite" } // via SyncTemplates lookup
     },
     {
       method: "PUT",

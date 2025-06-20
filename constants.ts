@@ -82,7 +82,10 @@ export const TemplateId = {
   GoogleWorkspaceSaml: "8b1025e4-1dd2-430b-a150-2ef79cd700f5"
 };
 
-export const SyncTemplateId = { GoogleWorkspace: "google2provisioningV2" };
+// Synchronization templates are enumerated per service principal. The Google
+// Workspace connector exposes a template with factory tag `gsuite`. We
+// dynamically look up the corresponding template ID before job creation.
+export const SyncTemplateTag = { GoogleWorkspace: "gsuite" };
 
 export const GroupId = { AllUsers: "allUsers" };
 
