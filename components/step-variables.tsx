@@ -3,6 +3,7 @@ import { WORKFLOW_VARIABLES, WorkflowVars } from "@/lib/workflow/variables";
 import { StepIdValue, VarName } from "@/types";
 
 import { Database } from "lucide-react";
+import { useMemo } from "react";
 
 interface StepVariablesProps {
   stepId: StepIdValue;
@@ -10,17 +11,28 @@ interface StepVariablesProps {
   onChange: (key: VarName, value: unknown) => void;
 }
 export function StepVariables({ stepId, vars, onChange }: StepVariablesProps) {
-  const allStepVars = Object.entries(WORKFLOW_VARIABLES)
-    .filter(
-      ([, meta]) =>
-        meta.consumedBy?.includes(stepId) || meta.producedBy === stepId
-    )
-    .map(([key, meta]) => ({ key: key as VarName, ...meta }));
-
-  const requiredVars = allStepVars.filter(
-    (v) => v.consumedBy?.includes(stepId) && v.producedBy !== stepId
+  const allStepVars = useMemo(
+    () =>
+      Object.entries(WORKFLOW_VARIABLES)
+        .filter(
+          ([, meta]) =>
+            meta.consumedBy?.includes(stepId) || meta.producedBy === stepId
+        )
+        .map(([key, meta]) => ({ key: key as VarName, ...meta })),
+    [stepId]
   );
-  const providedVars = allStepVars.filter((v) => v.producedBy === stepId);
+
+  const requiredVars = useMemo(
+    () =>
+      allStepVars.filter(
+        (v) => v.consumedBy?.includes(stepId) && v.producedBy !== stepId
+      ),
+    [allStepVars, stepId]
+  );
+  const providedVars = useMemo(
+    () => allStepVars.filter((v) => v.producedBy === stepId),
+    [allStepVars, stepId]
+  );
 
   const VariableItem = ({
     varKey,
