@@ -37,12 +37,19 @@ if (
   });
 } else {
   describe("Workflow Live E2E", () => {
+    const mode =
+      process.env.UPDATE_FIXTURES ? "record"
+      : process.env.CHECK_FIXTURES ? "verify"
+      : "run";
+
+    console.log(`Running E2E tests in ${mode} mode`);
+
     const baseVars = {
       [Var.GoogleAccessToken]: process.env.TEST_GOOGLE_BEARER_TOKEN!,
       [Var.MsGraphToken]: process.env.TEST_MS_BEARER_TOKEN!,
       [Var.PrimaryDomain]: process.env.TEST_DOMAIN!,
-      [Var.IsDomainVerified]: true
-    } as const;
+      [Var.IsDomainVerified]: "true"
+    };
 
     const fixtureDir = path.join(__dirname, "fixtures");
 
@@ -78,31 +85,58 @@ if (
     let vars: Record<string, any> = { ...baseVars };
 
     for (const step of steps) {
-      it(step, async () => {
+      it(`${step} (${mode} mode)`, async () => {
         const result = await runStep(step, vars);
         const sanitized = { status: result.state.status };
-        if (process.env.UPDATE_FIXTURES) {
-          saveFixture(step, sanitized);
+
+        switch (mode) {
+          case "record":
+            saveFixture(step, sanitized);
+            console.log(`Recorded fixture for ${step}`);
+            break;
+          case "verify": {
+            const expected = loadFixture(step);
+            if (!expected) {
+              throw new Error(
+                `Missing fixture for ${step}. Run with UPDATE_FIXTURES=1 first.`
+              );
+            }
+            expect(sanitized).toEqual(expected);
+            break;
+          }
+          case "run":
+            expect(result.state.status).toBeDefined();
+            break;
         }
-        const expected = loadFixture(step);
-        if (expected && process.env.CHECK_FIXTURES) {
-          expect(sanitized).toEqual(expected);
-        }
+
         vars = { ...vars, ...result.newVars };
       });
     }
 
     const undoSteps = [...steps].reverse();
     for (const step of undoSteps) {
-      it(`${step} undo`, async () => {
+      it(`${step} undo (${mode} mode)`, async () => {
         const result = await undoStep(step, vars);
         const sanitized = { status: result.state.status };
-        if (process.env.UPDATE_FIXTURES) {
-          saveFixture(`${step}-undo`, sanitized);
-        }
-        const expected = loadFixture(`${step}-undo`);
-        if (expected && process.env.CHECK_FIXTURES) {
-          expect(sanitized).toEqual(expected);
+
+        switch (mode) {
+          case "record":
+            saveFixture(`${step}-undo`, sanitized);
+            console.log(`Recorded undo fixture for ${step}`);
+            break;
+          case "verify": {
+            const expected = loadFixture(`${step}-undo`);
+            if (!expected) {
+              throw new Error(
+                `Missing undo fixture for ${step}. Run with UPDATE_FIXTURES=1 first.`
+              );
+            }
+            expect(sanitized).toEqual(expected);
+            break;
+          }
+          case "run":
+            expect(result.state.status).toBeDefined();
+            break;
         }
       });
     }
