@@ -89,6 +89,11 @@ export function StepVariables({ stepId, vars, onChange }: StepVariablesProps) {
           : <span className="italic text-slate-400 text-2xs">Not set</span>}
         </div>
       }
+      {meta.ephemeral && (
+        <div className="text-xs text-amber-600 mt-1">
+          ⚠️ This value is temporary and will be lost if you refresh the page
+        </div>
+      )}
     </div>
   );
 
