@@ -1,0 +1,5 @@
+{
+  "inboundSsoAssignments": [
+    { "name": "assignments/allUsers", "targetGroup": "groups/allUsers" }
+  ]
+}

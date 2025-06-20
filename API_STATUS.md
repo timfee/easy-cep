@@ -105,3 +105,12 @@ _check_ success:
 ### testSsoConfiguration
 
 - Manual verification of SSO login
+
+### info server actions
+
+- listOrgUnits: verified 200 response listing organizational units
+- listSamlProfiles: verified 200 response listing SAML profiles
+- listSsoAssignments: verified 200 response listing assignments
+- listProvisioningJobs: verified 200 response (0 jobs returned)
+- listClaimsPolicies: verified 200 response listing claims policies
+- listEnterpriseApps: verified 200 response listing apps
