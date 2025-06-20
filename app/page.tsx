@@ -10,7 +10,7 @@ export default function HomePage() {
         <section className="flex-1 overflow-y-auto bg-slate-50/30 p-6">
           <StepsList />
         </section>
-        <aside className="w-96 border-l bg-white overflow-y-auto p-6">
+        <aside className="w-96 border-l bg-white overflow-y-auto">
           <VarsPanel />
         </aside>
       </main>

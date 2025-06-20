@@ -50,11 +50,11 @@ export function VarsInspector({ vars, onChange }: VarsInspectorProps) {
   );
 
   return (
-    <div className="h-full bg-white border border-slate-200 rounded-lg overflow-hidden flex flex-col">
+    <div className="flex flex-col">
       <div className="flex-1 overflow-y-auto">
         {Object.entries(groupedVars).map(([category, variables]) => (
           <div key={category}>
-            <h4 className="bg-slate-50 px-3 py-1.5 text-xs font-semibold text-slate-700 sticky top-0 border-b border-slate-200">
+            <h4 className="bg-slate-200 px-3 py-1.5 text-xs font-semibold text-slate-700 sticky top-0 border-b border-slate-200">
               {categoryTitles[category as VariableMetadata["category"]]}
             </h4>
             <div className="divide-y divide-slate-100">
@@ -109,11 +109,11 @@ export function VarsInspector({ vars, onChange }: VarsInspectorProps) {
                           className="h-7 text-xs w-full rounded-md"
                         />
                       : vars[key] !== undefined ?
-                        <code className="font-mono text-xs text-slate-600 bg-slate-100 px-1.5 py-0.5 rounded-md block truncate">
+                        <code className="font-mono text-xs text-slate-500  px-4 py-0.5 rounded-md block truncate">
                           {meta.sensitive ? "••••••••" : String(vars[key])}
                         </code>
-                      : <span className="italic text-slate-400 text-xs">
-                          Not set
+                      : <span className="italic px-4 text-slate-300 text-xs">
+                          (Not set)
                         </span>
                       }
                     </div>
@@ -123,11 +123,6 @@ export function VarsInspector({ vars, onChange }: VarsInspectorProps) {
             </div>
           </div>
         ))}
-        {Object.keys(groupedVars).length === 0 && (
-          <p className="p-4 text-sm text-slate-500 text-center">
-            No variables in this category.
-          </p>
-        )}
       </div>
     </div>
   );
