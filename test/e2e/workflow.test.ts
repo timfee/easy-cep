@@ -1,7 +1,11 @@
 import { runStep, undoStep } from "@/lib/workflow/engine";
 import { StepId, Var } from "@/types";
+import { jest } from "@jest/globals";
 import fs from "fs";
 import path from "path";
+import { fileURLToPath } from "url";
+
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
 // Some workflow steps take longer than Jest's default 5 second timeout
 // so increase the limit globally for this suite
@@ -22,12 +26,15 @@ if (!process.env.TEST_MS_BEARER_TOKEN && fs.existsSync(msTokenPath)) {
 }
 
 if (
-  !process.env.TEST_GOOGLE_BEARER_TOKEN
+  process.env.RUN_E2E !== "1"
+  || !process.env.TEST_GOOGLE_BEARER_TOKEN
   || !process.env.TEST_MS_BEARER_TOKEN
 ) {
-  console.warn(
-    "E2E tests require TEST_GOOGLE_BEARER_TOKEN and TEST_MS_BEARER_TOKEN; skipping."
-  );
+  test.skip("e2e", () => {
+    console.warn(
+      "E2E tests require TEST_GOOGLE_BEARER_TOKEN and TEST_MS_BEARER_TOKEN; skipping."
+    );
+  });
 } else {
   describe("Workflow Live E2E", () => {
     const baseVars = {

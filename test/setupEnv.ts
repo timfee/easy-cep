@@ -32,3 +32,10 @@ if (
 if (!process.env.TEST_DOMAIN) {
   process.env.TEST_DOMAIN = "test.example.com";
 }
+
+// Provide defaults for required environment variables
+process.env.AUTH_SECRET ??= "test-secret";
+process.env.GOOGLE_OAUTH_CLIENT_ID ??= "test-google-client-id";
+process.env.GOOGLE_OAUTH_CLIENT_SECRET ??= "test-google-client-secret";
+process.env.MICROSOFT_OAUTH_CLIENT_ID ??= "test-microsoft-client-id";
+process.env.MICROSOFT_OAUTH_CLIENT_SECRET ??= "test-microsoft-client-secret";
