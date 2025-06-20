@@ -44,9 +44,7 @@ export async function listOrgUnits(): Promise<InfoItem[]> {
     data.organizationUnits?.map((ou) => ({
       id: ou.orgUnitId,
       label: ou.orgUnitPath,
-      href: `https://admin.google.com/ac/orgunits?ouid=${encodeURIComponent(
-        ou.orgUnitId.replace(/^id:/, "")
-      )}`,
+      href: `https://admin.google.com/ac/orgunits`,
       deletable: true,
       deleteEndpoint: `${ApiEndpoint.Google.OrgUnits}/${encodeURIComponent(
         ou.orgUnitPath.replace(/^\//, "")
@@ -72,11 +70,10 @@ export async function listSamlProfiles(): Promise<InfoItem[]> {
   const data = Schema.parse(await res.json());
   return (
     data.inboundSamlSsoProfiles?.map((profile) => {
-      const id = profile.name.replace(/^(?:.*\/)?samlProfiles\//, "");
       return {
         id: profile.name,
         label: profile.displayName ?? profile.name,
-        href: `https://admin.google.com/ac/apps/saml/${encodeURIComponent(id)}`,
+        href: `https://admin.google.com/ac/security/sso/sso-profiles/${encodeURIComponent(profile.name)}`,
         deletable: true,
         deleteEndpoint: ApiEndpoint.Google.SamlProfile(profile.name)
       };
@@ -118,9 +115,7 @@ export async function listSsoAssignments(): Promise<InfoItem[]> {
         label:
           assignment.targetGroup || assignment.targetOrgUnit || assignment.name,
         subLabel: assignment.ssoMode,
-        href: `https://admin.google.com/ac/security/inboundsso?assignmentId=${encodeURIComponent(
-          id
-        )}`,
+        href: `https://admin.google.com/ac/security/sso`,
         deletable: true,
         deleteEndpoint: `${ApiEndpoint.Google.SsoAssignments}/${encodeURIComponent(
           id
@@ -134,7 +129,9 @@ export async function listProvisioningJobs(): Promise<InfoItem[]> {
   const token = await refreshTokenIfNeeded(PROVIDERS.MICROSOFT);
   if (!token) return [];
 
-  const SpSchema = z.object({ value: z.array(z.object({ id: z.string() })) });
+  const SpSchema = z.object({
+    value: z.array(z.object({ id: z.string(), appId: z.string() }))
+  });
   const spFilter = encodeURIComponent(
     "displayName eq 'Google Workspace Provisioning'"
   );
@@ -144,8 +141,8 @@ export async function listProvisioningJobs(): Promise<InfoItem[]> {
   );
   if (!spRes.ok) throw new Error(`HTTP ${spRes.status}`);
   const spData = SpSchema.parse(await spRes.json());
-  const spId = spData.value[0]?.id;
-  if (!spId) return [];
+  const sp = spData.value[0];
+  if (!sp) return [];
 
   const JobsSchema = z.object({
     value: z.array(
@@ -157,7 +154,7 @@ export async function listProvisioningJobs(): Promise<InfoItem[]> {
     )
   });
 
-  const res = await fetch(ApiEndpoint.Microsoft.SyncJobs(spId), {
+  const res = await fetch(ApiEndpoint.Microsoft.SyncJobs(sp.id), {
     headers: { Authorization: `Bearer ${token.accessToken}` }
   });
   if (!res.ok) throw new Error(`HTTP ${res.status}`);
@@ -166,9 +163,9 @@ export async function listProvisioningJobs(): Promise<InfoItem[]> {
     id: job.id,
     label: job.templateId ?? job.id,
     subLabel: job.status?.code,
-    href: `https://entra.microsoft.com/#view/Microsoft_AAD_Connect/SynchronizationJobBlade/jobId/${job.id}`,
+    href: `https://portal.azure.com/#view/Microsoft_AAD_Connect_Provisioning/ProvisioningMenuBlade/~/Overview/objectId/${sp.id}/appId/${sp.appId}`,
     deletable: true,
-    deleteEndpoint: `${ApiEndpoint.Microsoft.SyncJobs(spId)}/${job.id}`
+    deleteEndpoint: `${ApiEndpoint.Microsoft.SyncJobs(sp.id)}/${job.id}`
   }));
 }
 
@@ -190,7 +187,7 @@ export async function listClaimsPolicies(): Promise<InfoItem[]> {
   return data.value.map((policy) => ({
     id: policy.id,
     label: policy.displayName ?? policy.id,
-    href: `https://entra.microsoft.com/#view/Microsoft_AAD_IAM/PoliciesMenuBlade/~/ClaimsMappingPolicies/objectId/${policy.id}`,
+    href: `https://portal.azure.com/#view/Microsoft_AAD_IAM/ActiveDirectoryMenuBlade/~/Overview`,
     deletable: true,
     deleteEndpoint: `${ApiEndpoint.Microsoft.ClaimsPolicies}/${policy.id}`
   }));
@@ -216,11 +213,30 @@ export async function listEnterpriseApps(): Promise<InfoItem[]> {
   if (!res.ok) throw new Error(`HTTP ${res.status}`);
   const data = Schema.parse(await res.json());
 
-  return data.value.map((application) => ({
-    id: application.id,
-    label: application.displayName,
-    href: `https://entra.microsoft.com/#view/Microsoft_AAD_RegisteredApps/ApplicationMenuBlade/~/Overview/objectId/${application.id}`,
-    deletable: !PROTECTED_RESOURCES.microsoftAppIds.has(application.appId),
-    deleteEndpoint: `${ApiEndpoint.Microsoft.Applications}/${application.id}`
-  }));
+  const items: InfoItem[] = [];
+  for (const application of data.value) {
+    const spFilter = encodeURIComponent(`appId eq '${application.appId}'`);
+    const spRes = await fetch(
+      `${ApiEndpoint.Microsoft.ServicePrincipals}?$filter=${spFilter}`,
+      { headers: { Authorization: `Bearer ${token.accessToken}` } }
+    );
+    if (spRes.ok) {
+      const spData = z
+        .object({ value: z.array(z.object({ id: z.string() })) })
+        .parse(await spRes.json());
+      const spId = spData.value[0]?.id;
+
+      items.push({
+        id: application.id,
+        label: application.displayName,
+        href:
+          spId ?
+            `https://portal.azure.com/#view/Microsoft_AAD_IAM/ManagedAppMenuBlade/~/SignOn/objectId/${spId}/appId/${application.appId}/preferredSingleSignOnMode~/null/servicePrincipalType/Application/fromNav/`
+          : `https://portal.azure.com/#view/Microsoft_AAD_IAM/ActiveDirectoryMenuBlade/~/Overview`,
+        deletable: !PROTECTED_RESOURCES.microsoftAppIds.has(application.appId),
+        deleteEndpoint: `${ApiEndpoint.Microsoft.Applications}/${application.id}`
+      });
+    }
+  }
+  return items;
 }
