@@ -91,7 +91,7 @@ export function StepVariables({ stepId, vars, onChange }: StepVariablesProps) {
       }
       {meta.ephemeral && (
         <div className="text-xs text-amber-600 mt-1">
-          ⚠️ This value is temporary and will be lost if you refresh the page
+          ⚠️ This value will be lost if you refresh the page
         </div>
       )}
     </div>

@@ -257,9 +257,9 @@ export function StepCard({
 
   const getCardClassName = () => {
     const baseClass =
-      "transition-all duration-300 ease-out bg-white border py-4";
+      "transition-all duration-300 ease-out bg-white border py-4 shadow-none";
     const cursorClass = isExpanded ? "" : "cursor-pointer";
-    const shadowClass = isExpanded ? "shadow-xl" : "hover:shadow-lg";
+    const shadowClass = "hover:shadow-md";
     let borderColorClass = "border-slate-200 hover:border-slate-300";
     const animationClass = "";
 
