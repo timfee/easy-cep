@@ -44,7 +44,7 @@ import {
   XCircle,
   Zap
 } from "lucide-react";
-import { useEffect, useState } from "react";
+import React, { useEffect, useState } from "react";
 
 interface StepCardProps {
   index: number;
@@ -57,6 +57,15 @@ interface StepCardProps {
   onForce(id: StepIdValue): void;
   onVarChange(key: VarName, value: unknown): void;
 }
+
+const INFO_BUTTONS: Partial<Record<StepIdValue, React.FC>> = {
+  [StepId.CreateAutomationOU]: OuInfoButton,
+  [StepId.ConfigureGoogleSamlProfile]: SamlInfoButton,
+  [StepId.AssignUsersToSso]: SsoInfoButton,
+  [StepId.CreateMicrosoftApps]: AppsInfoButton,
+  [StepId.ConfigureMicrosoftSyncAndSso]: ProvisioningInfoButton,
+  [StepId.SetupMicrosoftClaimsPolicy]: ClaimsInfoButton
+};
 
 export function StepCard({
   index,
@@ -71,6 +80,7 @@ export function StepCard({
 }: StepCardProps) {
   const [isExpanded, setIsExpanded] = useState(false);
   const [logsOpen, setLogsOpen] = useState(false);
+  const InfoButtonComponent = INFO_BUTTONS[definition.id];
   const detail = STEP_DETAILS[definition.id];
 
   const title =
@@ -369,22 +379,7 @@ export function StepCard({
                   Execute
                 </Button>
 
-                {definition.id === StepId.CreateAutomationOU && (
-                  <OuInfoButton />
-                )}
-                {definition.id === StepId.ConfigureGoogleSamlProfile && (
-                  <SamlInfoButton />
-                )}
-                {definition.id === StepId.AssignUsersToSso && <SsoInfoButton />}
-                {definition.id === StepId.CreateMicrosoftApps && (
-                  <AppsInfoButton />
-                )}
-                {definition.id === StepId.ConfigureMicrosoftSyncAndSso && (
-                  <ProvisioningInfoButton />
-                )}
-                {definition.id === StepId.SetupMicrosoftClaimsPolicy && (
-                  <ClaimsInfoButton />
-                )}
+                {InfoButtonComponent && <InfoButtonComponent />}
               </div>
               <div className="space-x-2">
                 {canUndo && (
