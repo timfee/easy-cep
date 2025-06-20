@@ -102,6 +102,16 @@ export function StepCard({
       );
     }
     switch (state?.status) {
+      case "checking":
+        return (
+          <div
+            className={cn(
+              baseClasses,
+              "bg-blue-500 text-white animate-breathing"
+            )}>
+            <Loader2 className={cn(iconClasses, "animate-spin")} />
+          </div>
+        );
       case "complete":
         return (
           <div className={cn(baseClasses, "bg-green-500 text-white")}>
@@ -153,6 +163,12 @@ export function StepCard({
         </Badge>
       );
     switch (state?.status) {
+      case "checking":
+        return (
+          <Badge className="bg-blue-100 text-blue-800 border-blue-200 hover:bg-blue-100">
+            Checking
+          </Badge>
+        );
       case "complete":
         return (
           <Badge className="bg-green-100 text-green-800 border-green-200 hover:bg-green-100">
@@ -216,6 +232,9 @@ export function StepCard({
           break;
         case "pending":
           borderColorClass = "border-amber-400";
+          break;
+        case "checking":
+          borderColorClass = "border-blue-300";
           break;
         case "undoing":
           borderColorClass = "border-amber-400 ring-1 ring-amber-300"; // Softer ring
