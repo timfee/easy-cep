@@ -5,21 +5,12 @@ import { Badge } from "@/components/ui/badge";
 import { useWorkflow } from "../context/workflow-context";
 
 export function WorkflowHeader() {
-  const { steps, status, updateVars, executing, executeStep } = useWorkflow();
+  const { steps, status, updateVars, executing } = useWorkflow();
 
   const completedSteps = steps.filter(
     (s) => status[s.id]?.status === "complete"
   ).length;
   const isRunning = executing !== null;
-
-  const runAllSteps = async () => {
-    for (const step of steps) {
-      if (status[step.id]?.status !== "complete") {
-        await executeStep(step.id);
-        await new Promise((resolve) => setTimeout(resolve, 500));
-      }
-    }
-  };
 
   return (
     <div className="border-b px-6 py-3 bg-white">
