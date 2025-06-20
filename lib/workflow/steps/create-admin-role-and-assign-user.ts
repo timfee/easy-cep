@@ -1,10 +1,6 @@
 import { ApiEndpoint } from "@/constants";
-import {
-  EmptyResponseSchema,
-  findInTree,
-  isConflictError,
-  isNotFoundError
-} from "@/lib/workflow/utils";
+import { isConflictError, isNotFoundError } from "@/lib/workflow/errors";
+import { EmptyResponseSchema, findInTree } from "@/lib/workflow/utils";
 import { LogLevel, StepId, Var } from "@/types";
 import { z } from "zod";
 import { defineStep } from "../step-builder";
