@@ -68,8 +68,8 @@ export function StepApiCalls({ stepId }: StepApiCallsProps) {
         <TooltipProvider key={idx}>
           <Tooltip>
             <TooltipTrigger asChild>
-              <div className="flex items-center gap-2 rounded py-1 hover:bg-slate-100 cursor-help">
-                <div className="flex-shrink-0 mt-0.5">
+              <div className="flex items-center gap-2 rounded py-1 hover:bg-slate-100 cursor-pointer">
+                <div className="flex-shrink-0">
                   {getMethodBadge(template.method)}
                 </div>
                 <code className="ml-1 text-slate-600 break-all">
@@ -81,9 +81,9 @@ export function StepApiCalls({ stepId }: StepApiCallsProps) {
             <TooltipContent side="bottom" className="max-w-xl">
               <div className="api-scrollbar text-xs p-2 rounded max-h-40 overflow-auto">
                 <h4 className="font-bold">{template.description}</h4>
-                <pre className="text-[11spx]">
+                <pre className="text-[10px]">
                   {getFullUrl(template.endpoint)}
-                  <div className="text-slate-300">
+                  <div className="opacity-90">
                     {JSON.stringify(template.body, null, 2)}
                   </div>
                 </pre>

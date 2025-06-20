@@ -294,13 +294,13 @@ export function StepCard({
           <CardContent className="px-6">
             {/* Action Buttons */}
             {detail?.description && (
-              <p
+              <div
                 className=" text-slate-700 px-7"
                 onClick={(e) => e.stopPropagation()}>
                 {detail.description.split("\n").map((line, i) => (
                   <p key={i}>{line}</p>
                 ))}
-              </p>
+              </div>
             )}
 
             <div
