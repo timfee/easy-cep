@@ -115,10 +115,10 @@ export async function deleteSamlProfiles(ids: string[]): Promise<DeleteResult> {
 export async function deleteSsoAssignments(
   ids: string[]
 ): Promise<DeleteResult> {
-  return createGoogleDeleteAction(
-    (id) => `${ApiEndpoint.Google.SsoAssignments}/${encodeURIComponent(id)}`,
-    "SSO Assignment"
-  )(ids);
+  return createGoogleDeleteAction((id) => {
+    const normalized = id.replace(/^(?:.*\/)?inboundSsoAssignments\//, "");
+    return `${ApiEndpoint.Google.SsoAssignments}/${encodeURIComponent(normalized)}`;
+  }, "SSO Assignment")(ids);
 }
 
 export async function deleteGoogleRoles(ids: string[]): Promise<DeleteResult> {

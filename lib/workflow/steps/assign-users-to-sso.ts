@@ -203,8 +203,12 @@ export default defineStep<CheckData>(StepId.AssignUsersToSso)
       );
 
       if (assignment) {
+        const id = assignment.name.replace(
+          /^(?:.*\/)?inboundSsoAssignments\//,
+          ""
+        );
         await google.delete(
-          `${ApiEndpoint.Google.SsoAssignments}/${encodeURIComponent(assignment.name)}`,
+          `${ApiEndpoint.Google.SsoAssignments}/${encodeURIComponent(id)}`,
           EmptyResponseSchema
         );
       }
