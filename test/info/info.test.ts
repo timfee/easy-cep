@@ -71,7 +71,7 @@ describe("info server actions", () => {
       {
         id: "samlProfiles/abc123",
         label: "Workspace SAML",
-        href: undefined,
+        href: "https://admin.google.com/ac/apps/saml/abc123",
         deletable: true,
         deleteEndpoint:
           "https://cloudidentity.googleapis.com/v1/inboundSamlSsoProfiles/samlProfiles%2Fabc123"
@@ -91,7 +91,8 @@ describe("info server actions", () => {
       {
         id: "assignments/allUsers",
         label: "groups/allUsers",
-        href: undefined,
+        subLabel: "SAML_SSO",
+        href: "https://admin.google.com/ac/security/inboundsso?assignmentId=assignments%2FallUsers",
         deletable: true,
         deleteEndpoint:
           "https://cloudidentity.googleapis.com/v1/inboundSsoAssignments/assignments%2FallUsers"
@@ -111,7 +112,8 @@ describe("info server actions", () => {
       {
         id: "abc123",
         label: "orgUnits/03ph8a2z23yjui6",
-        href: undefined,
+        subLabel: "SSO_OFF",
+        href: "https://admin.google.com/ac/security/inboundsso?assignmentId=abc123",
         deletable: true,
         deleteEndpoint:
           "https://cloudidentity.googleapis.com/v1/inboundSsoAssignments/abc123"
@@ -134,8 +136,9 @@ describe("info server actions", () => {
     expect(items).toEqual([
       {
         id: "Initial",
-        label: "Active",
-        href: undefined,
+        label: "gsuite",
+        subLabel: "Active",
+        href: "https://entra.microsoft.com/#view/Microsoft_AAD_Connect/SynchronizationJobBlade/jobId/Initial",
         deletable: true,
         deleteEndpoint:
           "https://graph.microsoft.com/v1.0/servicePrincipals/sp1/synchronization/jobs/Initial"

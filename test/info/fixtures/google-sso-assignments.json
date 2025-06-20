@@ -1,5 +1,9 @@
 {
   "inboundSsoAssignments": [
-    { "name": "assignments/allUsers", "targetGroup": "groups/allUsers" }
+    {
+      "name": "assignments/allUsers",
+      "targetGroup": "groups/allUsers",
+      "ssoMode": "SAML_SSO"
+    }
   ]
 }

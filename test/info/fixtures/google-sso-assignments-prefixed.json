@@ -2,7 +2,8 @@
   "inboundSsoAssignments": [
     {
       "name": "inboundSsoAssignments/abc123",
-      "targetOrgUnit": "orgUnits/03ph8a2z23yjui6"
+      "targetOrgUnit": "orgUnits/03ph8a2z23yjui6",
+      "ssoMode": "SSO_OFF"
     }
   ]
 }

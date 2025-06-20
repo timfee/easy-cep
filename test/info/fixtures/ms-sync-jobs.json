@@ -1,1 +1,5 @@
-{ "value": [{ "id": "Initial", "status": { "code": "Active" } }] }
+{
+  "value": [
+    { "id": "Initial", "templateId": "gsuite", "status": { "code": "Active" } }
+  ]
+}
