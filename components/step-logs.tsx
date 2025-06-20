@@ -91,7 +91,7 @@ function StepLogItem({ log }: { log: StepLogEntry }) {
         </div>
       </CollapsibleTrigger>
       {log.data !== null && (
-        <CollapsibleContent className="mt-2 transition-all data-[state=closed]:animate-accordion-up data-[state=open]:animate-accordion-down">
+        <CollapsibleContent className="mt-2 origin-top transform-gpu transition-transform duration-300 data-[state=closed]:scale-y-0 data-[state=open]:scale-y-100">
           <div className="bg-slate-800 text-slate-100 rounded p-2.5 border border-slate-700 max-h-60 overflow-y-auto">
             <pre className="text-xs font-mono whitespace-pre-wrap">
               {JSON.stringify(log.data, null, 2)}
