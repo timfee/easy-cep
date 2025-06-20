@@ -1,11 +1,13 @@
 "use client";
 
-import { AppsInfoButton } from "@/components/apps-info-button";
-import { ClaimsInfoButton } from "@/components/claims-info-button";
-import { OuInfoButton } from "@/components/ou-info-button";
-import { ProvisioningInfoButton } from "@/components/provisioning-info-button";
-import { SamlInfoButton } from "@/components/saml-info-button";
-import { SsoInfoButton } from "@/components/sso-info-button";
+import {
+  AppsInfoButton,
+  ClaimsInfoButton,
+  OuInfoButton,
+  ProvisioningInfoButton,
+  SamlInfoButton,
+  SsoInfoButton
+} from "@/components/info-buttons";
 import { StepApiCalls } from "@/components/step-api-calls";
 import { StepLogs } from "@/components/step-logs";
 import { StepVariables } from "@/components/step-variables";
