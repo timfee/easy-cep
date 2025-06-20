@@ -3,7 +3,7 @@
 import { ProviderLogin } from "@/components/provider-login";
 import { Badge } from "@/components/ui/badge";
 import Image from "next/image";
-import { useWorkflow } from "../context/workflow-context";
+import { useWorkflow } from "./workflow-context";
 
 export function WorkflowHeader() {
   const { steps, status, updateVars, executing } = useWorkflow();

@@ -2,7 +2,7 @@
 
 import { VarsInspector } from "@/components/vars-inspector";
 import { Variable } from "lucide-react";
-import { useWorkflow } from "../context/workflow-context";
+import { useWorkflow } from "../workflow-context";
 
 export default function VariablesPage() {
   const { varsRaw, updateVars } = useWorkflow();

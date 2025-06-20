@@ -1,6 +1,6 @@
 "use client";
 
-import { useWorkflow } from "@/app/workflow/context/workflow-context";
+import { useWorkflow } from "@/app/workflow/workflow-context";
 import { Button } from "@/components/ui/button";
 import { type Provider } from "@/constants";
 import { Var, WorkflowVars } from "@/types";

@@ -1,8 +1,8 @@
 /* eslint-disable workflow/no-hardcoded-config */
 import { getAllSteps } from "@/lib/workflow/step-registry";
 import { Var } from "@/types";
-import { WorkflowHeader } from "./components/workflow-header";
-import { WorkflowProvider } from "./context/workflow-context";
+import { WorkflowProvider } from "./workflow-context";
+import { WorkflowHeader } from "./workflow-header";
 
 const DEFAULT_CONFIG = {
   [Var.AutomationOuName]: "Automation",
@@ -43,6 +43,7 @@ export default function WorkflowLayout({
                 {steps}
               </div>
             </div>
+
             <aside className="w-96 border-l bg-white overflow-y-auto">
               <div className="p-6">{variables}</div>
             </aside>
