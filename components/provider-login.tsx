@@ -92,10 +92,15 @@ export function ProviderLogin({ onUpdate }: Props) {
               size="sm"
               variant="outline"
               onClick={onDisconnectClick}
-              className="text-xs text-slate-400 mx-2"
+              className="relative mx-2 overflow-hidden text-xs text-slate-400 group"
               title="Disconnect"
               aria-label={`Disconnect ${name}`}>
-              {minutesLeft} m left
+              <span className="transition-all duration-300 group-hover:-translate-y-full group-hover:opacity-0">
+                {minutesLeft} m left
+              </span>
+              <span className="absolute inset-0 flex items-center justify-center translate-y-full opacity-0 transition-all duration-300 group-hover:translate-y-0 group-hover:opacity-100">
+                Sign out
+              </span>
             </Button>
           </>
         : <>
