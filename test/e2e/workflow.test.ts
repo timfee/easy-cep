@@ -26,7 +26,7 @@ if (!process.env.TEST_MS_BEARER_TOKEN && fs.existsSync(msTokenPath)) {
 }
 
 if (
-  process.env.RUN_E2E !== "1"
+  process.env.SKIP_E2E === "1"
   || !process.env.TEST_GOOGLE_BEARER_TOKEN
   || !process.env.TEST_MS_BEARER_TOKEN
 ) {
