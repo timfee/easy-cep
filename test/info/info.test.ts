@@ -99,6 +99,26 @@ describe("info server actions", () => {
     ]);
   });
 
+  test("listSsoAssignments handles prefixed names", async () => {
+    global.fetch = jest
+      .fn<() => Promise<any>>()
+      .mockResolvedValue({
+        ok: true,
+        json: async () => load("google-sso-assignments-prefixed.json")
+      }) as any;
+    const items = await listSsoAssignments();
+    expect(items).toEqual([
+      {
+        id: "abc123",
+        label: "orgUnits/03ph8a2z23yjui6",
+        href: undefined,
+        deletable: true,
+        deleteEndpoint:
+          "https://cloudidentity.googleapis.com/v1/inboundSsoAssignments/abc123"
+      }
+    ]);
+  });
+
   test("listProvisioningJobs", async () => {
     global.fetch = jest
       .fn<() => Promise<any>>()

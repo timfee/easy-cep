@@ -105,15 +105,18 @@ export async function listSsoAssignments(): Promise<InfoItem[]> {
   if (!res.ok) throw new Error(`HTTP ${res.status}`);
   const data = Schema.parse(await res.json());
   return (
-    data.inboundSsoAssignments?.map((a) => ({
-      id: a.name,
-      label: a.targetGroup || a.targetOrgUnit || a.name,
-      href: undefined,
-      deletable: true,
-      deleteEndpoint: `${ApiEndpoint.Google.SsoAssignments}/${encodeURIComponent(
-        a.name
-      )}`
-    })) ?? []
+    data.inboundSsoAssignments?.map((a) => {
+      const id = a.name.replace(/^(?:.*\/)?inboundSsoAssignments\//, "");
+      return {
+        id,
+        label: a.targetGroup || a.targetOrgUnit || a.name,
+        href: undefined,
+        deletable: true,
+        deleteEndpoint: `${ApiEndpoint.Google.SsoAssignments}/${encodeURIComponent(
+          id
+        )}`
+      };
+    }) ?? []
   );
 }
 

@@ -51,8 +51,9 @@ async function cleanupGoogleAssignments() {
   const { inboundSsoAssignments = [] } = AssignSchema.parse(await res.json());
 
   for (const assign of inboundSsoAssignments) {
+    const id = assign.name.replace(/^(?:.*\/)?inboundSsoAssignments\//, "");
     await fetch(
-      `${ApiEndpoint.Google.SsoAssignments}/${encodeURIComponent(assign.name)}`,
+      `${ApiEndpoint.Google.SsoAssignments}/${encodeURIComponent(id)}`,
       { method: "DELETE", headers: { Authorization: `Bearer ${GOOGLE_TOKEN}` } }
     );
   }
