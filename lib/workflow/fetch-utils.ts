@@ -68,7 +68,27 @@ export function createAuthenticatedFetch(
         level: LogLevel.Debug
       });
 
-      if (!res.ok) throw new Error(`HTTP ${res.status}: ${res.statusText}`);
+      if (!res.ok) {
+        let detail = res.statusText;
+        try {
+          const body = await res.json();
+          const err = (body as { error?: { message?: string } }).error;
+          if (err?.message) {
+            detail = err.message;
+          } else if (typeof body === "string") {
+            detail = body;
+          } else {
+            detail = JSON.stringify(body);
+          }
+        } catch {
+          try {
+            detail = await res.text();
+          } catch {
+            // ignore
+          }
+        }
+        throw new Error(`HTTP ${res.status}: ${detail}`);
+      }
 
       let json: unknown;
       try {
