@@ -3,6 +3,9 @@ import { LogLevel, StepId, Var } from "@/types";
 import { z } from "zod";
 import { defineStep } from "../step-builder";
 
+// Empty object type - this step doesn't extract data during check phase
+type CheckData = Record<string, never>;
+
 export default defineStep(StepId.CompleteGoogleSsoSetup)
   .requires(
     Var.GoogleAccessToken,

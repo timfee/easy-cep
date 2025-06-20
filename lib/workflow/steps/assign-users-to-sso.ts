@@ -4,7 +4,6 @@ import {
   isConflictError,
   isNotFoundError
 } from "@/lib/workflow/utils";
-import type { WorkflowVars } from "@/types";
 import { LogLevel, StepId, Var } from "@/types";
 import { z } from "zod";
 import { defineStep } from "../step-builder";
@@ -17,7 +16,8 @@ interface HttpClient {
   ): Promise<R>;
 }
 
-type CheckData = Partial<Pick<WorkflowVars, never>>;
+// Empty object type - this step doesn't extract data during check phase
+type CheckData = Record<string, never>;
 
 async function getRootOrgUnitId(google: HttpClient) {
   const OrgUnitsSchema = z.object({
@@ -46,7 +46,7 @@ async function getRootOrgUnitId(google: HttpClient) {
   return id.replace(/^id:/, "");
 }
 
-export default defineStep<CheckData>(StepId.AssignUsersToSso)
+export default defineStep(StepId.AssignUsersToSso)
   .requires(
     Var.GoogleAccessToken,
     Var.SamlProfileId,
