@@ -8,6 +8,10 @@ import {
   TemplateId
 } from "@/constants";
 import { refreshTokenIfNeeded } from "@/lib/auth";
+import {
+  extractResourceId,
+  ResourceTypes
+} from "@/lib/workflow/utils/resource-ids";
 import { z } from "zod";
 
 export interface InfoItem {
@@ -132,9 +136,9 @@ export async function listSsoAssignments(): Promise<InfoItem[]> {
   const data = Schema.parse(await res.json());
   return (
     data.inboundSsoAssignments?.map((assignment) => {
-      const id = assignment.name.replace(
-        /^(?:.*\/)?inboundSsoAssignments\//,
-        ""
+      const id = extractResourceId(
+        assignment.name,
+        ResourceTypes.InboundSsoAssignments
       );
       return {
         id,
