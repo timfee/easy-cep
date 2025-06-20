@@ -1,5 +1,6 @@
 import { ApiEndpoint, SyncTemplateTag } from "@/constants";
-import { EmptyResponseSchema, isNotFoundError } from "@/lib/workflow/utils";
+import { isNotFoundError } from "@/lib/workflow/errors";
+import { EmptyResponseSchema } from "@/lib/workflow/utils";
 import { LogLevel, StepId, Var } from "@/types";
 import { z } from "zod";
 import { defineStep } from "../step-builder";
