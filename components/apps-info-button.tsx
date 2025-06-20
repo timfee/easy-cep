@@ -2,6 +2,7 @@
 
 import { InfoButton } from "@/components/info-button";
 import { PROTECTED_RESOURCES } from "@/constants";
+import { env } from "@/env";
 import { listEnterpriseApps } from "@/lib/info";
 import { deleteEnterpriseApps } from "@/lib/workflow/info-actions";
 
@@ -16,7 +17,7 @@ export function AppsInfoButton() {
           deletable: !PROTECTED_RESOURCES.microsoftAppIds.has(item.id)
         }));
       }}
-      deleteItems={deleteEnterpriseApps}
+      deleteItems={env.ALLOW_INFO_PURGE ? deleteEnterpriseApps : undefined}
     />
   );
 }

@@ -176,36 +176,8 @@ export async function deleteProvisioningJobs(
     };
   }
 
-  const limit = pLimit(3);
-  const results: DeleteResult = { deleted: [], failed: [] };
-
-  await Promise.all(
-    ids.map((jobId) =>
-      limit(async () => {
-        try {
-          const res = await fetch(
-            `${ApiEndpoint.Microsoft.SyncJobs(spId)}/${jobId}`,
-            {
-              method: "DELETE",
-              headers: { Authorization: `Bearer ${token.accessToken}` }
-            }
-          );
-
-          if (!res.ok) {
-            const text = await res.text();
-            throw new Error(`HTTP ${res.status}: ${text}`);
-          }
-
-          results.deleted.push(jobId);
-        } catch (error) {
-          results.failed.push({
-            id: jobId,
-            error: error instanceof Error ? error.message : String(error)
-          });
-        }
-      })
-    )
-  );
-
-  return results;
+  return createMicrosoftDeleteAction(
+    (id) => `${ApiEndpoint.Microsoft.SyncJobs(spId)}/${id}`,
+    "Provisioning Job"
+  )(ids);
 }
