@@ -9,6 +9,10 @@ import {
 } from "@/constants";
 import { env } from "@/env";
 import { refreshTokenIfNeeded } from "@/lib/auth";
+import {
+  extractResourceId,
+  ResourceTypes
+} from "@/lib/workflow/utils/resource-ids";
 import { z } from "zod";
 
 import pLimit from "p-limit";
@@ -116,7 +120,10 @@ export async function deleteSsoAssignments(
   ids: string[]
 ): Promise<DeleteResult> {
   return createGoogleDeleteAction((id) => {
-    const normalized = id.replace(/^(?:.*\/)?inboundSsoAssignments\//, "");
+    const normalized = extractResourceId(
+      id,
+      ResourceTypes.InboundSsoAssignments
+    );
     return `${ApiEndpoint.Google.SsoAssignments}/${encodeURIComponent(normalized)}`;
   }, "SSO Assignment")(ids);
 }

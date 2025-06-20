@@ -54,7 +54,7 @@ export function VarsInspector({ vars, onChange }: VarsInspectorProps) {
       <div className="flex-1 overflow-y-auto">
         {Object.entries(groupedVars).map(([category, variables]) => (
           <div key={category}>
-            <h4 className="bg-slate-200 px-3 py-1.5 text-xs font-semibold text-slate-700 sticky top-0 border-b border-slate-200">
+            <h4 className="bg-slate-100 px-2 py-1.5 text-sm font-semibold text-slate-700 top-0 border-b border-slate-200">
               {categoryTitles[category as VariableMetadata["category"]]}
             </h4>
             <div className="divide-y divide-slate-100">

@@ -1,48 +1,15 @@
 import { z } from "zod";
 
-/**
- * HTTP error detection utilities
- */
-export function isHttpError(error: unknown, statusCode: number): boolean {
-  if (!(error instanceof Error)) return false;
-  const patterns = [
-    `HTTP ${statusCode}`,
-    `${statusCode}:`,
-    `code": ${statusCode}`,
-    `"code":${statusCode}`
-  ];
-  return patterns.some((pattern) => error.message.includes(pattern));
-}
+// Re-export error utilities from errors.ts
+export {
+  isConflictError,
+  isHttpError,
+  isNotFoundError,
+  isPreconditionFailedError
+} from "./errors";
 
-export function isNotFoundError(error: unknown): boolean {
-  return isHttpError(error, 404);
-}
-
-export function isConflictError(error: unknown): boolean {
-  return isHttpError(error, 409);
-}
-
-export function isPreconditionFailedError(error: unknown): boolean {
-  return isHttpError(error, 412);
-}
-
-export function getErrorStatusCode(error: unknown): number | null {
-  if (!(error instanceof Error)) return null;
-  const match = error.message.match(/HTTP (\d{3})|(\d{3}):|code":\s*(\d{3})/);
-  if (match) {
-    return parseInt(match[1] || match[2] || match[3], 10);
-  }
-  return null;
-}
-
-/**
- * Schema for empty 204 responses
- */
 export const EmptyResponseSchema = z.object({});
 
-/**
- * Find an item in a tree structure
- */
 export function findInTree<T>(
   items: T[],
   predicate: (item: T) => boolean,

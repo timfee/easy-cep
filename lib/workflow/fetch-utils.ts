@@ -1,5 +1,11 @@
 import { LogLevel, StepLogEntry } from "@/types";
 import { z } from "zod";
+import {
+  ConflictError,
+  HttpError,
+  NotFoundError,
+  PreconditionFailedError
+} from "./errors";
 
 export type FetchOpts = RequestInit & { flatten?: boolean | string };
 
@@ -75,15 +81,14 @@ export function createAuthenticatedFetch(
 
       if (!res.ok) {
         let detail = res.statusText;
+        let body: unknown;
         try {
-          const body = await res.json();
+          body = await res.json();
           const err = (body as { error?: { message?: string } }).error;
           if (err?.message) {
             detail = err.message;
           } else if (typeof body === "string") {
             detail = body;
-          } else {
-            detail = JSON.stringify(body);
           }
         } catch {
           try {
@@ -92,7 +97,17 @@ export function createAuthenticatedFetch(
             // ignore
           }
         }
-        throw new Error(`HTTP ${res.status}: ${detail}`);
+
+        switch (res.status) {
+          case 404:
+            throw new NotFoundError(detail, body);
+          case 409:
+            throw new ConflictError(detail, body);
+          case 412:
+            throw new PreconditionFailedError(detail, body);
+          default:
+            throw new HttpError(res.status, detail, body);
+        }
       }
 
       let json: unknown;

@@ -1,10 +1,10 @@
 import { ApiEndpoint } from "@/constants";
 import {
-  EmptyResponseSchema,
   isConflictError,
   isNotFoundError,
   isPreconditionFailedError
-} from "@/lib/workflow/utils";
+} from "@/lib/workflow/errors";
+import { EmptyResponseSchema } from "@/lib/workflow/utils";
 
 import { LogLevel, StepId, Var } from "@/types";
 import crypto from "crypto";

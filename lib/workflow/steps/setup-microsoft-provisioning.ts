@@ -1,5 +1,6 @@
 import { ApiEndpoint, SyncTemplateTag } from "@/constants";
-import { EmptyResponseSchema, isNotFoundError } from "@/lib/workflow/utils";
+import { isNotFoundError } from "@/lib/workflow/errors";
+import { EmptyResponseSchema } from "@/lib/workflow/utils";
 import { LogLevel, StepId, Var } from "@/types";
 import { z } from "zod";
 import { defineStep } from "../step-builder";
@@ -88,61 +89,62 @@ export default defineStep(StepId.SetupMicrosoftProvisioning)
    * Headers: { Authorization: Bearer {msGraphToken} }
    * Success response (204) {}
    */
-  .execute(
-    async ({ vars, microsoft, output, markFailed: _markFailed, log: _log }) => {
-      try {
-        const spId = vars.require(Var.ProvisioningServicePrincipalId);
-        const password = vars.require(Var.GeneratedPassword);
+  .execute(async ({ vars, microsoft, output, markFailed, log }) => {
+    try {
+      const spId = vars.require(Var.ProvisioningServicePrincipalId);
+      const password = vars.require(Var.GeneratedPassword);
+      const baseAddress = ApiEndpoint.Google.Users.replace("/users", "");
 
-        const baseAddress = ApiEndpoint.Google.Users.replace("/users", "");
+      const TemplatesSchema = z.object({
+        value: z.array(z.object({ id: z.string(), factoryTag: z.string() }))
+      });
 
-        const TemplatesSchema = z.object({
-          value: z.array(z.object({ id: z.string(), factoryTag: z.string() }))
-        });
+      const { value: templates } = await microsoft.get(
+        ApiEndpoint.Microsoft.SyncTemplates(spId),
+        TemplatesSchema,
+        { flatten: "value" }
+      );
 
-        const { value: templates } = await microsoft.get(
-          ApiEndpoint.Microsoft.SyncTemplates(spId),
-          TemplatesSchema,
-          { flatten: "value" }
-        );
-        const templateId =
-          templates.find(
-            (template) =>
-              template.factoryTag === SyncTemplateTag.GoogleWorkspace
-          )?.id ?? SyncTemplateTag.GoogleWorkspace;
+      const templateId =
+        templates.find(
+          (template) => template.factoryTag === SyncTemplateTag.GoogleWorkspace
+        )?.id ?? SyncTemplateTag.GoogleWorkspace;
 
-        const CreateJobSchema = z.object({
-          id: z.string(),
-          templateId: z.string(),
-          status: z.object({ code: z.string() }).optional()
-        });
+      const CreateJobSchema = z.object({
+        id: z.string(),
+        templateId: z.string(),
+        status: z.object({ code: z.string() }).optional()
+      });
 
-        const job = await microsoft.post(
-          ApiEndpoint.Microsoft.SyncJobs(spId),
-          CreateJobSchema,
-          { templateId }
-        );
+      const job = await microsoft.post(
+        ApiEndpoint.Microsoft.SyncJobs(spId),
+        CreateJobSchema,
+        { templateId }
+      );
 
-        await microsoft.put(
-          ApiEndpoint.Microsoft.SyncSecrets(spId),
-          EmptyResponseSchema,
-          {
-            value: [
-              { key: "BaseAddress", value: baseAddress },
-              { key: "SecretToken", value: password }
-            ]
-          }
-        );
+      await microsoft.put(
+        ApiEndpoint.Microsoft.SyncSecrets(spId),
+        EmptyResponseSchema,
+        {
+          value: [
+            { key: "BaseAddress", value: baseAddress },
+            { key: "SecretToken", value: password }
+          ]
+        }
+      );
 
-        await microsoft.post(
-          ApiEndpoint.Microsoft.StartSync(spId, job.id),
-          EmptyResponseSchema
-        );
+      await microsoft.post(
+        ApiEndpoint.Microsoft.StartSync(spId, job.id),
+        EmptyResponseSchema
+      );
 
-        output({});
-      } catch {}
+      log(LogLevel.Info, "Microsoft provisioning setup completed");
+      output({});
+    } catch (error) {
+      log(LogLevel.Error, "Failed to setup Microsoft provisioning", { error });
+      markFailed(error instanceof Error ? error.message : "Execute failed");
     }
-  )
+  })
   /**
    * GET https://graph.microsoft.com/v1.0/servicePrincipals/{provisioningServicePrincipalId}/synchronization/jobs
    * DELETE https://graph.microsoft.com/v1.0/servicePrincipals/{provisioningServicePrincipalId}/synchronization/jobs/{jobId}

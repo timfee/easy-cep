@@ -9,8 +9,8 @@ const config: Config = {
     "^@/(.*)$": "<rootDir>/$1",
     "server-only": "<rootDir>/test/__mocks__/server-only.ts"
   },
-  extensionsToTreatAsEsm: [".ts"],
-  globals: { "ts-jest": { useESM: true } }
+  extensionsToTreatAsEsm: [".ts", ".tsx"],
+  globals: { "ts-jest": { useESM: true, tsconfig: "tsconfig.jest.json" } }
 };
 
 export default config;
