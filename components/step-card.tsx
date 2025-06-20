@@ -19,6 +19,11 @@ import {
   CollapsibleContent,
   CollapsibleTrigger
 } from "@/components/ui/collapsible";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger
+} from "@/components/ui/tooltip";
 import { cn } from "@/lib/utils";
 import { STEP_DETAILS } from "@/lib/workflow/step-details";
 import { WORKFLOW_VARIABLES } from "@/lib/workflow/variables";
@@ -278,11 +283,17 @@ export function StepCard({
     return `${baseClass} ${cursorClass} ${shadowClass} ${borderColorClass} ${animationClass}`;
   };
 
-  const canExecute = Object.entries(WORKFLOW_VARIABLES)
-    .filter(
-      ([, meta]) => meta.consumedBy?.includes(definition.id) && !meta.producedBy
-    )
-    .every(([key]) => vars[key as VarName] !== undefined);
+  const missingEphemeralVars = definition.requires.filter(
+    (v) => WORKFLOW_VARIABLES[v]?.ephemeral && vars[v] === undefined
+  );
+  const canExecute =
+    Object.entries(WORKFLOW_VARIABLES)
+      .filter(
+        ([, meta]) =>
+          meta.consumedBy?.includes(definition.id) && !meta.producedBy
+      )
+      .every(([key]) => vars[key as VarName] !== undefined)
+    && missingEphemeralVars.length === 0;
   const canUndo = state?.status === "complete";
 
   const handleHeaderClick = () => {
@@ -368,19 +379,48 @@ export function StepCard({
 
             <div className="flex items-center justify-between my-6">
               <div className="flex items-center gap-2">
-                <Button
-                  size="sm"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    onExecute(definition.id);
-                  }}
-                  disabled={
-                    !canExecute || executing || state?.status === "complete"
-                  }
-                  variant="default">
-                  <Play className="h-3.5 w-3.5 mr-1.5" />
-                  Execute
-                </Button>
+                {missingEphemeralVars.length > 0 ?
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <Button
+                        size="sm"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          onExecute(definition.id);
+                        }}
+                        disabled
+                        variant="default">
+                        <Play className="h-3.5 w-3.5 mr-1.5" />
+                        Execute
+                      </Button>
+                    </TooltipTrigger>
+                    <TooltipContent side="top">
+                      {`Requires transient data from ${missingEphemeralVars
+                        .map((v) => {
+                          const producer = WORKFLOW_VARIABLES[v]?.producedBy;
+                          const name =
+                            producer ?
+                              STEP_DETAILS[producer]?.title || producer
+                            : v;
+                          return name;
+                        })
+                        .join(", ")}. Re-run the producing step first.`}
+                    </TooltipContent>
+                  </Tooltip>
+                : <Button
+                    size="sm"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      onExecute(definition.id);
+                    }}
+                    disabled={
+                      !canExecute || executing || state?.status === "complete"
+                    }
+                    variant="default">
+                    <Play className="h-3.5 w-3.5 mr-1.5" />
+                    Execute
+                  </Button>
+                }
 
                 {InfoButtonComponent && <InfoButtonComponent />}
               </div>

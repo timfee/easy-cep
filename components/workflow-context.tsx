@@ -2,7 +2,9 @@
 /* eslint-disable workflow/no-duplicate-code-blocks */
 
 import { checkStep, runStep, undoStep } from "@/lib/workflow/engine";
+import { STEP_DETAILS } from "@/lib/workflow/step-details";
 import { createVarStore, type BasicVarStore } from "@/lib/workflow/var-store";
+import { WORKFLOW_VARIABLES } from "@/lib/workflow/variables";
 import {
   StepDefinition,
   StepIdValue,
@@ -176,9 +178,19 @@ export function WorkflowProvider({
 
       const missingVars = step.requires.filter((varName) => !vars[varName]);
       if (missingVars.length > 0) {
+        const messages = missingVars.map((key) => {
+          const meta = WORKFLOW_VARIABLES[key];
+          const producer = meta?.producedBy;
+          const producerName =
+            producer ? STEP_DETAILS[producer]?.title || producer : null;
+          if (meta?.ephemeral && producerName) {
+            return `${key} (from \"${producerName}\" – rerun this step)`;
+          }
+          return producerName ? `${key} (from \"${producerName}\")` : key;
+        });
         updateStep(id, {
           status: "failed",
-          error: `Missing required vars: ${missingVars.join(", ")}`
+          error: `Missing required vars: ${messages.join(", ")}`
         });
         return;
       }

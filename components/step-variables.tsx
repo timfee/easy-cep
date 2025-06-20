@@ -1,4 +1,11 @@
+"use client";
+
 import { Input } from "@/components/ui/input";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger
+} from "@/components/ui/tooltip";
 import { WORKFLOW_VARIABLES, WorkflowVars } from "@/lib/workflow/variables";
 import { StepIdValue, VarName } from "@/types";
 
@@ -51,6 +58,18 @@ export function StepVariables({ stepId, vars, onChange }: StepVariablesProps) {
         className="text-xs font-medium text-slate-700 flex items-center gap-1.5">
         <Database className="h-3 w-3 text-purple-500" />
         <span>{varKey}</span>
+        {meta.ephemeral && (
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <span className="text-[10px] text-amber-600 cursor-help">
+                (transient)
+              </span>
+            </TooltipTrigger>
+            <TooltipContent side="top">
+              Temporary value; rerun the producing step if missing
+            </TooltipContent>
+          </Tooltip>
+        )}
       </label>
       {isEditable ?
         <Input
