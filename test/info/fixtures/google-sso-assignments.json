@@ -1,9 +1,14 @@
 {
   "inboundSsoAssignments": [
     {
-      "name": "assignments/allUsers",
-      "targetGroup": "groups/allUsers",
+      "name": "inboundSsoAssignments/root",
+      "targetOrgUnit": "/",
       "ssoMode": "SAML_SSO"
+    },
+    {
+      "name": "inboundSsoAssignments/automation",
+      "targetOrgUnit": "orgUnits/03ph8a2z1s3ovsg",
+      "ssoMode": "SSO_OFF"
     }
   ]
 }

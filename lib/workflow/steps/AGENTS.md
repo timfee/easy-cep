@@ -740,16 +740,21 @@ Authorization: Bearer {googleAccessToken}
 {
   "inboundSsoAssignments": [
     {
-      "targetGroup": "groups/allUsers",
-      "samlSsoInfo": { "inboundSamlSsoProfile": "{samlProfileId}" }
-    }
+      "targetOrgUnit": "/",
+      "samlSsoInfo": { "inboundSamlSsoProfile": "{samlProfileId}" },
+      "ssoMode": "SAML_SSO"
+    },
+    { "targetOrgUnit": "{automationOuPath}", "ssoMode": "SSO_OFF" }
   ]
 }
 ```
 
 #### Step 10 Completion Criteria
 
-Assignment exists with `targetGroup = "groups/allUsers"` and matching `samlProfileId`
+Assignments exist for both:
+
+1. `targetOrgUnit = "/"` with `ssoMode = "SAML_SSO"` and matching `samlProfileId`
+2. `targetOrgUnit = "{automationOuPath}"` with `ssoMode = "SSO_OFF"`
 
 ### Step 10 Execution
 
@@ -766,9 +771,18 @@ Authorization: Bearer {googleAccessToken}
 Content-Type: application/json
 
 {
-  "targetGroup": "groups/allUsers",
+  "targetOrgUnit": "/",
   "samlSsoInfo": { "inboundSamlSsoProfile": "{samlProfileId}" },
   "ssoMode": "SAML_SSO"
+}
+
+POST https://cloudidentity.googleapis.com/v1/inboundSsoAssignments
+Authorization: Bearer {googleAccessToken}
+Content-Type: application/json
+
+{
+  "targetOrgUnit": "{automationOuPath}",
+  "ssoMode": "SSO_OFF"
 }
 ```
 
