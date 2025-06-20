@@ -156,7 +156,7 @@ export default defineStep(StepId.ConfigureGoogleSamlProfile)
         return;
       }
       await google.delete(
-        `${ApiEndpoint.Google.SsoProfiles}/${encodeURIComponent(id)}`,
+        ApiEndpoint.Google.SamlProfile(id),
         EmptyResponseSchema
       );
       markReverted();

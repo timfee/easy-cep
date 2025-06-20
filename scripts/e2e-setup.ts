@@ -66,7 +66,7 @@ export async function cleanupGoogleEnvironment() {
   };
   for (const profile of samlData.inboundSamlSsoProfiles || []) {
     if (profile.displayName === "Azure AD") {
-      await fetch(`${ApiEndpoint.Google.SsoProfiles}/${profile.name}`, {
+      await fetch(ApiEndpoint.Google.SamlProfile(profile.name), {
         method: "DELETE",
         headers: { Authorization: `Bearer ${GOOGLE_TOKEN}` }
       });

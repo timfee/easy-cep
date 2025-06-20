@@ -74,7 +74,7 @@ describe("info server actions", () => {
         href: "https://admin.google.com/ac/apps/saml/abc123",
         deletable: true,
         deleteEndpoint:
-          "https://cloudidentity.googleapis.com/v1/inboundSamlSsoProfiles/samlProfiles%2Fabc123"
+          "https://cloudidentity.googleapis.com/v1/samlProfiles/abc123"
       }
     ]);
   });
