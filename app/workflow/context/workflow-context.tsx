@@ -62,6 +62,7 @@ export function WorkflowProvider({
   const [status, setStatus] = useState<
     Partial<Record<StepIdValue, StepUIState>>
   >({});
+  const statusRef = useRef<Partial<Record<StepIdValue, StepUIState>>>({});
   const [executing, setExecuting] = useState<StepIdValue | null>(null);
   const checkedSteps = useRef(new Set<StepIdValue>());
   const listeners = useRef<Map<VarName, Set<(value: unknown) => void>>>(
@@ -120,7 +121,7 @@ export function WorkflowProvider({
           const dependsOnChangedVar = step.requires.some((reqVar) =>
             keys.includes(reqVar)
           );
-          const isCompleted = status[step.id]?.status === "complete";
+          const isCompleted = statusRef.current[step.id]?.status === "complete";
           if (dependsOnChangedVar && !isCompleted) {
             checkedSteps.current.delete(step.id);
           }
@@ -129,12 +130,13 @@ export function WorkflowProvider({
         return updated;
       });
     },
-    [steps, status]
+    [steps]
   );
 
   const updateStep = useCallback(
     (stepId: StepIdValue, stepState: StepUIState) => {
       setStatus((prev) => ({ ...prev, [stepId]: stepState }));
+      statusRef.current = { ...statusRef.current, [stepId]: stepState };
     },
     []
   );
@@ -158,8 +160,8 @@ export function WorkflowProvider({
 
       try {
         const result = await runStep(id, vars);
-        updateVars(result.newVars);
         updateStep(id, result.state);
+        updateVars(result.newVars);
       } catch (error) {
         console.error("Failed to run step:", error);
         updateStep(id, {
