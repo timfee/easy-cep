@@ -1,5 +1,5 @@
 import { ApiEndpoint } from "@/constants";
-import { EmptyResponseSchema } from "@/lib/workflow/utils";
+import { EmptyResponseSchema, isNotFoundError } from "@/lib/workflow/utils";
 import { LogLevel, StepId, Var } from "@/types";
 import { z } from "zod";
 import { defineStep } from "../step-builder";
@@ -25,6 +25,8 @@ export default defineStep(StepId.ConfigureMicrosoftSso)
    *
    * Success response (200)
    * { "value": [ { "keyId": "...", "key": "MII...", "startDateTime": "2024-01-01T00:00:00Z", "endDateTime": "2025-01-01T00:00:00Z" } ] }
+   * Error response (404)
+   * { "error": { "code": "Request_ResourceNotFound" } }
    */
 
   .check(
@@ -66,10 +68,20 @@ export default defineStep(StepId.ConfigureMicrosoftSso)
             )
           });
 
-          const certs = await microsoft.get(
-            ApiEndpoint.Microsoft.TokenSigningCertificates(spId),
-            CertSchema
-          );
+          let certs: z.infer<typeof CertSchema>;
+          try {
+            certs = await microsoft.get(
+              ApiEndpoint.Microsoft.TokenSigningCertificates(spId),
+              CertSchema
+            );
+          } catch (error) {
+            // isNotFoundError handles: 404
+            if (isNotFoundError(error)) {
+              certs = { value: [] };
+            } else {
+              throw error;
+            }
+          }
 
           const now = new Date();
           const activeCert = certs.value.find((cert) => {
