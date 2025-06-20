@@ -4,17 +4,22 @@ import { InfoButton } from "@/components/info-button";
 import { PROTECTED_RESOURCES } from "@/constants";
 import { env } from "@/env";
 import {
+  listAdminRoles,
   listClaimsPolicies,
+  listDomains,
   listEnterpriseApps,
   listOrgUnits,
   listProvisioningJobs,
   listSamlProfiles,
   listSsoAssignments,
+  listUsers,
   type InfoItem
 } from "@/lib/info";
 import {
   deleteClaimsPolicies,
   deleteEnterpriseApps,
+  deleteGoogleRoles,
+  deleteGoogleUsers,
   deleteOrgUnits,
   deleteProvisioningJobs,
   deleteSamlProfiles,
@@ -65,6 +70,50 @@ export const SamlInfoButton = createInfoButton({
   context: (
     <a
       href="https://admin.google.com/ac/apps/saml"
+      target="_blank"
+      rel="noopener noreferrer"
+      className="text-blue-600 hover:underline">
+      Open in Google Admin
+    </a>
+  )
+});
+
+export const DomainInfoButton = createInfoButton({
+  title: "Existing Domains",
+  fetchItems: listDomains,
+  context: (
+    <a
+      href="https://admin.google.com/ac/domains"
+      target="_blank"
+      rel="noopener noreferrer"
+      className="text-blue-600 hover:underline">
+      Open in Google Admin
+    </a>
+  )
+});
+
+export const UsersInfoButton = createInfoButton({
+  title: "Existing Users",
+  fetchItems: listUsers,
+  deleteItems: env.ALLOW_INFO_PURGE ? deleteGoogleUsers : undefined,
+  context: (
+    <a
+      href="https://admin.google.com/ac/users"
+      target="_blank"
+      rel="noopener noreferrer"
+      className="text-blue-600 hover:underline">
+      Open in Google Admin
+    </a>
+  )
+});
+
+export const RolesInfoButton = createInfoButton({
+  title: "Existing Admin Roles",
+  fetchItems: listAdminRoles,
+  deleteItems: env.ALLOW_INFO_PURGE ? deleteGoogleRoles : undefined,
+  context: (
+    <a
+      href="https://admin.google.com/ac/roles"
       target="_blank"
       rel="noopener noreferrer"
       className="text-blue-600 hover:underline">

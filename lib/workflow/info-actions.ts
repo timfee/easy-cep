@@ -129,6 +129,13 @@ export async function deleteGoogleRoles(ids: string[]): Promise<DeleteResult> {
   )(ids);
 }
 
+export async function deleteGoogleUsers(ids: string[]): Promise<DeleteResult> {
+  return createGoogleDeleteAction(
+    (id) => `${ApiEndpoint.Google.Users}/${id}`,
+    "User"
+  )(ids);
+}
+
 export async function deleteClaimsPolicies(
   ids: string[]
 ): Promise<DeleteResult> {
