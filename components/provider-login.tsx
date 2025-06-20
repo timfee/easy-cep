@@ -68,6 +68,9 @@ export function ProviderLogin({ onUpdate }: Props) {
     try {
       await fetch(`/api/auth/signout/${provider}`, { method: "POST" });
     } finally {
+      if (typeof window !== "undefined") {
+        localStorage.removeItem("workflowState");
+      }
       window.location.href = "/";
     }
   }, []);
