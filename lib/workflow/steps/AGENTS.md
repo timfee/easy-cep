@@ -642,8 +642,10 @@ POST https://graph.microsoft.com/v1.0/servicePrincipals/{provisioningServicePrin
 Authorization: Bearer {msGraphToken}
 Content-Type: application/json
 
-{ "templateId": "google2provisioningV2" }
+{ "templateId": "gsuite" }
 ```
+
+Lookup the template ID via `GET /servicePrincipals/{provisioningServicePrincipalId}/synchronization/templates` and match on `factoryTag` `gsuite`.
 
 Expected: `201 Created` returning job ID
 

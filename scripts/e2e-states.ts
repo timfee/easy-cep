@@ -2,7 +2,7 @@
  * Creates specific test states for each step
  */
 
-import { ApiEndpoint, TemplateId } from "@/constants";
+import { ApiEndpoint, TemplateId, SyncTemplateTag } from "@/constants";
 import { fetch, ProxyAgent, setGlobalDispatcher } from "undici";
 
 if (process.env.USE_UNDICI_PROXY !== "false") {
@@ -97,6 +97,16 @@ async function createSyncJob(spId: string, templateId: string) {
   });
 }
 
+async function getSyncTemplateId(spId: string, tag: string) {
+  const res = await fetch(ApiEndpoint.Microsoft.SyncTemplates(spId), {
+    headers: { Authorization: `Bearer ${MS_TOKEN}` }
+  });
+  const json = (await res.json()) as {
+    value: Array<{ id: string; factoryTag: string }>;
+  };
+  return json.value.find((t) => t.factoryTag === tag)?.id ?? tag;
+}
+
 async function setSyncJobToQuarantine(spId: string) {
   await fetch(`${ApiEndpoint.Microsoft.Synchronization(spId)}/jobs/Initial`, {
     method: "PATCH",
@@ -124,7 +134,11 @@ export async function createErrorState(step: string) {
     case "configure-microsoft-sync-and-sso": {
       const spId = await getProvisioningServicePrincipalId();
       if (spId) {
-        await createSyncJob(spId, "google2provisioningV2");
+        const templateId = await getSyncTemplateId(
+          spId,
+          SyncTemplateTag.GoogleWorkspace
+        );
+        await createSyncJob(spId, templateId);
         await setSyncJobToQuarantine(spId);
       }
       break;
