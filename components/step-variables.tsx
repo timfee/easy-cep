@@ -72,7 +72,9 @@ export function StepVariables({ stepId, vars, onChange }: StepVariablesProps) {
   );
 
   return (
-    <div className="grid md:grid-cols-2 gap-4">
+    <div
+      className="grid md:grid-cols-2 gap-4"
+      onClick={(e) => e.stopPropagation()}>
       {/* Requires Column */}
       <div className="flex-1 space-y-3 bg-slate-50/50 border border-slate-200/80 rounded-lg p-4">
         {/* Lighter background, slightly softer border, more padding */}

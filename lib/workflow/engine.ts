@@ -92,7 +92,7 @@ async function processStep<T extends StepIdValue>(
       markComplete: (data: CheckType) => {
         checkData = data;
         isComplete = true;
-        pushState({ status: "complete", summary: "Already complete" });
+        pushState({ status: "complete", summary: "Step already complete" });
       },
       markIncomplete: (summary: string, data: CheckType) => {
         checkData = data;

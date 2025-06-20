@@ -63,7 +63,7 @@ export function StepApiCalls({ stepId }: StepApiCallsProps) {
   };
 
   return (
-    <div className="space-y-3">
+    <div className="space-y-3" onClick={(e) => e.stopPropagation()}>
       {apiTemplates.map((template) => (
         <TooltipProvider key={template.endpoint}>
           <Tooltip>
