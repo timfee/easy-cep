@@ -1,7 +1,12 @@
 "use server";
 import "server-only";
 
-import { ApiEndpoint, PROTECTED_RESOURCES, PROVIDERS } from "@/constants";
+import {
+  ApiEndpoint,
+  PROTECTED_RESOURCES,
+  PROVIDERS,
+  type Provider
+} from "@/constants";
 import { env } from "@/env";
 import { refreshTokenIfNeeded } from "@/lib/auth";
 
@@ -18,7 +23,8 @@ function checkPurgeAllowed() {
   }
 }
 
-function createGoogleDeleteAction(
+function createDeleteAction(
+  provider: Provider,
   getEndpoint: (id: string) => string,
   resourceName: string,
   isProtected?: (id: string) => boolean
@@ -26,8 +32,11 @@ function createGoogleDeleteAction(
   return async function deleteResources(ids: string[]): Promise<DeleteResult> {
     checkPurgeAllowed();
 
-    const token = await refreshTokenIfNeeded(PROVIDERS.GOOGLE);
-    if (!token) throw new Error("No Google token available");
+    const token = await refreshTokenIfNeeded(provider);
+    if (!token)
+      throw new Error(
+        `No ${provider === PROVIDERS.GOOGLE ? "Google" : "Microsoft"} token available`
+      );
 
     const limit = pLimit(3);
     const results: DeleteResult = { deleted: [], failed: [] };
@@ -69,56 +78,24 @@ function createGoogleDeleteAction(
   };
 }
 
-function createMicrosoftDeleteAction(
+const createGoogleDeleteAction = (
   getEndpoint: (id: string) => string,
   resourceName: string,
   isProtected?: (id: string) => boolean
-) {
-  return async function deleteResources(ids: string[]): Promise<DeleteResult> {
-    checkPurgeAllowed();
+) =>
+  createDeleteAction(PROVIDERS.GOOGLE, getEndpoint, resourceName, isProtected);
 
-    const token = await refreshTokenIfNeeded(PROVIDERS.MICROSOFT);
-    if (!token) throw new Error("No Microsoft token available");
-
-    const limit = pLimit(3);
-    const results: DeleteResult = { deleted: [], failed: [] };
-
-    const deletableIds =
-      isProtected ? ids.filter((id) => !isProtected(id)) : ids;
-    const protectedIds = isProtected ? ids.filter((id) => isProtected(id)) : [];
-
-    protectedIds.forEach((id) => {
-      results.failed.push({ id, error: `${resourceName} is protected` });
-    });
-
-    await Promise.all(
-      deletableIds.map((id) =>
-        limit(async () => {
-          try {
-            const res = await fetch(getEndpoint(id), {
-              method: "DELETE",
-              headers: { Authorization: `Bearer ${token.accessToken}` }
-            });
-
-            if (!res.ok) {
-              const text = await res.text();
-              throw new Error(`HTTP ${res.status}: ${text}`);
-            }
-
-            results.deleted.push(id);
-          } catch (error) {
-            results.failed.push({
-              id,
-              error: error instanceof Error ? error.message : String(error)
-            });
-          }
-        })
-      )
-    );
-
-    return results;
-  };
-}
+const createMicrosoftDeleteAction = (
+  getEndpoint: (id: string) => string,
+  resourceName: string,
+  isProtected?: (id: string) => boolean
+) =>
+  createDeleteAction(
+    PROVIDERS.MICROSOFT,
+    getEndpoint,
+    resourceName,
+    isProtected
+  );
 
 export async function deleteOrgUnits(ids: string[]): Promise<DeleteResult> {
   return createGoogleDeleteAction(
@@ -134,7 +111,9 @@ export async function deleteSamlProfiles(ids: string[]): Promise<DeleteResult> {
   )(ids);
 }
 
-export async function deleteSsoAssignments(ids: string[]): Promise<DeleteResult> {
+export async function deleteSsoAssignments(
+  ids: string[]
+): Promise<DeleteResult> {
   return createGoogleDeleteAction(
     (id) => `${ApiEndpoint.Google.SsoAssignments}/${encodeURIComponent(id)}`,
     "SSO Assignment"
@@ -149,14 +128,18 @@ export async function deleteGoogleRoles(ids: string[]): Promise<DeleteResult> {
   )(ids);
 }
 
-export async function deleteClaimsPolicies(ids: string[]): Promise<DeleteResult> {
+export async function deleteClaimsPolicies(
+  ids: string[]
+): Promise<DeleteResult> {
   return createMicrosoftDeleteAction(
     (id) => `${ApiEndpoint.Microsoft.ClaimsPolicies}/${id}`,
     "Claims Policy"
   )(ids);
 }
 
-export async function deleteEnterpriseApps(ids: string[]): Promise<DeleteResult> {
+export async function deleteEnterpriseApps(
+  ids: string[]
+): Promise<DeleteResult> {
   return createMicrosoftDeleteAction(
     (id) => `${ApiEndpoint.Microsoft.Applications}/${id}`,
     "Enterprise Application",
