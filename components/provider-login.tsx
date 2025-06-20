@@ -1,5 +1,6 @@
 "use client";
 
+import { useWorkflow } from "@/app/workflow/context/workflow-context";
 import { Button } from "@/components/ui/button";
 import { type Provider } from "@/constants";
 import { Var, WorkflowVars } from "@/types";
@@ -17,39 +18,47 @@ interface SessionTokens {
 }
 
 export function ProviderLogin({ onUpdate }: Props) {
+  const { setSessionLoaded } = useWorkflow();
   const [tokens, setTokens] = useState<SessionTokens>({});
 
   const loadTokens = useCallback(async () => {
-    const res = await fetch("/api/auth/session");
-    if (!res.ok) return;
+    try {
+      const res = await fetch("/api/auth/session");
+      if (!res.ok) return;
 
-    const data: SessionTokens = await res.json();
-    const now = Date.now();
-    const validGoogle =
-      data.googleAccessToken
-      && data.googleExpiresAt
-      && data.googleExpiresAt > now;
-    const validMicrosoft =
-      data.msGraphToken && data.msGraphExpiresAt && data.msGraphExpiresAt > now;
+      const data: SessionTokens = await res.json();
+      const now = Date.now();
+      const validGoogle =
+        data.googleAccessToken
+        && data.googleExpiresAt
+        && data.googleExpiresAt > now;
+      const validMicrosoft =
+        data.msGraphToken
+        && data.msGraphExpiresAt
+        && data.msGraphExpiresAt > now;
 
-    const current: SessionTokens = {};
-    if (validGoogle) {
-      current.googleAccessToken = data.googleAccessToken;
-      current.googleExpiresAt = data.googleExpiresAt;
+      const current: SessionTokens = {};
+      if (validGoogle) {
+        current.googleAccessToken = data.googleAccessToken;
+        current.googleExpiresAt = data.googleExpiresAt;
+      }
+      if (validMicrosoft) {
+        current.msGraphToken = data.msGraphToken;
+        current.msGraphExpiresAt = data.msGraphExpiresAt;
+      }
+
+      setTokens(current);
+
+      const vars: Partial<WorkflowVars> = {
+        [Var.GoogleAccessToken]:
+          validGoogle ? data.googleAccessToken : undefined,
+        [Var.MsGraphToken]: validMicrosoft ? data.msGraphToken : undefined
+      };
+      onUpdate(vars);
+    } finally {
+      setSessionLoaded(true);
     }
-    if (validMicrosoft) {
-      current.msGraphToken = data.msGraphToken;
-      current.msGraphExpiresAt = data.msGraphExpiresAt;
-    }
-
-    setTokens(current);
-
-    const vars: Partial<WorkflowVars> = {
-      [Var.GoogleAccessToken]: validGoogle ? data.googleAccessToken : undefined,
-      [Var.MsGraphToken]: validMicrosoft ? data.msGraphToken : undefined
-    };
-    onUpdate(vars);
-  }, [onUpdate]);
+  }, [onUpdate, setSessionLoaded]);
 
   useEffect(() => {
     loadTokens();

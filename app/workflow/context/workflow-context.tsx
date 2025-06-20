@@ -37,6 +37,8 @@ interface WorkflowContextValue {
   executeStep: (stepId: StepIdValue) => Promise<void>;
   undoStep: (stepId: StepIdValue) => Promise<void>;
   checkSteps: () => Promise<void>;
+  sessionLoaded: boolean;
+  setSessionLoaded: (loaded: boolean) => void;
 }
 
 const WorkflowContext = createContext<WorkflowContextValue | null>(null);
@@ -65,6 +67,7 @@ export function WorkflowProvider({
   >({});
   const statusRef = useRef<Partial<Record<StepIdValue, StepUIState>>>({});
   const [executing, setExecuting] = useState<StepIdValue | null>(null);
+  const [sessionLoaded, setSessionLoaded] = useState(false);
   const checkedSteps = useRef(new Set<StepIdValue>());
   const listeners = useRef<Map<VarName, Set<(value: unknown) => void>>>(
     new Map()
@@ -250,7 +253,9 @@ export function WorkflowProvider({
     updateStep,
     executeStep,
     undoStep: undoStepAction,
-    checkSteps
+    checkSteps,
+    sessionLoaded,
+    setSessionLoaded
   };
 
   return (
