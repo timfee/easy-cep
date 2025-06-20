@@ -99,9 +99,10 @@ export async function listSsoAssignments(): Promise<InfoItem[]> {
       .optional()
   });
 
-  const res = await fetch(ApiEndpoint.Google.SsoAssignments, {
-    headers: { Authorization: `Bearer ${token.accessToken}` }
-  });
+  const res = await fetch(
+    `${ApiEndpoint.Google.SsoAssignments}?customer=customers/my_customer`,
+    { headers: { Authorization: `Bearer ${token.accessToken}` } }
+  );
   if (!res.ok) throw new Error(`HTTP ${res.status}`);
   const data = Schema.parse(await res.json());
   return (
