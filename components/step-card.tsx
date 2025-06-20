@@ -3,10 +3,13 @@
 import {
   AppsInfoButton,
   ClaimsInfoButton,
+  DomainInfoButton,
   OuInfoButton,
   ProvisioningInfoButton,
+  RolesInfoButton,
   SamlInfoButton,
-  SsoInfoButton
+  SsoInfoButton,
+  UsersInfoButton
 } from "@/components/info-buttons";
 import { StepApiCalls } from "@/components/step-api-calls";
 import { StepLogs } from "@/components/step-logs";
@@ -64,13 +67,17 @@ interface StepCardProps {
 }
 
 const INFO_BUTTONS: Partial<Record<StepIdValue, React.FC>> = {
+  [StepId.VerifyPrimaryDomain]: DomainInfoButton,
   [StepId.CreateAutomationOU]: OuInfoButton,
+  [StepId.CreateServiceUser]: UsersInfoButton,
+  [StepId.CreateAdminRoleAndAssignUser]: RolesInfoButton,
   [StepId.ConfigureGoogleSamlProfile]: SamlInfoButton,
-  [StepId.AssignUsersToSso]: SsoInfoButton,
   [StepId.CreateMicrosoftApps]: AppsInfoButton,
   [StepId.SetupMicrosoftProvisioning]: ProvisioningInfoButton,
-  [StepId.ConfigureMicrosoftSso]: ProvisioningInfoButton,
-  [StepId.SetupMicrosoftClaimsPolicy]: ClaimsInfoButton
+  [StepId.ConfigureMicrosoftSso]: AppsInfoButton,
+  [StepId.SetupMicrosoftClaimsPolicy]: ClaimsInfoButton,
+  [StepId.CompleteGoogleSsoSetup]: SamlInfoButton,
+  [StepId.AssignUsersToSso]: SsoInfoButton
 };
 
 export function StepCard({

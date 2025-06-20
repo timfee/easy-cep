@@ -19,6 +19,33 @@ export interface InfoItem {
   deleteEndpoint?: string;
 }
 
+export async function listDomains(): Promise<InfoItem[]> {
+  const token = await refreshTokenIfNeeded(PROVIDERS.GOOGLE);
+  if (!token) return [];
+
+  const Schema = z.object({
+    domains: z.array(
+      z.object({
+        domainName: z.string(),
+        isPrimary: z.boolean().optional(),
+        verified: z.boolean().optional()
+      })
+    )
+  });
+
+  const res = await fetch(ApiEndpoint.Google.Domains, {
+    headers: { Authorization: `Bearer ${token.accessToken}` }
+  });
+  if (!res.ok) throw new Error(`HTTP ${res.status}`);
+  const data = Schema.parse(await res.json());
+  return data.domains.map((domain) => ({
+    id: domain.domainName,
+    label: domain.domainName + (domain.isPrimary ? " (Primary)" : ""),
+    subLabel: domain.verified ? "Verified" : "Unverified",
+    href: "https://admin.google.com/ac/domains"
+  }));
+}
+
 export async function listOrgUnits(): Promise<InfoItem[]> {
   const token = await refreshTokenIfNeeded(PROVIDERS.GOOGLE);
   if (!token) return [];
@@ -238,4 +265,56 @@ export async function listEnterpriseApps(): Promise<InfoItem[]> {
     }
   }
   return items;
+}
+
+export async function listUsers(): Promise<InfoItem[]> {
+  const token = await refreshTokenIfNeeded(PROVIDERS.GOOGLE);
+  if (!token) return [];
+
+  const Schema = z.object({
+    users: z
+      .array(z.object({ id: z.string(), primaryEmail: z.string() }))
+      .optional()
+  });
+
+  const res = await fetch(`${ApiEndpoint.Google.Users}?maxResults=25`, {
+    headers: { Authorization: `Bearer ${token.accessToken}` }
+  });
+  if (!res.ok) throw new Error(`HTTP ${res.status}`);
+  const data = Schema.parse(await res.json());
+  return (
+    data.users?.map((user) => ({
+      id: user.id,
+      label: user.primaryEmail,
+      deletable: true,
+      deleteEndpoint: `${ApiEndpoint.Google.Users}/${user.id}`,
+      href: "https://admin.google.com/ac/users"
+    })) ?? []
+  );
+}
+
+export async function listAdminRoles(): Promise<InfoItem[]> {
+  const token = await refreshTokenIfNeeded(PROVIDERS.GOOGLE);
+  if (!token) return [];
+
+  const Schema = z.object({
+    items: z
+      .array(z.object({ roleId: z.string(), roleName: z.string() }))
+      .optional()
+  });
+
+  const res = await fetch(ApiEndpoint.Google.Roles, {
+    headers: { Authorization: `Bearer ${token.accessToken}` }
+  });
+  if (!res.ok) throw new Error(`HTTP ${res.status}`);
+  const data = Schema.parse(await res.json());
+  return (
+    data.items?.map((role) => ({
+      id: role.roleId,
+      label: role.roleName,
+      deletable: !role.roleId.startsWith("_"),
+      deleteEndpoint: `${ApiEndpoint.Google.Roles}/${role.roleId}`,
+      href: "https://admin.google.com/ac/roles"
+    })) ?? []
+  );
 }
