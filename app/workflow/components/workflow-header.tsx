@@ -2,6 +2,7 @@
 
 import { ProviderLogin } from "@/components/provider-login";
 import { Badge } from "@/components/ui/badge";
+import Image from "next/image";
 import { useWorkflow } from "../context/workflow-context";
 
 export function WorkflowHeader() {
@@ -16,9 +17,16 @@ export function WorkflowHeader() {
     <div className="border-b px-6 py-3 bg-white">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-xl font-semibold text-slate-900 mb-1">
-            Easy CEP
-          </h1>
+          <div className="flex items-center py-2">
+            <Image
+              src="../icon.svg"
+              alt="Easy CEP Logo"
+              width="40"
+              height="40"
+              className="mb-1 mr-2"
+            />
+            <h1 className="text-xl font-semibold text-blue-700">Easy CEP</h1>
+          </div>
           <div className="flex items-center gap-3 text-sm -mx-1">
             <Badge
               variant={isRunning ? "default" : "secondary"}

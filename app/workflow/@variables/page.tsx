@@ -13,7 +13,7 @@ export default function VariablesPage() {
         <div className="p-1 bg-purple-100 rounded">
           <Variable className="h-4 w-4 text-purple-600" />
         </div>
-        Global Variables
+        Variables
       </h3>
       <VarsInspector vars={varsRaw} onChange={updateVars} />
     </div>
