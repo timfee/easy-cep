@@ -59,7 +59,7 @@ export default defineStep<CheckData>(StepId.AssignUsersToSso)
         const profileId = vars.require(Var.SamlProfileId);
 
         const { inboundSsoAssignments = [] } = await google.get(
-          `${ApiEndpoint.Google.SsoAssignments}?customer=customers/my_customer`,
+          ApiEndpoint.Google.SsoAssignments,
           AssignSchema,
           { flatten: "inboundSsoAssignments" }
         );
@@ -136,7 +136,7 @@ export default defineStep<CheckData>(StepId.AssignUsersToSso)
        * { "error": { "code": 409, "message": "Assignment exists" } }
        */
       const op = await google.post(
-        `${ApiEndpoint.Google.SsoAssignments}?customer=customers/my_customer`,
+        ApiEndpoint.Google.SsoAssignments,
         OpSchema,
         {
           targetGroup: `groups/${GroupId.AllUsers}`,
@@ -190,7 +190,7 @@ export default defineStep<CheckData>(StepId.AssignUsersToSso)
       });
 
       const { inboundSsoAssignments = [] } = await google.get(
-        `${ApiEndpoint.Google.SsoAssignments}?customer=customers/my_customer`,
+        ApiEndpoint.Google.SsoAssignments,
         AssignSchema,
         { flatten: "inboundSsoAssignments" }
       );
