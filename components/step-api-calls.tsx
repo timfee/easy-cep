@@ -7,7 +7,8 @@ import {
   TooltipProvider,
   TooltipTrigger
 } from "@/components/ui/tooltip";
-import { ApiEndpoint } from "@/constants";
+import { API_PREFIXES, ApiEndpoint } from "@/constants";
+import { extractPath } from "@/lib/utils/url";
 import { Var } from "@/types";
 
 type StepIdValue = string;
@@ -28,19 +29,27 @@ export function StepApiCalls({ stepId }: StepApiCallsProps) {
   if (apiTemplates.length === 0) return null;
 
   const getFullUrl = (endpoint: string) => {
+    const {
+      GOOGLE_ADMIN,
+      GOOGLE_CLOUD_IDENTITY,
+      MS_GRAPH,
+      MS_GRAPH_BETA,
+      MS_GRAPH_V1
+    } = API_PREFIXES;
+
     if (endpoint.startsWith("/cloudidentity")) {
-      return `https://cloudidentity.googleapis.com/v1${endpoint.slice("/cloudidentity".length)}`;
+      return GOOGLE_CLOUD_IDENTITY + endpoint.slice("/cloudidentity".length);
     }
     if (endpoint.startsWith("/graph/beta")) {
-      return `https://graph.microsoft.com${endpoint.slice("/graph".length)}`;
+      return MS_GRAPH_BETA + endpoint.slice("/graph/beta".length);
     }
     if (endpoint.startsWith("/graph/v1.0")) {
-      return `https://graph.microsoft.com${endpoint.slice("/graph".length)}`;
+      return MS_GRAPH_V1 + endpoint.slice("/graph/v1.0".length);
     }
     if (endpoint.startsWith("/graph")) {
-      return `https://graph.microsoft.com${endpoint.slice("/graph".length)}`;
+      return MS_GRAPH + endpoint.slice("/graph".length);
     }
-    return `https://admin.googleapis.com/admin/directory/v1${endpoint}`;
+    return GOOGLE_ADMIN + endpoint;
   };
 
   const getMethodBadge = (method: string) => {
@@ -94,26 +103,6 @@ export function StepApiCalls({ stepId }: StepApiCallsProps) {
       ))}
     </div>
   );
-}
-
-function extractPath(url: string): string {
-  // eslint-disable-next-line workflow/no-hardcoded-urls
-  const googlePrefix = "https://admin.googleapis.com/admin/directory/v1";
-  // eslint-disable-next-line workflow/no-hardcoded-urls
-  const googleCloudPrefix = "https://cloudidentity.googleapis.com/v1";
-  // eslint-disable-next-line workflow/no-hardcoded-urls
-  const msGraphPrefix = "https://graph.microsoft.com";
-
-  if (url.startsWith(googlePrefix)) {
-    return url.slice(googlePrefix.length);
-  }
-  if (url.startsWith(googleCloudPrefix)) {
-    return "/cloudidentity" + url.slice(googleCloudPrefix.length);
-  }
-  if (url.startsWith(msGraphPrefix)) {
-    return "/graph" + url.slice(msGraphPrefix.length);
-  }
-  return url;
 }
 
 export const stepApiMetadata: Record<StepIdValue, ApiCallMetadata[]> = {

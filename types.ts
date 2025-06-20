@@ -12,6 +12,9 @@ export interface StepLogEntry {
   message: string;
   data?: unknown;
   level?: LogLevel;
+  method?: string;
+  status?: number;
+  url?: string;
 }
 
 export enum LogLevel {

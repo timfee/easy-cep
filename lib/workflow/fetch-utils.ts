@@ -34,7 +34,9 @@ export function createAuthenticatedFetch(
 
       context.addLog({
         timestamp: Date.now(),
-        message: `Request ${method} ${pageUrl}`,
+        message: `Request`,
+        method,
+        url: pageUrl,
         data: {
           url: pageUrl,
           method,
@@ -63,7 +65,10 @@ export function createAuthenticatedFetch(
 
       context.addLog({
         timestamp: Date.now(),
-        message: `Response ${res.status} ${pageUrl}`,
+        message: `Response`,
+        method,
+        status: res.status,
+        url: pageUrl,
         data: logData,
         level: LogLevel.Debug
       });
