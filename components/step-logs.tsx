@@ -1,7 +1,6 @@
 "use client";
 
 import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
 import {
   Collapsible,
   CollapsibleContent,
@@ -9,26 +8,22 @@ import {
 } from "@/components/ui/collapsible";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { StepLogEntry } from "@/types";
-import { AlertTriangle, Bug, Info, Terminal, XCircle } from "lucide-react";
+import {
+  AlertTriangle,
+  Bug,
+  ChevronRight,
+  Info,
+  Terminal,
+  XCircle
+} from "lucide-react";
+import { useState } from "react";
 
 interface StepLogsProps {
   logs: StepLogEntry[] | undefined;
 }
 
-export function StepLogs({ logs }: StepLogsProps) {
-  if (!logs || logs.length === 0) {
-    return (
-      <div className="text-center py-6 text-slate-500">
-        <div className="p-3 bg-slate-100 rounded-full w-fit mx-auto mb-3">
-          <Terminal className="h-5 w-5 text-slate-400" />
-        </div>
-        <p className="text-sm font-medium">No logs available</p>
-        <p className="text-xs text-slate-400 mt-1">
-          Logs will appear here during step execution
-        </p>
-      </div>
-    );
-  }
+function StepLogItem({ log }: { log: StepLogEntry }) {
+  const [open, setOpen] = useState(false);
 
   const getLevelIcon = (level?: string) => {
     switch (level) {
@@ -61,55 +56,75 @@ export function StepLogs({ logs }: StepLogsProps) {
   };
 
   return (
+    <Collapsible
+      open={open}
+      onOpenChange={setOpen}
+      className="p-3 rounded-md border bg-white border-slate-200">
+      <CollapsibleTrigger asChild>
+        <div className="flex items-start gap-3 cursor-pointer">
+          <div
+            className={`p-1.5 rounded ${getLevelBadgeClasses(log.level)
+              .split(" ")[0]
+              .replace("bg-", "bg-opacity-20")}`}>
+            {getLevelIcon(log.level)}
+          </div>
+          <div className="flex-1 min-w-0">
+            <div className="flex items-center gap-2 mb-1 flex-wrap">
+              <Badge
+                variant="outline"
+                className={`${getLevelBadgeClasses(log.level)} font-semibold`}>
+                {getLevelText(log.level)}
+              </Badge>
+              <span className="text-xs text-slate-500 font-mono bg-slate-100 px-1.5 py-0.5 rounded border border-slate-200">
+                {new Date(log.timestamp).toLocaleTimeString()}
+              </span>
+              {log.data !== null && (
+                <ChevronRight
+                  className={`h-3 w-3 transition-transform ${open ? "rotate-90" : ""}`}
+                />
+              )}
+            </div>
+            <p className="text-sm text-slate-800 leading-relaxed break-words">
+              {log.message}
+            </p>
+          </div>
+        </div>
+      </CollapsibleTrigger>
+      {log.data !== null && (
+        <CollapsibleContent className="mt-2 animate-accordion-down">
+          <div className="bg-slate-800 text-slate-100 rounded p-2.5 border border-slate-700 max-h-60 overflow-y-auto">
+            <pre className="text-xs font-mono whitespace-pre-wrap">
+              {JSON.stringify(log.data, null, 2)}
+            </pre>
+          </div>
+        </CollapsibleContent>
+      )}
+    </Collapsible>
+  );
+}
+
+export function StepLogs({ logs }: StepLogsProps) {
+  if (!logs || logs.length === 0) {
+    return (
+      <div className="text-center py-6 text-slate-500">
+        <div className="p-3 bg-slate-100 rounded-full w-fit mx-auto mb-3">
+          <Terminal className="h-5 w-5 text-slate-400" />
+        </div>
+        <p className="text-sm font-medium">No logs available</p>
+        <p className="text-xs text-slate-400 mt-1">
+          Logs will appear here during step execution
+        </p>
+      </div>
+    );
+  }
+
+  return (
     <ScrollArea
       className="h-[250px] -mx-2"
       onClick={(e) => e.stopPropagation()}>
       <div className="space-y-1.5 px-2">
         {logs.map((log) => (
-          <div
-            key={log.timestamp}
-            className="p-3 rounded-md border bg-white border-slate-200">
-            <div className="flex items-start gap-3">
-              <div
-                className={`p-1.5 rounded ${getLevelBadgeClasses(log.level).split(" ")[0].replace("bg-", "bg-opacity-20")}`}>
-                {getLevelIcon(log.level)}
-              </div>
-              <div className="flex-1 min-w-0">
-                <div className="flex items-center gap-2 mb-1 flex-wrap">
-                  <Badge
-                    variant="outline"
-                    className={`${getLevelBadgeClasses(log.level)} font-semibold`}>
-                    {getLevelText(log.level)}
-                  </Badge>
-                  <span className="text-xs text-slate-500 font-mono bg-slate-100 px-1.5 py-0.5 rounded border border-slate-200">
-                    {new Date(log.timestamp).toLocaleTimeString()}
-                  </span>
-                </div>
-                <p className="text-sm text-slate-800 leading-relaxed">
-                  {log.message}
-                </p>
-                {log.data !== null && (
-                  <Collapsible className="mt-2">
-                    <CollapsibleTrigger asChild>
-                      <Button
-                        variant="link"
-                        size="sm"
-                        className="text-xs p-0 h-auto text-blue-600 hover:text-blue-700">
-                        View Data
-                      </Button>
-                    </CollapsibleTrigger>
-                    <CollapsibleContent className="mt-1 animate-accordion-down">
-                      <div className="bg-slate-800 text-slate-100 rounded p-2.5 border border-slate-700 max-h-60 overflow-y-auto">
-                        <pre className="text-xs font-mono whitespace-pre-wrap">
-                          {JSON.stringify(log.data, null, 2)}
-                        </pre>
-                      </div>
-                    </CollapsibleContent>
-                  </Collapsible>
-                )}
-              </div>
-            </div>
-          </div>
+          <StepLogItem key={log.timestamp} log={log} />
         ))}
       </div>
     </ScrollArea>
