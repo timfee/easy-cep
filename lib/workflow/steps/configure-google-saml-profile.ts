@@ -45,7 +45,7 @@ export default defineStep(StepId.ConfigureGoogleSamlProfile)
         const { inboundSamlSsoProfiles = [] } = await google.get(
           ApiEndpoint.Google.SsoProfiles,
           ProfilesSchema,
-          { flatten: true }
+          { flatten: "inboundSamlSsoProfiles" }
         );
         // Extract: samlProfileId = inboundSamlSsoProfiles[0]?.name
 

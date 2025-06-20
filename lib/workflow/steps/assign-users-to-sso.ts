@@ -61,7 +61,7 @@ export default defineStep<CheckData>(StepId.AssignUsersToSso)
         const { inboundSsoAssignments = [] } = await google.get(
           ApiEndpoint.Google.SsoAssignments,
           AssignSchema,
-          { flatten: true }
+          { flatten: "inboundSsoAssignments" }
         );
         // Extract: assignmentExists = inboundSsoAssignments.some(...)
 
@@ -192,7 +192,7 @@ export default defineStep<CheckData>(StepId.AssignUsersToSso)
       const { inboundSsoAssignments = [] } = await google.get(
         ApiEndpoint.Google.SsoAssignments,
         AssignSchema,
-        { flatten: true }
+        { flatten: "inboundSsoAssignments" }
       );
       // Extract: assignmentName = inboundSsoAssignments.find(...).name
 

@@ -45,7 +45,7 @@ export default defineStep(StepId.ConfigureMicrosoftSyncAndSso)
         const { value } = await microsoft.get(
           ApiEndpoint.Microsoft.SyncJobs(spId),
           JobsSchema,
-          { flatten: true }
+          { flatten: "value" }
         );
         // Extract: jobStatusCodes = value.map(v => v.status.code)
 
@@ -135,7 +135,7 @@ export default defineStep(StepId.ConfigureMicrosoftSyncAndSso)
       const { value } = await microsoft.get(
         ApiEndpoint.Microsoft.SyncJobs(spId),
         JobsSchema,
-        { flatten: true }
+        { flatten: "value" }
       );
 
       for (const job of value) {

@@ -34,12 +34,12 @@ export interface StepCheckContext<T> {
   fetchGoogle<R>(
     url: string,
     schema: z.ZodSchema<R>,
-    init?: RequestInit & { flatten?: boolean }
+    init?: RequestInit & { flatten?: boolean | string }
   ): Promise<R>;
   fetchMicrosoft<R>(
     url: string,
     schema: z.ZodSchema<R>,
-    init?: RequestInit & { flatten?: boolean }
+    init?: RequestInit & { flatten?: boolean | string }
   ): Promise<R>;
   log(level: LogLevel, message: string, data?: unknown): void;
   vars: Partial<WorkflowVars>;
@@ -52,12 +52,12 @@ export interface StepExecuteContext<T> {
   fetchGoogle<R>(
     url: string,
     schema: z.ZodSchema<R>,
-    init?: RequestInit & { flatten?: boolean }
+    init?: RequestInit & { flatten?: boolean | string }
   ): Promise<R>;
   fetchMicrosoft<R>(
     url: string,
     schema: z.ZodSchema<R>,
-    init?: RequestInit & { flatten?: boolean }
+    init?: RequestInit & { flatten?: boolean | string }
   ): Promise<R>;
   log(level: LogLevel, message: string, data?: unknown): void;
   vars: Partial<WorkflowVars>;
@@ -71,12 +71,12 @@ export interface StepUndoContext {
   fetchGoogle<R>(
     url: string,
     schema: z.ZodSchema<R>,
-    init?: RequestInit & { flatten?: boolean }
+    init?: RequestInit & { flatten?: boolean | string }
   ): Promise<R>;
   fetchMicrosoft<R>(
     url: string,
     schema: z.ZodSchema<R>,
-    init?: RequestInit & { flatten?: boolean }
+    init?: RequestInit & { flatten?: boolean | string }
   ): Promise<R>;
   log(level: LogLevel, message: string, data?: unknown): void;
   vars: Partial<WorkflowVars>;
