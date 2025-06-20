@@ -90,3 +90,27 @@ pnpm build
 ```
 
 These commands should run without any warnings or TypeScript errors.
+
+## ✅ Token Verification
+
+Bearer tokens for Google and Microsoft live under `google_bearer.token` and
+`microsoft_bearer.token`. Before running steps or E2E tests, verify they are
+valid:
+
+```bash
+./scripts/token-info.sh
+```
+
+The script prints token metadata so you know the credentials are active.
+Never commit refreshed tokens or other secrets to the repository.
+
+## ✅ Testing
+
+Unit and integration tests can be run with:
+
+```bash
+pnpm test
+```
+
+E2E tests require `TEST_GOOGLE_BEARER_TOKEN`, `TEST_MS_BEARER_TOKEN` and
+`TEST_DOMAIN` environment variables. Set `RUN_E2E=1` to enable them.
