@@ -53,10 +53,5 @@ export const STEP_DETAILS: Record<string, StepDetail> = {
     title: "Assign Users to SSO",
     description:
       "Enables SAML single sign‑on for all users by creating an inbound assignment that points to the configured SAML profile."
-  },
-  "test-sso-configuration": {
-    title: "Test SSO Configuration",
-    description:
-      "Guide to manually sign in as a test user to verify the SAML flow. Confirms that authentication is redirected to Microsoft and successfully returns to Google."
   }
 };

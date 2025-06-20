@@ -6,7 +6,7 @@ Automates the integration between Google Workspace and Microsoft Entra ID (Azure
 
 ## What It Does
 
-This application automates the manual process of setting up federation between Google Workspace and Microsoft 365. It executes a series of 11 steps that:
+This application automates the manual process of setting up federation between Google Workspace and Microsoft 365. It executes a series of 10 steps that:
 
 - Create service accounts and organizational units in Google Workspace
 - Configure SAML profiles and SSO assignments
@@ -48,7 +48,6 @@ pnpm dev
 8. **Setup Microsoft Claims Policy** - Creates claims mapping policy
 9. **Complete Google SSO Setup** - Updates SAML profile with Azure AD metadata
 10. **Assign Users to SSO** - Enables SSO for all users
-11. **Test SSO Configuration** - Manual verification step
 
 ## Architecture
 

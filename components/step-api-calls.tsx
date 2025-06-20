@@ -318,7 +318,5 @@ export const stepApiMetadata: Record<StepIdValue, ApiCallMetadata[]> = {
         ssoMode: "SAML_SSO"
       }
     }
-  ],
-
-  "test-sso-configuration": []
+  ]
 };

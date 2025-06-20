@@ -16,7 +16,6 @@ import createAutomationOu from "./steps/create-automation-ou";
 import createMicrosoftApps from "./steps/create-microsoft-apps";
 import createServiceUser from "./steps/create-service-user";
 import setupMicrosoftClaimsPolicy from "./steps/setup-microsoft-claims-policy";
-import testSsoConfiguration from "./steps/test-sso-configuration";
 import verifyPrimaryDomain from "./steps/verify-primary-domain";
 
 const allSteps = [
@@ -29,8 +28,7 @@ const allSteps = [
   configureMicrosoftSyncAndSso,
   setupMicrosoftClaimsPolicy,
   completeGoogleSsoSetup,
-  assignUsersToSso,
-  testSsoConfiguration
+  assignUsersToSso
 ] as const;
 
 export function getAllSteps() {

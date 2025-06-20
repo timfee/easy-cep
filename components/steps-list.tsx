@@ -1,5 +1,6 @@
 "use client";
 
+import { CompletionCard } from "@/components/completion-card";
 import { StepCard } from "@/components/step-card";
 import { useWorkflow } from "@/components/workflow-context";
 import { Var, WorkflowVars } from "@/types";
@@ -44,6 +45,9 @@ export function StepsList() {
     );
   }
 
+  const allComplete =
+    steps.length > 0 && steps.every((s) => status[s.id]?.status === "complete");
+
   return (
     <div className="space-y-4">
       {steps.map((step, index) => (
@@ -62,6 +66,7 @@ export function StepsList() {
           }
         />
       ))}
+      {allComplete && <CompletionCard />}
     </div>
   );
 }
