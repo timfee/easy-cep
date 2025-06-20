@@ -26,9 +26,9 @@ export function StepLogs({ logs }: StepLogsProps) {
 
   return (
     <ScrollArea
-      className="h-[250px] -mx-2"
+      className="h-64 rounded-md border bg-white"
       onClick={(e) => e.stopPropagation()}>
-      <div className="space-y-1.5 px-2">
+      <div className="divide-y">
         {logs.map((log, index) => (
           <StepLogItem key={index} log={log} />
         ))}
