@@ -100,8 +100,7 @@ export default defineStep(StepId.VerifyPrimaryDomain)
             markIncomplete("Domain verification pending", {
               isDomainVerified: "false",
               primaryDomain: primary.domainName,
-              verificationToken: verificationData.token,
-              verificationMethod: "DNS_TXT"
+              verificationToken: verificationData.token
             });
           } catch {
             markIncomplete("Domain not verified", {
