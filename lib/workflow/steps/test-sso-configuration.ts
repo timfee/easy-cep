@@ -6,18 +6,10 @@ export default defineStep(StepId.TestSsoConfiguration)
   .provides()
 
   .check(async ({ markIncomplete }) => {
-    try {
-      markIncomplete("Manual test required", {});
-    } catch {
-      markIncomplete("Manual test required", {});
-    }
+    markIncomplete("Manual test required", {});
   })
   .execute(async ({ markPending }) => {
-    try {
-      markPending("Complete login flow manually");
-    } catch {
-      markPending("Complete login flow manually");
-    }
+    markPending("Complete login flow manually");
   })
   .undo(async ({ markReverted }) => {
     markReverted();

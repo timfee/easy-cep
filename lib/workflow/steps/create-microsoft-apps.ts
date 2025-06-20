@@ -59,14 +59,14 @@ export default defineStep(StepId.CreateMicrosoftApps)
         const { value: provApps } = await microsoft.get(
           `${ApiEndpoint.Microsoft.Applications}?$filter=${provFilter}`,
           AppsSchema,
-          { flatten: true }
+          { flatten: "value" }
         );
         // Extract: provisioning app info from provApps[0]
 
         const { value: ssoApps } = await microsoft.get(
           `${ApiEndpoint.Microsoft.Applications}?$filter=${ssoFilter}`,
           AppsSchema,
-          { flatten: true }
+          { flatten: "value" }
         );
         // Extract: ssoAppId = ssoApps[0]?.appId
 
@@ -85,14 +85,14 @@ export default defineStep(StepId.CreateMicrosoftApps)
           const provRes = await microsoft.get(
             `${ApiEndpoint.Microsoft.ServicePrincipals}?$filter=${provFilter}`,
             SpSchema,
-            { flatten: true }
+            { flatten: "value" }
           );
           // Extract: provisioningServicePrincipalId = provRes.value[0]?.id
 
           const ssoRes = await microsoft.get(
             `${ApiEndpoint.Microsoft.ServicePrincipals}?$filter=${ssoFilter}`,
             SpSchema,
-            { flatten: true }
+            { flatten: "value" }
           );
           // Extract: ssoServicePrincipalId = ssoRes.value[0]?.id
 

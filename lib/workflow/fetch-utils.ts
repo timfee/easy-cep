@@ -1,7 +1,7 @@
 import { LogLevel, StepLogEntry } from "@/types";
 import { z } from "zod";
 
-export type FetchOpts = RequestInit & { flatten?: boolean };
+export type FetchOpts = RequestInit & { flatten?: boolean | string };
 
 export interface FetchContext {
   addLog: (entry: StepLogEntry) => void;
@@ -80,30 +80,28 @@ export function createAuthenticatedFetch(
     };
 
     if (flatten) {
+      const arrayKey = typeof flatten === "string" ? flatten : "items";
       let aggregated: T | undefined;
-      let nextToken: string | undefined;
+      let pageUrl: string | undefined = url;
       const allItems: unknown[] = [];
-      const baseUrl = url;
 
-      do {
-        let pageUrl = baseUrl;
-        if (nextToken) {
-          const sep = baseUrl.includes("?") ? "&" : "?";
-          pageUrl = `${baseUrl}${sep}pageToken=${encodeURIComponent(nextToken)}`;
-        }
+      while (pageUrl) {
         const page = await fetchPage(pageUrl);
         if (aggregated === undefined) aggregated = page;
-        const p = page as unknown as {
-          items?: unknown[];
-          nextPageToken?: string;
-        };
-        if (Array.isArray(p.items)) allItems.push(...p.items);
-        nextToken = p.nextPageToken;
-      } while (nextToken);
+        const p = page as unknown as Record<string, unknown>;
+        const items = p[arrayKey];
+        if (Array.isArray(items)) allItems.push(...items);
+        pageUrl =
+          (p["nextPageToken"] as string | undefined)
+          ?? (p["nextLink"] as string | undefined)
+          ?? (p["@odata.nextLink"] as string | undefined);
+      }
 
-      const result = aggregated as unknown as { items: unknown[] };
-      result.items = allItems;
-      delete (result as unknown as { nextPageToken?: string }).nextPageToken;
+      const result = aggregated as unknown as Record<string, unknown>;
+      (result as Record<string, unknown>)[arrayKey] = allItems;
+      delete result["nextPageToken"];
+      delete result["nextLink"];
+      delete result["@odata.nextLink"];
       return aggregated!;
     }
 

@@ -49,7 +49,7 @@ export default defineStep(StepId.SetupMicrosoftClaimsPolicy)
         const { value } = await microsoft.get(
           ApiEndpoint.Microsoft.ReadClaimsPolicy(spId),
           PoliciesSchema,
-          { flatten: true }
+          { flatten: "value" }
         );
         // Extract: claimsPolicyId = value[0]?.id
 
@@ -114,7 +114,7 @@ export default defineStep(StepId.SetupMicrosoftClaimsPolicy)
           const { value } = await microsoft.get(
             ApiEndpoint.Microsoft.ClaimsPolicies,
             listSchema,
-            { flatten: true }
+            { flatten: "value" }
           );
           policyId = value[0]?.id;
         } else {

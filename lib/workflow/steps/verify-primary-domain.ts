@@ -48,7 +48,7 @@ export default defineStep(StepId.VerifyPrimaryDomain)
         const { domains } = await google.get(
           ApiEndpoint.Google.Domains,
           DomainsResponse,
-          { flatten: true }
+          { flatten: "domains" }
         );
         // Extract: primaryDomain = domains.find(d => d.isPrimary)?.domainName
 
