@@ -2,6 +2,7 @@
 
 import { StepCard } from "@/components/step-card";
 import { Var, WorkflowVars } from "@/types";
+import { Loader2 } from "lucide-react";
 import { useWorkflow } from "../context/workflow-context";
 
 export default function StepsPage() {
@@ -12,12 +13,21 @@ export default function StepsPage() {
     executing,
     executeStep,
     undoStep,
-    updateVars
+    updateVars,
+    sessionLoaded
   } = useWorkflow();
 
   const loggedIn = Boolean(
     varsRaw[Var.GoogleAccessToken] || varsRaw[Var.MsGraphToken]
   );
+
+  if (!sessionLoaded) {
+    return (
+      <div className="py-24 text-center text-slate-600">
+        <Loader2 className="h-6 w-6 mx-auto animate-spin" />
+      </div>
+    );
+  }
 
   if (!loggedIn) {
     return (
