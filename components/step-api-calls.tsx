@@ -63,35 +63,33 @@ export function StepApiCalls({ stepId }: StepApiCallsProps) {
   };
 
   return (
-    <div className="space-y-3" onClick={(e) => e.stopPropagation()}>
-      {apiTemplates.map((template) => (
-        <TooltipProvider key={template.endpoint}>
+    <div className="space-y-1 text-xs" onClick={(e) => e.stopPropagation()}>
+      {apiTemplates.map((template, idx) => (
+        <TooltipProvider key={idx}>
           <Tooltip>
             <TooltipTrigger asChild>
-              <div className="border border-slate-200 rounded-lg p-3 bg-slate-50/30 hover:bg-slate-100/50 transition-colors duration-150 cursor-help">
-                <div className="flex items-start gap-3">
-                  <div className="flex-shrink-0">
-                    {getMethodBadge(template.method)}
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <p className="text-sm font-medium text-slate-800 mb-1">
-                      {template.description}
-                    </p>
-                    <code className="text-xs text-slate-600 bg-white px-2 py-1 rounded border border-slate-300 break-all">
-                      {template.endpoint}
-                    </code>
-                  </div>
+              <div className="flex items-start gap-2 rounded px-2 py-1 hover:bg-slate-100 cursor-help">
+                <div className="flex-shrink-0 mt-0.5">
+                  {getMethodBadge(template.method)}
+                </div>
+                <div className="flex-1 min-w-0">
+                  <span className="font-medium text-slate-800">
+                    {template.description}
+                  </span>
+                  <code className="ml-1 text-slate-600 break-all">
+                    {template.endpoint}
+                  </code>
                 </div>
               </div>
             </TooltipTrigger>
 
-            <TooltipContent side="bottom" className="max-w-md">
-              <div className="space-y-2">
-                <pre className="text-xs bg-slate-800 text-slate-100 p-2 rounded overflow-auto max-h-40">
-                  <strong>{getFullUrl(template.endpoint)}</strong>
-                  {JSON.stringify(template.body, null, 2)}
-                </pre>
-              </div>
+            <TooltipContent side="bottom" className="max-w-lg w-96">
+              <pre className="api-scrollbar text-[11px] bg-slate-800 text-slate-100 p-2 rounded max-h-40 overflow-auto">
+                <strong className="block mb-1">
+                  {getFullUrl(template.endpoint)}
+                </strong>
+                {JSON.stringify(template.body, null, 2)}
+              </pre>
             </TooltipContent>
           </Tooltip>
         </TooltipProvider>

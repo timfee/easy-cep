@@ -126,6 +126,22 @@
   .animate-indeterminate {
     animation: indeterminate 1.5s linear infinite;
   }
+
+  .api-scrollbar {
+    scrollbar-width: thin;
+    scrollbar-color: var(--border) var(--muted);
+  }
+  .api-scrollbar::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+  }
+  .api-scrollbar::-webkit-scrollbar-track {
+    background: var(--muted);
+  }
+  .api-scrollbar::-webkit-scrollbar-thumb {
+    background: var(--border);
+    border-radius: 3px;
+  }
 }
 
 @layer base {

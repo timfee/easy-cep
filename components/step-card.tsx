@@ -199,7 +199,8 @@ export function StepCard({
 
   const getCardClassName = () => {
     const baseClass =
-      "transition-all duration-300 ease-out bg-white border cursor-pointer py-4";
+      "transition-all duration-300 ease-out bg-white border py-4";
+    const cursorClass = isExpanded ? "" : "cursor-pointer";
     const shadowClass = isExpanded ? "shadow-xl" : "hover:shadow-lg";
     let borderColorClass = "border-slate-200 hover:border-slate-300";
     const animationClass = "";
@@ -225,7 +226,7 @@ export function StepCard({
           break;
       }
     }
-    return `${baseClass} ${shadowClass} ${borderColorClass} ${animationClass}`;
+    return `${baseClass} ${cursorClass} ${shadowClass} ${borderColorClass} ${animationClass}`;
   };
 
   const canExecute = Object.entries(WORKFLOW_VARIABLES)
@@ -242,7 +243,9 @@ export function StepCard({
   return (
     <Card
       className={getCardClassName()}
-      onClick={handleHeaderClick}
+      onClick={() => {
+        if (!isExpanded) handleHeaderClick();
+      }}
       role="button"
       aria-expanded={isExpanded}>
       <CardHeader

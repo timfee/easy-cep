@@ -207,6 +207,7 @@ export function InfoButton({
         <Button
           size="sm"
           variant="outline"
+          onClick={(e) => e.stopPropagation()}
           className="border-slate-300 text-slate-700">
           <Info className="h-3.5 w-3.5 mr-1.5" /> Info
         </Button>
