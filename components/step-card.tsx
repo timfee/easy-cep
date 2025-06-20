@@ -337,7 +337,7 @@ export function StepCard({
       )}
 
       <Collapsible open={isExpanded}>
-        <CollapsibleContent className="overflow-hidden transition-all duration-300 ease-out data-[state=closed]:animate-accordion-up data-[state=open]:animate-accordion-down">
+        <CollapsibleContent className="overflow-hidden origin-top transform-gpu transition-transform duration-300 data-[state=closed]:scale-y-0 data-[state=open]:scale-y-100">
           <CardContent className="px-6">
             {/* Action Buttons */}
             {detail?.description && (
@@ -435,7 +435,7 @@ export function StepCard({
                   }`}
                 />
               </CollapsibleTrigger>
-              <CollapsibleContent className="mt-2 data-[state=closed]:animate-accordion-up data-[state=open]:animate-accordion-down">
+              <CollapsibleContent className="mt-2 origin-top transform-gpu transition-transform duration-300 data-[state=closed]:scale-y-0 data-[state=open]:scale-y-100">
                 {state?.logs && state.logs.length > 0 ?
                   <StepLogs logs={state.logs} />
                 : <div className="text-center py-6 text-slate-500 border border-dashed border-slate-300 rounded-lg mt-1">
