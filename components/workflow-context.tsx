@@ -2,6 +2,10 @@
 /* eslint-disable workflow/no-duplicate-code-blocks */
 
 import { checkStep, runStep, undoStep } from "@/lib/workflow/engine";
+import {
+  parsePersistedState,
+  prepareStateForPersistence
+} from "@/lib/workflow/schemas/persisted-state";
 import { STEP_DETAILS } from "@/lib/workflow/step-details";
 import { createVarStore, type BasicVarStore } from "@/lib/workflow/var-store";
 import { WORKFLOW_VARIABLES } from "@/lib/workflow/variables";
@@ -21,6 +25,17 @@ import {
   useRef,
   useState
 } from "react";
+
+export function filterEphemeralVars(
+  vars: Partial<WorkflowVars>
+): Partial<WorkflowVars> {
+  return Object.entries(vars).reduce((acc, [key, value]) => {
+    if (!WORKFLOW_VARIABLES[key as VarName]?.ephemeral) {
+      acc[key as VarName] = value;
+    }
+    return acc;
+  }, {} as Partial<WorkflowVars>);
+}
 
 interface VarStore extends BasicVarStore {
   set(updates: Partial<WorkflowVars>): void;
@@ -67,13 +82,21 @@ export function WorkflowProvider({
     if (typeof window === "undefined") return null;
     try {
       const raw = localStorage.getItem("workflowState");
-      return raw ?
-          (JSON.parse(raw) as Partial<{
-            vars: Partial<WorkflowVars>;
-            status: Partial<Record<StepIdValue, StepUIState>>;
-          }>)
-        : null;
-    } catch {
+      if (!raw) return null;
+
+      const parsed = JSON.parse(raw);
+      const validated = parsePersistedState(parsed);
+
+      if (!validated) {
+        localStorage.removeItem("workflowState");
+        console.warn("Cleared corrupted workflow state from localStorage");
+        return null;
+      }
+
+      return validated;
+    } catch (error) {
+      console.error("Failed to load workflow state:", error);
+      localStorage.removeItem("workflowState");
       return null;
     }
   }, []);
@@ -290,10 +313,12 @@ export function WorkflowProvider({
 
   useEffect(() => {
     if (typeof window !== "undefined") {
-      localStorage.setItem(
-        "workflowState",
-        JSON.stringify({ vars, status: statusRef.current })
-      );
+      try {
+        const stateJson = prepareStateForPersistence(vars, statusRef.current);
+        localStorage.setItem("workflowState", stateJson);
+      } catch (error) {
+        console.error("Failed to save workflow state:", error);
+      }
     }
   }, [vars, status]);
 
