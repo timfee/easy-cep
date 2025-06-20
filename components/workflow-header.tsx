@@ -18,7 +18,7 @@ export function WorkflowHeader() {
             height="36"
             className="ml-3.5 mr-2"
           />
-          <h1 className="text-3xl font-semibold text-blue-700">Easy CEP</h1>
+          <h1 className="text-3xl font-bold text-blue-700">Easy CEP</h1>
         </div>
       </section>
       <section className="space-x-4 flex mr-2">
