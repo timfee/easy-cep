@@ -178,7 +178,6 @@ describe("info server actions", () => {
       {
         id: "app1",
         label: "Google Workspace Provisioning",
-        subLabel: "abcd1234",
         href: "https://entra.microsoft.com/#view/Microsoft_AAD_RegisteredApps/ApplicationMenuBlade/~/Overview/objectId/app1",
         deletable: true,
         deleteEndpoint: "https://graph.microsoft.com/beta/applications/app1"
