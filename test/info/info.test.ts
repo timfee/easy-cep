@@ -51,7 +51,7 @@ describe("info server actions", () => {
       {
         id: "id:123",
         label: "/Automation",
-        href: "https://admin.google.com/ac/orgunits?ouid=123",
+        href: "https://admin.google.com/ac/orgunits",
         deletable: true,
         deleteEndpoint:
           "https://admin.googleapis.com/admin/directory/v1/customer/my_customer/orgunits/Automation"
@@ -71,7 +71,7 @@ describe("info server actions", () => {
       {
         id: "samlProfiles/abc123",
         label: "Workspace SAML",
-        href: "https://admin.google.com/ac/apps/saml/abc123",
+        href: "https://admin.google.com/ac/security/sso/sso-profiles/samlProfiles%2Fabc123",
         deletable: true,
         deleteEndpoint:
           "https://cloudidentity.googleapis.com/v1/samlProfiles/abc123"
@@ -92,7 +92,7 @@ describe("info server actions", () => {
         id: "assignments/allUsers",
         label: "groups/allUsers",
         subLabel: "SAML_SSO",
-        href: "https://admin.google.com/ac/security/inboundsso?assignmentId=assignments%2FallUsers",
+        href: "https://admin.google.com/ac/security/sso",
         deletable: true,
         deleteEndpoint:
           "https://cloudidentity.googleapis.com/v1/inboundSsoAssignments/assignments%2FallUsers"
@@ -113,7 +113,7 @@ describe("info server actions", () => {
         id: "abc123",
         label: "orgUnits/03ph8a2z23yjui6",
         subLabel: "SSO_OFF",
-        href: "https://admin.google.com/ac/security/inboundsso?assignmentId=abc123",
+        href: "https://admin.google.com/ac/security/sso",
         deletable: true,
         deleteEndpoint:
           "https://cloudidentity.googleapis.com/v1/inboundSsoAssignments/abc123"
@@ -126,7 +126,7 @@ describe("info server actions", () => {
       .fn<() => Promise<any>>()
       .mockResolvedValueOnce({
         ok: true,
-        json: async () => ({ value: [{ id: "sp1" }] })
+        json: async () => ({ value: [{ id: "sp1", appId: "abcd1234" }] })
       })
       .mockResolvedValueOnce({
         ok: true,
@@ -138,7 +138,7 @@ describe("info server actions", () => {
         id: "Initial",
         label: "gsuite",
         subLabel: "Active",
-        href: "https://entra.microsoft.com/#view/Microsoft_AAD_Connect/SynchronizationJobBlade/jobId/Initial",
+        href: "https://portal.azure.com/#view/Microsoft_AAD_Connect_Provisioning/ProvisioningMenuBlade/~/Overview/objectId/sp1/appId/abcd1234",
         deletable: true,
         deleteEndpoint:
           "https://graph.microsoft.com/v1.0/servicePrincipals/sp1/synchronization/jobs/Initial"
@@ -158,7 +158,7 @@ describe("info server actions", () => {
       {
         id: "policy123",
         label: "Google Workspace Claims",
-        href: "https://entra.microsoft.com/#view/Microsoft_AAD_IAM/PoliciesMenuBlade/~/ClaimsMappingPolicies/objectId/policy123",
+        href: "https://portal.azure.com/#view/Microsoft_AAD_IAM/ActiveDirectoryMenuBlade/~/Overview",
         deletable: true,
         deleteEndpoint:
           "https://graph.microsoft.com/beta/policies/claimsMappingPolicies/policy123"
@@ -178,7 +178,7 @@ describe("info server actions", () => {
       {
         id: "app1",
         label: "Google Workspace Provisioning",
-        href: "https://entra.microsoft.com/#view/Microsoft_AAD_RegisteredApps/ApplicationMenuBlade/~/Overview/objectId/app1",
+        href: "https://portal.azure.com/#view/Microsoft_AAD_IAM/ManagedAppMenuBlade/~/SignOn/objectId/app1/appId/abcd1234/preferredSingleSignOnMode~/null/servicePrincipalType/Application/fromNav/",
         deletable: true,
         deleteEndpoint: "https://graph.microsoft.com/beta/applications/app1"
       }

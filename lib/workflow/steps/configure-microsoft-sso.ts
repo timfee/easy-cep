@@ -18,7 +18,7 @@ export default defineStep(StepId.ConfigureMicrosoftSso)
    * Headers: { Authorization: Bearer {msGraphToken} }
    *
    * Success response (200)
-   * { "preferredSingleSignOnMode": "saml", "samlSingleSignOnSettings": { "loginUrl": "https://login.microsoftonline.com/..." } }
+   * { "preferredSingleSignOnMode": "saml", "samlSingleSignOnSettings": { "relayState": "" } }
    *
    * GET https://graph.microsoft.com/beta/servicePrincipals/{ssoServicePrincipalId}/tokenSigningCertificates
    * Headers: { Authorization: Bearer {msGraphToken} }
@@ -42,7 +42,7 @@ export default defineStep(StepId.ConfigureMicrosoftSso)
         const SpSchema = z.object({
           preferredSingleSignOnMode: z.string().nullable(),
           samlSingleSignOnSettings: z
-            .object({ loginUrl: z.string().nullable() })
+            .object({ relayState: z.string().nullable() })
             .nullable()
         });
 
@@ -51,10 +51,7 @@ export default defineStep(StepId.ConfigureMicrosoftSso)
           SpSchema
         );
 
-        if (
-          sp.preferredSingleSignOnMode === "saml"
-          && sp.samlSingleSignOnSettings?.loginUrl
-        ) {
+        if (sp.preferredSingleSignOnMode === "saml") {
           log(LogLevel.Info, "Microsoft SSO already configured");
 
           // Need to fetch certificate to pass to Google
@@ -93,7 +90,7 @@ export default defineStep(StepId.ConfigureMicrosoftSso)
 
             markComplete({
               msSigningCertificate: activeCert.key,
-              msSsoLoginUrl: sp.samlSingleSignOnSettings.loginUrl!,
+              msSsoLoginUrl: `https://login.microsoftonline.com/${tenantId}/saml2`,
               msSsoEntityId: `https://sts.windows.net/${tenantId}/`
             });
           } else {
@@ -116,7 +113,7 @@ export default defineStep(StepId.ConfigureMicrosoftSso)
      * GET https://graph.microsoft.com/v1.0/organization
      *
      * PATCH https://graph.microsoft.com/v1.0/servicePrincipals/{ssoServicePrincipalId}
-     * Body: { samlSingleSignOnSettings: { loginUrl, logoutUrl, relayState: "" } }
+     * Body: { samlSingleSignOnSettings: { relayState: "" } }
      *
      * GET https://graph.microsoft.com/v1.0/applications?$filter=appId eq {ssoAppId}
      *
@@ -164,13 +161,7 @@ export default defineStep(StepId.ConfigureMicrosoftSso)
       await microsoft.patch(
         `${ApiEndpoint.Microsoft.ServicePrincipals}/${spId}`,
         EmptyResponseSchema,
-        {
-          samlSingleSignOnSettings: {
-            loginUrl: loginUrl,
-            logoutUrl: loginUrl,
-            relayState: ""
-          }
-        }
+        { samlSingleSignOnSettings: { relayState: "" } }
       );
 
       // 4. Get the application object ID (different from appId)
