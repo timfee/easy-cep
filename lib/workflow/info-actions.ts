@@ -9,6 +9,7 @@ import {
 } from "@/constants";
 import { env } from "@/env";
 import { refreshTokenIfNeeded } from "@/lib/auth";
+import { z } from "zod";
 
 import pLimit from "p-limit";
 
@@ -154,22 +155,57 @@ export async function deleteProvisioningJobs(
 
   const token = await refreshTokenIfNeeded(PROVIDERS.MICROSOFT);
   if (!token) throw new Error("No Microsoft token available");
+  const SpSchema = z.object({ value: z.array(z.object({ id: z.string() })) });
+  const spFilter = encodeURIComponent(
+    "displayName eq 'Google Workspace Provisioning'"
+  );
+  const spRes = await fetch(
+    `${ApiEndpoint.Microsoft.ServicePrincipals}?$filter=${spFilter}`,
+    { headers: { Authorization: `Bearer ${token.accessToken}` } }
+  );
+  if (!spRes.ok) throw new Error(`HTTP ${spRes.status}`);
+  const spData = SpSchema.parse(await spRes.json());
+  const spId = spData.value[0]?.id;
+  if (!spId) {
+    return {
+      deleted: [],
+      failed: ids.map((id) => ({
+        id,
+        error: "Provisioning service principal not found"
+      }))
+    };
+  }
 
+  const limit = pLimit(3);
   const results: DeleteResult = { deleted: [], failed: [] };
 
-  for (const jobId of ids) {
-    try {
-      results.failed.push({
-        id: jobId,
-        error: "Provisioning job deletion requires service principal context"
-      });
-    } catch (error) {
-      results.failed.push({
-        id: jobId,
-        error: error instanceof Error ? error.message : String(error)
-      });
-    }
-  }
+  await Promise.all(
+    ids.map((jobId) =>
+      limit(async () => {
+        try {
+          const res = await fetch(
+            `${ApiEndpoint.Microsoft.SyncJobs(spId)}/${jobId}`,
+            {
+              method: "DELETE",
+              headers: { Authorization: `Bearer ${token.accessToken}` }
+            }
+          );
+
+          if (!res.ok) {
+            const text = await res.text();
+            throw new Error(`HTTP ${res.status}: ${text}`);
+          }
+
+          results.deleted.push(jobId);
+        } catch (error) {
+          results.failed.push({
+            id: jobId,
+            error: error instanceof Error ? error.message : String(error)
+          });
+        }
+      })
+    )
+  );
 
   return results;
 }
