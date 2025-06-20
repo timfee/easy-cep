@@ -6,6 +6,15 @@ import { env } from "@/env";
 import { getAllSteps } from "@/lib/workflow/step-registry";
 import { Var } from "@/types";
 import type { Metadata } from "next";
+import localFont from "next/font/local";
+
+const inter = localFont({
+  src: [
+    { path: "./InterVariable.woff2", style: "normal" },
+    { path: "./InterVariable-Italic.woff2", style: "italic" }
+  ]
+});
+
 import "./globals.css";
 
 // Initialize protected resources
@@ -38,7 +47,8 @@ export default function RootLayout({
 
   return (
     <html lang="en" className="antialiased scroll-smooth">
-      <body className="h-screen overflow-hidden">
+      <body
+        className={`antialiased transform-gpu scroll-smooth ${inter.className}`}>
         <WorkflowProvider steps={allSteps} initialVars={DEFAULT_CONFIG}>
           <WorkflowHeader />
           <main className="flex h-[calc(100vh-64px)]">{children}</main>
