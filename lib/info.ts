@@ -209,7 +209,7 @@ export async function listEnterpriseApps(): Promise<InfoItem[]> {
   });
 
   const filter = encodeURIComponent(
-    `applicationTemplateId eq '${TemplateId.GoogleWorkspaceConnector}' or applicationTemplateId eq '${TemplateId.GoogleWorkspaceSaml}'`
+    `applicationTemplateId eq '${TemplateId.GoogleWorkspaceConnector}'`
   );
   const res = await fetch(
     `${ApiEndpoint.Microsoft.Applications}?$filter=${filter}`,

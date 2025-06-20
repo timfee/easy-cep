@@ -53,7 +53,7 @@ export default defineStep(StepId.CreateMicrosoftApps)
           `applicationTemplateId eq '${TemplateId.GoogleWorkspaceConnector}'`
         );
         const ssoFilter = encodeURIComponent(
-          `applicationTemplateId eq '${TemplateId.GoogleWorkspaceSaml}'`
+          `applicationTemplateId eq '${TemplateId.GoogleWorkspaceConnector}'`
         );
 
         const { value: provApps } = await microsoft.get(
@@ -162,7 +162,7 @@ export default defineStep(StepId.CreateMicrosoftApps)
       // Extract: provisioningServicePrincipalId = res1.servicePrincipal.id
 
       const res2 = await microsoft.post(
-        ApiEndpoint.Microsoft.Templates(TemplateId.GoogleWorkspaceSaml),
+        ApiEndpoint.Microsoft.Templates(TemplateId.GoogleWorkspaceConnector),
         CreateSchema,
         { displayName: vars.require(Var.SsoAppDisplayName) }
       );
