@@ -1,75 +1,121 @@
-# Directory Federation Orchestrator
+# Easy CEP - Directory Federation Orchestrator
 
-This application automates the integration between **Google Workspace** and **Microsoft Entra ID** (Azure AD) by orchestrating the API calls necessary to create and configure provisioning and SAML operations.
+Automates the integration between Google Workspace and Microsoft Entra ID (Azure AD) by orchestrating the API calls necessary to create and configure provisioning and SAML operations.
+
+## What It Does
+
+This application automates the manual process of setting up federation between Google Workspace and Microsoft 365. It executes a series of 11 steps that:
+
+- Create service accounts and organizational units in Google Workspace
+- Configure SAML profiles and SSO assignments
+- Set up Microsoft enterprise applications
+- Configure provisioning and claims policies
+- Exchange certificates and metadata between platforms
+
+## Requirements
+
+- Node.js and pnpm
+- Google Workspace admin account
+- Microsoft Entra ID admin account
+- OAuth applications in both platforms
 
 ## Setup
 
-Node.js and [PNPM](https://pnpm.io/) must be installed. Run `pnpm install` once before executing `pnpm check`, `pnpm dev`, or `pnpm lint` so that all dependencies are available. Authentication utilities, including cookie helpers, reside in `./lib/auth.ts`.
+```bash
+pnpm install
+
+# Create .env.local with:
+AUTH_SECRET=<random-string>
+GOOGLE_OAUTH_CLIENT_ID=<your-client-id>
+GOOGLE_OAUTH_CLIENT_SECRET=<your-client-secret>
+MICROSOFT_OAUTH_CLIENT_ID=<your-client-id>
+MICROSOFT_OAUTH_CLIENT_SECRET=<your-client-secret>
+
+pnpm dev
+```
+
+## Workflow Steps
+
+1. **Verify Primary Domain** - Checks domain verification in Google Workspace
+2. **Create Automation OU** - Creates `/Automation` organizational unit
+3. **Create Service User** - Creates `azuread-provisioning@domain` account
+4. **Create Admin Role and Assign User** - Sets up custom role with required privileges
+5. **Configure Google SAML Profile** - Creates inbound SAML configuration
+6. **Create Microsoft Apps** - Instantiates provisioning and SSO applications
+7. **Configure Microsoft Sync and SSO** - Sets up synchronization job
+8. **Setup Microsoft Claims Policy** - Creates claims mapping policy
+9. **Complete Google SSO Setup** - Updates SAML profile with Azure AD metadata
+10. **Assign Users to SSO** - Enables SSO for all users
+11. **Test SSO Configuration** - Manual verification step
 
 ## Architecture
 
-This project defines a series of discrete, type-safe `step` files. Each step:
+### Frontend
+- Next.js 15 with React Server Components
+- Real-time workflow status updates
+- Variable inspector for configuration values
+- Expandable step cards with execution logs
 
-- Encapsulates one unit of setup (e.g. create service user, configure SAML)
-- Implements `check()` to detect current state
-- Implements `execute()` to perform a mutation (if needed)
-- Declares which variables it `requires` and what it `provides`
-- Contributes to global state (`vars`) in a type-safe way
+### Backend
+- Server actions for step execution
+- OAuth 2.0 authentication with encrypted cookie storage
+- Type-safe API calls with Zod validation
 
-The runtime engine orchestrates execution across steps using these declarations.
+### Step Implementation
 
-Workflow variables live in `./lib/workflow/variables.ts` and step identifiers
-in `./lib/workflow/step-ids.ts`. These are re-exported from `types.ts` so most
-code can simply import from `@/types`.
+Steps are defined in `lib/workflow/steps/` following this pattern:
 
-## Steps
-
-Steps follow a two-phase pattern (see `lib/workflow/steps/AGENTS.md` for the full Implementation Pattern, including type conventions and automatic `requires` enforcement):
-
-1. **Check Phase**: Determines if work needs to be done
-
-   - Must handle errors (service might be down)
-   - Calls one of: markComplete, markIncomplete, markCheckFailed
-   - Passes typed data to execute phase
-
-2. **Execute Phase**: Performs the actual work
-   - Receives typed checkData from check phase
-   - Must handle errors
-   - Calls one of: markSucceeded, markFailed, markPending
-
-State is managed client-side in React. Each step reports its status through callbacks.
-
-Error handling is mandatory at every level - both phases must use try-catch.
-
-## Notes
-
-Use `pnpm` for package management and execution.
-
-## Network access
-
-Internet access is available to install dependencies during the setup script phase. During the agent phase, internet access is disabled by default, but you can configure the environment to have limited or full internet access. [Learn more about agent internet access.](https://platform.openai.com/docs/codex/agent-network)
-
-Environments run behind an HTTP/HTTPS network proxy for security and abuse prevention purposes. All outbound internet traffic passes through this proxy.
-
-Environments are pre-configured to work with common tools and package managers:
-
-- Codex sets standard environment variables including `http_proxy` and `https_proxy`. These settings are respected by tools such as `curl`, `npm`, and `pip`.
-- Codex installs a proxy certificate into the system trust store. This certificate's path is available as the environment variable `$CODEX_PROXY_CERT`. Additionally, specific package manager variables (e.g., `PIP_CERT`, `NODE_EXTRA_CA_CERTS`) are set to this certificate path.
-
-If you're encountering connectivity issues, verify and/or configure the following:
-
-- Ensure you are connecting via the proxy at `http://proxy:8080`.
-- Ensure you are trusting the proxy certificate located at `$CODEX_PROXY_CERT`. Always reference this environment variable instead of using a hardcoded file path, as the path may change.
-
-The `scripts/token-info.sh` script will output bearer tokens in text format for using against Google and Microsoft as `./google_bearer.token` and `./microsoft_bearer.token` that you can use to verify commands.
+```typescript
+export default defineStep(StepId.StepName)
+  .requires(Var.InputVariable)
+  .provides(Var.OutputVariable)
+  .check(async ({ vars, google, microsoft, markComplete, markIncomplete, markCheckFailed }) => {
+    // Check if already complete
+  })
+  .execute(async ({ vars, google, microsoft, output, markFailed, markPending }) => {
+    // Perform the work
+  })
+  .undo(async ({ vars, google, microsoft, markReverted, markFailed }) => {
+    // Rollback if needed
+  })
+  .build();
+```
 
 ## Testing
 
-1. Run `pnpm install` to install dependencies.
-2. Obtain Google and Microsoft bearer tokens and store them in `google_bearer.token` and `microsoft_bearer.token`.
-3. Run `pnpm test` to execute the Jest test suite.
+```bash
+# Run tests
+pnpm test
 
-Tests require network access. By default the tests use `undici` through the HTTP proxy; set
-`USE_UNDICI_PROXY=false` to bypass the proxy.
+# Clean test environment
+pnpm tsx scripts/full-cleanup.ts
 
-The test suite relies on `test/setupEnv.ts` to set up bearer tokens and proxy configuration.
+# Verify tokens
+./scripts/token-info.sh
+```
+
+## API Endpoints
+
+The application calls these primary endpoints:
+
+**Google**
+- `admin.googleapis.com/admin/directory/v1` - Directory API
+- `cloudidentity.googleapis.com/v1` - Cloud Identity API
+
+**Microsoft**
+- `graph.microsoft.com/v1.0` - Microsoft Graph API
+- `graph.microsoft.com/beta` - Beta endpoints for claims policies
+
+## Security
+
+- OAuth tokens stored in encrypted, chunked HTTP-only cookies
+- No credentials persisted to disk
+- Service accounts use generated passwords
+- Protected resources cannot be deleted through the UI
+
+## Scripts
+
+- `scripts/token-info.sh` - Display token information
+- `scripts/cleanup-apps.sh` - Remove applications created in last 10 days
+- `scripts/full-cleanup.ts` - Remove all test resources
+- `scripts/e2e-setup.ts` - Prepare clean test environment
