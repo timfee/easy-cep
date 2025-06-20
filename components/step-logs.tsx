@@ -123,8 +123,8 @@ export function StepLogs({ logs }: StepLogsProps) {
       className="h-[250px] -mx-2"
       onClick={(e) => e.stopPropagation()}>
       <div className="space-y-1.5 px-2">
-        {logs.map((log) => (
-          <StepLogItem key={log.timestamp} log={log} />
+        {logs.map((log, index) => (
+          <StepLogItem key={index} log={log} />
         ))}
       </div>
     </ScrollArea>
