@@ -74,7 +74,7 @@ describe("info server actions", () => {
         href: "https://admin.google.com/ac/apps/saml/abc123",
         deletable: true,
         deleteEndpoint:
-          "https://cloudidentity.googleapis.com/v1/inboundSamlSsoProfiles/samlProfiles%2Fabc123"
+          "https://cloudidentity.googleapis.com/v1/samlProfiles/abc123"
       }
     ]);
   });
@@ -178,7 +178,6 @@ describe("info server actions", () => {
       {
         id: "app1",
         label: "Google Workspace Provisioning",
-        subLabel: "abcd1234",
         href: "https://entra.microsoft.com/#view/Microsoft_AAD_RegisteredApps/ApplicationMenuBlade/~/Overview/objectId/app1",
         deletable: true,
         deleteEndpoint: "https://graph.microsoft.com/beta/applications/app1"

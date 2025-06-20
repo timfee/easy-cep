@@ -78,9 +78,7 @@ export async function listSamlProfiles(): Promise<InfoItem[]> {
         label: profile.displayName ?? profile.name,
         href: `https://admin.google.com/ac/apps/saml/${encodeURIComponent(id)}`,
         deletable: true,
-        deleteEndpoint: `${ApiEndpoint.Google.SsoProfiles}/${encodeURIComponent(
-          profile.name
-        )}`
+        deleteEndpoint: ApiEndpoint.Google.SamlProfile(profile.name)
       };
     }) ?? []
   );
