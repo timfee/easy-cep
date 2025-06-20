@@ -1,6 +1,14 @@
 import { ApiEndpoint } from "@/constants";
-import { isConflictError, isNotFoundError } from "@/lib/workflow/errors";
-import { EmptyResponseSchema } from "@/lib/workflow/utils";
+import {
+  EmptyResponseSchema,
+  isConflictError,
+  isNotFoundError
+} from "@/lib/workflow/utils";
+import {
+  extractResourceId,
+  ResourceTypes
+} from "@/lib/workflow/utils/resource-ids";
+
 import type { WorkflowVars } from "@/types";
 import { LogLevel, StepId, Var } from "@/types";
 import { z } from "zod";
@@ -293,9 +301,9 @@ export default defineStep<CheckData>(StepId.AssignUsersToSso)
       );
 
       if (rootAssignment) {
-        const id = rootAssignment.name.replace(
-          /^(?:.*\/)?inboundSsoAssignments\//,
-          ""
+        const id = extractResourceId(
+          rootAssignment.name,
+          ResourceTypes.InboundSsoAssignments
         );
         await google.delete(
           `${ApiEndpoint.Google.SsoAssignments}/${encodeURIComponent(id)}`,
@@ -309,9 +317,9 @@ export default defineStep<CheckData>(StepId.AssignUsersToSso)
       );
 
       if (automationAssignment) {
-        const id = automationAssignment.name.replace(
-          /^(?:.*\/)?inboundSsoAssignments\//,
-          ""
+        const id = extractResourceId(
+          automationAssignment.name,
+          ResourceTypes.InboundSsoAssignments
         );
         await google.delete(
           `${ApiEndpoint.Google.SsoAssignments}/${encodeURIComponent(id)}`,

@@ -113,4 +113,4 @@ pnpm test
 ```
 
 E2E tests require `TEST_GOOGLE_BEARER_TOKEN`, `TEST_MS_BEARER_TOKEN` and
-`TEST_DOMAIN` environment variables. Set `RUN_E2E=1` to enable them.
+`TEST_DOMAIN` environment variables. They are included by default; run them. If you are having catastrophic errors, you can skip with `SKIP_E2E=1`
