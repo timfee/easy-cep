@@ -2,7 +2,7 @@
  * Creates specific test states for each step
  */
 
-import { ApiEndpoint, TemplateId, SyncTemplateTag } from "@/constants";
+import { ApiEndpoint, SyncTemplateTag, TemplateId } from "@/constants";
 import { fetch, ProxyAgent, setGlobalDispatcher } from "undici";
 
 if (process.env.USE_UNDICI_PROXY !== "false") {

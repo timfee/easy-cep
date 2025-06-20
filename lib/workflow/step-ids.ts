@@ -12,8 +12,7 @@ export const StepId = {
   ConfigureMicrosoftSyncAndSso: "configure-microsoft-sync-and-sso",
   SetupMicrosoftClaimsPolicy: "setup-microsoft-claims-policy",
   CompleteGoogleSsoSetup: "complete-google-sso-setup",
-  AssignUsersToSso: "assign-users-to-sso",
-  TestSsoConfiguration: "test-sso-configuration"
+  AssignUsersToSso: "assign-users-to-sso"
 } as const;
 
 export type StepIdValue = (typeof StepId)[keyof typeof StepId];

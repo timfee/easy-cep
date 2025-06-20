@@ -67,7 +67,7 @@ export default defineStep(StepId.ConfigureMicrosoftSyncAndSso)
   )
   .execute(async ({ vars, microsoft, output, markFailed, log }) => {
     /**
-    * POST https://graph.microsoft.com/v1.0/servicePrincipals/{provisioningServicePrincipalId}/synchronization/jobs
+     * POST https://graph.microsoft.com/v1.0/servicePrincipals/{provisioningServicePrincipalId}/synchronization/jobs
      * Headers: { Authorization: Bearer {msGraphToken} }
      * Body: { "templateId": "gsuite" }  // discovered via /synchronization/templates
      *

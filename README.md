@@ -6,7 +6,7 @@ Automates the integration between Google Workspace and Microsoft Entra ID (Azure
 
 ## What It Does
 
-This application automates the manual process of setting up federation between Google Workspace and Microsoft 365. It executes a series of 11 steps that:
+This application automates the manual process of setting up federation between Google Workspace and Microsoft 365. It executes a series of 10 steps that:
 
 - Create service accounts and organizational units in Google Workspace
 - Configure SAML profiles and SSO assignments
@@ -48,17 +48,18 @@ pnpm dev
 8. **Setup Microsoft Claims Policy** - Creates claims mapping policy
 9. **Complete Google SSO Setup** - Updates SAML profile with Azure AD metadata
 10. **Assign Users to SSO** - Enables SSO for all users
-11. **Test SSO Configuration** - Manual verification step
 
 ## Architecture
 
 ### Frontend
+
 - Next.js 15 with React Server Components
 - Real-time workflow status updates
 - Variable inspector for configuration values
 - Expandable step cards with execution logs
 
 ### Backend
+
 - Server actions for step execution
 - OAuth 2.0 authentication with encrypted cookie storage
 - Type-safe API calls with Zod validation
@@ -71,12 +72,23 @@ Steps are defined in `lib/workflow/steps/` following this pattern:
 export default defineStep(StepId.StepName)
   .requires(Var.InputVariable)
   .provides(Var.OutputVariable)
-  .check(async ({ vars, google, microsoft, markComplete, markIncomplete, markCheckFailed }) => {
-    // Check if already complete
-  })
-  .execute(async ({ vars, google, microsoft, output, markFailed, markPending }) => {
-    // Perform the work
-  })
+  .check(
+    async ({
+      vars,
+      google,
+      microsoft,
+      markComplete,
+      markIncomplete,
+      markCheckFailed
+    }) => {
+      // Check if already complete
+    }
+  )
+  .execute(
+    async ({ vars, google, microsoft, output, markFailed, markPending }) => {
+      // Perform the work
+    }
+  )
   .undo(async ({ vars, google, microsoft, markReverted, markFailed }) => {
     // Rollback if needed
   })
@@ -101,10 +113,12 @@ pnpm tsx scripts/full-cleanup.ts
 The application calls these primary endpoints:
 
 **Google**
+
 - `admin.googleapis.com/admin/directory/v1` - Directory API
 - `cloudidentity.googleapis.com/v1` - Cloud Identity API
 
 **Microsoft**
+
 - `graph.microsoft.com/v1.0` - Microsoft Graph API
 - `graph.microsoft.com/beta` - Beta endpoints for claims policies
 
