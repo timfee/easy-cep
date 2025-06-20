@@ -78,16 +78,13 @@ export function WorkflowProvider({
     }
   }, []);
 
-  const stored = loadStoredState();
-
-  const [vars, setVarsState] = useState<Partial<WorkflowVars>>({
-    ...initialVars,
-    ...(stored?.vars ?? {})
-  });
+  const [vars, setVarsState] = useState<Partial<WorkflowVars>>(() => ({
+    ...initialVars
+  }));
 
   const [status, setStatus] = useState<
     Partial<Record<StepIdValue, StepUIState>>
-  >(stored?.status ?? {});
+  >({});
   const statusRef = useRef<Partial<Record<StepIdValue, StepUIState>>>(status);
   const [executing, setExecuting] = useState<StepIdValue | null>(null);
   const [sessionLoaded, setSessionLoaded] = useState(false);
@@ -95,6 +92,21 @@ export function WorkflowProvider({
   const listeners = useRef<Map<VarName, Set<(value: unknown) => void>>>(
     new Map()
   );
+
+  // Load stored workflow state on mount
+  useEffect(() => {
+    const stored = loadStoredState();
+    if (stored) {
+      if (stored.vars) {
+        setVarsState((prev) => ({ ...prev, ...stored.vars }));
+      }
+      if (stored.status) {
+        setStatus(stored.status);
+        statusRef.current = stored.status;
+      }
+    }
+    setSessionLoaded(true);
+  }, [loadStoredState]);
 
   const updateVars = useCallback(
     (newVars: Partial<WorkflowVars>) => {
