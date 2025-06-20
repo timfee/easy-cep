@@ -2,13 +2,18 @@
 import "server-only";
 
 import { ApiEndpoint, PROVIDERS, TemplateId } from "@/constants";
+import { env } from "@/env";
 import { refreshTokenIfNeeded } from "@/lib/auth";
 import { z } from "zod";
+
+const PROTECTED_APP_IDS = [env.MICROSOFT_CLIENT_ID];
 
 export interface InfoItem {
   id: string;
   label: string;
   href?: string;
+  deletable?: boolean;
+  deleteEndpoint?: string;
 }
 
 export async function listOrgUnits(): Promise<InfoItem[]> {
@@ -38,6 +43,10 @@ export async function listOrgUnits(): Promise<InfoItem[]> {
       label: ou.orgUnitPath,
       href: `https://admin.google.com/ac/orgunits?ouid=${encodeURIComponent(
         ou.orgUnitId.replace(/^id:/, "")
+      )}`,
+      deletable: true,
+      deleteEndpoint: `${ApiEndpoint.Google.OrgUnits}/${encodeURIComponent(
+        ou.orgUnitPath.replace(/^\//, "")
       )}`
     })) ?? []
   );
@@ -62,7 +71,11 @@ export async function listSamlProfiles(): Promise<InfoItem[]> {
     data.inboundSamlSsoProfiles?.map((p) => ({
       id: p.name,
       label: p.displayName ?? p.name,
-      href: undefined
+      href: undefined,
+      deletable: true,
+      deleteEndpoint: `${ApiEndpoint.Google.SsoProfiles}/${encodeURIComponent(
+        p.name
+      )}`
     })) ?? []
   );
 }
@@ -93,7 +106,11 @@ export async function listSsoAssignments(): Promise<InfoItem[]> {
     data.inboundSsoAssignments?.map((a) => ({
       id: a.name,
       label: a.targetGroup || a.targetOrgUnit || a.name,
-      href: undefined
+      href: undefined,
+      deletable: true,
+      deleteEndpoint: `${ApiEndpoint.Google.SsoAssignments}/${encodeURIComponent(
+        a.name
+      )}`
     })) ?? []
   );
 }
@@ -129,7 +146,12 @@ export async function listProvisioningJobs(): Promise<InfoItem[]> {
   });
   if (!res.ok) throw new Error(`HTTP ${res.status}`);
   const data = JobsSchema.parse(await res.json());
-  return data.value.map((j) => ({ id: j.id, label: j.status?.code ?? j.id }));
+  return data.value.map((j) => ({
+    id: j.id,
+    label: j.status?.code ?? j.id,
+    deletable: true,
+    deleteEndpoint: `${ApiEndpoint.Microsoft.SyncJobs(spId)}/${j.id}`
+  }));
 }
 
 export async function listClaimsPolicies(): Promise<InfoItem[]> {
@@ -147,7 +169,12 @@ export async function listClaimsPolicies(): Promise<InfoItem[]> {
   });
   if (!res.ok) throw new Error(`HTTP ${res.status}`);
   const data = Schema.parse(await res.json());
-  return data.value.map((p) => ({ id: p.id, label: p.displayName ?? p.id }));
+  return data.value.map((p) => ({
+    id: p.id,
+    label: p.displayName ?? p.id,
+    deletable: true,
+    deleteEndpoint: `${ApiEndpoint.Microsoft.ClaimsPolicies}/${p.id}`
+  }));
 }
 
 export async function listEnterpriseApps(): Promise<InfoItem[]> {
@@ -155,7 +182,9 @@ export async function listEnterpriseApps(): Promise<InfoItem[]> {
   if (!token) return [];
 
   const Schema = z.object({
-    value: z.array(z.object({ id: z.string(), displayName: z.string() }))
+    value: z.array(
+      z.object({ id: z.string(), appId: z.string(), displayName: z.string() })
+    )
   });
 
   const filter = encodeURIComponent(
@@ -167,5 +196,10 @@ export async function listEnterpriseApps(): Promise<InfoItem[]> {
   );
   if (!res.ok) throw new Error(`HTTP ${res.status}`);
   const data = Schema.parse(await res.json());
-  return data.value.map((a) => ({ id: a.id, label: a.displayName }));
+  return data.value.map((a) => ({
+    id: a.id,
+    label: a.displayName,
+    deletable: !PROTECTED_APP_IDS.includes(a.appId),
+    deleteEndpoint: `${ApiEndpoint.Microsoft.Applications}/${a.id}`
+  }));
 }
