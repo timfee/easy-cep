@@ -85,6 +85,17 @@ export function StepCard({
     }
   }, [isExpanded]);
 
+  const getDescriptorText = () => {
+    if (executing) return "Executing...";
+    switch (state?.status) {
+      case "checking":
+        return "Checking...";
+      case "undoing":
+        return "Undoing...";
+      default:
+        return state?.summary || "Ready to execute";
+    }
+  };
   useEffect(() => {
     if (executing || state?.status === "pending") {
       setIsExpanded(true);
@@ -287,7 +298,7 @@ export function StepCard({
                 {title}
               </h3>
               <p className="text-xs md:text-sm text-slate-600 mt-0.5 leading-tight">
-                {state?.summary || "Ready to execute"}
+                {getDescriptorText()}
               </p>
             </div>
           </div>
