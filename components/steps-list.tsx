@@ -1,11 +1,11 @@
 "use client";
 
 import { StepCard } from "@/components/step-card";
+import { useWorkflow } from "@/components/workflow-context";
 import { Var, WorkflowVars } from "@/types";
 import { Loader2 } from "lucide-react";
-import { useWorkflow } from "../workflow-context";
 
-export default function StepsPage() {
+export function StepsList() {
   const {
     steps,
     status,
@@ -65,3 +65,5 @@ export default function StepsPage() {
     </div>
   );
 }
+
+export default StepsList;
