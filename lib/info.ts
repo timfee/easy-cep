@@ -188,6 +188,7 @@ export async function listClaimsPolicies(): Promise<InfoItem[]> {
   return data.value.map((p) => ({
     id: p.id,
     label: p.displayName ?? p.id,
+    href: `https://entra.microsoft.com/#view/Microsoft_AAD_IAM/PoliciesMenuBlade/~/ClaimsMappingPolicies/objectId/${p.id}`,
     deletable: true,
     deleteEndpoint: `${ApiEndpoint.Microsoft.ClaimsPolicies}/${p.id}`
   }));
@@ -215,6 +216,8 @@ export async function listEnterpriseApps(): Promise<InfoItem[]> {
   return data.value.map((a) => ({
     id: a.id,
     label: a.displayName,
+    subLabel: a.appId,
+    href: `https://entra.microsoft.com/#view/Microsoft_AAD_RegisteredApps/ApplicationMenuBlade/~/Overview/objectId/${a.id}`,
     deletable: !PROTECTED_RESOURCES.microsoftAppIds.has(a.appId),
     deleteEndpoint: `${ApiEndpoint.Microsoft.Applications}/${a.id}`
   }));
