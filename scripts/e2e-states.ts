@@ -12,8 +12,8 @@ if (process.env.USE_UNDICI_PROXY !== "false") {
   }
 }
 
-const GOOGLE_TOKEN = process.env.GOOGLE_BEARER_TOKEN;
-const MS_TOKEN = process.env.MS_BEARER_TOKEN;
+const GOOGLE_TOKEN = process.env.TEST_GOOGLE_BEARER_TOKEN;
+const MS_TOKEN = process.env.TEST_MS_BEARER_TOKEN;
 const TEST_DOMAIN = process.env.TEST_DOMAIN || "test.example.com";
 const TEST_USER_PASSWORD = process.env.TEST_USER_PASSWORD || "TempPassword123!";
 

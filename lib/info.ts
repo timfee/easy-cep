@@ -1,12 +1,14 @@
 "use server";
 import "server-only";
 
-import { ApiEndpoint, PROVIDERS, TemplateId } from "@/constants";
-import { env } from "@/env";
+import {
+  ApiEndpoint,
+  PROTECTED_RESOURCES,
+  PROVIDERS,
+  TemplateId
+} from "@/constants";
 import { refreshTokenIfNeeded } from "@/lib/auth";
 import { z } from "zod";
-
-const PROTECTED_APP_IDS = [env.MICROSOFT_CLIENT_ID];
 
 export interface InfoItem {
   id: string;
@@ -199,7 +201,7 @@ export async function listEnterpriseApps(): Promise<InfoItem[]> {
   return data.value.map((a) => ({
     id: a.id,
     label: a.displayName,
-    deletable: !PROTECTED_APP_IDS.includes(a.appId),
+    deletable: !PROTECTED_RESOURCES.microsoftAppIds.has(a.appId),
     deleteEndpoint: `${ApiEndpoint.Microsoft.Applications}/${a.id}`
   }));
 }

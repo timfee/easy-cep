@@ -17,8 +17,8 @@ if (process.env.USE_UNDICI_PROXY !== "false") {
   }
 }
 
-const GOOGLE_TOKEN = process.env.GOOGLE_BEARER_TOKEN;
-const MS_TOKEN = process.env.MS_BEARER_TOKEN;
+const GOOGLE_TOKEN = process.env.TEST_GOOGLE_BEARER_TOKEN;
+const MS_TOKEN = process.env.TEST_MS_BEARER_TOKEN;
 
 const DEFAULT_PROVISIONING_EMAIL =
   "testing@proven-audio-462619-h2.iam.gserviceaccount.com";
@@ -32,8 +32,8 @@ const KEEP_MS_APP_IDS = Array.from(
   new Set(
     [
       ...DEFAULT_MS_APP_IDS,
-      process.env.MICROSOFT_CLIENT_ID,
-      process.env.MS_CLIENT_ID,
+      process.env.MICROSOFT_OAUTH_CLIENT_ID,
+      process.env.TEST_MS_CLIENT_ID,
       ...(process.env.KEEP_MS_APP_IDS || "").split(",")
     ].filter(Boolean)
   )

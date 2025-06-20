@@ -9,15 +9,21 @@ if (process.env.USE_UNDICI_PROXY !== "false") {
   (globalThis as any).fetch = fetch as unknown as typeof globalThis.fetch;
 }
 
-if (!process.env.GOOGLE_BEARER_TOKEN && existsSync("./google_bearer.token")) {
-  process.env.GOOGLE_BEARER_TOKEN = readFileSync(
+if (
+  !process.env.TEST_GOOGLE_BEARER_TOKEN
+  && existsSync("./google_bearer.token")
+) {
+  process.env.TEST_GOOGLE_BEARER_TOKEN = readFileSync(
     "./google_bearer.token",
     "utf8"
   ).trim();
 }
 
-if (!process.env.MS_BEARER_TOKEN && existsSync("./microsoft_bearer.token")) {
-  process.env.MS_BEARER_TOKEN = readFileSync(
+if (
+  !process.env.TEST_MS_BEARER_TOKEN
+  && existsSync("./microsoft_bearer.token")
+) {
+  process.env.TEST_MS_BEARER_TOKEN = readFileSync(
     "./microsoft_bearer.token",
     "utf8"
   ).trim();

@@ -8,26 +8,31 @@ import path from "path";
 jest.setTimeout(20000);
 
 const googleTokenPath = path.join(__dirname, "google.token");
-if (!process.env.GOOGLE_BEARER_TOKEN && fs.existsSync(googleTokenPath)) {
-  process.env.GOOGLE_BEARER_TOKEN = fs
+if (!process.env.TEST_GOOGLE_BEARER_TOKEN && fs.existsSync(googleTokenPath)) {
+  process.env.TEST_GOOGLE_BEARER_TOKEN = fs
     .readFileSync(googleTokenPath, "utf8")
     .trim();
 }
 
 const msTokenPath = "/.microsoft.token";
-if (!process.env.MS_BEARER_TOKEN && fs.existsSync(msTokenPath)) {
-  process.env.MS_BEARER_TOKEN = fs.readFileSync(msTokenPath, "utf8").trim();
+if (!process.env.TEST_MS_BEARER_TOKEN && fs.existsSync(msTokenPath)) {
+  process.env.TEST_MS_BEARER_TOKEN = fs
+    .readFileSync(msTokenPath, "utf8")
+    .trim();
 }
 
-if (!process.env.GOOGLE_BEARER_TOKEN || !process.env.MS_BEARER_TOKEN) {
+if (
+  !process.env.TEST_GOOGLE_BEARER_TOKEN
+  || !process.env.TEST_MS_BEARER_TOKEN
+) {
   console.warn(
-    "E2E tests require GOOGLE_BEARER_TOKEN and MS_BEARER_TOKEN; skipping."
+    "E2E tests require TEST_GOOGLE_BEARER_TOKEN and TEST_MS_BEARER_TOKEN; skipping."
   );
 } else {
   describe("Workflow Live E2E", () => {
     const baseVars = {
-      [Var.GoogleAccessToken]: process.env.GOOGLE_BEARER_TOKEN!,
-      [Var.MsGraphToken]: process.env.MS_BEARER_TOKEN!,
+      [Var.GoogleAccessToken]: process.env.TEST_GOOGLE_BEARER_TOKEN!,
+      [Var.MsGraphToken]: process.env.TEST_MS_BEARER_TOKEN!,
       [Var.PrimaryDomain]: process.env.TEST_DOMAIN!,
       [Var.IsDomainVerified]: true
     } as const;

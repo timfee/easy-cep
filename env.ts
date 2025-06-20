@@ -7,10 +7,13 @@ export const env = createEnv({
       .enum(["development", "test", "production"])
       .default("development"),
     AUTH_SECRET: z.string(),
-    GOOGLE_CLIENT_ID: z.string(),
-    GOOGLE_CLIENT_SECRET: z.string(),
-    MICROSOFT_CLIENT_ID: z.string(),
-    MICROSOFT_CLIENT_SECRET: z.string()
+    GOOGLE_OAUTH_CLIENT_ID: z.string(),
+    GOOGLE_OAUTH_CLIENT_SECRET: z.string(),
+    MICROSOFT_OAUTH_CLIENT_ID: z.string(),
+    MICROSOFT_OAUTH_CLIENT_SECRET: z.string(),
+    ALLOW_INFO_PURGE: z
+      .preprocess((v) => (v === "true" ? true : v === "false" ? false : v), z.boolean())
+      .default(false)
   },
   client: {},
   shared: {
@@ -21,9 +24,10 @@ export const env = createEnv({
   runtimeEnv: {
     NODE_ENV: process.env.NODE_ENV,
     AUTH_SECRET: process.env.AUTH_SECRET,
-    GOOGLE_CLIENT_ID: process.env.GOOGLE_CLIENT_ID,
-    GOOGLE_CLIENT_SECRET: process.env.GOOGLE_CLIENT_SECRET,
-    MICROSOFT_CLIENT_ID: process.env.MICROSOFT_CLIENT_ID,
-    MICROSOFT_CLIENT_SECRET: process.env.MICROSOFT_CLIENT_SECRET
+    GOOGLE_OAUTH_CLIENT_ID: process.env.GOOGLE_OAUTH_CLIENT_ID,
+    GOOGLE_OAUTH_CLIENT_SECRET: process.env.GOOGLE_OAUTH_CLIENT_SECRET,
+    MICROSOFT_OAUTH_CLIENT_ID: process.env.MICROSOFT_OAUTH_CLIENT_ID,
+    MICROSOFT_OAUTH_CLIENT_SECRET: process.env.MICROSOFT_OAUTH_CLIENT_SECRET,
+    ALLOW_INFO_PURGE: process.env.ALLOW_INFO_PURGE
   }
 });

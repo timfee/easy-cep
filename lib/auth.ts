@@ -83,8 +83,8 @@ interface OAuthConfig {
 }
 
 const googleOAuthConfig: OAuthConfig = {
-  clientId: env.GOOGLE_CLIENT_ID,
-  clientSecret: env.GOOGLE_CLIENT_SECRET,
+  clientId: env.GOOGLE_OAUTH_CLIENT_ID,
+  clientSecret: env.GOOGLE_OAUTH_CLIENT_SECRET,
   redirectUri: `/api/auth/callback/google`,
   authorizationUrl: ApiEndpoint.GoogleAuth.Authorize,
   tokenUrl: ApiEndpoint.GoogleAuth.Token,
@@ -103,8 +103,8 @@ const googleOAuthConfig: OAuthConfig = {
 };
 
 const microsoftOAuthConfig: OAuthConfig = {
-  clientId: env.MICROSOFT_CLIENT_ID,
-  clientSecret: env.MICROSOFT_CLIENT_SECRET,
+  clientId: env.MICROSOFT_OAUTH_CLIENT_ID,
+  clientSecret: env.MICROSOFT_OAUTH_CLIENT_SECRET,
   redirectUri: `/api/auth/callback/microsoft`,
   authorizationUrl: ApiEndpoint.MicrosoftAuth.Authorize,
   tokenUrl: ApiEndpoint.MicrosoftAuth.Token,
