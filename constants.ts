@@ -117,6 +117,15 @@ export const OAuthScope = {
   Microsoft: "https://graph.microsoft.com/.default offline_access"
 };
 
+export const PROTECTED_RESOURCES = {
+  microsoftAppIds: new Set<string>(),
+  googleRoleNames: new Set<string>([
+    "_SUPERADMIN_ROLE",
+    "_SEED_ADMIN_ROLE",
+    "_GROUPS_ADMIN_ROLE"
+  ])
+};
+
 export const categoryTitles = {
   auth: "Auth",
   domain: "Domain",
