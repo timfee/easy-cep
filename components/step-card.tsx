@@ -432,7 +432,7 @@ export function StepCard({
                   }`}
                 />
               </CollapsibleTrigger>
-              <CollapsibleContent className="mt-2 data-[state=closed]:animate-collapsible-up data-[state=open]:animate-collapsible-down">
+              <CollapsibleContent className="p-2 border-slate-100 border border-t-0 rounded-t-none rounded-md data-[state=closed]:animate-collapsible-up data-[state=open]:animate-collapsible-down">
                 {state?.logs && state.logs.length > 0 ?
                   <StepLogs logs={state.logs} />
                 : <div className="text-center py-6 text-slate-500 border border-dashed border-slate-300 rounded-lg mt-1">
