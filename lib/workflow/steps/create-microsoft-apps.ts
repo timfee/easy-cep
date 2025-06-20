@@ -18,14 +18,15 @@ export default defineStep(StepId.CreateMicrosoftApps)
 
   /**
    * GET https://graph.microsoft.com/beta/applications?$filter=applicationTemplateId eq '{templateId}'
+   * Headers: { Authorization: Bearer {msGraphToken} }
    *
-   * Example success (200)
-   * { "value": [ { "servicePrincipalId": "004f09c3-8e2b-4308-bfb5-38f2f2a83980", "appId": "7b33..." } ] }
+   * Success response (200)
+   * { "value": [ { "servicePrincipalId": "004f...", "appId": "7b33" } ] }
    *
-   * Example none found (200)
+   * Success response (200) – empty
    * { "value": [] }
    *
-   * Example invalid token (401)
+   * Error response (401)
    * { "error": { "code": "InvalidAuthenticationToken" } }
    */
 
@@ -60,12 +61,14 @@ export default defineStep(StepId.CreateMicrosoftApps)
           AppsSchema,
           { flatten: true }
         );
+        // Extract: provisioning app info from provApps[0]
 
         const { value: ssoApps } = await microsoft.get(
           `${ApiEndpoint.Microsoft.Applications}?$filter=${ssoFilter}`,
           AppsSchema,
           { flatten: true }
         );
+        // Extract: ssoAppId = ssoApps[0]?.appId
 
         const provApp = provApps[0];
         const ssoApp = ssoApps[0] ?? provApp;
@@ -84,12 +87,14 @@ export default defineStep(StepId.CreateMicrosoftApps)
             SpSchema,
             { flatten: true }
           );
+          // Extract: provisioningServicePrincipalId = provRes.value[0]?.id
 
           const ssoRes = await microsoft.get(
             `${ApiEndpoint.Microsoft.ServicePrincipals}?$filter=${ssoFilter}`,
             SpSchema,
             { flatten: true }
           );
+          // Extract: ssoServicePrincipalId = ssoRes.value[0]?.id
 
           const provId = provRes.value[0]?.id;
           const ssoId = ssoRes.value[0]?.id;
@@ -125,20 +130,21 @@ export default defineStep(StepId.CreateMicrosoftApps)
   .execute(async ({ vars, microsoft, output, markFailed, log }) => {
     /**
      * POST https://graph.microsoft.com/v1.0/applicationTemplates/{templateId}/instantiate
-     * { "displayName": "Google Workspace Provisioning" }
+     * Headers: { Authorization: Bearer {msGraphToken} }
+     * Body: { "displayName": "Google Workspace Provisioning" }
      *
      * POST https://graph.microsoft.com/v1.0/applicationTemplates/{templateId}/instantiate
-     * { "displayName": "Google Workspace SSO" }
+     * Headers: { Authorization: Bearer {msGraphToken} }
+     * Body: { "displayName": "Google Workspace SSO" }
      *
-     * Success response
+     * Success response (201)
+     * {
+     *   "servicePrincipal": { "id": "..." },
+     *   "application": { "appId": "..." }
+     * }
      *
-     * 201
-     * { "servicePrincipal": { "id": "..." }, "application": { "appId": "..." } }
-     *
-     * Error response
-     *
-     * 400
-     * { "error": { "message": "Invalid template" } }
+     * Error response (400)
+     * { "error": { "code": 400, "message": "Invalid template" } }
      */
     try {
       const CreateSchema = z.object({
@@ -151,12 +157,14 @@ export default defineStep(StepId.CreateMicrosoftApps)
         CreateSchema,
         { displayName: vars.require(Var.ProvisioningAppDisplayName) }
       );
+      // Extract: provisioningServicePrincipalId = res1.servicePrincipal.id
 
       const res2 = await microsoft.post(
         ApiEndpoint.Microsoft.Templates(TemplateId.GoogleWorkspaceSaml),
         CreateSchema,
         { displayName: vars.require(Var.SsoAppDisplayName) }
       );
+      // Extract: ssoServicePrincipalId = res2.servicePrincipal.id; ssoAppId = res2.application.appId
 
       output({
         provisioningServicePrincipalId: res1.servicePrincipal.id,
@@ -197,6 +205,7 @@ export default defineStep(StepId.CreateMicrosoftApps)
 
       markReverted();
     } catch (error) {
+      // isNotFoundError handles: 404
       if (isNotFoundError(error)) {
         markReverted();
       } else {

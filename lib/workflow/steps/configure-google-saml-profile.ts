@@ -14,18 +14,14 @@ export default defineStep(StepId.ConfigureGoogleSamlProfile)
 
   /**
    * GET https://cloudidentity.googleapis.com/v1/inboundSamlSsoProfiles
+   * Headers: { Authorization: Bearer {googleAccessToken} }
    *
-   * Example success (200)
+   * Success response (200)
    * {
-   *   "inboundSamlSsoProfiles": [
-   *     {
-   *       "name": "inboundSamlSsoProfiles/03rr0y8q3klp6gw",
-   *       "displayName": "Test SAML 1750028141404"
-   *     }
-   *   ]
+   *   "inboundSamlSsoProfiles": [ { "name": "inboundSamlSsoProfiles/01" } ]
    * }
    *
-   * Example none found (200)
+   * Success response (200) – empty
    * { "inboundSamlSsoProfiles": [] }
    */
 
@@ -51,6 +47,7 @@ export default defineStep(StepId.ConfigureGoogleSamlProfile)
           ProfilesSchema,
           { flatten: true }
         );
+        // Extract: samlProfileId = inboundSamlSsoProfiles[0]?.name
 
         if (inboundSamlSsoProfiles.length > 0) {
           const profile = inboundSamlSsoProfiles[0];
@@ -74,20 +71,22 @@ export default defineStep(StepId.ConfigureGoogleSamlProfile)
   .execute(async ({ vars, google, output, markFailed, markPending, log }) => {
     /**
      * POST https://cloudidentity.googleapis.com/v1/customers/my_customer/inboundSamlSsoProfiles
+     * Headers: { Authorization: Bearer {googleAccessToken} }
+     * Body:
      * {
      *   "displayName": "Azure AD",
      *   "idpConfig": { "entityId": "", "singleSignOnServiceUri": "" }
      * }
      *
-     * Success response
+     * Success response (200)
+     * {
+     *   "name": "operations/abc123",
+     *   "done": true,
+     *   "response": { "name": "inboundSamlSsoProfiles/010xi5tr1szon40" }
+     * }
      *
-     * 200
-     * { "response": { "name": "inboundSamlSsoProfiles/010xi5tr1szon40" } }
-     *
-     * Error response
-     *
-     * 400
-     * { "error": { "message": "Invalid request" } }
+     * Error response (400)
+     * { "error": { "code": 400, "message": "Invalid request" } }
      */
     try {
       const CreateSchema = z.object({
@@ -119,6 +118,7 @@ export default defineStep(StepId.ConfigureGoogleSamlProfile)
         displayName: vars.require(Var.SamlProfileDisplayName),
         idpConfig: { entityId: "", singleSignOnServiceUri: "" }
       });
+      // Extract: samlProfileId = op.response?.name
 
       if (!op.done) {
         markPending("SAML profile creation in progress");
@@ -161,6 +161,7 @@ export default defineStep(StepId.ConfigureGoogleSamlProfile)
       );
       markReverted();
     } catch (error) {
+      // isNotFoundError handles: 404
       if (isNotFoundError(error)) {
         markReverted();
       } else {

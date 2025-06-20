@@ -27,15 +27,16 @@ export default defineStep(StepId.CreateServiceUser)
 
   /**
    * GET https://admin.googleapis.com/admin/directory/v1/users/azuread-provisioning@{primaryDomain}
+   * Headers: { Authorization: Bearer {googleAccessToken} }
    *
-   * Example success (200)
+   * Success response (200)
    * {
    *   "id": "102354298977995584115",
-   *   "primaryEmail": "azuread-provisioning@cep-netnew.cc"
+   *   "primaryEmail": "azuread-provisioning@example.com"
    * }
    *
-   * Example not found (404)
-   * { "error": { "code": 404 } }
+   * Error response (404)
+   * { "error": { "code": 404, "message": "Not Found" } }
    */
 
   .check(
@@ -61,6 +62,7 @@ export default defineStep(StepId.CreateServiceUser)
         const email = vars.build("{provisioningUserPrefix}@{primaryDomain}");
         const url = `${ApiEndpoint.Google.Users}/${encodeURIComponent(email)}?fields=id,primaryEmail`;
         const user = await google.get(url, UserSchema);
+        // Extract: provisioningUserId = user.id; provisioningUserEmail = user.primaryEmail
 
         if (user.id && user.primaryEmail) {
           log(LogLevel.Info, "Service user already exists");
@@ -73,6 +75,7 @@ export default defineStep(StepId.CreateServiceUser)
           markCheckFailed("Malformed user object returned");
         }
       } catch (error) {
+        // isNotFoundError handles: 404
         if (isNotFoundError(error)) {
           markIncomplete("Service user missing", {});
         } else {
@@ -96,6 +99,8 @@ export default defineStep(StepId.CreateServiceUser)
     }) => {
       /**
        * POST https://admin.googleapis.com/admin/directory/v1/users
+       * Headers: { Authorization: Bearer {googleAccessToken} }
+       * Body:
        * {
        *   "primaryEmail": "azuread-provisioning@{primaryDomain}",
        *   "name": { "givenName": "Microsoft", "familyName": "Provisioning" },
@@ -103,15 +108,17 @@ export default defineStep(StepId.CreateServiceUser)
        *   "orgUnitPath": "/Automation"
        * }
        *
-       * Success response
+       * Success response (201)
+       * { "id": "...", "primaryEmail": "azuread-provisioning@example.com" }
        *
-       * 201
-       * { "id": "...", "primaryEmail": "azuread-provisioning@cep-netnew.cc" }
+       * Error response (409)
+       * { "error": { "code": 409, "message": "Entity already exists." } }
        *
-       * Conflict response
+       * Error response (403)
+       * { "error": { "code": 403, "message": "Insufficient permissions" } }
        *
-       * 409
-       * { "error": { "message": "Entity already exists." } }
+       * Error response (400)
+       * { "error": { "code": 400, "message": "Invalid email" } }
        */
       try {
         vars.require(Var.PrimaryDomain);
@@ -135,6 +142,7 @@ export default defineStep(StepId.CreateServiceUser)
             password,
             orgUnitPath: ouPath
           });
+          // isConflictError handles: 409
         } catch (error) {
           if (isConflictError(error)) {
             const fallbackEmail = vars.build(
@@ -145,6 +153,13 @@ export default defineStep(StepId.CreateServiceUser)
             )}?fields=id,primaryEmail`;
             user = await google.get(getUrl, CreateSchema);
 
+            /**
+             * PUT https://admin.googleapis.com/admin/directory/v1/users/{userId}
+             * Headers: { Authorization: Bearer {googleAccessToken} }
+             * Body: { "password": "TempXXXX!" }
+             *
+             * Success response (200) {}
+             */
             await google.put(
               `${ApiEndpoint.Google.Users}/${user.id}`,
               z.object({}),
@@ -179,6 +194,8 @@ export default defineStep(StepId.CreateServiceUser)
       );
       markReverted();
     } catch (error) {
+      // isNotFoundError handles: 404
+      // isPreconditionFailedError handles: 412
       if (isNotFoundError(error) || isPreconditionFailedError(error)) {
         markReverted();
       } else {

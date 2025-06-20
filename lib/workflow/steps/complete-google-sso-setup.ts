@@ -98,10 +98,18 @@ export default defineStep(StepId.CompleteGoogleSsoSetup)
         )
       });
 
+      /**
+       * GET https://graph.microsoft.com/v1.0/organization
+       * Headers: { Authorization: Bearer {msGraphToken} }
+       *
+       * Success response (200)
+       * { "value": [ { "id": "tenant", "verifiedDomains": [] } ] }
+       */
       const tenantInfo = await microsoft.get(
         ApiEndpoint.Microsoft.Organization,
         TenantSchema
       );
+      // Extract: tenantId = tenantInfo.value[0]?.id
 
       // Example tenantInfo structure:
       // {
@@ -141,6 +149,13 @@ export default defineStep(StepId.CompleteGoogleSsoSetup)
         throw new Error("SAML Service Principal ID not provided");
       }
 
+      /**
+       * GET https://graph.microsoft.com/v1.0/servicePrincipals/{ssoServicePrincipalId}/tokenSigningCertificates
+       * Headers: { Authorization: Bearer {msGraphToken} }
+       *
+       * Success response (200)
+       * { "value": [ { "startDateTime": "...", "endDateTime": "...", "key": "..." } ] }
+       */
       const certs = await microsoft.get(
         ApiEndpoint.Microsoft.TokenSigningCertificates(ssoSpId),
         CertSchema
@@ -195,6 +210,14 @@ export default defineStep(StepId.CompleteGoogleSsoSetup)
 
       const patchUrl = `${ApiEndpoint.Google.SamlProfile(profileId)}?updateMask=${encodeURIComponent(updateMask)}`;
 
+      /**
+       * PATCH https://cloudidentity.googleapis.com/v1/{samlProfile}?updateMask=idpConfig.entityId,...
+       * Headers: { Authorization: Bearer {googleAccessToken} }
+       * Body: { idpConfig: { entityId: "..." } }
+       *
+       * Success response (200)
+       * { "done": true }
+       */
       const updateOp = await google.patch(patchUrl, UpdateSchema, {
         idpConfig: {
           entityId: idpEntityId,

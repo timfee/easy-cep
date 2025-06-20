@@ -18,14 +18,15 @@ export default defineStep(StepId.SetupMicrosoftClaimsPolicy)
 
   /**
    * GET https://graph.microsoft.com/beta/servicePrincipals/{ssoServicePrincipalId}/claimsMappingPolicies
+   * Headers: { Authorization: Bearer {msGraphToken} }
    *
-   * Example success (200)
+   * Success response (200)
    * { "value": [ { "id": "policy123" } ] }
    *
-   * Example none found (200)
+   * Success response (200) – empty
    * { "value": [] }
    *
-   * Example invalid token (401)
+   * Error response (401)
    * { "error": { "code": "InvalidAuthenticationToken" } }
    */
 
@@ -50,6 +51,7 @@ export default defineStep(StepId.SetupMicrosoftClaimsPolicy)
           PoliciesSchema,
           { flatten: true }
         );
+        // Extract: claimsPolicyId = value[0]?.id
 
         if (value.length > 0) {
           log(LogLevel.Info, "Claims policy already assigned");
@@ -68,18 +70,20 @@ export default defineStep(StepId.SetupMicrosoftClaimsPolicy)
   .execute(async ({ vars, microsoft, output, markFailed, log }) => {
     /**
      * POST https://graph.microsoft.com/beta/policies/claimsMappingPolicies
-     * { "displayName": "Google Workspace Basic Claims", ... }
-     *
-     * Success response
-     *
-     * 201
+     * Headers: { Authorization: Bearer {msGraphToken} }
+     * Body:
+     * {
+     *   "definition": ["{\"ClaimsMappingPolicy\":{\"Version\":1,\"IncludeBasicClaimSet\":true,\"ClaimsSchema\":[]}}"],
+     *   "displayName": "Google Workspace Basic Claims",
+     *   "isOrganizationDefault": false
+     * }
+     * Success response (201)
      * { "id": "policy123" }
      *
      * POST https://graph.microsoft.com/v1.0/servicePrincipals/{ssoServicePrincipalId}/claimsMappingPolicies/$ref
-     * { "@odata.id": "https://graph.microsoft.com/v1.0/policies/claimsMappingPolicies/{policyId}" }
-     *
-     * Success response
-     * 204
+     * Headers: { Authorization: Bearer {msGraphToken} }
+     * Body: { "@odata.id": "https://graph.microsoft.com/v1.0/policies/claimsMappingPolicies/{policyId}" }
+     * Success response (204) {}
      */
     try {
       const spId = vars.require(Var.SsoServicePrincipalId);
@@ -100,7 +104,9 @@ export default defineStep(StepId.SetupMicrosoftClaimsPolicy)
           }
         );
         policyId = created.id;
+        // Extract: claimsPolicyId = created.id
       } catch (error) {
+        // isConflictError handles: 409
         if (isConflictError(error)) {
           const listSchema = z.object({
             value: z.array(z.object({ id: z.string() }))
@@ -127,6 +133,7 @@ export default defineStep(StepId.SetupMicrosoftClaimsPolicy)
           }
         );
       } catch (error) {
+        // isConflictError handles: 409
         if (!isConflictError(error)) {
           throw error;
         }
@@ -162,6 +169,7 @@ export default defineStep(StepId.SetupMicrosoftClaimsPolicy)
 
       markReverted();
     } catch (error) {
+      // isNotFoundError handles: 404
       if (isNotFoundError(error)) {
         markReverted();
       } else {

@@ -34,24 +34,19 @@ export default defineStep(StepId.CreateAdminRoleAndAssignUser)
 
   /**
    * GET https://admin.googleapis.com/admin/directory/v1/customer/my_customer/roles
+   * Headers: { Authorization: Bearer {googleAccessToken} }
    *
-   * Example success (200)
+   * Success response (200)
    * {
    *   "kind": "admin#directory#roles",
-   *   "items": [
-   *     {
-   *       "roleId": "91447453409034818",
-   *       "roleName": "_GROUPS_ADMIN_ROLE",
-   *       "roleDescription": "Grou..."
-   *     }
-   *   ]
+   *   "items": [ { "roleId": "91447453409034818" } ]
    * }
    *
-   * Example incomplete (200)
+   * Success response (200) – paginated
    * {
    *   "kind": "admin#directory#roles",
    *   "items": [],
-   *   "nextPageToken": "..."
+   *   "nextPageToken": "token"
    * }
    */
 
@@ -85,6 +80,7 @@ export default defineStep(StepId.CreateAdminRoleAndAssignUser)
           RolesSchema,
           { flatten: true }
         );
+        // Extract: adminRoleId = role.roleId when found
         const roleName = vars.require(Var.AdminRoleName);
         const role = items.find((r) => r.roleName === roleName);
         if (role) {
@@ -112,6 +108,7 @@ export default defineStep(StepId.CreateAdminRoleAndAssignUser)
             assignUrl,
             AssignmentsSchema
           );
+          // Extract: existing assignment = assignments.some(...)
 
           const exists = assignments.some((a) => a.roleId === role.roleId);
 
@@ -142,21 +139,14 @@ export default defineStep(StepId.CreateAdminRoleAndAssignUser)
   .execute(async ({ vars, google, checkData, output, markFailed, log }) => {
     /**
      * GET https://admin.googleapis.com/admin/directory/v1/customer/my_customer/roles/ALL/privileges
+     * Headers: { Authorization: Bearer {googleAccessToken} }
      *
-     * Example success
-     *
-     * 200
-     * {
-     *   "items": [
-     *     {
-     *       "privilegeName": "USERS_ALL",
-     *       "serviceId": "00haapch16h1ysv",
-     *       "childPrivileges": [ { "privilegeName": "USERS_RETRIEVE" } ]
-     *     }
-     *   ]
-     * }
+     * Success response (200)
+     * { "items": [ { "privilegeName": "USERS_ALL", "serviceId": "00haapch16h1ysv" } ] }
      *
      * POST https://admin.googleapis.com/admin/directory/v1/customer/my_customer/roles
+     * Headers: { Authorization: Bearer {googleAccessToken} }
+     * Body:
      * {
      *   "roleName": "Microsoft Entra Provisioning",
      *   "roleDescription": "Custom role for Microsoft provisioning",
@@ -169,22 +159,11 @@ export default defineStep(StepId.CreateAdminRoleAndAssignUser)
      *   ]
      * }
      *
-     * Success response
+     * Success response (200)
+     * { "roleId": "91447453409035734" }
      *
-     * 200
-     * {
-     *   "roleId": "91447453409035734",
-     *   "roleName": "TempRole_1750182467"
-     * }
-     *
-     * Conflict response
-     *
-     * 409
-     * {
-     *   "error": {
-     *     "message": "Another role exists with the same role name"
-     *   }
-     * }
+     * Error response (409)
+     * { "error": { "code": 409, "message": "Another role exists with the same role name" } }
      */
     try {
       const PrivilegeSchema: z.ZodType<AdminPrivilege> = z.lazy(() =>
@@ -197,6 +176,13 @@ export default defineStep(StepId.CreateAdminRoleAndAssignUser)
 
       const PrivListSchema = z.object({ items: z.array(PrivilegeSchema) });
 
+      /**
+       * GET https://admin.googleapis.com/admin/directory/v1/customer/my_customer/roles/ALL/privileges
+       * Headers: { Authorization: Bearer {googleAccessToken} }
+       *
+       * Success response (200)
+       * { "items": [ { "privilegeName": "USERS_RETRIEVE", "childPrivileges": [...] } ] }
+       */
       const { items } = await google.get(
         ApiEndpoint.Google.RolePrivileges,
         PrivListSchema
@@ -207,6 +193,7 @@ export default defineStep(StepId.CreateAdminRoleAndAssignUser)
         (priv) => priv.privilegeName === "USERS_RETRIEVE",
         (priv) => priv.childPrivileges
       )?.serviceId;
+      // Extract: directoryServiceId = serviceId
 
       if (!serviceId)
         throw new Error("Service ID not found in role privileges");
@@ -227,6 +214,7 @@ export default defineStep(StepId.CreateAdminRoleAndAssignUser)
           ]
         });
         roleId = res.roleId;
+        // Extract: adminRoleId = res.roleId
       } catch (error) {
         if (isConflictError(error)) {
           if (!roleId) {
@@ -286,12 +274,24 @@ export default defineStep(StepId.CreateAdminRoleAndAssignUser)
          * 409
          * { "error": { "message": "Role assignment already exists for the role" } }
          */
+        /**
+         * POST https://admin.googleapis.com/admin/directory/v1/customer/my_customer/roleassignments
+         * Headers: { Authorization: Bearer {googleAccessToken} }
+         * Body: { "roleId": "{roleId}", "assignedTo": "{userId}", "scopeType": "CUSTOMER" }
+         *
+         * Success response (200)
+         * { "roleAssignmentId": "..." }
+         *
+         * Error response (409)
+         * { "error": { "code": 409, "message": "Role assignment already exists for the role" } }
+         */
         await google.post(ApiEndpoint.Google.RoleAssignments, AssignSchema, {
           roleId,
           assignedTo: userId,
           scopeType: "CUSTOMER"
         });
       } catch (error) {
+        // isConflictError handles: 409
         if (!isConflictError(error)) {
           throw error;
         }
@@ -341,6 +341,7 @@ export default defineStep(StepId.CreateAdminRoleAndAssignUser)
       );
       markReverted();
     } catch (error) {
+      // isNotFoundError handles: 404
       if (isNotFoundError(error)) {
         markReverted();
       } else {
