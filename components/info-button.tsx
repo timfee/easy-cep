@@ -273,15 +273,27 @@ export function InfoButton({
                     onChange={(e) => setDeleteConfirmText(e.target.value)}
                     placeholder="Type DELETE ALL to confirm"
                     className="mt-2"
+                    disabled={isDeleting}
                   />
                   <AlertDialogFooter>
-                    <AlertDialogCancel onClick={() => setDeleteConfirmText("")}>
+                    <AlertDialogCancel
+                      onClick={() => setDeleteConfirmText("")}
+                      disabled={isDeleting}>
                       Cancel
                     </AlertDialogCancel>
                     <AlertDialogAction
-                      onClick={handlePurgeAll}
-                      disabled={deleteConfirmText !== "DELETE ALL"}
+                      onClick={async (e) => {
+                        e.preventDefault();
+                        await handlePurgeAll();
+                        setOpen(false);
+                      }}
+                      disabled={
+                        deleteConfirmText !== "DELETE ALL" || isDeleting
+                      }
                       className="bg-red-600 hover:bg-red-700">
+                      {isDeleting && (
+                        <Loader2 className="h-3 w-3 mr-1 animate-spin" />
+                      )}
                       Purge All
                     </AlertDialogAction>
                   </AlertDialogFooter>
