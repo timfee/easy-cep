@@ -14,14 +14,15 @@ export default defineStep(StepId.ConfigureMicrosoftSyncAndSso)
 
   /**
    * GET https://graph.microsoft.com/v1.0/servicePrincipals/{provisioningServicePrincipalId}/synchronization/jobs
+   * Headers: { Authorization: Bearer {msGraphToken} }
    *
-   * Example success (200)
+   * Success response (200)
    * { "value": [ { "status": { "code": "Active" } } ] }
    *
-   * Example none found (200)
+   * Success response (200) – empty
    * { "value": [] }
    *
-   * Example invalid token (401)
+   * Error response (401)
    * { "error": { "code": "InvalidAuthenticationToken" } }
    */
 
@@ -46,6 +47,7 @@ export default defineStep(StepId.ConfigureMicrosoftSyncAndSso)
           JobsSchema,
           { flatten: true }
         );
+        // Extract: jobStatusCodes = value.map(v => v.status.code)
 
         const active = value.some((v) => v.status.code !== "Paused");
 
@@ -66,12 +68,17 @@ export default defineStep(StepId.ConfigureMicrosoftSyncAndSso)
   .execute(async ({ vars, microsoft, output, markFailed, log }) => {
     /**
      * POST https://graph.microsoft.com/v1.0/servicePrincipals/{provisioningServicePrincipalId}/synchronization/jobs
-     * { "templateId": "google2provisioningV2" }
+     * Headers: { Authorization: Bearer {msGraphToken} }
+     * Body: { "templateId": "google2provisioningV2" }
      *
      * PUT https://graph.microsoft.com/v1.0/servicePrincipals/{provisioningServicePrincipalId}/synchronization/secrets
+     * Headers: { Authorization: Bearer {msGraphToken} }
+     * Body:
      * { "value": [ { "key": "BaseAddress", "value": "https://admin.googleapis.com/admin/directory/v1" }, { "key": "SecretToken", "value": "{generatedPassword}" } ] }
+     * Success response (204) {}
      *
      * POST https://graph.microsoft.com/v1.0/servicePrincipals/{provisioningServicePrincipalId}/synchronization/jobs/{jobId}/start
+     * Headers: { Authorization: Bearer {msGraphToken} }
      */
     try {
       const spId = vars.require(Var.ProvisioningServicePrincipalId);
@@ -90,6 +97,7 @@ export default defineStep(StepId.ConfigureMicrosoftSyncAndSso)
         CreateJobSchema,
         { templateId: SyncTemplateId.GoogleWorkspace }
       );
+      // Extract: jobId = job.id
 
       await microsoft.put(
         ApiEndpoint.Microsoft.SyncSecrets(spId),
@@ -139,6 +147,7 @@ export default defineStep(StepId.ConfigureMicrosoftSyncAndSso)
 
       markReverted();
     } catch (error) {
+      // isNotFoundError handles: 404
       if (isNotFoundError(error)) {
         markReverted();
       } else {

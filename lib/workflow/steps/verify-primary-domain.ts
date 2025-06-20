@@ -9,21 +9,27 @@ export default defineStep(StepId.VerifyPrimaryDomain)
 
   /**
    * GET https://admin.googleapis.com/admin/directory/v1/customer/my_customer/domains
+   * Headers: { Authorization: Bearer {googleAccessToken} }
    *
-   * Example success (200)
+   * Success response (200)
    * {
-   *   "kind": "admin#directory#domains",
    *   "domains": [
-   *     {
-   *       "domainName": "cep-netnew.cc",
-   *       "isPrimary": true,
-   *       "verified": true
-   *     }
+   *     { "domainName": "example.com", "isPrimary": true, "verified": true }
    *   ]
    * }
    *
-   * Example incomplete (200)
+   * Success response (200) – unverified
+   * {
+   *   "domains": [
+   *     { "domainName": "example.com", "isPrimary": true, "verified": false }
+   *   ]
+   * }
+   *
+   * Success response (200) – empty list
    * { "domains": [] }
+   *
+   * Error response (401)
+   * { "error": { "code": 401, "message": "Invalid Credentials" } }
    */
 
   .check(
@@ -44,6 +50,7 @@ export default defineStep(StepId.VerifyPrimaryDomain)
           DomainsResponse,
           { flatten: true }
         );
+        // Extract: primaryDomain = domains.find(d => d.isPrimary)?.domainName
 
         const primary = domains.find((d) => d.isPrimary);
 
@@ -65,6 +72,21 @@ export default defineStep(StepId.VerifyPrimaryDomain)
           });
 
           try {
+            /**
+             * POST https://www.googleapis.com/siteVerification/v1/token
+             * Headers: { Authorization: Bearer {googleAccessToken} }
+             * Body:
+             * {
+             *   "site": { "type": "INET_DOMAIN", "identifier": "{domain}" },
+             *   "verificationMethod": "DNS_TXT"
+             * }
+             *
+             * Success response (200)
+             * { "token": "google-site-verification=abc" }
+             *
+             * Error response (401)
+             * { "error": { "code": 401, "message": "Auth error" } }
+             */
             const verificationData = await google.post(
               `${ApiEndpoint.Google.SiteVerification}/token`,
               TokenSchema,
@@ -73,6 +95,7 @@ export default defineStep(StepId.VerifyPrimaryDomain)
                 verificationMethod: "DNS_TXT"
               }
             );
+            // Extract: verificationToken = verificationData.token
 
             markIncomplete("Domain verification pending", {
               isDomainVerified: "false",
@@ -113,6 +136,21 @@ export default defineStep(StepId.VerifyPrimaryDomain)
         });
 
         try {
+          /**
+           * POST https://www.googleapis.com/siteVerification/v1/webResource?verificationMethod=DNS_TXT
+           * Headers: { Authorization: Bearer {googleAccessToken} }
+           * Body:
+           * {
+           *   "site": { "type": "INET_DOMAIN", "identifier": "{domain}" },
+           *   "verificationMethod": "DNS_TXT"
+           * }
+           *
+           * Success response (200)
+           * { "id": "{id}", "site": { "type": "INET_DOMAIN", "identifier": "{domain}" } }
+           *
+           * Error response (400)
+           * { "error": { "code": 400, "message": "DNS record not found" } }
+           */
           const verified = await google.post(
             `${ApiEndpoint.Google.SiteVerification}/webResource`,
             VerifySchema,
@@ -124,6 +162,7 @@ export default defineStep(StepId.VerifyPrimaryDomain)
               verificationMethod: "DNS_TXT"
             }
           );
+          // Extract: isDomainVerified = "true"
 
           log(LogLevel.Info, "Domain verified successfully", { verified });
           output({

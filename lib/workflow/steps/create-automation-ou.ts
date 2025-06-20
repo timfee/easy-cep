@@ -20,20 +20,18 @@ export default defineStep(StepId.CreateAutomationOU)
 
   /**
    * GET https://admin.googleapis.com/admin/directory/v1/customer/my_customer/orgunits/Automation
+   * Headers: { Authorization: Bearer {googleAccessToken} }
    *
-   * Example success (200)
+   * Success response (200)
    * {
    *   "orgUnitPath": "/Automation",
    *   "name": "Automation",
    *   "orgUnitId": "id:03ph8a2z1s3ovsg"
    * }
    *
-   * Example not found (404)
+   * Error response (404)
    * {
-   *   "error": {
-   *     "code": 404,
-   *     "message": "Org unit not found"
-   *   }
+   *   "error": { "code": 404, "message": "Org unit not found" }
    * }
    */
 
@@ -54,6 +52,7 @@ export default defineStep(StepId.CreateAutomationOU)
           `${ApiEndpoint.Google.OrgUnits}/${encodeURIComponent(ouName)}`,
           OrgUnitSchema
         );
+        // isNotFoundError handles: 404
         log(LogLevel.Info, "Automation OU already exists");
         markComplete({});
       } catch (error) {
@@ -72,20 +71,18 @@ export default defineStep(StepId.CreateAutomationOU)
   .execute(async ({ vars, google, output, markFailed, log }) => {
     /**
      * POST https://admin.googleapis.com/admin/directory/v1/customer/my_customer/orgunits
+     * Headers: { Authorization: Bearer {googleAccessToken} }
+     * Body:
      * {
      *   "name": "Automation",
      *   "parentOrgUnitPath": "/"
      * }
      *
-     * Success response
-     *
-     * 201
+     * Success response (201)
      * { "orgUnitPath": "/Automation" }
      *
-     * Conflict response
-     *
-     * 409
-     * { "error": { "message": "Invalid Ou Id" } }
+     * Error response (409)
+     * { "error": { "code": 409, "message": "Invalid Ou Id" } }
      */
     try {
       const CreateSchema = z.object({
@@ -98,6 +95,7 @@ export default defineStep(StepId.CreateAutomationOU)
         name: vars.require(Var.AutomationOuName),
         parentOrgUnitPath: "/"
       });
+      // isConflictError handles: 409
 
       log(LogLevel.Info, "Automation OU created or already exists");
       output({});
@@ -124,6 +122,7 @@ export default defineStep(StepId.CreateAutomationOU)
       );
       markReverted();
     } catch (error) {
+      // isNotFoundError handles: 404
       if (isNotFoundError(error)) {
         markReverted();
       } else {

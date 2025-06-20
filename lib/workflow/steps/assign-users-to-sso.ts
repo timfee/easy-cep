@@ -17,21 +17,17 @@ export default defineStep<CheckData>(StepId.AssignUsersToSso)
 
   /**
    * GET https://cloudidentity.googleapis.com/v1/inboundSsoAssignments
+   * Headers: { Authorization: Bearer {googleAccessToken} }
    *
-   * Example success (200)
+   * Success response (200)
    * {
    *   "inboundSsoAssignments": [
-   *     {
-   *       "name": "inboundSsoAssignments/aQzAxYjFlNjViLU8wM3BoOGEyejIzeWp1aTY",
-   *       "ssoMode": "SAML_SSO",
-   *       "samlSsoInfo": {
-   *         "inboundSamlSsoProfile": "inboundSamlSsoProfiles/010xi5tr1szon40"
-   *       }
-   *     }
+   *     { "name": "assignment/1", "ssoMode": "SAML_SSO" },
+   *     { "name": "assignment/2", "ssoMode": "OFF" }
    *   ]
    * }
    *
-   * Example incomplete (200)
+   * Success response (200) – empty
    * { "inboundSsoAssignments": [] }
    */
 
@@ -67,6 +63,7 @@ export default defineStep<CheckData>(StepId.AssignUsersToSso)
           AssignSchema,
           { flatten: true }
         );
+        // Extract: assignmentExists = inboundSsoAssignments.some(...)
 
         const exists = inboundSsoAssignments.some(
           (a) =>
@@ -122,6 +119,22 @@ export default defineStep<CheckData>(StepId.AssignUsersToSso)
           .optional()
       });
 
+      /**
+       * POST https://cloudidentity.googleapis.com/v1/inboundSsoAssignments
+       * Headers: { Authorization: Bearer {googleAccessToken} }
+       * Body:
+       * {
+       *   "targetGroup": "groups/allUsers",
+       *   "samlSsoInfo": { "inboundSamlSsoProfile": "{profileId}" },
+       *   "ssoMode": "SAML_SSO"
+       * }
+       *
+       * Success response (200)
+       * { "done": true }
+       *
+       * Error response (409)
+       * { "error": { "code": 409, "message": "Assignment exists" } }
+       */
       const op = await google.post(
         ApiEndpoint.Google.SsoAssignments,
         OpSchema,
@@ -144,6 +157,7 @@ export default defineStep<CheckData>(StepId.AssignUsersToSso)
 
       output({});
     } catch (error) {
+      // isConflictError handles: 409
       if (isConflictError(error)) {
         output({});
       } else {
@@ -180,6 +194,7 @@ export default defineStep<CheckData>(StepId.AssignUsersToSso)
         AssignSchema,
         { flatten: true }
       );
+      // Extract: assignmentName = inboundSsoAssignments.find(...).name
 
       const assignment = inboundSsoAssignments.find(
         (a) =>
@@ -196,6 +211,7 @@ export default defineStep<CheckData>(StepId.AssignUsersToSso)
 
       markReverted();
     } catch (error) {
+      // isNotFoundError handles: 404
       if (isNotFoundError(error)) {
         markReverted();
       } else {
