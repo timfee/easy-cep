@@ -30,7 +30,7 @@ import {
   PaginationPrevious
 } from "@/components/ui/pagination";
 import { Info, Loader2, Lock, Trash2 } from "lucide-react";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useState, type ReactNode } from "react";
 
 export interface InfoItem {
   id: string;
@@ -49,12 +49,14 @@ interface InfoButtonProps {
   title: string;
   fetchItems: () => Promise<InfoItem[]>;
   deleteItems?: (ids: string[]) => Promise<DeleteResult>;
+  context?: ReactNode;
 }
 
 export function InfoButton({
   title,
   fetchItems,
-  deleteItems
+  deleteItems,
+  context
 }: InfoButtonProps) {
   const [open, setOpen] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -216,6 +218,7 @@ export function InfoButton({
       <DialogContent className="max-w-2xl max-h-[600px] flex flex-col">
         <DialogHeader>
           <DialogTitle>{title}</DialogTitle>
+          {context && <p className="text-xs text-slate-600 mt-1">{context}</p>}
         </DialogHeader>
 
         {deleteItems && deletableItems.length > 0 && (

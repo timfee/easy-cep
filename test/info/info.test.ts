@@ -158,7 +158,7 @@ describe("info server actions", () => {
       {
         id: "policy123",
         label: "Google Workspace Claims",
-        href: undefined,
+        href: "https://entra.microsoft.com/#view/Microsoft_AAD_IAM/PoliciesMenuBlade/~/ClaimsMappingPolicies/objectId/policy123",
         deletable: true,
         deleteEndpoint:
           "https://graph.microsoft.com/beta/policies/claimsMappingPolicies/policy123"
@@ -178,7 +178,8 @@ describe("info server actions", () => {
       {
         id: "app1",
         label: "Google Workspace Provisioning",
-        href: undefined,
+        subLabel: "abcd1234",
+        href: "https://entra.microsoft.com/#view/Microsoft_AAD_RegisteredApps/ApplicationMenuBlade/~/Overview/objectId/app1",
         deletable: true,
         deleteEndpoint: "https://graph.microsoft.com/beta/applications/app1"
       }
