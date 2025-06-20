@@ -1,4 +1,4 @@
-import { ApiEndpoint, GroupId } from "@/constants";
+import { ApiEndpoint, OrgUnit } from "@/constants";
 import {
   EmptyResponseSchema,
   isConflictError,
@@ -12,7 +12,12 @@ import { defineStep } from "../step-builder";
 type CheckData = Partial<Pick<WorkflowVars, never>>;
 
 export default defineStep<CheckData>(StepId.AssignUsersToSso)
-  .requires(Var.GoogleAccessToken, Var.SamlProfileId, Var.IsDomainVerified)
+  .requires(
+    Var.GoogleAccessToken,
+    Var.SamlProfileId,
+    Var.IsDomainVerified,
+    Var.AutomationOuPath
+  )
   .provides()
 
   /**
@@ -57,6 +62,7 @@ export default defineStep<CheckData>(StepId.AssignUsersToSso)
         });
 
         const profileId = vars.require(Var.SamlProfileId);
+        const automationOuPath = vars.require(Var.AutomationOuPath);
 
         const { inboundSsoAssignments = [] } = await google.get(
           ApiEndpoint.Google.SsoAssignments,
@@ -65,13 +71,20 @@ export default defineStep<CheckData>(StepId.AssignUsersToSso)
         );
         // Extract: assignmentExists = inboundSsoAssignments.some(...)
 
-        const exists = inboundSsoAssignments.some(
+        const rootAssigned = inboundSsoAssignments.some(
           (assignment) =>
-            assignment.samlSsoInfo?.inboundSamlSsoProfile === profileId
+            assignment.targetOrgUnit === OrgUnit.RootPath
+            && assignment.samlSsoInfo?.inboundSamlSsoProfile === profileId
             && assignment.ssoMode === "SAML_SSO"
         );
 
-        if (exists) {
+        const automationExcluded = inboundSsoAssignments.some(
+          (assignment) =>
+            assignment.targetOrgUnit === automationOuPath
+            && assignment.ssoMode === "SSO_OFF"
+        );
+
+        if (rootAssigned && automationExcluded) {
           log(LogLevel.Info, "All users already assigned to SSO");
           markComplete({});
         } else {
@@ -106,6 +119,7 @@ export default defineStep<CheckData>(StepId.AssignUsersToSso)
      */
     try {
       const profileId = vars.require(Var.SamlProfileId);
+      const automationOuPath = vars.require(Var.AutomationOuPath);
 
       const OpSchema = z.object({
         name: z.string(),
@@ -139,7 +153,7 @@ export default defineStep<CheckData>(StepId.AssignUsersToSso)
         ApiEndpoint.Google.SsoAssignments,
         OpSchema,
         {
-          targetGroup: `groups/${GroupId.AllUsers}`,
+          targetOrgUnit: OrgUnit.RootPath,
           samlSsoInfo: { inboundSamlSsoProfile: profileId },
           ssoMode: "SAML_SSO"
         }
@@ -154,6 +168,12 @@ export default defineStep<CheckData>(StepId.AssignUsersToSso)
         markFailed(op.error.message);
         return;
       }
+
+      // Exclude automation OU from SSO
+      await google.post(ApiEndpoint.Google.SsoAssignments, OpSchema, {
+        targetOrgUnit: automationOuPath,
+        ssoMode: "SSO_OFF"
+      });
 
       output({});
     } catch (error) {
@@ -196,14 +216,33 @@ export default defineStep<CheckData>(StepId.AssignUsersToSso)
       );
       // Extract: assignmentName = inboundSsoAssignments.find(...).name
 
-      const assignment = inboundSsoAssignments.find(
+      const automationOuPath = vars.require(Var.AutomationOuPath);
+
+      const rootAssignment = inboundSsoAssignments.find(
         (item) =>
-          item.samlSsoInfo?.inboundSamlSsoProfile === profileId
+          item.targetOrgUnit === OrgUnit.RootPath
+          && item.samlSsoInfo?.inboundSamlSsoProfile === profileId
           && item.ssoMode === "SAML_SSO"
       );
 
-      if (assignment) {
-        const id = assignment.name.replace(
+      if (rootAssignment) {
+        const id = rootAssignment.name.replace(
+          /^(?:.*\/)?inboundSsoAssignments\//,
+          ""
+        );
+        await google.delete(
+          `${ApiEndpoint.Google.SsoAssignments}/${encodeURIComponent(id)}`,
+          EmptyResponseSchema
+        );
+      }
+
+      const automationAssignment = inboundSsoAssignments.find(
+        (item) =>
+          item.targetOrgUnit === automationOuPath && item.ssoMode === "SSO_OFF"
+      );
+
+      if (automationAssignment) {
+        const id = automationAssignment.name.replace(
           /^(?:.*\/)?inboundSsoAssignments\//,
           ""
         );

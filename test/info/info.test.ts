@@ -89,13 +89,22 @@ describe("info server actions", () => {
     const items = await listSsoAssignments();
     expect(items).toEqual([
       {
-        id: "assignments/allUsers",
-        label: "groups/allUsers",
+        id: "root",
+        label: "/",
         subLabel: "SAML_SSO",
         href: "https://admin.google.com/ac/security/sso",
         deletable: true,
         deleteEndpoint:
-          "https://cloudidentity.googleapis.com/v1/inboundSsoAssignments/assignments%2FallUsers"
+          "https://cloudidentity.googleapis.com/v1/inboundSsoAssignments/root"
+      },
+      {
+        id: "automation",
+        label: "orgUnits/03ph8a2z1s3ovsg",
+        subLabel: "SSO_OFF",
+        href: "https://admin.google.com/ac/security/sso",
+        deletable: true,
+        deleteEndpoint:
+          "https://cloudidentity.googleapis.com/v1/inboundSsoAssignments/automation"
       }
     ]);
   });
