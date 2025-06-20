@@ -82,6 +82,10 @@ export function createAuthenticatedFetch(
     if (flatten) {
       const arrayKey = typeof flatten === "string" ? flatten : "items";
       let aggregated: T | undefined;
+      const base = new URL(url);
+      const baseSearch = new URLSearchParams(base.search);
+      baseSearch.delete("pageToken");
+      const baseUrl = `${base.origin}${base.pathname}`;
       let pageUrl: string | undefined = url;
       const allItems: unknown[] = [];
 
@@ -91,10 +95,27 @@ export function createAuthenticatedFetch(
         const p = page as unknown as Record<string, unknown>;
         const items = p[arrayKey];
         if (Array.isArray(items)) allItems.push(...items);
-        pageUrl =
-          (p["nextPageToken"] as string | undefined)
-          ?? (p["nextLink"] as string | undefined)
+        const nextToken = p["nextPageToken"] as string | undefined;
+        const nextLink =
+          (p["nextLink"] as string | undefined)
           ?? (p["@odata.nextLink"] as string | undefined);
+
+        if (nextToken) {
+          const next = new URL(baseUrl);
+          const params = new URLSearchParams(baseSearch.toString());
+          params.set("pageToken", nextToken);
+          next.search = params.toString();
+          pageUrl = next.toString();
+        } else if (nextLink) {
+          if (/^https?:\/\//.test(nextLink)) {
+            pageUrl = nextLink;
+          } else {
+            const next = new URL(nextLink, baseUrl);
+            pageUrl = next.toString();
+          }
+        } else {
+          pageUrl = undefined;
+        }
       }
 
       const result = aggregated as unknown as Record<string, unknown>;
