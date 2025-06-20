@@ -52,7 +52,7 @@ export default defineStep(StepId.VerifyPrimaryDomain)
         );
         // Extract: primaryDomain = domains.find(d => d.isPrimary)?.domainName
 
-        const primary = domains.find((d) => d.isPrimary);
+        const primary = domains.find((domain) => domain.isPrimary);
 
         if (primary?.verified) {
           log(LogLevel.Info, "Primary domain already verified");

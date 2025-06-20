@@ -117,13 +117,13 @@ export function createAuthenticatedFetch(
       while (pageUrl) {
         const page = await fetchPage(pageUrl);
         if (aggregated === undefined) aggregated = page;
-        const p = page as unknown as Record<string, unknown>;
-        const items = p[arrayKey];
+        const pageData = page as unknown as Record<string, unknown>;
+        const items = pageData[arrayKey];
         if (Array.isArray(items)) allItems.push(...items);
-        const nextToken = p["nextPageToken"] as string | undefined;
+        const nextToken = pageData["nextPageToken"] as string | undefined;
         const nextLink =
-          (p["nextLink"] as string | undefined)
-          ?? (p["@odata.nextLink"] as string | undefined);
+          (pageData["nextLink"] as string | undefined)
+          ?? (pageData["@odata.nextLink"] as string | undefined);
 
         if (nextToken) {
           const next = new URL(baseUrl);

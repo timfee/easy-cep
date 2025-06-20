@@ -66,9 +66,9 @@ export default defineStep<CheckData>(StepId.AssignUsersToSso)
         // Extract: assignmentExists = inboundSsoAssignments.some(...)
 
         const exists = inboundSsoAssignments.some(
-          (a) =>
-            a.samlSsoInfo?.inboundSamlSsoProfile === profileId
-            && a.ssoMode === "SAML_SSO"
+          (assignment) =>
+            assignment.samlSsoInfo?.inboundSamlSsoProfile === profileId
+            && assignment.ssoMode === "SAML_SSO"
         );
 
         if (exists) {
@@ -197,9 +197,9 @@ export default defineStep<CheckData>(StepId.AssignUsersToSso)
       // Extract: assignmentName = inboundSsoAssignments.find(...).name
 
       const assignment = inboundSsoAssignments.find(
-        (a) =>
-          a.samlSsoInfo?.inboundSamlSsoProfile === profileId
-          && a.ssoMode === "SAML_SSO"
+        (item) =>
+          item.samlSsoInfo?.inboundSamlSsoProfile === profileId
+          && item.ssoMode === "SAML_SSO"
       );
 
       if (assignment) {

@@ -71,15 +71,15 @@ export async function listSamlProfiles(): Promise<InfoItem[]> {
   if (!res.ok) throw new Error(`HTTP ${res.status}`);
   const data = Schema.parse(await res.json());
   return (
-    data.inboundSamlSsoProfiles?.map((p) => {
-      const id = p.name.replace(/^(?:.*\/)?samlProfiles\//, "");
+    data.inboundSamlSsoProfiles?.map((profile) => {
+      const id = profile.name.replace(/^(?:.*\/)?samlProfiles\//, "");
       return {
-        id: p.name,
-        label: p.displayName ?? p.name,
+        id: profile.name,
+        label: profile.displayName ?? profile.name,
         href: `https://admin.google.com/ac/apps/saml/${encodeURIComponent(id)}`,
         deletable: true,
         deleteEndpoint: `${ApiEndpoint.Google.SsoProfiles}/${encodeURIComponent(
-          p.name
+          profile.name
         )}`
       };
     }) ?? []
@@ -110,12 +110,16 @@ export async function listSsoAssignments(): Promise<InfoItem[]> {
   if (!res.ok) throw new Error(`HTTP ${res.status}`);
   const data = Schema.parse(await res.json());
   return (
-    data.inboundSsoAssignments?.map((a) => {
-      const id = a.name.replace(/^(?:.*\/)?inboundSsoAssignments\//, "");
+    data.inboundSsoAssignments?.map((assignment) => {
+      const id = assignment.name.replace(
+        /^(?:.*\/)?inboundSsoAssignments\//,
+        ""
+      );
       return {
         id,
-        label: a.targetGroup || a.targetOrgUnit || a.name,
-        subLabel: a.ssoMode,
+        label:
+          assignment.targetGroup || assignment.targetOrgUnit || assignment.name,
+        subLabel: assignment.ssoMode,
         href: `https://admin.google.com/ac/security/inboundsso?assignmentId=${encodeURIComponent(
           id
         )}`,
@@ -160,13 +164,13 @@ export async function listProvisioningJobs(): Promise<InfoItem[]> {
   });
   if (!res.ok) throw new Error(`HTTP ${res.status}`);
   const data = JobsSchema.parse(await res.json());
-  return data.value.map((j) => ({
-    id: j.id,
-    label: j.templateId ?? j.id,
-    subLabel: j.status?.code,
-    href: `https://entra.microsoft.com/#view/Microsoft_AAD_Connect/SynchronizationJobBlade/jobId/${j.id}`,
+  return data.value.map((job) => ({
+    id: job.id,
+    label: job.templateId ?? job.id,
+    subLabel: job.status?.code,
+    href: `https://entra.microsoft.com/#view/Microsoft_AAD_Connect/SynchronizationJobBlade/jobId/${job.id}`,
     deletable: true,
-    deleteEndpoint: `${ApiEndpoint.Microsoft.SyncJobs(spId)}/${j.id}`
+    deleteEndpoint: `${ApiEndpoint.Microsoft.SyncJobs(spId)}/${job.id}`
   }));
 }
 
@@ -185,11 +189,11 @@ export async function listClaimsPolicies(): Promise<InfoItem[]> {
   });
   if (!res.ok) throw new Error(`HTTP ${res.status}`);
   const data = Schema.parse(await res.json());
-  return data.value.map((p) => ({
-    id: p.id,
-    label: p.displayName ?? p.id,
+  return data.value.map((policy) => ({
+    id: policy.id,
+    label: policy.displayName ?? policy.id,
     deletable: true,
-    deleteEndpoint: `${ApiEndpoint.Microsoft.ClaimsPolicies}/${p.id}`
+    deleteEndpoint: `${ApiEndpoint.Microsoft.ClaimsPolicies}/${policy.id}`
   }));
 }
 
@@ -212,10 +216,10 @@ export async function listEnterpriseApps(): Promise<InfoItem[]> {
   );
   if (!res.ok) throw new Error(`HTTP ${res.status}`);
   const data = Schema.parse(await res.json());
-  return data.value.map((a) => ({
-    id: a.id,
-    label: a.displayName,
-    deletable: !PROTECTED_RESOURCES.microsoftAppIds.has(a.appId),
-    deleteEndpoint: `${ApiEndpoint.Microsoft.Applications}/${a.id}`
+  return data.value.map((application) => ({
+    id: application.id,
+    label: application.displayName,
+    deletable: !PROTECTED_RESOURCES.microsoftAppIds.has(application.appId),
+    deleteEndpoint: `${ApiEndpoint.Microsoft.Applications}/${application.id}`
   }));
 }

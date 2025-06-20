@@ -19,10 +19,10 @@ export const env = createEnv({
       .default("development"),
     ALLOW_INFO_PURGE: z
       .preprocess(
-        (v) =>
-          v === "true" ? true
-          : v === "false" ? false
-          : v,
+        (value) =>
+          value === "true" ? true
+          : value === "false" ? false
+          : value,
         z.boolean()
       )
       .default(true)

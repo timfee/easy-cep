@@ -150,10 +150,10 @@ export function WorkflowProvider({
 
   const executeStep = useCallback(
     async (id: StepIdValue) => {
-      const step = steps.find((s) => s.id === id);
+      const step = steps.find((workflowStep) => workflowStep.id === id);
       if (!step) return;
 
-      const missingVars = step.requires.filter((v) => !vars[v]);
+      const missingVars = step.requires.filter((varName) => !vars[varName]);
       if (missingVars.length > 0) {
         updateStep(id, {
           status: "failed",
@@ -185,7 +185,7 @@ export function WorkflowProvider({
 
   const undoStepAction = useCallback(
     async (id: StepIdValue) => {
-      const step = steps.find((s) => s.id === id);
+      const step = steps.find((workflowStep) => workflowStep.id === id);
       if (!step) return;
 
       updateStep(id, { status: "undoing" });
@@ -224,7 +224,7 @@ export function WorkflowProvider({
       ) {
         continue;
       }
-      if (step.requires.some((v) => !vars[v])) continue;
+      if (step.requires.some((varName) => !vars[varName])) continue;
 
       checkedSteps.current.add(step.id);
       updateStep(step.id, { status: "checking" });

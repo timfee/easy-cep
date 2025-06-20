@@ -48,7 +48,7 @@ export async function cleanupGoogleEnvironment() {
     items?: Array<{ roleName: string; roleId: string }>;
   };
   const customRole = roles.items?.find(
-    (r) => r.roleName === "Microsoft Entra Provisioning"
+    (role) => role.roleName === "Microsoft Entra Provisioning"
   );
   if (customRole) {
     await fetch(`${ApiEndpoint.Google.Roles}/${customRole.roleId}`, {

@@ -1,8 +1,8 @@
 "use client";
 
 import { cn } from "@/lib/utils";
-import { useWorkflow } from "./workflow-context";
 import { type StepIdValue } from "@/types";
+import { useWorkflow } from "./workflow-context";
 
 export function StepProgress() {
   const { steps, status, executing } = useWorkflow();

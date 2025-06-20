@@ -10,7 +10,7 @@ export function WorkflowHeader() {
   const { steps, status, updateVars, executing } = useWorkflow();
 
   const completedSteps = steps.filter(
-    (s) => status[s.id]?.status === "complete"
+    (step) => status[step.id]?.status === "complete"
   ).length;
   const isRunning = executing !== null;
 
