@@ -1,0 +1,9 @@
+{
+  "organizationUnits": [
+    {
+      "orgUnitId": "id:123",
+      "name": "Automation",
+      "orgUnitPath": "/Automation"
+    }
+  ]
+}

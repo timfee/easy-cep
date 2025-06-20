@@ -1,0 +1,5 @@
+{
+  "inboundSamlSsoProfiles": [
+    { "name": "samlProfiles/abc123", "displayName": "Workspace SAML" }
+  ]
+}
