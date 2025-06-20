@@ -82,10 +82,14 @@ export default defineStep(StepId.CreateAdminRoleAndAssignUser)
         );
         // Extract: adminRoleId = role.roleId when found
         const roleName = vars.require(Var.AdminRoleName);
-        const role = items.find((r) => r.roleName === roleName);
+        const role = items.find((roleItem) => roleItem.roleName === roleName);
         if (role) {
-          const privNames = role.rolePrivileges.map((p) => p.privilegeName);
-          const hasPrivs = REQUIRED_PRIVS.every((p) => privNames.includes(p));
+          const privilegeNames = role.rolePrivileges.map(
+            (privilege) => privilege.privilegeName
+          );
+          const hasPrivs = REQUIRED_PRIVS.every((priv) =>
+            privilegeNames.includes(priv)
+          );
           if (!hasPrivs) {
             log(LogLevel.Info, "Role missing required privileges");
             markIncomplete("Role privileges incorrect", {
@@ -110,7 +114,9 @@ export default defineStep(StepId.CreateAdminRoleAndAssignUser)
           );
           // Extract: existing assignment = assignments.some(...)
 
-          const exists = assignments.some((a) => a.roleId === role.roleId);
+          const exists = assignments.some(
+            (assignment) => assignment.roleId === role.roleId
+          );
 
           if (exists) {
             log(LogLevel.Info, "Role and assignment exist");
@@ -240,7 +246,9 @@ export default defineStep(StepId.CreateAdminRoleAndAssignUser)
               { flatten: true }
             );
             const roleName = vars.require(Var.AdminRoleName);
-            roleId = rolesList.find((r) => r.roleName === roleName)?.roleId;
+            roleId = rolesList.find(
+              (roleItem) => roleItem.roleName === roleName
+            )?.roleId;
           }
         } else {
           throw error;
@@ -327,7 +335,7 @@ export default defineStep(StepId.CreateAdminRoleAndAssignUser)
         `${ApiEndpoint.Google.RoleAssignments}?userKey=${encodeURIComponent(userId)}`,
         AssignSchema
       );
-      const assignment = items.find((a) => a.roleId === roleId);
+      const assignment = items.find((item) => item.roleId === roleId);
       if (assignment) {
         await google.delete(
           `${ApiEndpoint.Google.RoleAssignments}/${assignment.roleAssignmentId}`,

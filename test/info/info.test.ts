@@ -30,8 +30,8 @@ beforeAll(async () => {
 });
 
 function load(name: string) {
-  const p = path.join(__dirname, "fixtures", name);
-  return JSON.parse(fs.readFileSync(p, "utf8"));
+  const filePath = path.join(__dirname, "fixtures", name);
+  return JSON.parse(fs.readFileSync(filePath, "utf8"));
 }
 
 describe("info server actions", () => {

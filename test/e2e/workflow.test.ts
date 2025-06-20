@@ -47,9 +47,9 @@ if (
     const fixtureDir = path.join(__dirname, "fixtures");
 
     function loadFixture(step: string): any {
-      const p = path.join(fixtureDir, `${step}.json`);
-      return fs.existsSync(p) ?
-          JSON.parse(fs.readFileSync(p, "utf8"))
+      const filePath = path.join(fixtureDir, `${step}.json`);
+      return fs.existsSync(filePath) ?
+          JSON.parse(fs.readFileSync(filePath, "utf8"))
         : undefined;
     }
 

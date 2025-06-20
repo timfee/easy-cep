@@ -49,7 +49,7 @@ export default defineStep(StepId.ConfigureMicrosoftSyncAndSso)
         );
         // Extract: jobStatusCodes = value.map(v => v.status.code)
 
-        const active = value.some((v) => v.status.code !== "Paused");
+        const active = value.some((job) => job.status.code !== "Paused");
 
         if (active) {
           log(LogLevel.Info, "Synchronization already active");
@@ -67,7 +67,7 @@ export default defineStep(StepId.ConfigureMicrosoftSyncAndSso)
   )
   .execute(async ({ vars, microsoft, output, markFailed, log }) => {
     /**
-    * POST https://graph.microsoft.com/v1.0/servicePrincipals/{provisioningServicePrincipalId}/synchronization/jobs
+     * POST https://graph.microsoft.com/v1.0/servicePrincipals/{provisioningServicePrincipalId}/synchronization/jobs
      * Headers: { Authorization: Bearer {msGraphToken} }
      * Body: { "templateId": "gsuite" }  // discovered via /synchronization/templates
      *
@@ -96,8 +96,9 @@ export default defineStep(StepId.ConfigureMicrosoftSyncAndSso)
         { flatten: "value" }
       );
       const templateId =
-        templates.find((t) => t.factoryTag === SyncTemplateTag.GoogleWorkspace)
-          ?.id ?? SyncTemplateTag.GoogleWorkspace;
+        templates.find(
+          (template) => template.factoryTag === SyncTemplateTag.GoogleWorkspace
+        )?.id ?? SyncTemplateTag.GoogleWorkspace;
 
       const CreateJobSchema = z.object({
         id: z.string(),

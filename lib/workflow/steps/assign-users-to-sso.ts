@@ -59,16 +59,16 @@ export default defineStep<CheckData>(StepId.AssignUsersToSso)
         const profileId = vars.require(Var.SamlProfileId);
 
         const { inboundSsoAssignments = [] } = await google.get(
-          `${ApiEndpoint.Google.SsoAssignments}?customer=customers/my_customer`,
+          ApiEndpoint.Google.SsoAssignments,
           AssignSchema,
           { flatten: "inboundSsoAssignments" }
         );
         // Extract: assignmentExists = inboundSsoAssignments.some(...)
 
         const exists = inboundSsoAssignments.some(
-          (a) =>
-            a.samlSsoInfo?.inboundSamlSsoProfile === profileId
-            && a.ssoMode === "SAML_SSO"
+          (assignment) =>
+            assignment.samlSsoInfo?.inboundSamlSsoProfile === profileId
+            && assignment.ssoMode === "SAML_SSO"
         );
 
         if (exists) {
@@ -136,7 +136,7 @@ export default defineStep<CheckData>(StepId.AssignUsersToSso)
        * { "error": { "code": 409, "message": "Assignment exists" } }
        */
       const op = await google.post(
-        `${ApiEndpoint.Google.SsoAssignments}?customer=customers/my_customer`,
+        ApiEndpoint.Google.SsoAssignments,
         OpSchema,
         {
           targetGroup: `groups/${GroupId.AllUsers}`,
@@ -190,16 +190,16 @@ export default defineStep<CheckData>(StepId.AssignUsersToSso)
       });
 
       const { inboundSsoAssignments = [] } = await google.get(
-        `${ApiEndpoint.Google.SsoAssignments}?customer=customers/my_customer`,
+        ApiEndpoint.Google.SsoAssignments,
         AssignSchema,
         { flatten: "inboundSsoAssignments" }
       );
       // Extract: assignmentName = inboundSsoAssignments.find(...).name
 
       const assignment = inboundSsoAssignments.find(
-        (a) =>
-          a.samlSsoInfo?.inboundSamlSsoProfile === profileId
-          && a.ssoMode === "SAML_SSO"
+        (item) =>
+          item.samlSsoInfo?.inboundSamlSsoProfile === profileId
+          && item.ssoMode === "SAML_SSO"
       );
 
       if (assignment) {

@@ -1,14 +1,21 @@
 "use client";
 
-import { Badge } from "@/components/ui/badge";
 import {
   Collapsible,
   CollapsibleContent,
   CollapsibleTrigger
 } from "@/components/ui/collapsible";
+import { cn } from "@/lib/utils";
 import { extractPath } from "@/lib/utils/url";
 import { StepLogEntry } from "@/types";
-import { AlertTriangle, Bug, ChevronRight, Info, XCircle } from "lucide-react";
+import {
+  AlertTriangle,
+  Bug,
+  ChevronRight,
+  Info,
+  Network,
+  XCircle
+} from "lucide-react";
 import { useState } from "react";
 
 interface StepLogItemProps {
@@ -18,129 +25,78 @@ interface StepLogItemProps {
 function getLevelIcon(level?: string) {
   switch (level) {
     case "warn":
-      return <AlertTriangle className="h-4 w-4 text-amber-500" />;
+      return <AlertTriangle className="h-3 w-3 text-amber-500" />;
     case "error":
-      return <XCircle className="h-4 w-4 text-red-500" />;
+      return <XCircle className="h-3 w-3 text-red-500" />;
     case "debug":
-      return <Bug className="h-4 w-4 text-purple-500" />;
+      return <Bug className="h-3 w-3 text-purple-500" />;
     default:
-      return <Info className="h-4 w-4 text-blue-500" />;
+      return <Info className="h-3 w-3 text-blue-500" />;
   }
 }
 
-function getLevelBadgeClasses(level?: string) {
+function getLevelClasses(level?: string) {
   switch (level) {
     case "warn":
-      return "bg-amber-50 text-amber-700 border-amber-200";
+      return "border-amber-200 text-amber-700";
     case "error":
-      return "bg-red-50 text-red-700 border-red-200";
+      return "border-red-200 text-red-700";
     case "debug":
-      return "bg-purple-50 text-purple-700 border-purple-200";
+      return "border-purple-200 text-purple-700";
     default:
-      return "bg-blue-50 text-blue-700 border-blue-200";
+      return "border-blue-200 text-blue-700";
   }
-}
-
-function getLevelText(level?: string) {
-  return (level || "info").toUpperCase();
 }
 
 function getMethodClasses(success: boolean) {
   return success ?
-      "bg-green-50 text-green-700 border-green-200"
-    : "bg-red-50 text-red-700 border-red-200";
+      "border-green-200 text-green-700"
+    : "border-red-200 text-red-700";
 }
 
 export function StepLogItem({ log }: StepLogItemProps) {
   const [open, setOpen] = useState(false);
   const time = new Date(log.timestamp).toLocaleTimeString();
 
-  if (log.method) {
-    const success = log.status === undefined || log.status < 400;
-    return (
-      <Collapsible
-        open={open}
-        onOpenChange={setOpen}
-        className="p-3 rounded-md border bg-white border-slate-200">
-        <CollapsibleTrigger asChild>
-          <div className="flex items-start gap-3 cursor-pointer">
-            <div className={`p-1.5 rounded ${getMethodClasses(success)}`}>
-              <span className="text-xs font-mono">{log.method}</span>
-            </div>
-            <div className="flex-1 min-w-0">
-              <div className="flex items-center gap-2 mb-1 flex-wrap">
-                {log.status !== undefined && (
-                  <Badge
-                    variant="outline"
-                    className="bg-slate-100 text-slate-700 border-slate-200">
-                    {log.status}
-                  </Badge>
-                )}
-                <span className="text-xs text-slate-500 font-mono bg-slate-100 px-1.5 py-0.5 rounded border border-slate-200">
-                  {time}
-                </span>
-                {log.data !== null && (
-                  <ChevronRight
-                    className={`h-3 w-3 transition-transform ${open ? "rotate-90" : ""}`}
-                  />
-                )}
-              </div>
-              <p className="text-sm text-slate-800 leading-relaxed break-all">
-                {extractPath(log.url ?? "")}
-              </p>
-            </div>
-          </div>
-        </CollapsibleTrigger>
-        {log.data !== null && (
-          <CollapsibleContent className="mt-2 transition-all data-[state=closed]:animate-accordion-up data-[state=open]:animate-accordion-down">
-            <div className="bg-slate-800 text-slate-100 rounded p-2.5 border border-slate-700 max-h-60 overflow-y-auto">
-              <pre className="text-xs font-mono whitespace-pre-wrap">
-                {JSON.stringify(log.data, null, 2)}
-              </pre>
-            </div>
-          </CollapsibleContent>
-        )}
-      </Collapsible>
-    );
-  }
+  const success = log.status === undefined || log.status < 400;
 
   return (
     <Collapsible
       open={open}
       onOpenChange={setOpen}
-      className="p-3 rounded-md border bg-white border-slate-200">
+      className="text-xs font-mono">
       <CollapsibleTrigger asChild>
-        <div className="flex items-start gap-3 cursor-pointer">
-          <div
-            className={`p-1.5 rounded ${getLevelBadgeClasses(log.level).split(" ")[0].replace("bg-", "bg-opacity-20")}`}>
-            {getLevelIcon(log.level)}
-          </div>
-          <div className="flex-1 min-w-0">
-            <div className="flex items-center gap-2 mb-1 flex-wrap">
-              <Badge
-                variant="outline"
-                className={`${getLevelBadgeClasses(log.level)} font-semibold`}>
-                {getLevelText(log.level)}
-              </Badge>
-              <span className="text-xs text-slate-500 font-mono bg-slate-100 px-1.5 py-0.5 rounded border border-slate-200">
-                {time}
-              </span>
-              {log.data !== null && (
-                <ChevronRight
-                  className={`h-3 w-3 transition-transform ${open ? "rotate-90" : ""}`}
-                />
+        <div className="flex items-center gap-2 px-2 py-1 hover:bg-slate-100 cursor-pointer">
+          {log.method ?
+            <Network className="h-3 w-3 text-slate-500" />
+          : getLevelIcon(log.level)}
+          <span
+            className={cn(
+              "px-1.5 py-0.5 rounded border",
+              log.method ?
+                getMethodClasses(success)
+              : getLevelClasses(log.level)
+            )}>
+            {log.method ? log.method : (log.level || "info").toUpperCase()}
+          </span>
+          <span className="text-[10px] text-slate-500">{time}</span>
+          <span className="flex-1 truncate text-slate-800">
+            {log.method ? extractPath(log.url ?? "") : log.message}
+          </span>
+          {log.data !== null && (
+            <ChevronRight
+              className={cn(
+                "h-3 w-3 transition-transform",
+                open && "rotate-90"
               )}
-            </div>
-            <p className="text-sm text-slate-800 leading-relaxed break-words">
-              {log.message}
-            </p>
-          </div>
+            />
+          )}
         </div>
       </CollapsibleTrigger>
       {log.data !== null && (
-        <CollapsibleContent className="mt-2 transition-all data-[state=closed]:animate-accordion-up data-[state=open]:animate-accordion-down">
-          <div className="bg-slate-800 text-slate-100 rounded p-2.5 border border-slate-700 max-h-60 overflow-y-auto">
-            <pre className="text-xs font-mono whitespace-pre-wrap">
+        <CollapsibleContent className="px-4 py-2 data-[state=closed]:animate-collapsible-up data-[state=open]:animate-collapsible-down">
+          <div className="bg-slate-800 text-slate-100 rounded border border-slate-700 max-h-60 overflow-y-auto">
+            <pre className="p-2 whitespace-pre-wrap">
               {JSON.stringify(log.data, null, 2)}
             </pre>
           </div>

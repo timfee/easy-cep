@@ -53,12 +53,14 @@ pnpm dev
 ## Architecture
 
 ### Frontend
+
 - Next.js 15 with React Server Components
 - Real-time workflow status updates
 - Variable inspector for configuration values
 - Expandable step cards with execution logs
 
 ### Backend
+
 - Server actions for step execution
 - OAuth 2.0 authentication with encrypted cookie storage
 - Type-safe API calls with Zod validation
@@ -71,12 +73,23 @@ Steps are defined in `lib/workflow/steps/` following this pattern:
 export default defineStep(StepId.StepName)
   .requires(Var.InputVariable)
   .provides(Var.OutputVariable)
-  .check(async ({ vars, google, microsoft, markComplete, markIncomplete, markCheckFailed }) => {
-    // Check if already complete
-  })
-  .execute(async ({ vars, google, microsoft, output, markFailed, markPending }) => {
-    // Perform the work
-  })
+  .check(
+    async ({
+      vars,
+      google,
+      microsoft,
+      markComplete,
+      markIncomplete,
+      markCheckFailed
+    }) => {
+      // Check if already complete
+    }
+  )
+  .execute(
+    async ({ vars, google, microsoft, output, markFailed, markPending }) => {
+      // Perform the work
+    }
+  )
   .undo(async ({ vars, google, microsoft, markReverted, markFailed }) => {
     // Rollback if needed
   })
@@ -101,10 +114,12 @@ pnpm tsx scripts/full-cleanup.ts
 The application calls these primary endpoints:
 
 **Google**
+
 - `admin.googleapis.com/admin/directory/v1` - Directory API
 - `cloudidentity.googleapis.com/v1` - Cloud Identity API
 
 **Microsoft**
+
 - `graph.microsoft.com/v1.0` - Microsoft Graph API
 - `graph.microsoft.com/beta` - Beta endpoints for claims policies
 

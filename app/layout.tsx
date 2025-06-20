@@ -17,10 +17,10 @@ export const metadata: Metadata = { title: "Easy CEP" };
 export default function RootLayout({
   children
 }: Readonly<{ children: React.ReactNode }>) {
-  const allSteps = getAllSteps().map((s) => ({
-    id: s.id,
-    requires: s.requires,
-    provides: s.provides
+  const allSteps = getAllSteps().map((step) => ({
+    id: step.id,
+    requires: step.requires,
+    provides: step.provides
   }));
 
   const DEFAULT_CONFIG = {

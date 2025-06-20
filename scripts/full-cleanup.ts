@@ -102,9 +102,9 @@ async function cleanupGoogleRoles() {
         const { items: assignments = [], nextPageToken: nextAssign } =
           AssignSchema.parse(await aRes.json());
         assignToken = nextAssign;
-        for (const a of assignments) {
+        for (const assignment of assignments) {
           await fetch(
-            `${ApiEndpoint.Google.RoleAssignments}/${a.roleAssignmentId}`,
+            `${ApiEndpoint.Google.RoleAssignments}/${assignment.roleAssignmentId}`,
             {
               method: "DELETE",
               headers: { Authorization: `Bearer ${GOOGLE_TOKEN}` }
@@ -119,10 +119,10 @@ async function cleanupGoogleRoles() {
       const { items: userAssignments = [] } = AssignSchema.parse(
         await userRes.json()
       );
-      for (const ua of userAssignments) {
-        if (ua.roleId === role.roleId) {
+      for (const userAssignment of userAssignments) {
+        if (userAssignment.roleId === role.roleId) {
           await fetch(
-            `${ApiEndpoint.Google.RoleAssignments}/${ua.roleAssignmentId}`,
+            `${ApiEndpoint.Google.RoleAssignments}/${userAssignment.roleAssignmentId}`,
             {
               method: "DELETE",
               headers: { Authorization: `Bearer ${GOOGLE_TOKEN}` }
