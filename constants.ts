@@ -79,7 +79,7 @@ export const OrgUnit = { RootPath: "/" } as const;
 
 export const TemplateId = {
   GoogleWorkspaceConnector: "01303a13-8322-4e06-bee5-80d612907131",
-  GoogleWorkspaceSaml: "8b1025e4-1dd2-430b-a150-2ef79cd700f5"
+  GoogleWorkspaceSaml: "01303a13-8322-4e06-bee5-80d612907131"
 };
 
 // Synchronization templates are enumerated per service principal. The Google

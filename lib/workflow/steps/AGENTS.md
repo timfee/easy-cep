@@ -531,7 +531,7 @@ GET https://graph.microsoft.com/beta/applications?$filter=applicationTemplateId 
 Authorization: Bearer {msGraphToken}
 
 # SSO app lookup
-GET https://graph.microsoft.com/beta/applications?$filter=applicationTemplateId eq '8b1025e4-1dd2-430b-a150-2ef79cd700f5'
+GET https://graph.microsoft.com/beta/applications?$filter=applicationTemplateId eq '01303a13-8322-4e06-bee5-80d612907131'
 Authorization: Bearer {msGraphToken}
 
 # Service principal queries
@@ -551,7 +551,7 @@ Authorization: Bearer {msGraphToken}
 
 #### Step 6 Completion Criteria
 
-Apps exist for both template IDs and their service principals are found. A single app may satisfy both roles if the IDs match. The check logs whether provisioning and SSO share an app or use separate ones.
+Apps exist for both instances and their service principals are found. The same template ID is used for provisioning and SSO. The check logs whether the two instances share a single application or use separate ones.
 
 #### Step 6 Check Variables Extracted
 
@@ -582,7 +582,7 @@ Content-Type: application/json
 1. SSO App
 
 ```http
-POST https://graph.microsoft.com/v1.0/applicationTemplates/8b1025e4-1dd2-430b-a150-2ef79cd700f5/instantiate
+POST https://graph.microsoft.com/v1.0/applicationTemplates/01303a13-8322-4e06-bee5-80d612907131/instantiate
 Authorization: Bearer {msGraphToken}
 Content-Type: application/json
 
