@@ -1,5 +1,6 @@
 /* eslint-disable workflow/no-hardcoded-config */
 import { WorkflowProvider } from "@/components/workflow-context";
+import { WorkflowHeader } from "@/components/workflow-header";
 import { PROTECTED_RESOURCES } from "@/constants";
 import { env } from "@/env";
 import { getAllSteps } from "@/lib/workflow/step-registry";
@@ -39,7 +40,8 @@ export default function RootLayout({
     <html lang="en">
       <body>
         <WorkflowProvider steps={allSteps} initialVars={DEFAULT_CONFIG}>
-          {children}
+          <WorkflowHeader />
+          <main className="flex h-[calc(100vh-64px)]">{children}</main>
         </WorkflowProvider>
       </body>
     </html>
