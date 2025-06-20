@@ -1,11 +1,16 @@
 "use client";
 
-import { Button } from "@/components/ui/button";
-import { Play } from "lucide-react";
+import { ProviderLogin } from "@/components/provider-login";
+import { Badge } from "@/components/ui/badge";
 import { useWorkflow } from "../context/workflow-context";
 
 export function WorkflowHeader() {
-  const { steps, status, executing, executeStep } = useWorkflow();
+  const { steps, status, updateVars, executing, executeStep } = useWorkflow();
+
+  const completedSteps = steps.filter(
+    (s) => status[s.id]?.status === "complete"
+  ).length;
+  const isRunning = executing !== null;
 
   const runAllSteps = async () => {
     for (const step of steps) {
@@ -17,24 +22,26 @@ export function WorkflowHeader() {
   };
 
   return (
-    <div className="border-b p-6 bg-white">
+    <div className="border-b px-6 py-3 bg-white">
       <div className="flex items-center justify-between">
         <div>
-          <h2 className="text-xl font-semibold text-slate-900 mb-1">
-            Workflow Steps
-          </h2>
-          <p className="text-sm text-slate-600">
-            Execute steps in sequence or manage them individually
-          </p>
+          <h1 className="text-xl font-semibold text-slate-900 mb-1">
+            Easy CEP
+          </h1>
+          <div className="flex items-center gap-3 text-sm -mx-1">
+            <Badge
+              variant={isRunning ? "default" : "secondary"}
+              className={
+                isRunning ? "bg-green-100 text-green-800 border-green-200" : ""
+              }>
+              {isRunning ? "Running" : "Idle"}
+            </Badge>
+            <span className="text-slate-600">
+              {completedSteps}/{steps.length} steps completed
+            </span>
+          </div>
         </div>
-        <Button
-          size="sm"
-          disabled={executing !== null}
-          onClick={runAllSteps}
-          className="bg-blue-600 hover:bg-blue-700">
-          <Play className="h-4 w-4 mr-2" />
-          Run All
-        </Button>
+        <ProviderLogin onUpdate={updateVars} />
       </div>
     </div>
   );

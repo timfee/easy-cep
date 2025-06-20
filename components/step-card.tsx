@@ -231,7 +231,7 @@ export function StepCard({
   return (
     <Card className={getCardClassName()}>
       <CardHeader
-        className="p-4 md:p-5 cursor-pointer transition-colors duration-200"
+        className="p-4 cursor-pointer transition-colors duration-200"
         onClick={handleHeaderClick}
         role="button"
         aria-expanded={isExpanded}>

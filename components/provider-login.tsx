@@ -3,7 +3,6 @@
 import { Button } from "@/components/ui/button";
 import { type Provider } from "@/constants";
 import { Var, WorkflowVars } from "@/types";
-import { CheckCircle, XCircle } from "lucide-react";
 import { useCallback, useEffect, useState } from "react";
 
 interface Props {
@@ -70,6 +69,7 @@ export function ProviderLogin({ onUpdate }: Props) {
     isConnected,
     onConnectClick,
     onDisconnectClick,
+    minutesLeft,
     iconColorClass
   }: {
     Icon: React.ElementType;
@@ -77,6 +77,7 @@ export function ProviderLogin({ onUpdate }: Props) {
     isConnected: boolean;
     onConnectClick: () => void;
     onDisconnectClick: () => void;
+    minutesLeft: number;
     iconColorClass: string;
   }) => (
     <div className="flex items-center justify-between py-2.5">
@@ -87,23 +88,22 @@ export function ProviderLogin({ onUpdate }: Props) {
       <div className="flex items-center gap-2">
         {isConnected ?
           <>
-            <CheckCircle className="h-4 w-4 text-green-500" />
-            <Button
-              size="sm"
-              variant="ghost"
-              onClick={onDisconnectClick}
-              className="text-slate-500 hover:text-red-600 h-auto px-1 py-0.5"
-              aria-label={`Disconnect ${name}`}>
-              <XCircle className="h-4 w-4" />
-            </Button>
-          </>
-        : <>
-            <XCircle className="h-4 w-4 text-slate-400" />
             <Button
               size="sm"
               variant="outline"
+              onClick={onDisconnectClick}
+              className="text-xs text-slate-400 mx-2"
+              title="Disconnect"
+              aria-label={`Disconnect ${name}`}>
+              {minutesLeft} m left
+            </Button>
+          </>
+        : <>
+            <Button
+              size="sm"
+              variant="default"
               onClick={onConnectClick}
-              className="text-xs px-2 py-1 h-auto border-slate-300 text-slate-700 hover:bg-slate-100">
+              className="text-xs  mx-2">
               Connect
             </Button>
           </>
@@ -112,11 +112,21 @@ export function ProviderLogin({ onUpdate }: Props) {
     </div>
   );
 
+  const googleTimeLeftInMinutes =
+    tokens.googleExpiresAt ?
+      Math.max(0, Math.floor((tokens.googleExpiresAt - Date.now()) / 60000))
+    : 0;
+  const msGraphTimeLeftInMinutes =
+    tokens.msGraphExpiresAt ?
+      Math.max(0, Math.floor((tokens.msGraphExpiresAt - Date.now()) / 60000))
+    : 0;
+
   return (
-    <div className="space-y-1 divide-y divide-slate-100">
+    <div className="space-x-4 divide-x divide-slate-100 flex">
       <ProviderItem
         Icon={Google}
         name={"Google"}
+        minutesLeft={googleTimeLeftInMinutes}
         isConnected={tokens.googleAccessToken !== undefined}
         onConnectClick={() => (window.location.href = "/api/auth/google")}
         onDisconnectClick={() => signOut("google")}
@@ -125,6 +135,7 @@ export function ProviderLogin({ onUpdate }: Props) {
       <ProviderItem
         Icon={Microsoft}
         name="Microsoft"
+        minutesLeft={msGraphTimeLeftInMinutes}
         isConnected={tokens.msGraphToken !== undefined}
         onConnectClick={() => (window.location.href = "/api/auth/microsoft")}
         onDisconnectClick={() => signOut("microsoft")}

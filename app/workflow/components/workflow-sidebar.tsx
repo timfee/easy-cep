@@ -3,7 +3,7 @@
 import { ProviderLogin } from "@/components/provider-login";
 import { Badge } from "@/components/ui/badge";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Activity, Settings } from "lucide-react";
+import { Activity } from "lucide-react";
 import { useWorkflow } from "../context/workflow-context";
 
 export function WorkflowSidebar() {
@@ -45,9 +45,7 @@ export function WorkflowSidebar() {
           <div className="space-y-6">
             <div>
               <h3 className="font-medium mb-4 flex items-center gap-2 text-slate-900">
-                <div className="p-1 bg-orange-100 rounded">
-                  <Settings className="h-4 w-4 text-orange-600" />
-                </div>
+                <div className="p-1 bg-orange-100 rounded"></div>
                 Provider Authentication
               </h3>
               <ProviderLogin onUpdate={updateVars} />

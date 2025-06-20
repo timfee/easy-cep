@@ -2,7 +2,6 @@
 import { getAllSteps } from "@/lib/workflow/step-registry";
 import { Var } from "@/types";
 import { WorkflowHeader } from "./components/workflow-header";
-import { WorkflowSidebar } from "./components/workflow-sidebar";
 import { WorkflowProvider } from "./context/workflow-context";
 
 const DEFAULT_CONFIG = {
@@ -35,7 +34,6 @@ export default function WorkflowLayout({
   return (
     <WorkflowProvider steps={allSteps} initialVars={DEFAULT_CONFIG}>
       <div className="flex h-screen bg-background">
-        <WorkflowSidebar />
         <div className="flex-1 flex flex-col overflow-hidden">
           <WorkflowHeader />
           <main className="flex-1 flex overflow-hidden">
