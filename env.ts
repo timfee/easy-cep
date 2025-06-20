@@ -25,7 +25,7 @@ export const env = createEnv({
           : v,
         z.boolean()
       )
-      .default(false)
+      .default(true)
   },
   runtimeEnv: {
     NODE_ENV: process.env.NODE_ENV,

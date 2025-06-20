@@ -1,6 +1,6 @@
 # Step API contracts
 
-Below is a complete canvas of **12 steps**, each with:
+Below is a complete canvas of **11 steps**, each with:
 
 - **Purpose**
 - **State Check**: HTTP request, expected response, completion criteria, and extracted variables
@@ -511,15 +511,15 @@ acsUrl = .response.spConfig.assertionConsumerServiceUri
 
 - `400`/`403`: error
 
-## Step 7: `createMicrosoftApps`
+## Step 6: `createMicrosoftApps`
 
-### Step 7 Purpose
+### Step 6 Purpose
 
 Instantiate provisioning and SSO Microsoft enterprise apps from template.
 
-### Step 7 State Check
+### Step 6 State Check
 
-#### Step 7 Check Request
+#### Step 6 Check Request
 
 ```http
 # Provisioning app lookup
@@ -535,7 +535,7 @@ GET https://graph.microsoft.com/beta/servicePrincipals?$filter=appId eq '{appId}
 Authorization: Bearer {msGraphToken}
 ```
 
-#### Step 7 Success Response (`200 OK`)
+#### Step 6 Success Response (`200 OK`)
 
 ```json
 # Application lookup example
@@ -545,11 +545,11 @@ Authorization: Bearer {msGraphToken}
 { "value": [{ "id": "..." }] }
 ```
 
-#### Step 7 Completion Criteria
+#### Step 6 Completion Criteria
 
 Apps exist for both template IDs and their service principals are found. A single app may satisfy both roles if the IDs match. The check logs whether provisioning and SSO share an app or use separate ones.
 
-#### Step 7 Check Variables Extracted
+#### Step 6 Check Variables Extracted
 
 ```ts
 provisioningServicePrincipalId = provisioningSp.value[0].id;
@@ -557,13 +557,13 @@ ssoServicePrincipalId = ssoSp.value[0].id;
 ssoAppId = ssoApp.appId;
 ```
 
-### Step 7 Execution
+### Step 6 Execution
 
-#### Step 7 Prerequisites
+#### Step 6 Prerequisites
 
 - `msGraphToken`
 
-#### Step 7 Execution Requests
+#### Step 6 Execution Requests
 
 1. Provisioning App
 
@@ -585,11 +585,11 @@ Content-Type: application/json
 { "displayName": "Google Workspace SSO" }
 ```
 
-#### Step 7 Expected Response (`201 Created`)
+#### Step 6 Expected Response (`201 Created`)
 
 Return includes `servicePrincipal.id` and `application.appId`
 
-#### Step 7 Execution Variables Extracted
+#### Step 6 Execution Variables Extracted
 
 ```ts
 provisioningServicePrincipalId = .servicePrincipal.id
@@ -597,39 +597,39 @@ ssoServicePrincipalId = .servicePrincipal.id
 ssoAppId = .application.appId
 ```
 
-## Step 8: `configureMicrosoftSyncAndSso`
+## Step 7: `configureMicrosoftSyncAndSso`
 
-### Step 8 Purpose
+### Step 7 Purpose
 
 Configure Azure AD provisioning and SSO settings.
 
-### Step 8 State Check
+### Step 7 State Check
 
-#### Step 8 Check Request
+#### Step 7 Check Request
 
 ```http
 GET https://graph.microsoft.com/v1.0/servicePrincipals/{provisioningServicePrincipalId}/synchronization/jobs
 Authorization: Bearer {msGraphToken}
 ```
 
-#### Step 8 Success Response (`200 OK`)
+#### Step 7 Success Response (`200 OK`)
 
 ```json
 { "value": [ { "status": { "code": "Active" } }, ... ] }
 ```
 
-#### Step 8 Completion Criteria
+#### Step 7 Completion Criteria
 
 At least one `value[].status.code != "Paused"`
 
-### Step 8 Execution
+### Step 7 Execution
 
-#### Step 8 Prerequisites
+#### Step 7 Prerequisites
 
 - `msGraphToken`
 - `provisioningServicePrincipalId`, `generatedPassword`
 
-#### Step 8 Execution Requests
+#### Step 7 Execution Requests
 
 1. Create Job
 
@@ -669,45 +669,45 @@ Authorization: Bearer {msGraphToken}
 
 Expected: `204 No Content`
 
-## Step 9: `setupMicrosoftClaimsPolicy`
+## Step 8: `setupMicrosoftClaimsPolicy`
 
-### Step 9 Purpose
+### Step 8 Purpose
 
 Ensure a claims mapping policy exists and is assigned to the SSO service principal.
 
-### Step 9 State Check
+### Step 8 State Check
 
-#### Step 9 Check Request
+#### Step 8 Check Request
 
 ```http
 GET https://graph.microsoft.com/beta/servicePrincipals/{ssoServicePrincipalId}/claimsMappingPolicies
 Authorization: Bearer {msGraphToken}
 ```
 
-#### Step 9 Success Response (`200 OK`)
+#### Step 8 Success Response (`200 OK`)
 
 ```json
 { "value": [ { "id": "policy123" }, ... ] }
 ```
 
-#### Step 9 Completion Criteria
+#### Step 8 Completion Criteria
 
 `value` array length >= 1
 
-#### Step 9 Variables Extracted
+#### Step 8 Variables Extracted
 
 ```ts
 claimsPolicyId = .value[0].id
 ```
 
-### Step 9 Execution
+### Step 8 Execution
 
-#### Step 9 Prerequisites
+#### Step 8 Prerequisites
 
 - `msGraphToken`
 - `ssoServicePrincipalId`
 
-#### Step 9 Execution Requests
+#### Step 8 Execution Requests
 
 1. Create Policy
 
@@ -743,17 +743,17 @@ Expected Responses:
 - `204 No Content`
 - `409 Conflict` if a policy is already assigned (only one allowed)
 
-## Step 10: `completeGoogleSsoSetup`
+## Step 9: `completeGoogleSsoSetup`
 
-### Step 10 Purpose
+### Step 9 Purpose
 
 Automatically configure Google SSO using Azure AD metadata.
 
-### Step 10 State Check
+### Step 9 State Check
 
 Fetch the existing SAML profile and verify `idpConfig` is populated.
 
-### Step 10 Execution
+### Step 9 Execution
 
 1. Query Microsoft Graph for tenant ID and token signing certificate
 2. PATCH the Google SAML profile with Azure AD SAML endpoints
@@ -762,22 +762,22 @@ Fetch the existing SAML profile and verify `idpConfig` is populated.
 Example responses can be found in `test/e2e/fixtures/ms-organization.json`
 and `test/e2e/fixtures/ms-token-certs.json`.
 
-## Step 11: `assignUsersToSso`
+## Step 10: `assignUsersToSso`
 
-### Step 11 Purpose
+### Step 10 Purpose
 
 Enable SAML SSO for all users in the domain.
 
-### Step 11 State Check
+### Step 10 State Check
 
-#### Step 11 Check Request
+#### Step 10 Check Request
 
 ```http
 GET https://cloudidentity.googleapis.com/v1/inboundSsoAssignments
 Authorization: Bearer {googleAccessToken}
 ```
 
-#### Step 11 Success Response (`200 OK`)
+#### Step 10 Success Response (`200 OK`)
 
 ```json
 {
@@ -790,18 +790,18 @@ Authorization: Bearer {googleAccessToken}
 }
 ```
 
-#### Step 11 Completion Criteria
+#### Step 10 Completion Criteria
 
 Assignment exists with `targetGroup = "groups/allUsers"` and matching `samlProfileId`
 
-### Step 11 Execution
+### Step 10 Execution
 
-#### Step 11 Prerequisites
+#### Step 10 Prerequisites
 
 - `googleAccessToken`
 - `samlProfileId`
 
-#### Step 11 Execution Request
+#### Step 10 Execution Request
 
 ```http
 POST https://cloudidentity.googleapis.com/v1/inboundSsoAssignments
@@ -815,27 +815,27 @@ Content-Type: application/json
 }
 ```
 
-#### Step 11 Expected Responses
+#### Step 10 Expected Responses
 
 - `200 OK` returning an [Operation](https://cloud.google.com/identity/docs/reference/rest/Shared.Types/Operation) with `done: true`
 - `409 Conflict` (already assigned)
 
-## Step 12: `testSsoConfiguration`
+## Step 11: `testSsoConfiguration`
 
-### Step 12 Purpose
+### Step 11 Purpose
 
 Verify end-to-end SAML SSO is functioning.
 
-### Step 12 State Check & Execution
+### Step 11 State Check & Execution
 
 Manual step — requires human interaction
 
-#### Step 12 Required Conditions
+#### Step 11 Required Conditions
 
 - Previously configured steps must be complete
 - A test user exists
 
-#### Step 12 Procedure
+#### Step 11 Procedure
 
 1. Open private or incognito browser window
 2. Navigate to Google Workspace login
