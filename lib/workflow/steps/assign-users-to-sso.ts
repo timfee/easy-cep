@@ -56,6 +56,12 @@ export default defineStep<CheckData>(StepId.AssignUsersToSso)
   .provides()
 
   /**
+   * GET https://cloudidentity.googleapis.com/v1/{samlProfileId}
+   * Headers: { Authorization: Bearer {googleAccessToken} }
+   *
+   * Success response (200)
+   * { "name": "profiles/{id}", "idpConfig": { ... } }
+   *
    * GET https://cloudidentity.googleapis.com/v1/inboundSsoAssignments
    * Headers: { Authorization: Bearer {googleAccessToken} }
    *
@@ -96,8 +102,34 @@ export default defineStep<CheckData>(StepId.AssignUsersToSso)
             .optional()
         });
 
+        const ProfileSchema = z.object({
+          name: z.string(),
+          idpConfig: z
+            .object({
+              entityId: z.string(),
+              singleSignOnServiceUri: z.string()
+            })
+            .optional()
+        });
+
         const profileId = vars.require(Var.SamlProfileId);
         const automationOuPath = vars.require(Var.AutomationOuPath);
+
+        const profile = await google.get(
+          ApiEndpoint.Google.SamlProfile(profileId),
+          ProfileSchema
+        );
+
+        if (
+          !profile.idpConfig?.entityId
+          || !profile.idpConfig.singleSignOnServiceUri
+          || profile.idpConfig.entityId === ""
+          || profile.idpConfig.singleSignOnServiceUri === ""
+        ) {
+          log(LogLevel.Info, "SAML profile not fully configured");
+          markIncomplete("SAML profile missing configuration", {});
+          return;
+        }
 
         const { inboundSsoAssignments = [] } = await google.get(
           ApiEndpoint.Google.SsoAssignments,
