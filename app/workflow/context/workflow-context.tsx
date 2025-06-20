@@ -15,6 +15,7 @@ import {
   useCallback,
   useContext,
   useEffect,
+  useMemo,
   useRef,
   useState
 } from "react";
@@ -69,40 +70,6 @@ export function WorkflowProvider({
     new Map()
   );
 
-  // Create VarStore implementation
-  const varStore: VarStore = {
-    get<K extends VarName>(key: K): WorkflowVars[K] | undefined {
-      return createVarStore(vars).get(key);
-    },
-
-    require<K extends VarName>(key: K): NonNullable<WorkflowVars[K]> {
-      return createVarStore(vars).require(key);
-    },
-
-    set(updates: Partial<WorkflowVars>) {
-      updateVars(updates);
-    },
-
-    has(key: VarName): boolean {
-      return vars[key] !== undefined;
-    },
-
-    build(template: string): string {
-      return createVarStore(vars).build(template);
-    },
-
-    subscribe(key: VarName, callback: (value: unknown) => void): () => void {
-      if (!listeners.current.has(key)) {
-        listeners.current.set(key, new Set());
-      }
-      listeners.current.get(key)!.add(callback);
-
-      return () => {
-        listeners.current.get(key)?.delete(callback);
-      };
-    }
-  };
-
   const updateVars = useCallback(
     (newVars: Partial<WorkflowVars>) => {
       const keys = Object.keys(newVars) as VarName[];
@@ -131,6 +98,43 @@ export function WorkflowProvider({
       });
     },
     [steps]
+  );
+
+  // Create VarStore implementation
+  const varStore = useMemo<VarStore>(
+    () => ({
+      get<K extends VarName>(key: K): WorkflowVars[K] | undefined {
+        return createVarStore(vars).get(key);
+      },
+
+      require<K extends VarName>(key: K): NonNullable<WorkflowVars[K]> {
+        return createVarStore(vars).require(key);
+      },
+
+      set(updates: Partial<WorkflowVars>) {
+        updateVars(updates);
+      },
+
+      has(key: VarName): boolean {
+        return vars[key] !== undefined;
+      },
+
+      build(template: string): string {
+        return createVarStore(vars).build(template);
+      },
+
+      subscribe(key: VarName, callback: (value: unknown) => void): () => void {
+        if (!listeners.current.has(key)) {
+          listeners.current.set(key, new Set());
+        }
+        listeners.current.get(key)!.add(callback);
+
+        return () => {
+          listeners.current.get(key)?.delete(callback);
+        };
+      }
+    }),
+    [vars, updateVars]
   );
 
   const updateStep = useCallback(
