@@ -12,7 +12,13 @@ export const env = createEnv({
     MICROSOFT_OAUTH_CLIENT_ID: z.string(),
     MICROSOFT_OAUTH_CLIENT_SECRET: z.string(),
     ALLOW_INFO_PURGE: z
-      .preprocess((v) => (v === "true" ? true : v === "false" ? false : v), z.boolean())
+      .preprocess(
+        (v) =>
+          v === "true" ? true
+          : v === "false" ? false
+          : v,
+        z.boolean()
+      )
       .default(false)
   },
   client: {},
