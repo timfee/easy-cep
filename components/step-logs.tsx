@@ -63,9 +63,9 @@ export function StepLogs({ logs }: StepLogsProps) {
   return (
     <ScrollArea className="h-[250px] -mx-2">
       <div className="space-y-1.5 px-2">
-        {logs.map((log, index) => (
+        {logs.map((log) => (
           <div
-            key={index}
+            key={log.timestamp}
             className="p-3 rounded-md border bg-white border-slate-200">
             <div className="flex items-start gap-3">
               <div

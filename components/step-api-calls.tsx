@@ -64,8 +64,8 @@ export function StepApiCalls({ stepId }: StepApiCallsProps) {
 
   return (
     <div className="space-y-3">
-      {apiTemplates.map((template, idx) => (
-        <TooltipProvider key={idx}>
+      {apiTemplates.map((template) => (
+        <TooltipProvider key={template.endpoint}>
           <Tooltip>
             <TooltipTrigger asChild>
               <div className="border border-slate-200 rounded-lg p-3 bg-slate-50/30 hover:bg-slate-100/50 transition-colors duration-150 cursor-help">

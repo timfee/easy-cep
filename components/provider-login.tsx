@@ -4,7 +4,6 @@ import { Button } from "@/components/ui/button";
 import { type Provider } from "@/constants";
 import { Var, WorkflowVars } from "@/types";
 import { CheckCircle, XCircle } from "lucide-react";
-import { redirect } from "next/navigation";
 import { useCallback, useEffect, useState } from "react";
 
 interface Props {
@@ -127,7 +126,7 @@ export function ProviderLogin({ onUpdate }: Props) {
         Icon={Microsoft}
         name="Microsoft"
         isConnected={tokens.msGraphToken !== undefined}
-        onConnectClick={() => redirect("/api/auth/microsoft")}
+        onConnectClick={() => (window.location.href = "/api/auth/microsoft")}
         onDisconnectClick={() => signOut("microsoft")}
         iconColorClass="text-purple-500"
       />
