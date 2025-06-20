@@ -70,35 +70,37 @@ export default defineStep(StepId.CreateMicrosoftApps)
         );
         // Extract: ssoAppId = ssoApps[0]?.appId
 
-        const provApp = provApps[0];
-        const ssoApp = ssoApps[0] ?? provApp;
+        const SpSchema = z.object({
+          value: z.array(z.object({ id: z.string() }))
+        });
+
+        async function findAppWithSp(
+          apps: Array<{ id: string; appId: string }>
+        ) {
+          for (const app of apps) {
+            const filter = encodeURIComponent(`appId eq '${app.appId}'`);
+            const { value } = await microsoft.get(
+              `${ApiEndpoint.Microsoft.ServicePrincipals}?$filter=${filter}`,
+              SpSchema,
+              { flatten: "value" }
+            );
+            const spId = value[0]?.id;
+            if (spId) return { app, spId };
+          }
+          return undefined;
+        }
+
+        const provPair = await findAppWithSp(provApps);
+        const ssoPair = await findAppWithSp(ssoApps);
+
+        const provApp = provPair?.app;
+        const provId = provPair?.spId;
+        const ssoApp = ssoPair?.app ?? provApp;
+        const ssoId = ssoPair?.spId;
+
         const sameApp = provApp?.appId === ssoApp?.appId;
 
         if (provApp && ssoApp) {
-          const SpSchema = z.object({
-            value: z.array(z.object({ id: z.string() }))
-          });
-
-          const provFilter = encodeURIComponent(`appId eq '${provApp.appId}'`);
-          const ssoFilter = encodeURIComponent(`appId eq '${ssoApp.appId}'`);
-
-          const provRes = await microsoft.get(
-            `${ApiEndpoint.Microsoft.ServicePrincipals}?$filter=${provFilter}`,
-            SpSchema,
-            { flatten: "value" }
-          );
-          // Extract: provisioningServicePrincipalId = provRes.value[0]?.id
-
-          const ssoRes = await microsoft.get(
-            `${ApiEndpoint.Microsoft.ServicePrincipals}?$filter=${ssoFilter}`,
-            SpSchema,
-            { flatten: "value" }
-          );
-          // Extract: ssoServicePrincipalId = ssoRes.value[0]?.id
-
-          const provId = provRes.value[0]?.id;
-          const ssoId = ssoRes.value[0]?.id;
-
           if (provId && ssoId) {
             log(
               LogLevel.Info,
