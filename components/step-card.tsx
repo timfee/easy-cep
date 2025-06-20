@@ -63,7 +63,8 @@ const INFO_BUTTONS: Partial<Record<StepIdValue, React.FC>> = {
   [StepId.ConfigureGoogleSamlProfile]: SamlInfoButton,
   [StepId.AssignUsersToSso]: SsoInfoButton,
   [StepId.CreateMicrosoftApps]: AppsInfoButton,
-  [StepId.ConfigureMicrosoftSyncAndSso]: ProvisioningInfoButton,
+  [StepId.SetupMicrosoftProvisioning]: ProvisioningInfoButton,
+  [StepId.ConfigureMicrosoftSso]: ProvisioningInfoButton,
   [StepId.SetupMicrosoftClaimsPolicy]: ClaimsInfoButton
 };
 

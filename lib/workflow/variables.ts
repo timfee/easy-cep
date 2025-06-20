@@ -34,9 +34,9 @@ export const WORKFLOW_VARIABLES: Record<string, VariableMetadata> = {
     sensitive: true,
     consumedBy: [
       StepId.CreateMicrosoftApps,
-      StepId.ConfigureMicrosoftSyncAndSso,
-      StepId.SetupMicrosoftClaimsPolicy,
-      StepId.CompleteGoogleSsoSetup
+      StepId.SetupMicrosoftProvisioning,
+      StepId.ConfigureMicrosoftSso,
+      StepId.SetupMicrosoftClaimsPolicy
     ]
   },
   primaryDomain: {
@@ -139,7 +139,7 @@ export const WORKFLOW_VARIABLES: Record<string, VariableMetadata> = {
     category: "state",
     description: "Password for provisioning account",
     producedBy: StepId.CreateServiceUser,
-    consumedBy: [StepId.ConfigureMicrosoftSyncAndSso],
+    consumedBy: [StepId.SetupMicrosoftProvisioning],
     sensitive: true
   },
   adminRoleId: {
@@ -160,8 +160,8 @@ export const WORKFLOW_VARIABLES: Record<string, VariableMetadata> = {
     description: "Service principal for SSO app",
     producedBy: StepId.CreateMicrosoftApps,
     consumedBy: [
-      StepId.SetupMicrosoftClaimsPolicy,
-      StepId.CompleteGoogleSsoSetup
+      StepId.ConfigureMicrosoftSso,
+      StepId.SetupMicrosoftClaimsPolicy
     ]
   },
   provisioningServicePrincipalId: {
@@ -169,13 +169,14 @@ export const WORKFLOW_VARIABLES: Record<string, VariableMetadata> = {
     category: "state",
     description: "Service principal for provisioning app",
     producedBy: StepId.CreateMicrosoftApps,
-    consumedBy: [StepId.ConfigureMicrosoftSyncAndSso]
+    consumedBy: [StepId.SetupMicrosoftProvisioning]
   },
   ssoAppId: {
     type: "string",
     category: "state",
     description: "Application ID for SSO app",
-    producedBy: StepId.CreateMicrosoftApps
+    producedBy: StepId.CreateMicrosoftApps,
+    consumedBy: [StepId.ConfigureMicrosoftSso]
   },
   samlProfileId: {
     type: "string",
@@ -188,19 +189,43 @@ export const WORKFLOW_VARIABLES: Record<string, VariableMetadata> = {
     type: "string",
     category: "state",
     description: "Service provider entityId",
-    producedBy: StepId.ConfigureGoogleSamlProfile
+    producedBy: StepId.ConfigureGoogleSamlProfile,
+    consumedBy: [StepId.ConfigureMicrosoftSso]
   },
   acsUrl: {
     type: "string",
     category: "state",
     description: "Assertion consumer service URL",
-    producedBy: StepId.ConfigureGoogleSamlProfile
+    producedBy: StepId.ConfigureGoogleSamlProfile,
+    consumedBy: [StepId.ConfigureMicrosoftSso]
   },
   claimsPolicyId: {
     type: "string",
     category: "state",
     description: "Claims policy identifier",
     producedBy: StepId.SetupMicrosoftClaimsPolicy
+  },
+  msSigningCertificate: {
+    type: "string",
+    category: "state",
+    description: "Microsoft SAML signing certificate in PEM format",
+    producedBy: StepId.ConfigureMicrosoftSso,
+    consumedBy: [StepId.CompleteGoogleSsoSetup],
+    sensitive: true
+  },
+  msSsoLoginUrl: {
+    type: "string",
+    category: "state",
+    description: "Microsoft SAML SSO login URL",
+    producedBy: StepId.ConfigureMicrosoftSso,
+    consumedBy: [StepId.CompleteGoogleSsoSetup]
+  },
+  msSsoEntityId: {
+    type: "string",
+    category: "state",
+    description: "Microsoft SAML entity ID",
+    producedBy: StepId.ConfigureMicrosoftSso,
+    consumedBy: [StepId.CompleteGoogleSsoSetup]
   }
 } as const satisfies Record<string, VariableMetadata>;
 

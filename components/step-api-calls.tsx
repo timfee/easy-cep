@@ -225,7 +225,7 @@ export const stepApiMetadata: Record<StepIdValue, ApiCallMetadata[]> = {
     }
   ],
 
-  "configure-microsoft-sync-and-sso": [
+  "setup-microsoft-provisioning": [
     {
       method: "GET",
       endpoint:
@@ -250,6 +250,35 @@ export const stepApiMetadata: Record<StepIdValue, ApiCallMetadata[]> = {
       endpoint:
         "/graph/v1.0/servicePrincipals/{provisioningServicePrincipalId}/synchronization/jobs/{jobId}/start",
       description: "Start synchronization"
+    }
+  ],
+
+  "configure-microsoft-sso": [
+    {
+      method: "PATCH",
+      endpoint: "/graph/v1.0/servicePrincipals/{ssoServicePrincipalId}",
+      description: "Set SSO mode to saml"
+    },
+    {
+      method: "GET",
+      endpoint: extractPath(ApiEndpoint.Microsoft.Organization),
+      description: "Get tenant information"
+    },
+    {
+      method: "PATCH",
+      endpoint: "/graph/v1.0/servicePrincipals/{ssoServicePrincipalId}",
+      description: "Configure SAML URLs"
+    },
+    {
+      method: "PATCH",
+      endpoint: "/graph/beta/applications/{applicationObjectId}",
+      description: "Set identifier URIs and redirect URIs"
+    },
+    {
+      method: "POST",
+      endpoint:
+        "/graph/beta/servicePrincipals/{ssoServicePrincipalId}/addTokenSigningCertificate",
+      description: "Create signing certificate"
     }
   ],
 

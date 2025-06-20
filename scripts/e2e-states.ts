@@ -60,7 +60,8 @@ export async function createPartiallyCompletedState(step: string) {
         orgUnitPath: "/"
       });
       break;
-    case "configure-microsoft-sync-and-sso":
+    case "setup-microsoft-provisioning":
+    case "configure-microsoft-sso":
       await createMicrosoftApp(TemplateId.GoogleWorkspaceConnector);
       await createMicrosoftApp(TemplateId.GoogleWorkspaceSaml);
       break;
@@ -131,7 +132,7 @@ async function createSsoAssignment(body: Record<string, unknown>) {
 
 export async function createErrorState(step: string) {
   switch (step) {
-    case "configure-microsoft-sync-and-sso": {
+    case "setup-microsoft-provisioning": {
       const spId = await getProvisioningServicePrincipalId();
       if (spId) {
         const templateId = await getSyncTemplateId(

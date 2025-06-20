@@ -64,6 +64,9 @@ export const ApiEndpoint = {
     TokenSigningCertificates: (spId: string) =>
       `https://graph.microsoft.com/beta/servicePrincipals/${spId}/tokenSigningCertificates`,
 
+    AddTokenSigningCertificate: (spId: string) =>
+      `https://graph.microsoft.com/beta/servicePrincipals/${spId}/addTokenSigningCertificate`,
+
     Organization: "https://graph.microsoft.com/v1.0/organization",
 
     Me: "https://graph.microsoft.com/v1.0/me"

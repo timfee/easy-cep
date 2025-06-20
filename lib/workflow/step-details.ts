@@ -34,10 +34,15 @@ export const STEP_DETAILS: Record<string, StepDetail> = {
     description:
       "Instantiates the Google Workspace provisioning and SSO applications in Microsoft Entra. Corresponding service principals are created automatically."
   },
-  "configure-microsoft-sync-and-sso": {
-    title: "Configure Microsoft Sync and SSO",
+  "setup-microsoft-provisioning": {
+    title: "Setup Microsoft Provisioning",
     description:
-      "Sets up Azure AD provisioning and single sign‑on. Credentials are stored and an initial synchronization job is started."
+      "Configures Azure AD user provisioning to Google Workspace. Creates a synchronization job, sets credentials, and starts the initial sync."
+  },
+  "configure-microsoft-sso": {
+    title: "Configure Microsoft SSO",
+    description:
+      "Configures SAML single sign-on settings in Microsoft Entra. Sets SSO mode, configures SAML URLs, updates application settings, and generates signing certificates."
   },
   "setup-microsoft-claims-policy": {
     title: "Setup Microsoft Claims Policy",

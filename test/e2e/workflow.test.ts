@@ -68,7 +68,8 @@ if (
       StepId.CreateAdminRoleAndAssignUser,
       StepId.ConfigureGoogleSamlProfile,
       StepId.CreateMicrosoftApps,
-      StepId.ConfigureMicrosoftSyncAndSso,
+      StepId.SetupMicrosoftProvisioning,
+      StepId.ConfigureMicrosoftSso,
       StepId.SetupMicrosoftClaimsPolicy,
       StepId.CompleteGoogleSsoSetup,
       StepId.AssignUsersToSso
