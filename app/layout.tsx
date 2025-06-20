@@ -37,7 +37,7 @@ export default function RootLayout({
 
   return (
     <html lang="en">
-      <body>
+      <body className="h-screen overflow-hidden">
         <WorkflowProvider steps={allSteps} initialVars={DEFAULT_CONFIG}>
           {children}
         </WorkflowProvider>
