@@ -1,5 +1,9 @@
+/* eslint-disable workflow/no-hardcoded-config */
+import { WorkflowProvider } from "@/components/workflow-context";
 import { PROTECTED_RESOURCES } from "@/constants";
 import { env } from "@/env";
+import { getAllSteps } from "@/lib/workflow/step-registry";
+import { Var } from "@/types";
 import type { Metadata } from "next";
 import "./globals.css";
 
@@ -13,9 +17,31 @@ export const metadata: Metadata = { title: "Easy CEP" };
 export default function RootLayout({
   children
 }: Readonly<{ children: React.ReactNode }>) {
+  const allSteps = getAllSteps().map((s) => ({
+    id: s.id,
+    requires: s.requires,
+    provides: s.provides
+  }));
+
+  const DEFAULT_CONFIG = {
+    [Var.AutomationOuName]: "Automation",
+    [Var.AutomationOuPath]: "/Automation",
+    [Var.ProvisioningUserPrefix]: "azuread-provisioning",
+    [Var.AdminRoleName]: "Microsoft Entra Provisioning",
+    [Var.SamlProfileDisplayName]: "Azure AD",
+    [Var.ProvisioningAppDisplayName]: "Google Workspace Provisioning",
+    [Var.SsoAppDisplayName]: "Google Workspace SSO",
+    [Var.ClaimsPolicyDisplayName]: "Google Workspace Basic Claims",
+    [Var.GeneratedPassword]: Math.random().toString(36).slice(-12)
+  };
+
   return (
     <html lang="en">
-      <body>{children}</body>
+      <body>
+        <WorkflowProvider steps={allSteps} initialVars={DEFAULT_CONFIG}>
+          {children}
+        </WorkflowProvider>
+      </body>
     </html>
   );
 }

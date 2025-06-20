@@ -1,7 +1,7 @@
 "use client";
 
-import { useWorkflow } from "@/app/workflow/workflow-context";
 import { Button } from "@/components/ui/button";
+import { useWorkflow } from "@/components/workflow-context";
 import { type Provider } from "@/constants";
 import { Var, WorkflowVars } from "@/types";
 import { useCallback, useEffect, useState } from "react";
