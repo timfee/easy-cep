@@ -35,6 +35,7 @@ import { useCallback, useEffect, useState } from "react";
 export interface InfoItem {
   id: string;
   label: string;
+  subLabel?: string;
   href?: string;
   deletable?: boolean;
 }
@@ -340,6 +341,11 @@ export function InfoButton({
                         {item.label}
                       </span>
                     }
+                    {item.subLabel && (
+                      <span className="text-xs text-slate-500 truncate block">
+                        {item.subLabel}
+                      </span>
+                    )}
                     {failedDeletes.has(item.id) && (
                       <span className="text-xs text-red-600">
                         Failed: {failedDeletes.get(item.id)}

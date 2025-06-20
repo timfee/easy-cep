@@ -13,6 +13,7 @@ import { z } from "zod";
 export interface InfoItem {
   id: string;
   label: string;
+  subLabel?: string;
   href?: string;
   deletable?: boolean;
   deleteEndpoint?: string;
@@ -70,15 +71,18 @@ export async function listSamlProfiles(): Promise<InfoItem[]> {
   if (!res.ok) throw new Error(`HTTP ${res.status}`);
   const data = Schema.parse(await res.json());
   return (
-    data.inboundSamlSsoProfiles?.map((p) => ({
-      id: p.name,
-      label: p.displayName ?? p.name,
-      href: undefined,
-      deletable: true,
-      deleteEndpoint: `${ApiEndpoint.Google.SsoProfiles}/${encodeURIComponent(
-        p.name
-      )}`
-    })) ?? []
+    data.inboundSamlSsoProfiles?.map((p) => {
+      const id = p.name.replace(/^(?:.*\/)?samlProfiles\//, "");
+      return {
+        id: p.name,
+        label: p.displayName ?? p.name,
+        href: `https://admin.google.com/ac/apps/saml/${encodeURIComponent(id)}`,
+        deletable: true,
+        deleteEndpoint: `${ApiEndpoint.Google.SsoProfiles}/${encodeURIComponent(
+          p.name
+        )}`
+      };
+    }) ?? []
   );
 }
 
@@ -110,7 +114,10 @@ export async function listSsoAssignments(): Promise<InfoItem[]> {
       return {
         id,
         label: a.targetGroup || a.targetOrgUnit || a.name,
-        href: undefined,
+        subLabel: a.ssoMode,
+        href: `https://admin.google.com/ac/security/inboundsso?assignmentId=${encodeURIComponent(
+          id
+        )}`,
         deletable: true,
         deleteEndpoint: `${ApiEndpoint.Google.SsoAssignments}/${encodeURIComponent(
           id
@@ -141,6 +148,7 @@ export async function listProvisioningJobs(): Promise<InfoItem[]> {
     value: z.array(
       z.object({
         id: z.string(),
+        templateId: z.string().optional(),
         status: z.object({ code: z.string().optional() }).optional()
       })
     )
@@ -153,7 +161,9 @@ export async function listProvisioningJobs(): Promise<InfoItem[]> {
   const data = JobsSchema.parse(await res.json());
   return data.value.map((j) => ({
     id: j.id,
-    label: j.status?.code ?? j.id,
+    label: j.templateId ?? j.id,
+    subLabel: j.status?.code,
+    href: `https://entra.microsoft.com/#view/Microsoft_AAD_Connect/SynchronizationJobBlade/jobId/${j.id}`,
     deletable: true,
     deleteEndpoint: `${ApiEndpoint.Microsoft.SyncJobs(spId)}/${j.id}`
   }));
