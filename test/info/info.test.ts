@@ -90,7 +90,7 @@ describe("info server actions", () => {
     expect(items).toEqual([
       {
         id: "root",
-        label: "/",
+        label: "orgUnits/03ph8a2z23yjui6",
         subLabel: "SAML_SSO",
         href: "https://admin.google.com/ac/security/sso",
         deletable: true,

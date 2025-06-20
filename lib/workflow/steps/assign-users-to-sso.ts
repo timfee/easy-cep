@@ -1,4 +1,4 @@
-import { ApiEndpoint, OrgUnit } from "@/constants";
+import { ApiEndpoint } from "@/constants";
 import {
   EmptyResponseSchema,
   isConflictError,
@@ -9,7 +9,42 @@ import { LogLevel, StepId, Var } from "@/types";
 import { z } from "zod";
 import { defineStep } from "../step-builder";
 
+interface HttpClient {
+  get<R>(
+    url: string,
+    schema: z.ZodSchema<R>,
+    options?: { flatten?: boolean | string }
+  ): Promise<R>;
+}
+
 type CheckData = Partial<Pick<WorkflowVars, never>>;
+
+async function getRootOrgUnitId(google: HttpClient) {
+  const OrgUnitsSchema = z.object({
+    organizationUnits: z
+      .array(
+        z.object({
+          orgUnitId: z.string(),
+          parentOrgUnitId: z.string().optional(),
+          orgUnitPath: z.string()
+        })
+      )
+      .optional()
+  });
+
+  const { organizationUnits = [] } = await google.get(
+    `${ApiEndpoint.Google.OrgUnits}?type=children`,
+    OrgUnitsSchema,
+    { flatten: "organizationUnits" }
+  );
+
+  if (organizationUnits.length === 0) {
+    throw new Error("No org units found");
+  }
+
+  const id = organizationUnits[0].parentOrgUnitId ?? "";
+  return id.replace(/^id:/, "");
+}
 
 export default defineStep<CheckData>(StepId.AssignUsersToSso)
   .requires(
@@ -71,9 +106,10 @@ export default defineStep<CheckData>(StepId.AssignUsersToSso)
         );
         // Extract: assignmentExists = inboundSsoAssignments.some(...)
 
+        const rootId = await getRootOrgUnitId(google);
         const rootAssigned = inboundSsoAssignments.some(
           (assignment) =>
-            assignment.targetOrgUnit === OrgUnit.RootPath
+            assignment.targetOrgUnit === `orgUnits/${rootId}`
             && assignment.samlSsoInfo?.inboundSamlSsoProfile === profileId
             && assignment.ssoMode === "SAML_SSO"
         );
@@ -149,11 +185,12 @@ export default defineStep<CheckData>(StepId.AssignUsersToSso)
        * Error response (409)
        * { "error": { "code": 409, "message": "Assignment exists" } }
        */
+      const rootId = await getRootOrgUnitId(google);
       const op = await google.post(
         ApiEndpoint.Google.SsoAssignments,
         OpSchema,
         {
-          targetOrgUnit: OrgUnit.RootPath,
+          targetOrgUnit: `orgUnits/${rootId}`,
           samlSsoInfo: { inboundSamlSsoProfile: profileId },
           ssoMode: "SAML_SSO"
         }
@@ -218,9 +255,10 @@ export default defineStep<CheckData>(StepId.AssignUsersToSso)
 
       const automationOuPath = vars.require(Var.AutomationOuPath);
 
+      const rootId = await getRootOrgUnitId(google);
       const rootAssignment = inboundSsoAssignments.find(
         (item) =>
-          item.targetOrgUnit === OrgUnit.RootPath
+          item.targetOrgUnit === `orgUnits/${rootId}`
           && item.samlSsoInfo?.inboundSamlSsoProfile === profileId
           && item.ssoMode === "SAML_SSO"
       );
