@@ -61,11 +61,32 @@ export function WorkflowProvider({
   steps,
   initialVars = {}
 }: WorkflowProviderProps) {
-  const [vars, setVarsState] = useState<Partial<WorkflowVars>>(initialVars);
+  const loadStoredState = useCallback(() => {
+    if (typeof window === "undefined") return null;
+    try {
+      const raw = localStorage.getItem("workflowState");
+      return raw ?
+          (JSON.parse(raw) as Partial<{
+            vars: Partial<WorkflowVars>;
+            status: Partial<Record<StepIdValue, StepUIState>>;
+          }>)
+        : null;
+    } catch {
+      return null;
+    }
+  }, []);
+
+  const stored = loadStoredState();
+
+  const [vars, setVarsState] = useState<Partial<WorkflowVars>>({
+    ...initialVars,
+    ...(stored?.vars ?? {})
+  });
+
   const [status, setStatus] = useState<
     Partial<Record<StepIdValue, StepUIState>>
-  >({});
-  const statusRef = useRef<Partial<Record<StepIdValue, StepUIState>>>({});
+  >(stored?.status ?? {});
+  const statusRef = useRef<Partial<Record<StepIdValue, StepUIState>>>(status);
   const [executing, setExecuting] = useState<StepIdValue | null>(null);
   const [sessionLoaded, setSessionLoaded] = useState(false);
   const checkedSteps = useRef(new Set<StepIdValue>());
@@ -242,6 +263,15 @@ export function WorkflowProvider({
   useEffect(() => {
     checkSteps();
   }, [checkSteps]);
+
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      localStorage.setItem(
+        "workflowState",
+        JSON.stringify({ vars, status: statusRef.current })
+      );
+    }
+  }, [vars, status]);
 
   const value: WorkflowContextValue = {
     vars: varStore,
