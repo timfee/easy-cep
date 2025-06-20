@@ -1,5 +1,6 @@
 "use client";
 
+import { InfoItemList } from "@/components/info-item-list";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -29,21 +30,13 @@ import {
   PaginationNext,
   PaginationPrevious
 } from "@/components/ui/pagination";
-import { Info, Loader2, Lock, Trash2 } from "lucide-react";
-import { useCallback, useEffect, useState, type ReactNode } from "react";
-
-export interface InfoItem {
-  id: string;
-  label: string;
-  subLabel?: string;
-  href?: string;
-  deletable?: boolean;
-}
-
-export interface DeleteResult {
-  deleted: string[];
-  failed: Array<{ id: string; error: string }>;
-}
+import { useInfoItems } from "@/hooks/use-info-items";
+import { useMultiSelect } from "@/hooks/use-multi-select";
+import { usePaginatedItems } from "@/hooks/use-paginated-items";
+import type { InfoItem } from "@/lib/info";
+import type { DeleteResult } from "@/lib/workflow/info-actions";
+import { Info, Loader2, Trash2 } from "lucide-react";
+import { useEffect, useState, type ReactNode } from "react";
 
 interface InfoButtonProps {
   title: string;
@@ -59,89 +52,45 @@ export function InfoButton({
   context
 }: InfoButtonProps) {
   const [open, setOpen] = useState(false);
-  const [loading, setLoading] = useState(false);
-  const [items, setItems] = useState<InfoItem[]>([]);
-  const [error, setError] = useState<string | undefined>(undefined);
-  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
-  const [currentPage, setCurrentPage] = useState(1);
   const [isDeleting, setIsDeleting] = useState(false);
   const [deleteConfirmText, setDeleteConfirmText] = useState("");
   const [failedDeletes, setFailedDeletes] = useState<Map<string, string>>(
     new Map()
   );
 
-  const itemsPerPage = 25;
-
-  useEffect(() => {
-    if (!open) {
-      setSelectedIds(new Set());
-      setCurrentPage(1);
-      setFailedDeletes(new Map());
-      return;
-    }
-
-    const controller = new AbortController();
-    const load = async () => {
-      setLoading(true);
-      setError(undefined);
-      try {
-        const res = await fetchItems();
-        if (!controller.signal.aborted) {
-          setItems(res);
-        }
-      } catch (err) {
-        if (!controller.signal.aborted) {
-          setError(err instanceof Error ? err.message : String(err));
-        }
-      } finally {
-        if (!controller.signal.aborted) {
-          setLoading(false);
-        }
-      }
-    };
-
-    load();
-    return () => controller.abort();
-  }, [open, fetchItems]);
-
-  const paginatedItems = items.slice(
-    (currentPage - 1) * itemsPerPage,
-    currentPage * itemsPerPage
-  );
-
-  const totalPages = Math.ceil(items.length / itemsPerPage);
-  const showPagination = items.length > itemsPerPage;
+  const { items, loading, error, refetch } = useInfoItems(fetchItems, open);
 
   const deletableItems = items.filter((item) => item.deletable !== false);
+
+  const {
+    currentPage,
+    totalPages,
+    paginatedItems,
+    goToPage,
+    goToNextPage,
+    goToPrevPage,
+    reset: resetPagination
+  } = usePaginatedItems(items);
+
+  const {
+    selectedIds,
+    toggleAll,
+    toggle,
+    reset: resetSelection
+  } = useMultiSelect(paginatedItems);
+
   const visibleDeletableItems = paginatedItems.filter(
     (item) => item.deletable !== false
   );
 
-  const handleSelectAll = useCallback(() => {
-    if (selectedIds.size === visibleDeletableItems.length) {
-      setSelectedIds(new Set());
-    } else {
-      setSelectedIds(new Set(visibleDeletableItems.map((item) => item.id)));
+  useEffect(() => {
+    if (!open) {
+      resetSelection();
+      resetPagination();
+      setFailedDeletes(new Map());
+      setDeleteConfirmText("");
     }
-  }, [selectedIds, visibleDeletableItems]);
-
-  const handleSelectItem = useCallback(
-    (id: string, checked: boolean) => {
-      const newSelected = new Set(selectedIds);
-      if (checked) {
-        newSelected.add(id);
-      } else {
-        newSelected.delete(id);
-      }
-      setSelectedIds(newSelected);
-    },
-    [selectedIds]
-  );
-
-  const handlePageChange = (page: number) => {
-    setSelectedIds(new Set());
-    setCurrentPage(page);
-  };
+  }, [open, resetSelection, resetPagination]);
 
   const handleDeleteSelected = async () => {
     if (!deleteItems || selectedIds.size === 0) return;
@@ -152,24 +101,17 @@ export function InfoButton({
     try {
       const result = await deleteItems(Array.from(selectedIds));
 
-      setItems((prev) =>
-        prev.filter((item) => !result.deleted.includes(item.id))
-      );
-      setSelectedIds(new Set());
+      await refetch(new AbortController().signal);
 
       const failures = new Map<string, string>();
-      result.failed.forEach(({ id, error }) => {
+      result.failed.forEach(({ id, error }: { id: string; error: string }) => {
         failures.set(id, error);
       });
       setFailedDeletes(failures);
 
-      const newTotal = items.length - result.deleted.length;
-      const newTotalPages = Math.ceil(newTotal / itemsPerPage);
-      if (currentPage > newTotalPages) {
-        setCurrentPage(1);
-      }
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "Delete operation failed");
+      resetSelection();
+    } catch {
+      // ignore errors here
     } finally {
       setIsDeleting(false);
     }
@@ -185,24 +127,25 @@ export function InfoButton({
       const allDeletableIds = deletableItems.map((item) => item.id);
       const result = await deleteItems(allDeletableIds);
 
-      setItems((prev) =>
-        prev.filter((item) => !result.deleted.includes(item.id))
-      );
-      setSelectedIds(new Set());
-      setDeleteConfirmText("");
-      setCurrentPage(1);
+      await refetch(new AbortController().signal);
 
       const failures = new Map<string, string>();
-      result.failed.forEach(({ id, error }) => {
+      result.failed.forEach(({ id, error }: { id: string; error: string }) => {
         failures.set(id, error);
       });
       setFailedDeletes(failures);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "Purge operation failed");
+
+      resetSelection();
+      setDeleteConfirmText("");
+      resetPagination();
+    } catch {
+      // ignore errors
     } finally {
       setIsDeleting(false);
     }
   };
+
+  const showPagination = items.length > 25;
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
@@ -230,7 +173,7 @@ export function InfoButton({
                     selectedIds.size === visibleDeletableItems.length
                     && visibleDeletableItems.length > 0
                   }
-                  onCheckedChange={handleSelectAll}
+                  onCheckedChange={() => toggleAll(visibleDeletableItems)}
                   className="h-3 w-3"
                 />
               )}
@@ -289,7 +232,6 @@ export function InfoButton({
                       onClick={async (e) => {
                         e.preventDefault();
                         await handlePurgeAll();
-                        setOpen(false);
                       }}
                       disabled={
                         deleteConfirmText !== "DELETE ALL" || isDeleting
@@ -311,58 +253,14 @@ export function InfoButton({
           {loading && <p className="text-sm text-slate-600 p-4">Loading...</p>}
           {error && <p className="text-sm text-red-600 p-4">{error}</p>}
           {!loading && !error && (
-            <div className="space-y-1 py-2">
-              {paginatedItems.map((item) => (
-                <div
-                  key={item.id}
-                  className={`flex items-center gap-2 px-2 py-1 hover:bg-slate-50 rounded ${
-                    failedDeletes.has(item.id) ? "bg-red-50" : ""
-                  }`}>
-                  {deleteItems && item.deletable !== false && (
-                    <Checkbox
-                      checked={selectedIds.has(item.id)}
-                      onCheckedChange={(checked) =>
-                        handleSelectItem(item.id, !!checked)
-                      }
-                      disabled={isDeleting}
-                      className="h-3 w-3"
-                    />
-                  )}
-                  {item.deletable === false && deleteItems && (
-                    <Lock className="h-3 w-3 text-slate-400" />
-                  )}
-                  <div className="flex-1 min-w-0">
-                    {item.href ?
-                      <a
-                        href={item.href}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="text-xs text-blue-600 hover:underline truncate block">
-                        {item.label}
-                      </a>
-                    : <span className="text-xs text-slate-700 truncate block">
-                        {item.label}
-                      </span>
-                    }
-                    {item.subLabel && (
-                      <span className="text-xs text-slate-500 truncate block">
-                        {item.subLabel}
-                      </span>
-                    )}
-                    {failedDeletes.has(item.id) && (
-                      <span className="text-xs text-red-600">
-                        Failed: {failedDeletes.get(item.id)}
-                      </span>
-                    )}
-                  </div>
-                </div>
-              ))}
-              {items.length === 0 && (
-                <p className="text-slate-600 text-xs text-center py-4">
-                  No entries found.
-                </p>
-              )}
-            </div>
+            <InfoItemList
+              items={paginatedItems}
+              selectedIds={selectedIds}
+              failedDeletes={failedDeletes}
+              onToggleSelect={toggle}
+              isDeleting={isDeleting}
+              showCheckboxes={!!deleteItems}
+            />
           )}
         </div>
 
@@ -370,17 +268,14 @@ export function InfoButton({
           <div className="border-t pt-3">
             <div className="flex items-center justify-between">
               <span className="text-xs text-slate-600">
-                Showing {(currentPage - 1) * itemsPerPage + 1}-
-                {Math.min(currentPage * itemsPerPage, items.length)} of{" "}
-                {items.length}
+                Showing {(currentPage - 1) * 25 + 1}-
+                {Math.min(currentPage * 25, items.length)} of {items.length}
               </span>
               <Pagination>
                 <PaginationContent>
                   <PaginationItem>
                     <PaginationPrevious
-                      onClick={() =>
-                        handlePageChange(Math.max(1, currentPage - 1))
-                      }
+                      onClick={goToPrevPage}
                       className={
                         currentPage === 1 ?
                           "pointer-events-none opacity-50"
@@ -388,24 +283,22 @@ export function InfoButton({
                       }
                     />
                   </PaginationItem>
-                  {Array.from({ length: Math.min(totalPages, 5) }, (_, i) => {
-                    const pageNum = i + 1;
-                    return (
-                      <PaginationItem key={pageNum}>
-                        <PaginationLink
-                          onClick={() => handlePageChange(pageNum)}
-                          isActive={currentPage === pageNum}
-                          className="cursor-pointer">
-                          {pageNum}
-                        </PaginationLink>
-                      </PaginationItem>
-                    );
-                  })}
+                  {Array.from(
+                    { length: Math.min(totalPages, 5) },
+                    (_, i) => i + 1
+                  ).map((pageNum) => (
+                    <PaginationItem key={pageNum}>
+                      <PaginationLink
+                        onClick={() => goToPage(pageNum)}
+                        isActive={currentPage === pageNum}
+                        className="cursor-pointer">
+                        {pageNum}
+                      </PaginationLink>
+                    </PaginationItem>
+                  ))}
                   <PaginationItem>
                     <PaginationNext
-                      onClick={() =>
-                        handlePageChange(Math.min(totalPages, currentPage + 1))
-                      }
+                      onClick={goToNextPage}
                       className={
                         currentPage === totalPages ?
                           "pointer-events-none opacity-50"
