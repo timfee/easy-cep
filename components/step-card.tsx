@@ -329,7 +329,7 @@ export function StepCard({
       </CardHeader>
 
       {(executing || state?.status === "pending") && (
-        <div className="px-6">
+        <div className="my-3 px-6">
           <div className="relative h-1 bg-slate-200 overflow-hidden rounded">
             <div className="absolute inset-0 bg-blue-500 animate-indeterminate" />
           </div>
@@ -339,7 +339,6 @@ export function StepCard({
       <Collapsible open={isExpanded}>
         <CollapsibleContent className="overflow-hidden data-[state=closed]:animate-collapsible-up data-[state=open]:animate-collapsible-down">
           <CardContent className="px-6">
-            {/* Action Buttons */}
             {detail?.description && (
               <div
                 className=" text-slate-700 px-7"
