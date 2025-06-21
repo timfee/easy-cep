@@ -4,6 +4,7 @@ import { StepCardContent } from "@/components/step-card/step-card-content";
 import { StepCardProvider } from "@/components/step-card/step-card-context";
 import { StepCardHeader } from "@/components/step-card/step-card-header";
 import { Card } from "@/components/ui/card";
+import { Collapsible, CollapsibleContent } from "@/components/ui/collapsible";
 import { cn } from "@/lib/utils";
 import { STEP_STATE_CONFIG } from "@/lib/workflow/step-constants";
 import {
@@ -46,37 +47,39 @@ export const StepCard = memo(function StepCard({
 
   return (
     <StepCardProvider value={actions}>
-      <Card
-        className={cn(
-          "transition-all duration-300 ease-out bg-white shadow-none hover:shadow-md",
-          config.borderClass,
-          !isExpanded && "cursor-pointer"
-        )}
-        onClick={() => !isExpanded && setIsExpanded(true)}>
-        <StepCardHeader
-          index={index}
-          stepId={definition.id}
-          state={state}
-          executing={executing}
-          isExpanded={isExpanded}
-          onToggle={() => setIsExpanded(!isExpanded)}
-        />
-        {(executing || state?.status === "pending") && (
-          <div className="my-6 px-6">
-            <div className="relative h-1 bg-slate-200 overflow-hidden rounded">
-              <div className="absolute inset-0 bg-primary animate-indeterminate" />
-            </div>
-          </div>
-        )}
-        {isExpanded && (
-          <StepCardContent
-            definition={definition}
+      <Collapsible open={isExpanded} onOpenChange={setIsExpanded}>
+        <Card
+          className={cn(
+            "transition-all duration-300 ease-out bg-white shadow-none hover:shadow-md",
+            config.borderClass,
+            !isExpanded && "cursor-pointer"
+          )}
+          onClick={() => !isExpanded && setIsExpanded(true)}>
+          <StepCardHeader
+            index={index}
+            stepId={definition.id}
             state={state}
-            vars={vars}
             executing={executing}
+            isExpanded={isExpanded}
+            onToggle={() => setIsExpanded(!isExpanded)}
           />
-        )}
-      </Card>
+          {(executing || state?.status === "pending") && (
+            <div className="my-6 px-6">
+              <div className="relative h-1 bg-slate-200 overflow-hidden rounded">
+                <div className="absolute inset-0 bg-primary animate-indeterminate" />
+              </div>
+            </div>
+          )}
+          <CollapsibleContent className="overflow-hidden data-[state=closed]:animate-collapsible-up data-[state=open]:animate-collapsible-down">
+            <StepCardContent
+              definition={definition}
+              state={state}
+              vars={vars}
+              executing={executing}
+            />
+          </CollapsibleContent>
+        </Card>
+      </Collapsible>
     </StepCardProvider>
   );
 });
