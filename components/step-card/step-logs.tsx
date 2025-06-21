@@ -1,8 +1,8 @@
 "use client";
 
-import { StepLogItem } from "@/components/step-log-item";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { StepLogEntry } from "@/types";
+import { StepLogItem } from "./step-log-item";
 
 interface StepLogsProps {
   logs: StepLogEntry[] | undefined;

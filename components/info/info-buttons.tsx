@@ -1,6 +1,5 @@
 "use client";
 
-import { InfoButton } from "@/components/info-button";
 import { PROTECTED_RESOURCES } from "@/constants";
 import { env } from "@/env";
 import {
@@ -27,6 +26,7 @@ import {
   type DeleteResult
 } from "@/lib/workflow/info-actions";
 import React from "react";
+import { InfoButton } from "./info-button";
 
 interface InfoButtonConfig {
   title: string;

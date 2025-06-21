@@ -9,11 +9,8 @@ import {
   SamlInfoButton,
   SsoInfoButton,
   UsersInfoButton
-} from "@/components/info-buttons";
-import { StepApiCalls } from "@/components/step-api-calls";
+} from "@/components/info/info-buttons";
 import { useStepCardActions } from "@/components/step-card/step-card-context";
-import { StepLogs } from "@/components/step-logs";
-import { StepVariables } from "@/components/step-variables";
 import { Button } from "@/components/ui/button";
 import { CardContent } from "@/components/ui/card";
 import {
@@ -39,6 +36,9 @@ import {
 } from "@/types";
 import { ChevronRight, Play, RotateCcw, Terminal, Zap } from "lucide-react";
 import { useEffect, useState } from "react";
+import { StepApiCalls } from "./step-api-calls";
+import { StepLogs } from "./step-logs";
+import { StepVariables } from "./step-variables";
 
 const INFO_BTN: Partial<Record<StepIdValue, React.FC>> = {
   [StepId.VerifyPrimaryDomain]: DomainInfoButton,

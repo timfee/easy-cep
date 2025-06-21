@@ -12,7 +12,7 @@ export function WorkflowHeader() {
       <section>
         <div className="flex items-center">
           <Image
-            src="../icon.svg"
+            src="/icon.svg"
             alt="Easy CEP Logo"
             width="36"
             height="36"
