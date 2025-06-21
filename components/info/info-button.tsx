@@ -99,23 +99,19 @@ export function InfoButton({
     setIsDeleting(true);
     setFailedDeletes(new Map());
 
-    try {
-      const result = await deleteItems(Array.from(selectedIds));
+    const result = await deleteItems(Array.from(selectedIds));
 
-      await refetch(new AbortController().signal);
+    await refetch(new AbortController().signal);
 
-      const failures = new Map<string, string>();
-      result.failed.forEach(({ id, error }: { id: string; error: string }) => {
-        failures.set(id, error);
-      });
-      setFailedDeletes(failures);
+    const failures = new Map<string, string>();
+    result.failed.forEach(({ id, error }: { id: string; error: string }) => {
+      failures.set(id, error);
+    });
+    setFailedDeletes(failures);
 
-      resetSelection();
-    } catch {
-      // ignore errors here
-    } finally {
-      setIsDeleting(false);
-    }
+    resetSelection();
+
+    setIsDeleting(false);
   };
 
   const handlePurgeAll = async () => {
@@ -151,12 +147,8 @@ export function InfoButton({
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
-        <Button
-          size="sm"
-          variant="outline"
-          onClick={(e) => e.stopPropagation()}
-          className="border-slate-300 text-slate-700">
-          <Info className="h-3.5 w-3.5 mr-1.5" /> Inspect
+        <Button size="sm" variant="link" onClick={(e) => e.stopPropagation()}>
+          <Info className="h-3.5 w-3.5" /> Inspect
         </Button>
       </DialogTrigger>
       <DialogContent className="max-w-2xl max-h-[600px] flex flex-col">
