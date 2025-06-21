@@ -1,6 +1,5 @@
 "use client";
 
-import { InfoItemList } from "@/components/info-item-list";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -37,6 +36,7 @@ import type { InfoItem } from "@/lib/info";
 import type { DeleteResult } from "@/lib/workflow/info-actions";
 import { Info, Loader2, Trash2 } from "lucide-react";
 import { useEffect, useState, type ReactNode } from "react";
+import { InfoItemList } from "./info-item-list";
 
 interface InfoButtonProps {
   title: string;

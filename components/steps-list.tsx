@@ -1,7 +1,6 @@
 "use client";
 
-import { CompletionCard } from "@/components/completion-card";
-import { StepCard } from "@/components/step-card";
+import { CompletionCard, StepCard } from "@/components/step-card";
 import { useWorkflow } from "@/components/workflow-context";
 import { Var, VarName, WorkflowVars } from "@/types";
 import { Loader2 } from "lucide-react";
