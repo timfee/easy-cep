@@ -165,7 +165,7 @@ export function InfoButton({
         </DialogHeader>
 
         {deleteItems && deletableItems.length > 0 && (
-          <div className="flex items-center justify-between gap-2 px-1 py-2 border-b">
+          <div className="flex items-center justify-between gap-3 px-6 py-2 border-b">
             <div className="flex items-center gap-3">
               {visibleDeletableItems.length > 0 && (
                 <Checkbox

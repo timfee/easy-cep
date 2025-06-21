@@ -3,8 +3,9 @@
 import { CompletionCard } from "@/components/completion-card";
 import { StepCard } from "@/components/step-card";
 import { useWorkflow } from "@/components/workflow-context";
-import { Var, WorkflowVars } from "@/types";
+import { Var, VarName, WorkflowVars } from "@/types";
 import { Loader2 } from "lucide-react";
+import { useMemo } from "react";
 
 export function StepsList() {
   const {
@@ -17,6 +18,17 @@ export function StepsList() {
     updateVars,
     sessionLoaded
   } = useWorkflow();
+
+  const stepActions = useMemo(
+    () => ({
+      onExecute: executeStep,
+      onUndo: undoStep,
+      onForce: executeStep,
+      onVarChange: (key: VarName, value: unknown) =>
+        updateVars({ [key]: value } as Partial<WorkflowVars>)
+    }),
+    [executeStep, undoStep, updateVars]
+  );
 
   const loggedIn = Boolean(
     varsRaw[Var.GoogleAccessToken] || varsRaw[Var.MsGraphToken]
@@ -58,12 +70,7 @@ export function StepsList() {
           state={status[step.id]}
           vars={varsRaw}
           executing={executing === step.id}
-          onExecute={executeStep}
-          onUndo={undoStep}
-          onForce={executeStep}
-          onVarChange={(key, value) =>
-            updateVars({ [key]: value } as Partial<WorkflowVars>)
-          }
+          actions={stepActions}
         />
       ))}
       {allComplete && <CompletionCard />}
