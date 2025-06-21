@@ -77,7 +77,7 @@ export function StepApiCalls({ stepId }: StepApiCallsProps) {
         <TooltipProvider key={idx}>
           <Tooltip>
             <TooltipTrigger asChild>
-              <div className="flex items-center gap-2 rounded py-1 hover:bg-slate-100 cursor-pointer">
+              <div className="flex items-center gap-3 rounded py-2 hover:bg-slate-100 cursor-pointer">
                 <div className="flex-shrink-0">
                   {getMethodBadge(template.method)}
                 </div>

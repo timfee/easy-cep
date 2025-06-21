@@ -66,7 +66,7 @@ export function StepLogItem({ log }: StepLogItemProps) {
       onOpenChange={setOpen}
       className="text-xs font-mono">
       <CollapsibleTrigger asChild>
-        <div className="flex items-center gap-2 px-2 py-1 hover:bg-slate-100 cursor-pointer">
+        <div className="flex items-center gap-2 px-4 py-2 hover:bg-slate-100 cursor-pointer">
           {log.method ?
             <Network className="h-3 w-3 text-slate-500" />
           : getLevelIcon(log.level)}
