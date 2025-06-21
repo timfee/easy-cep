@@ -1,5 +1,6 @@
 import { Checkbox } from "@/components/ui/checkbox";
 import { InfoItem } from "@/lib/info";
+import { cn } from "@/lib/utils";
 import { Lock } from "lucide-react";
 
 interface InfoItemListProps {
@@ -28,13 +29,14 @@ export function InfoItemList({
   }
 
   return (
-    <div className="space-y-1 py-2">
+    <div className="divide-y divide-slate-100">
       {items.map((item) => (
         <div
           key={item.id}
-          className={`flex items-center gap-2 px-2 py-1 hover:bg-slate-50 rounded ${
-            failedDeletes.has(item.id) ? "bg-destructive/10" : ""
-          }`}>
+          className={cn(
+            "flex items-start gap-2 px-2 py-1",
+            failedDeletes.has(item.id) && "bg-destructive/10"
+          )}>
           {showCheckboxes && item.deletable !== false && (
             <Checkbox
               checked={selectedIds.has(item.id)}

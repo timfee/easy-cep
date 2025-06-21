@@ -16,7 +16,6 @@ import { Checkbox } from "@/components/ui/checkbox";
 import {
   Dialog,
   DialogContent,
-  DialogHeader,
   DialogTitle,
   DialogTrigger
 } from "@/components/ui/dialog";
@@ -151,15 +150,15 @@ export function InfoButton({
           <Info className="h-3.5 w-3.5" /> Inspect
         </Button>
       </DialogTrigger>
-      <DialogContent className="max-w-2xl max-h-[600px] flex flex-col">
-        <DialogHeader>
+      <DialogContent className="max-w-2xl max-h-[600px] flex flex-col p-0">
+        <div className="px-6 py-4 border-b space-y-1">
           <DialogTitle>{title}</DialogTitle>
-          {context && <p className="text-xs text-slate-600 mt-1">{context}</p>}
-        </DialogHeader>
+          {context && <p className="text-xs text-slate-600">{context}</p>}
+        </div>
 
         {deleteItems && deletableItems.length > 0 && (
-          <div className="flex items-center justify-between gap-3 px-6 py-2 border-b">
-            <div className="flex items-center gap-3">
+          <div className="flex items-center justify-between gap-2 px-6 py-2 border-b">
+            <div className="flex items-center gap-2">
               {visibleDeletableItems.length > 0 && (
                 <Checkbox
                   checked={
@@ -242,7 +241,7 @@ export function InfoButton({
           </div>
         )}
 
-        <div className="flex-1 overflow-y-auto">
+        <div className="flex-1 overflow-y-auto px-6 py-4">
           {loading && <p className="text-sm text-slate-600 p-4">Loading...</p>}
           {error && <p className="text-sm text-destructive p-4">{error}</p>}
           {!loading && !error && (
@@ -258,7 +257,7 @@ export function InfoButton({
         </div>
 
         {showPagination && (
-          <div className="border-t pt-3">
+          <div className="border-t px-6 py-3">
             <div className="flex items-center justify-between">
               <span className="text-xs text-slate-600">
                 Showing {(currentPage - 1) * 25 + 1}-
