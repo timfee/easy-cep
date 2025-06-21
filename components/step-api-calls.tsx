@@ -59,6 +59,7 @@ export function StepApiCalls({ stepId }: StepApiCallsProps) {
       PUT: "bg-chart-1/10 text-chart-1 border-chart-1/20",
       DELETE: "bg-destructive/10 text-destructive border-destructive/20"
     } as const;
+
     return (
       <Badge
         variant="outline"
