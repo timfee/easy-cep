@@ -11,56 +11,56 @@ export const STEP_STATE_CONFIG = {
   checking: {
     badge: {
       variant: "default" as const,
-      className: "bg-blue-100 text-blue-800 border-blue-200"
+      className: "bg-primary/10 text-primary border-primary/20"
     },
     icon: "Loader2",
-    indicatorClass: "bg-blue-500 text-white animate-breathing",
-    borderClass: "border-blue-300"
+    indicatorClass: "bg-primary text-white animate-breathing",
+    borderClass: "border-primary/30"
   },
   executing: {
     badge: {
       variant: "default" as const,
-      className: "bg-blue-100 text-blue-800 border-blue-200"
+      className: "bg-primary/10 text-primary border-primary/20"
     },
     icon: "Loader2",
-    indicatorClass: "bg-blue-500 text-white animate-breathing",
-    borderClass: "border-blue-400 ring-1 ring-blue-300"
+    indicatorClass: "bg-primary text-white animate-breathing",
+    borderClass: "border-primary ring-1 ring-primary/30"
   },
   complete: {
     badge: {
       variant: "default" as const,
-      className: "bg-green-100 text-green-800 border-green-200"
+      className: "bg-secondary/10 text-secondary border-secondary/20"
     },
     icon: "CheckCircle",
-    indicatorClass: "bg-green-500 text-white",
-    borderClass: "border-green-400"
+    indicatorClass: "bg-secondary text-white",
+    borderClass: "border-secondary"
   },
   failed: {
     badge: {
       variant: "destructive" as const,
-      className: "bg-red-100 text-red-800 border-red-200"
+      className: "bg-destructive/10 text-destructive border-destructive/20"
     },
     icon: "XCircle",
-    indicatorClass: "bg-red-500 text-white",
-    borderClass: "border-red-400"
+    indicatorClass: "bg-destructive text-white",
+    borderClass: "border-destructive"
   },
   pending: {
     badge: {
       variant: "default" as const,
-      className: "bg-amber-100 text-amber-800 border-amber-200"
+      className: "bg-chart-1/10 text-chart-1 border-chart-1/20"
     },
     icon: "Clock",
-    indicatorClass: "bg-amber-500 text-white",
-    borderClass: "border-amber-400"
+    indicatorClass: "bg-chart-1 text-white",
+    borderClass: "border-chart-1"
   },
   undoing: {
     badge: {
       variant: "default" as const,
-      className: "bg-amber-100 text-amber-800 border-amber-200"
+      className: "bg-chart-1/10 text-chart-1 border-chart-1/20"
     },
     icon: "Loader2",
-    indicatorClass: "bg-amber-500 text-white animate-breathing",
-    borderClass: "border-amber-400 ring-1 ring-amber-300"
+    indicatorClass: "bg-chart-1 text-white animate-breathing",
+    borderClass: "border-chart-1 ring-1 ring-chart-1/30"
   },
   reverted: {
     badge: {

@@ -236,7 +236,7 @@ export function InfoButton({
                       disabled={
                         deleteConfirmText !== "DELETE ALL" || isDeleting
                       }
-                      className="bg-red-600 hover:bg-red-700">
+                      className="bg-destructive hover:bg-destructive/90">
                       {isDeleting && (
                         <Loader2 className="h-3 w-3 mr-1 animate-spin" />
                       )}
@@ -251,7 +251,7 @@ export function InfoButton({
 
         <div className="flex-1 overflow-y-auto">
           {loading && <p className="text-sm text-slate-600 p-4">Loading...</p>}
-          {error && <p className="text-sm text-red-600 p-4">{error}</p>}
+          {error && <p className="text-sm text-destructive p-4">{error}</p>}
           {!loading && !error && (
             <InfoItemList
               items={paginatedItems}

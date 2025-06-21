@@ -25,33 +25,33 @@ interface StepLogItemProps {
 function getLevelIcon(level?: string) {
   switch (level) {
     case "warn":
-      return <AlertTriangle className="h-3 w-3 text-amber-500" />;
+      return <AlertTriangle className="h-3 w-3 text-chart-1" />;
     case "error":
-      return <XCircle className="h-3 w-3 text-red-500" />;
+      return <XCircle className="h-3 w-3 text-destructive" />;
     case "debug":
-      return <Bug className="h-3 w-3 text-purple-500" />;
+      return <Bug className="h-3 w-3 text-accent" />;
     default:
-      return <Info className="h-3 w-3 text-blue-500" />;
+      return <Info className="h-3 w-3 text-primary" />;
   }
 }
 
 function getLevelClasses(level?: string) {
   switch (level) {
     case "warn":
-      return "border-amber-200 text-amber-700";
+      return "border-chart-1/20 text-chart-1";
     case "error":
-      return "border-red-200 text-red-700";
+      return "border-destructive/20 text-destructive";
     case "debug":
-      return "border-purple-200 text-purple-700";
+      return "border-accent/20 text-accent";
     default:
-      return "border-blue-200 text-blue-700";
+      return "border-primary/20 text-primary";
   }
 }
 
 function getMethodClasses(success: boolean) {
   return success ?
-      "border-green-200 text-green-700"
-    : "border-red-200 text-red-700";
+      "border-secondary/20 text-secondary"
+    : "border-destructive/20 text-destructive";
 }
 
 export function StepLogItem({ log }: StepLogItemProps) {

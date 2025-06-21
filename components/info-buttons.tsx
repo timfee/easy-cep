@@ -57,7 +57,7 @@ export const OuInfoButton = createInfoButton({
       href="https://admin.google.com/ac/orgunits"
       target="_blank"
       rel="noopener noreferrer"
-      className="text-blue-600 hover:underline">
+      className="text-primary hover:underline">
       Open in Google Admin
     </a>
   )
@@ -72,7 +72,7 @@ export const SamlInfoButton = createInfoButton({
       href="https://admin.google.com/ac/apps/saml"
       target="_blank"
       rel="noopener noreferrer"
-      className="text-blue-600 hover:underline">
+      className="text-primary hover:underline">
       Open in Google Admin
     </a>
   )
@@ -86,7 +86,7 @@ export const DomainInfoButton = createInfoButton({
       href="https://admin.google.com/ac/domains"
       target="_blank"
       rel="noopener noreferrer"
-      className="text-blue-600 hover:underline">
+      className="text-primary hover:underline">
       Open in Google Admin
     </a>
   )
@@ -101,7 +101,7 @@ export const UsersInfoButton = createInfoButton({
       href="https://admin.google.com/ac/users"
       target="_blank"
       rel="noopener noreferrer"
-      className="text-blue-600 hover:underline">
+      className="text-primary hover:underline">
       Open in Google Admin
     </a>
   )
@@ -116,7 +116,7 @@ export const RolesInfoButton = createInfoButton({
       href="https://admin.google.com/ac/roles"
       target="_blank"
       rel="noopener noreferrer"
-      className="text-blue-600 hover:underline">
+      className="text-primary hover:underline">
       Open in Google Admin
     </a>
   )
@@ -131,7 +131,7 @@ export const SsoInfoButton = createInfoButton({
       href="https://admin.google.com/ac/security/inboundsso"
       target="_blank"
       rel="noopener noreferrer"
-      className="text-blue-600 hover:underline">
+      className="text-primary hover:underline">
       Open in Google Admin
     </a>
   )
@@ -152,7 +152,7 @@ export const AppsInfoButton = createInfoButton({
       href="https://entra.microsoft.com/#view/Microsoft_AAD_RegisteredApps/ApplicationsListBlade"
       target="_blank"
       rel="noopener noreferrer"
-      className="text-blue-600 hover:underline">
+      className="text-primary hover:underline">
       Open in Microsoft Entra
     </a>
   )
@@ -167,7 +167,7 @@ export const ProvisioningInfoButton = createInfoButton({
       href="https://entra.microsoft.com/#view/Microsoft_AAD_Connect/ProvisioningMenuBlade"
       target="_blank"
       rel="noopener noreferrer"
-      className="text-blue-600 hover:underline">
+      className="text-primary hover:underline">
       Open in Microsoft Entra
     </a>
   )
@@ -182,7 +182,7 @@ export const ClaimsInfoButton = createInfoButton({
       href="https://entra.microsoft.com/#view/Microsoft_AAD_IAM/PoliciesMenuBlade/~/ClaimsMapping"
       target="_blank"
       rel="noopener noreferrer"
-      className="text-blue-600 hover:underline">
+      className="text-primary hover:underline">
       Open in Microsoft Entra
     </a>
   )
