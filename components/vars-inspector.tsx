@@ -70,7 +70,7 @@ export function VarsInspector({ vars, onChange }: VarsInspectorProps) {
                   <div className="flex flex-col gap-0.5">
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-1.5">
-                        <Database className="h-2.5 w-2.5 text-purple-500" />
+                        <Database className="h-2.5 w-2.5 text-accent" />
                         <span className="text-xs font-medium text-slate-800">
                           {key}
                         </span>

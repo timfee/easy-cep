@@ -147,7 +147,7 @@ export function ProviderLogin({ onUpdate }: Props) {
         isConnected={tokens.googleAccessToken !== undefined}
         onConnectClick={() => (window.location.href = "/api/auth/google")}
         onDisconnectClick={() => signOut("google")}
-        iconColorClass="text-blue-500"
+        iconColorClass="text-primary"
       />
       <ProviderItem
         Icon={Microsoft}
@@ -156,7 +156,7 @@ export function ProviderLogin({ onUpdate }: Props) {
         isConnected={tokens.msGraphToken !== undefined}
         onConnectClick={() => (window.location.href = "/api/auth/microsoft")}
         onDisconnectClick={() => signOut("microsoft")}
-        iconColorClass="text-purple-500"
+        iconColorClass="text-accent"
       />
     </>
   );

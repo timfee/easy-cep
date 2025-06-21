@@ -2,10 +2,6 @@
 @import "tw-animate-css";
 
 :root {
-  --primary: rgb(26, 115, 232);
-  --success: #00c853;
-  --warning: #ff6d00;
-  --error: #d32f2f;
   --radius: 0.625rem;
   --background: oklch(1 0 0);
   --foreground: oklch(0.145 0 0);

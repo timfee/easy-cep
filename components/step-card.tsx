@@ -64,7 +64,7 @@ export const StepCard = memo(function StepCard({
         {(executing || state?.status === "pending") && (
           <div className="my-6 px-6">
             <div className="relative h-1 bg-slate-200 overflow-hidden rounded">
-              <div className="absolute inset-0 bg-blue-500 animate-indeterminate" />
+              <div className="absolute inset-0 bg-primary animate-indeterminate" />
             </div>
           </div>
         )}

@@ -56,12 +56,12 @@ export function StepVariables({ stepId, vars, onChange }: StepVariablesProps) {
       <label
         htmlFor={`var-${varKey}-${stepId}`}
         className="text-xs font-medium text-slate-700 flex items-center gap-1.5">
-        <Database className="h-3 w-3 text-purple-500" />
+        <Database className="h-3 w-3 text-accent" />
         <span>{varKey}</span>
         {meta.ephemeral && (
           <Tooltip>
             <TooltipTrigger asChild>
-              <span className="text-[10px] text-amber-600 cursor-help">
+              <span className="text-[10px] text-chart-1 cursor-help">
                 (transient)
               </span>
             </TooltipTrigger>
@@ -90,7 +90,7 @@ export function StepVariables({ stepId, vars, onChange }: StepVariablesProps) {
         </div>
       }
       {meta.ephemeral && (
-        <div className="text-xs text-amber-600 mt-1">
+        <div className="text-xs text-chart-1 mt-1">
           ⚠️ This value will be lost if you refresh the page
         </div>
       )}
