@@ -78,7 +78,7 @@ export function StepCardContent({ definition, state, vars, executing }: Props) {
       .every(([k]) => vars[k as VarName] !== undefined) && missing.length === 0;
   const canUndo = state?.status === "complete";
   return (
-    <CardContent className="px-6">
+    <CardContent className="px-6 pb-8">
       {detail?.description && (
         <div
           className="text-sm text-slate-700 px-6"
@@ -105,7 +105,7 @@ export function StepCardContent({ definition, state, vars, executing }: Props) {
                     actions.onExecute(definition.id);
                   }}
                   disabled>
-                  <Play className="h-3.5 w-3.5 mr-1.5" /> Execute
+                  <Play className="h-3.5 w-3.5" /> Execute
                 </Button>
               </TooltipTrigger>
               <TooltipContent side="top">{`Requires transient data from ${missing
@@ -126,7 +126,7 @@ export function StepCardContent({ definition, state, vars, executing }: Props) {
               disabled={
                 !canExecute || executing || state?.status === "complete"
               }>
-              <Play className="h-3.5 w-3.5 mr-1.5" /> Execute
+              <Play className="h-3.5 w-3.5" /> Execute
             </Button>
           }
           {InfoBtn && <InfoBtn />}
@@ -135,23 +135,23 @@ export function StepCardContent({ definition, state, vars, executing }: Props) {
           {canUndo && (
             <Button
               size="sm"
-              variant="destructive"
+              variant="outline"
               onClick={(e) => {
                 e.stopPropagation();
                 actions.onUndo(definition.id);
               }}>
-              <RotateCcw className="h-3.5 w-3.5 mr-1.5" /> Undo
+              <RotateCcw className="h-3.5 w-3.5 " /> Undo
             </Button>
           )}
           <Button
             size="sm"
-            variant="secondary"
+            variant="outline"
             onClick={(e) => {
               e.stopPropagation();
               actions.onForce(definition.id);
             }}
             disabled={executing}>
-            <Zap className="h-3.5 w-3.5 mr-1.5" /> Force
+            <Zap className="h-3.5 w-3.5" /> Force
           </Button>
         </div>
       </div>
@@ -177,13 +177,9 @@ export function StepCardContent({ definition, state, vars, executing }: Props) {
           />
         </CollapsibleTrigger>
         <CollapsibleContent className="p-4 border-slate-100 border border-t-0 rounded-t-none rounded data-[state=closed]:animate-collapsible-up data-[state=open]:animate-collapsible-down">
-          {state?.logs && state.logs.length > 0 ?
+          {state?.logs && state.logs.length > 0 && (
             <StepLogs logs={state.logs} />
-          : <div className="text-center py-6 text-slate-500 border border-dashed border-slate-300 rounded my-1">
-              <Terminal className="h-5 w-5 mx-auto text-slate-400 mb-1.5" />
-              <p className="text-xs">No logs for this step yet.</p>
-            </div>
-          }
+          )}
         </CollapsibleContent>
       </Collapsible>
     </CardContent>
