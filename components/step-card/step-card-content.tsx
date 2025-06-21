@@ -167,7 +167,7 @@ export function StepCardContent({ definition, state, vars, executing }: Props) {
       <Collapsible open={logsOpen} onOpenChange={setLogsOpen} className="px-6">
         <CollapsibleTrigger className="w-full flex items-center justify-between mt-4 font-medium text-slate-700 hover:bg-slate-100 p-4 rounded bg-slate-50 border border-slate-200 transition-colors">
           <div className="flex items-center gap-2">
-            <Terminal className="h-4 w-4 text-green-600" /> Execution Logs
+            <Terminal className="h-4 w-4 text-secondary" /> Execution Logs
           </div>
           <ChevronRight
             className={cn(

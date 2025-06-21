@@ -33,7 +33,7 @@ export function InfoItemList({
         <div
           key={item.id}
           className={`flex items-center gap-2 px-2 py-1 hover:bg-slate-50 rounded ${
-            failedDeletes.has(item.id) ? "bg-red-50" : ""
+            failedDeletes.has(item.id) ? "bg-destructive/10" : ""
           }`}>
           {showCheckboxes && item.deletable !== false && (
             <Checkbox
@@ -52,7 +52,7 @@ export function InfoItemList({
                 href={item.href}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="text-xs text-blue-600 hover:underline truncate block">
+                className="text-xs text-primary hover:underline truncate block">
                 {item.label}
               </a>
             : <span className="text-xs text-slate-700 truncate block">
@@ -65,7 +65,7 @@ export function InfoItemList({
               </span>
             )}
             {failedDeletes.has(item.id) && (
-              <span className="text-xs text-red-600">
+              <span className="text-xs text-destructive">
                 Failed: {failedDeletes.get(item.id)}
               </span>
             )}

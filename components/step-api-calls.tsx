@@ -54,10 +54,10 @@ export function StepApiCalls({ stepId }: StepApiCallsProps) {
 
   const getMethodBadge = (method: string) => {
     const colors = {
-      GET: "bg-blue-100 text-blue-800 border-blue-200",
-      POST: "bg-green-100 text-green-800 border-green-200",
-      PUT: "bg-amber-100 text-amber-800 border-amber-200",
-      DELETE: "bg-red-100 text-red-800 border-red-200"
+      GET: "bg-primary/10 text-primary border-primary/20",
+      POST: "bg-secondary/10 text-secondary border-secondary/20",
+      PUT: "bg-chart-1/10 text-chart-1 border-chart-1/20",
+      DELETE: "bg-destructive/10 text-destructive border-destructive/20"
     };
     return (
       <Badge
@@ -72,10 +72,10 @@ export function StepApiCalls({ stepId }: StepApiCallsProps) {
   };
 
   return (
-    <div className="space-y-1 text-xs" onClick={(e) => e.stopPropagation()}>
-      {apiTemplates.map((template, idx) => (
-        <TooltipProvider key={idx}>
-          <Tooltip>
+    <TooltipProvider>
+      <div className="space-y-1 text-xs" onClick={(e) => e.stopPropagation()}>
+        {apiTemplates.map((template, idx) => (
+          <Tooltip key={idx}>
             <TooltipTrigger asChild>
               <div className="flex items-center gap-3 rounded py-2 hover:bg-slate-100 cursor-pointer">
                 <div className="flex-shrink-0">
@@ -99,9 +99,9 @@ export function StepApiCalls({ stepId }: StepApiCallsProps) {
               </div>
             </TooltipContent>
           </Tooltip>
-        </TooltipProvider>
-      ))}
-    </div>
+        ))}
+      </div>
+    </TooltipProvider>
   );
 }
 

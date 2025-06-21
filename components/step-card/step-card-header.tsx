@@ -104,14 +104,14 @@ export function StepCardHeader({
         </div>
       </div>
       {state?.error && isExpanded && (
-        <div className="mt-3 p-4 bg-red-50 border-l-4 border-red-400 rounded">
+        <div className="mt-3 p-4 bg-destructive/10 border-l-4 border-destructive rounded">
           <div className="flex items-start gap-2">
-            <AlertTriangle className="h-4 w-4 text-red-600 flex-shrink-0 mt-0.5" />
+            <AlertTriangle className="h-4 w-4 text-destructive flex-shrink-0 mt-0.5" />
             <div>
-              <h4 className="text-xs font-semibold text-red-800 mb-1">
+              <h4 className="text-xs font-semibold text-destructive mb-1">
                 Execution Error
               </h4>
-              <p className="text-xs text-red-700">{state.error}</p>
+              <p className="text-xs text-destructive">{state.error}</p>
             </div>
           </div>
         </div>
