@@ -325,33 +325,41 @@ export async function setChunkedCookie(
 export async function getChunkedCookie(
   name: string
 ): Promise<string | undefined> {
-  const store = await cookies();
-  const first = store.get(name);
-  if (!first) {
+  try {
+    const store = await cookies();
+    const first = store.get(name);
+    if (!first) {
+      return undefined;
+    }
+    let value = first.value;
+    for (let i = 1; ; i++) {
+      const part = store.get(`${name}-${i}`);
+      if (!part) {
+        break;
+      }
+      value += part.value;
+    }
+    return value;
+  } catch {
     return undefined;
   }
-  let value = first.value;
-  for (let i = 1; ; i++) {
-    const part = store.get(`${name}-${i}`);
-    if (!part) {
-      break;
-    }
-    value += part.value;
-  }
-  return value;
 }
 
 /** Clear cookies created via {@link setChunkedCookie}. */
 export async function clearChunkedCookie(response: NextResponse, name: string) {
-  const store = await cookies();
-  if (store.get(name)) {
-    response.cookies.delete(name);
-  }
-  for (let i = 1; ; i++) {
-    const part = store.get(`${name}-${i}`);
-    if (!part) {
-      break;
+  try {
+    const store = await cookies();
+    if (store.get(name)) {
+      response.cookies.delete(name);
     }
-    response.cookies.delete(`${name}-${i}`);
+    for (let i = 1; ; i++) {
+      const part = store.get(`${name}-${i}`);
+      if (!part) {
+        break;
+      }
+      response.cookies.delete(`${name}-${i}`);
+    }
+  } catch {
+    /* ignore cookie clearing errors */
   }
 }
