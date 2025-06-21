@@ -83,7 +83,7 @@ interface StepExecuteResult<K extends Var> {
 
 All PRs must pass the following commands before submission:
 
-```
+```bash
 pnpm lint
 pnpm check
 pnpm build
