@@ -90,7 +90,8 @@ export function InfoButton({
       setFailedDeletes(new Map());
       setDeleteConfirmText("");
     }
-  }, [open, resetSelection, resetPagination]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [open]);
 
   const handleDeleteSelected = async () => {
     if (!deleteItems || selectedIds.size === 0) return;
