@@ -108,7 +108,7 @@ export function ProviderLogin({ onUpdate }: Props) {
               title="Disconnect"
               aria-label={`Disconnect ${name}`}>
               <span className="transition-all duration-300 group-hover:-translate-y-full group-hover:opacity-0">
-                {minutesLeft} m left
+                {minutesLeft}m left
               </span>
               <span className="absolute inset-0 flex items-center justify-center translate-y-full opacity-0 transition-all duration-300 group-hover:translate-y-0 group-hover:opacity-100">
                 Sign out
@@ -120,7 +120,7 @@ export function ProviderLogin({ onUpdate }: Props) {
               size="sm"
               variant="default"
               onClick={onConnectClick}
-              className="text-xs  mx-2">
+              className="text-xs mx-2">
               Connect
             </Button>
           </>

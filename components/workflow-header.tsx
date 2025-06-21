@@ -8,7 +8,7 @@ export function WorkflowHeader() {
   const { updateVars } = useWorkflow();
 
   return (
-    <header className="border-b flex items-center justify-between">
+    <header className="bg-white py-2 border-b flex items-center justify-between">
       <section>
         <div className="flex items-center">
           <Image
