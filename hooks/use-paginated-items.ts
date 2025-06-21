@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useCallback, useMemo, useState } from "react";
 
 export function usePaginatedItems<T>(items: T[], itemsPerPage: number = 25) {
   const [currentPage, setCurrentPage] = useState(1);
@@ -11,11 +11,30 @@ export function usePaginatedItems<T>(items: T[], itemsPerPage: number = 25) {
     return items.slice(start, end);
   }, [items, currentPage, itemsPerPage]);
 
-  const goToPage = (page: number) => {
-    setCurrentPage(Math.max(1, Math.min(page, totalPages)));
-  };
+  const goToPage = useCallback(
+    (page: number) => {
+      setCurrentPage(
+        Math.max(1, Math.min(page, Math.ceil(items.length / itemsPerPage)))
+      );
+    },
+    [items.length, itemsPerPage]
+  );
 
-  const reset = () => setCurrentPage(1);
+  const goToFirstPage = useCallback(() => goToPage(1), [goToPage]);
+  const goToLastPage = useCallback(
+    () => goToPage(totalPages),
+    [goToPage, totalPages]
+  );
+  const goToNextPage = useCallback(
+    () => goToPage(currentPage + 1),
+    [goToPage, currentPage]
+  );
+  const goToPrevPage = useCallback(
+    () => goToPage(currentPage - 1),
+    [goToPage, currentPage]
+  );
+
+  const reset = useCallback(() => setCurrentPage(1), []);
 
   return {
     currentPage,
@@ -24,10 +43,10 @@ export function usePaginatedItems<T>(items: T[], itemsPerPage: number = 25) {
     totalItems: items.length,
     itemsPerPage,
     goToPage,
-    goToFirstPage: () => goToPage(1),
-    goToLastPage: () => goToPage(totalPages),
-    goToNextPage: () => goToPage(currentPage + 1),
-    goToPrevPage: () => goToPage(currentPage - 1),
+    goToFirstPage,
+    goToLastPage,
+    goToNextPage,
+    goToPrevPage,
     reset
   };
 }
