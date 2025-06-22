@@ -81,7 +81,9 @@ export function StepLogItem({ log }: StepLogItemProps) {
           </span>
           <span className="text-[10px] text-slate-500">{time}</span>
           <span className="flex-1 truncate text-slate-800">
-            {log.method ? extractPath(log.url ?? "") : log.message}
+            {log.method ?
+              `${log.message}: ${extractPath(log.url ?? "")}`
+            : log.message}
           </span>
           {log.data !== null && log.data !== undefined && (
             <ChevronRight
