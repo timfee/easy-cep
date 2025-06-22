@@ -6,6 +6,7 @@ import {
   TooltipContent,
   TooltipTrigger
 } from "@/components/ui/tooltip";
+import { cn } from "@/lib/utils";
 import { WORKFLOW_VARIABLES, WorkflowVars } from "@/lib/workflow/variables";
 import { StepIdValue, VarName } from "@/types";
 
@@ -16,8 +17,18 @@ interface StepVariablesProps {
   stepId: StepIdValue;
   vars: Partial<WorkflowVars>;
   onChange: (key: VarName, value: unknown) => void;
+  /**
+   * List of variables that are currently missing and should be highlighted
+   * in the UI.
+   */
+  missing?: VarName[];
 }
-export function StepVariables({ stepId, vars, onChange }: StepVariablesProps) {
+export function StepVariables({
+  stepId,
+  vars,
+  onChange,
+  missing = []
+}: StepVariablesProps) {
   const allStepVars = useMemo(
     () =>
       Object.entries(WORKFLOW_VARIABLES)
@@ -55,7 +66,10 @@ export function StepVariables({ stepId, vars, onChange }: StepVariablesProps) {
     <div className="space-y-1.5">
       <label
         htmlFor={`var-${varKey}-${stepId}`}
-        className="text-xs font-medium text-slate-700 flex items-center gap-1.5">
+        className={cn(
+          "text-xs font-medium text-slate-700 flex items-center gap-1.5",
+          missing.includes(varKey) && "text-destructive"
+        )}>
         <Database className="h-3 w-3 text-accent" />
         <span>{varKey}</span>
         {meta.ephemeral && (
@@ -79,8 +93,14 @@ export function StepVariables({ stepId, vars, onChange }: StepVariablesProps) {
           placeholder={meta.description || "Enter value"}
           className="text-xs border-slate-300 bg-white h-8 px-2 py-1 w-full rounded-md" // Changed from rounded-lg to rounded-md to match screenshot
           type="text"
+          aria-invalid={missing.includes(varKey)}
         />
-      : <div className="text-xs text-slate-600 bg-slate-100 border border-slate-300 rounded-md px-2 py-1.5 min-h-[32px] flex items-center w-full">
+      : <div
+          className={cn(
+            "text-xs text-slate-600 bg-slate-100 border border-slate-300 rounded-md px-2 py-1.5 min-h-[32px] flex items-center w-full",
+            missing.includes(varKey) && "border-destructive text-destructive"
+          )}
+          aria-invalid={missing.includes(varKey)}>
           {/* Matched screenshot style for value display */}
           {vars[varKey] !== undefined ?
             <code className="font-mono text-xs block truncate w-full">
