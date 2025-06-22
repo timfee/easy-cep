@@ -111,7 +111,7 @@ export async function deleteOrgUnits(ids: string[]): Promise<DeleteResult> {
 
 export async function deleteSamlProfiles(ids: string[]): Promise<DeleteResult> {
   return createGoogleDeleteAction(
-    (id) => `${ApiEndpoint.Google.SsoProfiles}/${encodeURIComponent(id)}`,
+    (id) => ApiEndpoint.Google.SamlProfile(id),
     "SAML Profile"
   )(ids);
 }
