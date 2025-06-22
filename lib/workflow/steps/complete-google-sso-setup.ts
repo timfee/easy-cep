@@ -1,4 +1,6 @@
 import { ApiEndpoint } from "@/constants";
+import { isNotFoundError } from "@/lib/workflow/errors";
+import { EmptyResponseSchema } from "@/lib/workflow/utils";
 import { LogLevel, StepId, Var } from "@/types";
 import { z } from "zod";
 import { defineStep } from "../step-builder";
@@ -182,9 +184,53 @@ export default defineStep(StepId.CompleteGoogleSsoSetup)
     }
   })
   /**
-   * No revert actions for Google configuration
+   * Delete any uploaded certificates when reverting
    */
-  .undo(async ({ markReverted }) => {
-    markReverted();
+  .undo(async ({ vars, google, markReverted, markFailed, log }) => {
+    try {
+      const profileId = vars.get(Var.SamlProfileId);
+      if (!profileId) {
+        markReverted();
+        return;
+      }
+
+      const CredsSchema = z.object({
+        idpCredentials: z
+          .array(
+            z.object({ name: z.string(), updateTime: z.string().optional() })
+          )
+          .optional()
+      });
+
+      const { idpCredentials = [] } = await google.get(
+        ApiEndpoint.Google.SamlProfileCredentialsList(profileId),
+        CredsSchema,
+        { flatten: "idpCredentials" }
+      );
+
+      for (const cred of idpCredentials) {
+        try {
+          const credId = cred.name.split("/").pop();
+          if (credId) {
+            await google.delete(
+              `${ApiEndpoint.Google.SamlProfileCredentialsList(profileId)}/${credId}`,
+              EmptyResponseSchema
+            );
+            log(LogLevel.Info, `Deleted certificate ${credId}`);
+          }
+        } catch (error) {
+          log(LogLevel.Warn, `Failed to delete certificate`, { error });
+        }
+      }
+
+      markReverted();
+    } catch (error) {
+      if (isNotFoundError(error)) {
+        markReverted();
+      } else {
+        log(LogLevel.Error, "Failed to cleanup certificates", { error });
+        markFailed(error instanceof Error ? error.message : "Undo failed");
+      }
+    }
   })
   .build();

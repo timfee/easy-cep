@@ -131,49 +131,73 @@ export default defineStep(StepId.CreateMicrosoftApps)
   )
 
   .execute(async ({ vars, microsoft, output, markFailed, log }) => {
-    /**
-     * POST https://graph.microsoft.com/v1.0/applicationTemplates/{templateId}/instantiate
-     * Headers: { Authorization: Bearer {msGraphToken} }
-     * Body: { "displayName": "Google Workspace Provisioning" }
-     *
-     * POST https://graph.microsoft.com/v1.0/applicationTemplates/{templateId}/instantiate
-     * Headers: { Authorization: Bearer {msGraphToken} }
-     * Body: { "displayName": "Google Workspace SSO" }
-     *
-     * Success response (201)
-     * {
-     *   "servicePrincipal": { "id": "..." },
-     *   "application": { "appId": "..." }
-     * }
-     *
-     * Error response (400)
-     * { "error": { "code": 400, "message": "Invalid template" } }
-     */
+    let provisioningSpId: string | undefined;
+    let provisioningAppId: string | undefined;
+    let ssoSpId: string | undefined;
+    let ssoAppId: string | undefined;
+
     try {
       const CreateSchema = z.object({
         servicePrincipal: z.object({ id: z.string() }),
-        application: z.object({ appId: z.string() })
+        application: z.object({ id: z.string(), appId: z.string() })
       });
 
+      // Create provisioning app
+      log(LogLevel.Info, "Creating provisioning app");
       const res1 = await microsoft.post(
         ApiEndpoint.Microsoft.Templates(TemplateId.GoogleWorkspaceConnector),
         CreateSchema,
         { displayName: vars.require(Var.ProvisioningAppDisplayName) }
       );
-      // Extract: provisioningServicePrincipalId = res1.servicePrincipal.id
+      provisioningSpId = res1.servicePrincipal.id;
+      provisioningAppId = res1.application.id;
 
-      const res2 = await microsoft.post(
-        ApiEndpoint.Microsoft.Templates(TemplateId.GoogleWorkspaceConnector),
-        CreateSchema,
-        { displayName: vars.require(Var.SsoAppDisplayName) }
-      );
-      // Extract: ssoServicePrincipalId = res2.servicePrincipal.id; ssoAppId = res2.application.appId
+      // Create SSO app
+      try {
+        log(LogLevel.Info, "Creating SSO app");
+        const res2 = await microsoft.post(
+          ApiEndpoint.Microsoft.Templates(TemplateId.GoogleWorkspaceConnector),
+          CreateSchema,
+          { displayName: vars.require(Var.SsoAppDisplayName) }
+        );
+        ssoSpId = res2.servicePrincipal.id;
+        ssoAppId = res2.application.appId;
 
-      output({
-        provisioningServicePrincipalId: res1.servicePrincipal.id,
-        ssoServicePrincipalId: res2.servicePrincipal.id,
-        ssoAppId: res2.application.appId
-      });
+        // Both succeeded, output the results
+        output({
+          provisioningServicePrincipalId: provisioningSpId,
+          ssoServicePrincipalId: ssoSpId,
+          ssoAppId: ssoAppId
+        });
+      } catch (ssoError) {
+        // SSO app failed, clean up provisioning app
+        log(
+          LogLevel.Error,
+          "SSO app creation failed, cleaning up provisioning app",
+          { ssoError }
+        );
+
+        try {
+          if (provisioningSpId) {
+            await microsoft.delete(
+              `${ApiEndpoint.Microsoft.ServicePrincipals}/${provisioningSpId}`,
+              EmptyResponseSchema
+            );
+          }
+          if (provisioningAppId) {
+            await microsoft.delete(
+              `${ApiEndpoint.Microsoft.Applications}/${provisioningAppId}`,
+              EmptyResponseSchema
+            );
+          }
+        } catch (cleanupError) {
+          log(LogLevel.Error, "Failed to cleanup provisioning app", {
+            cleanupError
+          });
+        }
+
+        throw ssoError;
+      }
     } catch (error) {
       log(LogLevel.Error, "Failed to create Microsoft apps", { error });
       markFailed(error instanceof Error ? error.message : "Execute failed");

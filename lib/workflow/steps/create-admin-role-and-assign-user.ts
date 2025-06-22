@@ -5,6 +5,27 @@ import { LogLevel, StepId, Var } from "@/types";
 import { z } from "zod";
 import { defineStep } from "../step-builder";
 
+async function retryWithBackoff<T>(
+  fn: () => Promise<T>,
+  maxRetries: number = 3,
+  initialDelay: number = 1000
+): Promise<T> {
+  let lastError: unknown;
+  for (let i = 0; i < maxRetries; i++) {
+    try {
+      return await fn();
+    } catch (error) {
+      lastError = error;
+      if (i < maxRetries - 1) {
+        await new Promise((resolve) =>
+          setTimeout(resolve, initialDelay * Math.pow(2, i))
+        );
+      }
+    }
+  }
+  throw lastError;
+}
+
 interface AdminPrivilege {
   serviceId: string;
   privilegeName: string;
@@ -289,16 +310,23 @@ export default defineStep(StepId.CreateAdminRoleAndAssignUser)
          * Error response (409)
          * { "error": { "code": 409, "message": "Role assignment already exists for the role" } }
          */
-        await google.post(ApiEndpoint.Google.RoleAssignments, AssignSchema, {
-          roleId,
-          assignedTo: userId,
-          scopeType: "CUSTOMER"
+        log(LogLevel.Info, "Assigning role to user (with retry)");
+
+        await retryWithBackoff(async () => {
+          await google.post(ApiEndpoint.Google.RoleAssignments, AssignSchema, {
+            roleId,
+            assignedTo: userId,
+            scopeType: "CUSTOMER"
+          });
         });
+
+        log(LogLevel.Info, "Role assignment succeeded");
       } catch (error) {
         // isConflictError handles: 409
         if (!isConflictError(error)) {
           throw error;
         }
+        log(LogLevel.Info, "Role already assigned");
       }
 
       output({ adminRoleId: roleId, directoryServiceId: serviceId });

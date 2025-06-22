@@ -234,9 +234,55 @@ export default defineStep(StepId.ConfigureMicrosoftSso)
     }
   })
   /**
-   * No remote changes are reverted for this step
+   * Undo SSO configuration by resetting mode and removing certificates
    */
-  .undo(async ({ markReverted }) => {
-    markReverted();
+  .undo(async ({ vars, microsoft, markReverted, markFailed, log }) => {
+    try {
+      const spId = vars.get(Var.SsoServicePrincipalId);
+      if (!spId) {
+        markReverted();
+        return;
+      }
+
+      // Reset SSO mode
+      try {
+        await microsoft.patch(
+          `${ApiEndpoint.Microsoft.ServicePrincipals}/${spId}`,
+          EmptyResponseSchema,
+          { preferredSingleSignOnMode: null }
+        );
+      } catch (error) {
+        log(LogLevel.Warn, "Failed to reset SSO mode", { error });
+      }
+
+      // Remove signing certificates
+      try {
+        const CertSchema = z.object({
+          value: z.array(z.object({ keyId: z.string() }))
+        });
+        const certs = await microsoft.get(
+          ApiEndpoint.Microsoft.TokenSigningCertificates(spId),
+          CertSchema
+        );
+
+        for (const cert of certs.value) {
+          await microsoft.delete(
+            `${ApiEndpoint.Microsoft.TokenSigningCertificates(spId)}/${cert.keyId}`,
+            EmptyResponseSchema
+          );
+        }
+      } catch (error) {
+        log(LogLevel.Warn, "Failed to remove certificates", { error });
+      }
+
+      markReverted();
+    } catch (error) {
+      if (isNotFoundError(error)) {
+        markReverted();
+      } else {
+        log(LogLevel.Error, "Failed to undo SSO configuration", { error });
+        markFailed(error instanceof Error ? error.message : "Undo failed");
+      }
+    }
   })
   .build();

@@ -147,8 +147,7 @@ export const WORKFLOW_VARIABLES: Record<string, VariableMetadata> = {
     description: "Password for provisioning account",
     producedBy: StepId.CreateServiceUser,
     consumedBy: [StepId.SetupMicrosoftProvisioning],
-    sensitive: true,
-    ephemeral: true
+    sensitive: true
   },
   adminRoleId: {
     type: "string",

@@ -34,7 +34,10 @@ describe("Persisted state validation", () => {
     } as const;
 
     const result = parsePersistedState(input);
-    expect(result?.vars).toEqual({ [Var.PrimaryDomain]: "example.com" });
+    expect(result?.vars).toEqual({
+      [Var.PrimaryDomain]: "example.com",
+      [Var.GeneratedPassword]: "secret123"
+    });
   });
 
   it("should return null for invalid data", () => {
@@ -54,7 +57,7 @@ describe("Persisted state validation", () => {
     const json = prepareStateForPersistence(vars, status);
     const parsed = JSON.parse(json);
 
-    expect(parsed.vars[Var.GeneratedPassword]).toBeUndefined();
+    expect(parsed.vars[Var.GeneratedPassword]).toBe("secret123");
     expect(parsed.vars[Var.PrimaryDomain]).toBe("example.com");
   });
 });
