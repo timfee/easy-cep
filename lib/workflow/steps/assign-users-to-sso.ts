@@ -47,7 +47,7 @@ async function getRootOrgUnitId(google: HttpClient) {
   }
 
   const id = organizationUnits[0].parentOrgUnitId ?? "";
-  return id.replace(/^id:/, "");
+  return extractResourceId(id, ResourceTypes.OrgUnitId);
 }
 
 export default defineStep(StepId.AssignUsersToSso)
@@ -60,12 +60,6 @@ export default defineStep(StepId.AssignUsersToSso)
   .provides()
 
   /**
-   * GET https://cloudidentity.googleapis.com/v1/{samlProfileId}
-   * Headers: { Authorization: Bearer {googleAccessToken} }
-   *
-   * Success response (200)
-   * { "name": "profiles/{id}", "idpConfig": { ... } }
-   *
    * GET https://cloudidentity.googleapis.com/v1/inboundSsoAssignments
    * Headers: { Authorization: Bearer {googleAccessToken} }
    *
@@ -109,63 +103,6 @@ export default defineStep(StepId.AssignUsersToSso)
         const profileId = vars.require(Var.SamlProfileId);
         const automationOuPath = vars.require(Var.AutomationOuPath);
 
-        // start (possibly duplicate SAML check)
-
-        const ProfileSchema = z.object({
-          name: z.string(),
-          idpConfig: z
-            .object({
-              entityId: z.string(),
-              singleSignOnServiceUri: z.string(),
-              signOutUri: z.string().optional()
-            })
-            .optional(),
-          spConfig: z.object({
-            entityId: z.string(),
-            assertionConsumerServiceUri: z.string()
-          })
-        });
-
-        const profile = await google.get(
-          ApiEndpoint.Google.SamlProfile(profileId),
-          ProfileSchema
-        );
-
-        if (
-          !profile.idpConfig?.entityId
-          || !profile.idpConfig.singleSignOnServiceUri
-          || !profile.idpConfig.signOutUri
-          || profile.idpConfig.entityId === ""
-          || profile.idpConfig.singleSignOnServiceUri === ""
-          || profile.idpConfig.signOutUri === ""
-        ) {
-          log(LogLevel.Info, "SAML profile not fully configured");
-          markCheckFailed(
-            "SAML profile not configured. Run 'Complete Google SSO setup' first."
-          );
-          return;
-        }
-
-        const CredsSchema = z.object({
-          idpCredentials: z.array(z.object({ name: z.string() })).optional()
-        });
-
-        const { idpCredentials = [] } = await google.get(
-          ApiEndpoint.Google.SamlProfileCredentialsList(profileId),
-          CredsSchema,
-          { flatten: "idpCredentials" }
-        );
-
-        if (idpCredentials.length === 0) {
-          log(LogLevel.Info, "SAML profile missing certificate");
-          markCheckFailed(
-            "SAML profile missing certificate. Run 'Complete Google SSO setup' first."
-          );
-          return;
-        }
-
-        // end (possibly duplicate SAML check)
-
         const { inboundSsoAssignments = [] } = await google.get(
           ApiEndpoint.Google.SsoAssignments,
           AssignSchema,
@@ -194,17 +131,10 @@ export default defineStep(StepId.AssignUsersToSso)
           markIncomplete("Users not assigned to SSO", {});
         }
       } catch (error) {
-        if (isNotFoundError(error) || isHttpError(error, 400)) {
-          log(LogLevel.Info, "SAML profile missing or incomplete", { error });
-          markCheckFailed(
-            "SAML profile missing or incomplete. Run 'Complete Google SSO setup' first."
-          );
-        } else {
-          log(LogLevel.Error, "Failed to check SSO assignment", { error });
-          markCheckFailed(
-            error instanceof Error ? error.message : "Check failed"
-          );
-        }
+        log(LogLevel.Error, "Failed to check SSO assignment", { error });
+        markCheckFailed(
+          error instanceof Error ? error.message : "Check failed"
+        );
       }
     }
   )
