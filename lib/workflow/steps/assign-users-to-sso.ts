@@ -109,6 +109,49 @@ export default defineStep(StepId.AssignUsersToSso)
         const profileId = vars.require(Var.SamlProfileId);
         const automationOuPath = vars.require(Var.AutomationOuPath);
 
+        // start (possibly duplicate SAML check)
+        
+        const profile = await google.get(
+          ApiEndpoint.Google.SamlProfile(profileId),
+          ProfileSchema
+        );
+
+        if (
+          !profile.idpConfig?.entityId
+          || !profile.idpConfig.singleSignOnServiceUri
+          || !profile.idpConfig.signOutUri
+          || profile.idpConfig.entityId === ""
+          || profile.idpConfig.singleSignOnServiceUri === ""
+          || profile.idpConfig.signOutUri === ""
+        ) {
+          log(LogLevel.Info, "SAML profile not fully configured");
+          markCheckFailed(
+            "SAML profile not configured. Run 'Complete Google SSO setup' first."
+          );
+          return;
+        }
+
+        const CredsSchema = z.object({
+          idpCredentials: z.array(z.object({ name: z.string() })).optional()
+        });
+
+        const { idpCredentials = [] } = await google.get(
+          ApiEndpoint.Google.SamlProfileCredentialsList(profileId),
+          CredsSchema,
+          { flatten: "idpCredentials" }
+        );
+
+        if (idpCredentials.length === 0) {
+          log(LogLevel.Info, "SAML profile missing certificate");
+          markCheckFailed(
+            "SAML profile missing certificate. Run 'Complete Google SSO setup' first."
+          );
+          return;
+        }
+
+        // end (possibly duplicate SAML check)
+        
+        
         const { inboundSsoAssignments = [] } = await google.get(
           ApiEndpoint.Google.SsoAssignments,
           AssignSchema,
@@ -137,10 +180,17 @@ export default defineStep(StepId.AssignUsersToSso)
           markIncomplete("Users not assigned to SSO", {});
         }
       } catch (error) {
-        log(LogLevel.Error, "Failed to check SSO assignment", { error });
-        markCheckFailed(
-          error instanceof Error ? error.message : "Check failed"
-        );
+        if (isNotFoundError(error) || isHttpError(error, 400)) {
+          log(LogLevel.Info, "SAML profile missing or incomplete", { error });
+          markCheckFailed(
+            "SAML profile missing or incomplete. Run 'Complete Google SSO setup' first."
+          );
+        } else {
+          log(LogLevel.Error, "Failed to check SSO assignment", { error });
+          markCheckFailed(
+            error instanceof Error ? error.message : "Check failed"
+          );
+        }
       }
     }
   )
