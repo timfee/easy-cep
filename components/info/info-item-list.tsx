@@ -30,9 +30,9 @@ export function InfoItemList({
 
   return (
     <div className="divide-y divide-slate-100">
-      {items.map((item) => (
+      {items.map((item, idx) => (
         <div
-          key={item.id}
+          key={`${item.id}-${idx}`}
           className={cn(
             "flex items-start gap-2 px-2 py-1",
             failedDeletes.has(item.id) && "bg-destructive/10"
