@@ -110,7 +110,22 @@ export default defineStep(StepId.AssignUsersToSso)
         const automationOuPath = vars.require(Var.AutomationOuPath);
 
         // start (possibly duplicate SAML check)
-        
+
+        const ProfileSchema = z.object({
+          name: z.string(),
+          idpConfig: z
+            .object({
+              entityId: z.string(),
+              singleSignOnServiceUri: z.string(),
+              signOutUri: z.string().optional()
+            })
+            .optional(),
+          spConfig: z.object({
+            entityId: z.string(),
+            assertionConsumerServiceUri: z.string()
+          })
+        });
+
         const profile = await google.get(
           ApiEndpoint.Google.SamlProfile(profileId),
           ProfileSchema
@@ -150,8 +165,7 @@ export default defineStep(StepId.AssignUsersToSso)
         }
 
         // end (possibly duplicate SAML check)
-        
-        
+
         const { inboundSsoAssignments = [] } = await google.get(
           ApiEndpoint.Google.SsoAssignments,
           AssignSchema,
@@ -277,6 +291,11 @@ export default defineStep(StepId.AssignUsersToSso)
       // isConflictError handles: 409
       if (isConflictError(error)) {
         output({});
+      } else if (isNotFoundError(error)) {
+        log(LogLevel.Error, "SAML profile not found", { error });
+        markFailed(
+          "SAML profile missing. Run 'Complete Google SSO setup' first."
+        );
       } else if (isHttpError(error, 400)) {
         log(LogLevel.Error, "Invalid SSO profile", { error });
         markFailed(
