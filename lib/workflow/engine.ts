@@ -26,6 +26,7 @@ import {
   Var,
   WorkflowVars
 } from "@/types";
+import { inspect } from "node:util";
 import { createAuthenticatedFetch } from "./fetch-utils";
 import { getStep } from "./step-registry";
 
@@ -45,11 +46,21 @@ async function processStep<T extends StepIdValue>(
   };
 
   const addLog = (entry: StepLogEntry) => {
-    logs = [...logs, entry];
+    let data = entry.data;
+    if (entry.level === LogLevel.Error) {
+      data = {
+        error: data instanceof Error ? inspect(data, { depth: null }) : data,
+        vars: { ...vars }
+      };
+    } else if (data instanceof Error) {
+      data = inspect(data, { depth: null });
+    }
+
+    const logEntry = { ...entry, data };
+    logs = [...logs, logEntry];
     if (process.env.NODE_ENV === "development") {
       const prefix = `[${entry.level?.toUpperCase()}] ${new Date(entry.timestamp).toISOString()}`;
-
-      console.log(`${prefix}: ${entry.message}`, entry.data ?? "");
+      console.log(`${prefix}: ${entry.message}`, logEntry.data ?? "");
     }
     pushState({});
   };

@@ -83,7 +83,7 @@ export function StepLogItem({ log }: StepLogItemProps) {
           <span className="flex-1 truncate text-slate-800">
             {log.method ? extractPath(log.url ?? "") : log.message}
           </span>
-          {log.data !== null && (
+          {log.data !== null && log.data !== undefined && (
             <ChevronRight
               className={cn(
                 "h-3 w-3 transition-transform",
@@ -93,11 +93,13 @@ export function StepLogItem({ log }: StepLogItemProps) {
           )}
         </div>
       </CollapsibleTrigger>
-      {log.data !== null && (
+      {log.data !== null && log.data !== undefined && (
         <CollapsibleContent className="px-4 py-2 data-[state=closed]:animate-collapsible-up data-[state=open]:animate-collapsible-down">
           <div className="bg-slate-800 text-slate-100 rounded border border-slate-700 max-h-60 overflow-y-auto">
             <pre className="p-2 whitespace-pre-wrap">
-              {JSON.stringify(log.data, null, 2)}
+              {typeof log.data === "string" ?
+                log.data
+              : JSON.stringify(log.data, null, 2)}
             </pre>
           </div>
         </CollapsibleContent>
