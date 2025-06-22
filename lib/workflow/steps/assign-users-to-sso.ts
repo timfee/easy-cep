@@ -23,9 +23,6 @@ interface HttpClient {
   ): Promise<R>;
 }
 
-// Empty object type - this step doesn't extract data during check phase
-type CheckData = Record<string, never>;
-
 async function getRootOrgUnitId(google: HttpClient) {
   const OrgUnitsSchema = z.object({
     organizationUnits: z
@@ -137,9 +134,8 @@ export default defineStep(StepId.AssignUsersToSso)
           || profile.idpConfig.signOutUri === ""
         ) {
           log(LogLevel.Info, "SAML profile not fully configured");
-          markIncomplete(
-            "SAML profile missing configuration or certificate",
-            {}
+          markCheckFailed(
+            "SAML profile not configured. Run 'Complete Google SSO setup' first."
           );
           return;
         }
@@ -156,7 +152,9 @@ export default defineStep(StepId.AssignUsersToSso)
 
         if (idpCredentials.length === 0) {
           log(LogLevel.Info, "SAML profile missing certificate");
-          markIncomplete("SAML profile missing certificate", {});
+          markCheckFailed(
+            "SAML profile missing certificate. Run 'Complete Google SSO setup' first."
+          );
           return;
         }
 
@@ -188,10 +186,17 @@ export default defineStep(StepId.AssignUsersToSso)
           markIncomplete("Users not assigned to SSO", {});
         }
       } catch (error) {
-        log(LogLevel.Error, "Failed to check SSO assignment", { error });
-        markCheckFailed(
-          error instanceof Error ? error.message : "Check failed"
-        );
+        if (isNotFoundError(error) || isHttpError(error, 400)) {
+          log(LogLevel.Info, "SAML profile missing or incomplete", { error });
+          markCheckFailed(
+            "SAML profile missing or incomplete. Run 'Complete Google SSO setup' first."
+          );
+        } else {
+          log(LogLevel.Error, "Failed to check SSO assignment", { error });
+          markCheckFailed(
+            error instanceof Error ? error.message : "Check failed"
+          );
+        }
       }
     }
   )
