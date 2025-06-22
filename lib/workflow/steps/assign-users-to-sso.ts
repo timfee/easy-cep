@@ -106,56 +106,8 @@ export default defineStep(StepId.AssignUsersToSso)
             .optional()
         });
 
-        const ProfileSchema = z.object({
-          name: z.string(),
-          idpConfig: z
-            .object({
-              entityId: z.string(),
-              singleSignOnServiceUri: z.string(),
-              signOutUri: z.string().optional()
-            })
-            .optional()
-        });
-
         const profileId = vars.require(Var.SamlProfileId);
         const automationOuPath = vars.require(Var.AutomationOuPath);
-
-        const profile = await google.get(
-          ApiEndpoint.Google.SamlProfile(profileId),
-          ProfileSchema
-        );
-
-        if (
-          !profile.idpConfig?.entityId
-          || !profile.idpConfig.singleSignOnServiceUri
-          || !profile.idpConfig.signOutUri
-          || profile.idpConfig.entityId === ""
-          || profile.idpConfig.singleSignOnServiceUri === ""
-          || profile.idpConfig.signOutUri === ""
-        ) {
-          log(LogLevel.Info, "SAML profile not fully configured");
-          markIncomplete(
-            "SAML profile missing configuration or certificate",
-            {}
-          );
-          return;
-        }
-
-        const CredsSchema = z.object({
-          idpCredentials: z.array(z.object({ name: z.string() })).optional()
-        });
-
-        const { idpCredentials = [] } = await google.get(
-          ApiEndpoint.Google.SamlProfileCredentialsList(profileId),
-          CredsSchema,
-          { flatten: "idpCredentials" }
-        );
-
-        if (idpCredentials.length === 0) {
-          log(LogLevel.Info, "SAML profile missing certificate");
-          markIncomplete("SAML profile missing certificate", {});
-          return;
-        }
 
         const { inboundSsoAssignments = [] } = await google.get(
           ApiEndpoint.Google.SsoAssignments,
