@@ -17,6 +17,11 @@ import { z } from "zod";
 
 import pLimit from "p-limit";
 
+interface DeleteOptions {
+  concurrency?: number;
+  delayMs?: number;
+}
+
 export interface DeleteResult {
   deleted: string[];
   failed: Array<{ id: string; error: string }>;
@@ -32,7 +37,8 @@ function createDeleteAction(
   provider: Provider,
   getEndpoint: (id: string) => string,
   resourceName: string,
-  isProtected?: (id: string) => boolean
+  isProtected?: (id: string) => boolean,
+  options: DeleteOptions = {}
 ) {
   return async function deleteResources(ids: string[]): Promise<DeleteResult> {
     checkPurgeAllowed();
@@ -43,7 +49,7 @@ function createDeleteAction(
         `No ${provider === PROVIDERS.GOOGLE ? "Google" : "Microsoft"} token available`
       );
 
-    const limit = pLimit(3);
+    const limit = pLimit(options.concurrency ?? 3);
     const results: DeleteResult = { deleted: [], failed: [] };
 
     const deletableIds =
@@ -55,7 +61,7 @@ function createDeleteAction(
     });
 
     await Promise.all(
-      deletableIds.map((id) =>
+      deletableIds.map((id, index) =>
         limit(async () => {
           try {
             const res = await fetch(getEndpoint(id), {
@@ -75,6 +81,12 @@ function createDeleteAction(
               error: error instanceof Error ? error.message : String(error)
             });
           }
+
+          if (options.delayMs && index < deletableIds.length - 1) {
+            await new Promise((resolve) =>
+              setTimeout(resolve, options.delayMs)
+            );
+          }
         })
       )
     );
@@ -86,20 +98,29 @@ function createDeleteAction(
 const createGoogleDeleteAction = (
   getEndpoint: (id: string) => string,
   resourceName: string,
-  isProtected?: (id: string) => boolean
+  isProtected?: (id: string) => boolean,
+  options?: DeleteOptions
 ) =>
-  createDeleteAction(PROVIDERS.GOOGLE, getEndpoint, resourceName, isProtected);
+  createDeleteAction(
+    PROVIDERS.GOOGLE,
+    getEndpoint,
+    resourceName,
+    isProtected,
+    options
+  );
 
 const createMicrosoftDeleteAction = (
   getEndpoint: (id: string) => string,
   resourceName: string,
-  isProtected?: (id: string) => boolean
+  isProtected?: (id: string) => boolean,
+  options?: DeleteOptions
 ) =>
   createDeleteAction(
     PROVIDERS.MICROSOFT,
     getEndpoint,
     resourceName,
-    isProtected
+    isProtected,
+    options
   );
 
 export async function deleteOrgUnits(ids: string[]): Promise<DeleteResult> {
@@ -144,34 +165,44 @@ export async function deleteOrgUnits(ids: string[]): Promise<DeleteResult> {
 export async function deleteSamlProfiles(ids: string[]): Promise<DeleteResult> {
   return createGoogleDeleteAction(
     (id) => ApiEndpoint.Google.SamlProfile(id),
-    "SAML Profile"
+    "SAML Profile",
+    undefined,
+    { concurrency: 1, delayMs: 1500 }
   )(ids);
 }
 
 export async function deleteSsoAssignments(
   ids: string[]
 ): Promise<DeleteResult> {
-  return createGoogleDeleteAction((id) => {
-    const normalized = extractResourceId(
-      id,
-      ResourceTypes.InboundSsoAssignments
-    );
-    return `${ApiEndpoint.Google.SsoAssignments}/${encodeURIComponent(normalized)}`;
-  }, "SSO Assignment")(ids);
+  return createGoogleDeleteAction(
+    (id) => {
+      const normalized = extractResourceId(
+        id,
+        ResourceTypes.InboundSsoAssignments
+      );
+      return `${ApiEndpoint.Google.SsoAssignments}/${encodeURIComponent(normalized)}`;
+    },
+    "SSO Assignment",
+    undefined,
+    { concurrency: 1, delayMs: 1500 }
+  )(ids);
 }
 
 export async function deleteGoogleRoles(ids: string[]): Promise<DeleteResult> {
   return createGoogleDeleteAction(
     (id) => `${ApiEndpoint.Google.Roles}/${id}`,
     "Admin Role",
-    (id) => id.startsWith("_")
+    (id) => id.startsWith("_"),
+    { concurrency: 1, delayMs: 1500 }
   )(ids);
 }
 
 export async function deleteGoogleUsers(ids: string[]): Promise<DeleteResult> {
   return createGoogleDeleteAction(
     (id) => `${ApiEndpoint.Google.Users}/${id}`,
-    "User"
+    "User",
+    undefined,
+    { concurrency: 1, delayMs: 1500 }
   )(ids);
 }
 
