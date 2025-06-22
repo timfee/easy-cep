@@ -56,7 +56,7 @@
 }
 @theme inline {
   --font-sans: var(--font-sans);
-  --font-mono: var(--font-mono);
+  --font-mono: "Menlo", "Fira Code", "Courier New", monospace;
   --font-serif: var(--font-serif);
 
   --radius-sm: calc(var(--radius) - 4px);
