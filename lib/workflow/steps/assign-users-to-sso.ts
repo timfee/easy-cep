@@ -23,9 +23,6 @@ interface HttpClient {
   ): Promise<R>;
 }
 
-// Empty object type - this step doesn't extract data during check phase
-type CheckData = Record<string, never>;
-
 async function getRootOrgUnitId(google: HttpClient) {
   const OrgUnitsSchema = z.object({
     organizationUnits: z
