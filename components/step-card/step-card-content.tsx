@@ -31,7 +31,6 @@ import {
   StepId,
   StepIdValue,
   StepUIState,
-  VarName,
   WorkflowVars
 } from "@/types";
 import { ChevronRight, Play, RotateCcw, Terminal, Zap } from "lucide-react";
@@ -69,13 +68,22 @@ export function StepCardContent({ definition, state, vars, executing }: Props) {
   useEffect(() => {
     if (executing || state?.status === "pending") setLogsOpen(true);
   }, [executing, state?.status]);
-  const missing = definition.requires.filter(
-    (v) => WORKFLOW_VARIABLES[v]?.ephemeral && vars[v] === undefined
+
+  const missingAll = definition.requires.filter((v) => vars[v] === undefined);
+  const missingTransient = missingAll.filter(
+    (v) => WORKFLOW_VARIABLES[v]?.ephemeral
   );
-  const canExecute =
-    Object.entries(WORKFLOW_VARIABLES)
-      .filter(([, m]) => m.consumedBy?.includes(definition.id) && !m.producedBy)
-      .every(([k]) => vars[k as VarName] !== undefined) && missing.length === 0;
+  const canExecute = missingAll.length === 0;
+  const missingMessages = missingAll.map((v) => {
+    const meta = WORKFLOW_VARIABLES[v];
+    const producer = meta?.producedBy;
+    const producerName =
+      producer ? STEP_DETAILS[producer]?.title || producer : null;
+    if (meta?.ephemeral && producerName) {
+      return `${v} (from "${producerName}" – rerun this step)`;
+    }
+    return producerName ? `${v} (from "${producerName}")` : v;
+  });
   const canUndo = state?.status === "complete";
   return (
     <CardContent className="px-6 pb-8">
@@ -95,7 +103,7 @@ export function StepCardContent({ definition, state, vars, executing }: Props) {
       </div>
       <div className="flex items-center justify-between my-6 px-6">
         <div className="flex items-center gap-2">
-          {missing.length > 0 ?
+          {missingTransient.length > 0 ?
             <Tooltip>
               <TooltipTrigger asChild>
                 <Button
@@ -108,7 +116,7 @@ export function StepCardContent({ definition, state, vars, executing }: Props) {
                   <Play className="h-3.5 w-3.5" /> Execute
                 </Button>
               </TooltipTrigger>
-              <TooltipContent side="top">{`Requires transient data from ${missing
+              <TooltipContent side="top">{`Requires transient data from ${missingTransient
                 .map((v) => {
                   const p = WORKFLOW_VARIABLES[v]?.producedBy;
                   return p ? STEP_DETAILS[p]?.title || p : v;
@@ -131,6 +139,11 @@ export function StepCardContent({ definition, state, vars, executing }: Props) {
           }
           {InfoBtn && <InfoBtn />}
         </div>
+        {!canExecute && (
+          <p className="text-xs text-destructive mt-2">
+            {`Missing required input${missingMessages.length > 1 ? "s" : ""}: ${missingMessages.join(", ")}`}
+          </p>
+        )}
         <div className="flex items-center gap-2">
           {canUndo && (
             <Button
@@ -162,6 +175,7 @@ export function StepCardContent({ definition, state, vars, executing }: Props) {
           stepId={definition.id}
           vars={vars}
           onChange={actions.onVarChange}
+          missing={missingAll}
         />
       </div>
       <Collapsible open={logsOpen} onOpenChange={setLogsOpen} className="px-6">
