@@ -44,10 +44,11 @@ pnpm dev
 4. **Create Admin Role and Assign User** - Sets up custom role with required privileges
 5. **Configure Google SAML Profile** - Creates inbound SAML configuration
 6. **Create Microsoft Apps** - Instantiates provisioning and SSO applications
-7. **Configure Microsoft Sync and SSO** - Sets up synchronization job
-8. **Setup Microsoft Claims Policy** - Creates claims mapping policy
-9. **Complete Google SSO Setup** - Updates SAML profile with Azure AD metadata
-10. **Assign Users to SSO** - Enables SSO for all users
+7. **Setup Microsoft Provisioning** - Configures Azure AD user provisioning
+8. **Configure Microsoft SSO** - Sets SSO mode and generates signing certificate
+9. **Setup Microsoft Claims Policy** - Creates claims mapping policy
+10. **Complete Google SSO Setup** - Updates SAML profile with Azure AD metadata
+11. **Assign Users to SSO** - Enables SSO for all users
 
 ## Architecture
 

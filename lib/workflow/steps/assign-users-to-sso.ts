@@ -106,20 +106,11 @@ export default defineStep(StepId.AssignUsersToSso)
             .optional()
         });
 
-        const ProfileSchema = z.object({
-          name: z.string(),
-          idpConfig: z
-            .object({
-              entityId: z.string(),
-              singleSignOnServiceUri: z.string(),
-              signOutUri: z.string().optional()
-            })
-            .optional()
-        });
-
         const profileId = vars.require(Var.SamlProfileId);
         const automationOuPath = vars.require(Var.AutomationOuPath);
 
+        // start (possibly duplicate SAML check)
+        
         const profile = await google.get(
           ApiEndpoint.Google.SamlProfile(profileId),
           ProfileSchema
@@ -158,6 +149,9 @@ export default defineStep(StepId.AssignUsersToSso)
           return;
         }
 
+        // end (possibly duplicate SAML check)
+        
+        
         const { inboundSsoAssignments = [] } = await google.get(
           ApiEndpoint.Google.SsoAssignments,
           AssignSchema,
