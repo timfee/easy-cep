@@ -52,14 +52,30 @@ export function createAuthenticatedFetch(
         level: LogLevel.Debug
       });
 
-      const res = await fetch(pageUrl, {
-        ...reqInit,
-        headers: {
-          ...(reqInit.headers ?? {}),
-          Authorization: `Bearer ${token}`,
-          "Content-Type": "application/json"
-        }
-      });
+      let res: Response;
+      try {
+        res = await fetch(pageUrl, {
+          ...reqInit,
+          headers: {
+            ...(reqInit.headers ?? {}),
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json"
+          }
+        });
+      } catch (error) {
+        context.addLog({
+          timestamp: Date.now(),
+          message: "Network error",
+          method,
+          url: pageUrl,
+          data: error instanceof Error ? error.message : String(error),
+          level: LogLevel.Error
+        });
+        throw new HttpError(
+          0,
+          error instanceof Error ? error.message : String(error)
+        );
+      }
 
       const clone = res.clone();
       let logData: unknown;
