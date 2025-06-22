@@ -137,6 +137,22 @@ export default defineStep(StepId.AssignUsersToSso)
           return;
         }
 
+        const CredsSchema = z.object({
+          idpCredentials: z.array(z.object({ name: z.string() })).optional()
+        });
+
+        const { idpCredentials = [] } = await google.get(
+          ApiEndpoint.Google.SamlProfileCredentialsList(profileId),
+          CredsSchema,
+          { flatten: "idpCredentials" }
+        );
+
+        if (idpCredentials.length === 0) {
+          log(LogLevel.Info, "SAML profile missing certificate");
+          markIncomplete("SAML profile missing certificate", {});
+          return;
+        }
+
         const { inboundSsoAssignments = [] } = await google.get(
           ApiEndpoint.Google.SsoAssignments,
           AssignSchema,
