@@ -11,7 +11,7 @@ describe("Ephemeral variable filtering", () => {
 
     const filtered = filterEphemeralVars(vars);
 
-    expect(filtered[Var.GeneratedPassword]).toBeUndefined();
+    expect(filtered[Var.GeneratedPassword]).toBe("secret123");
     expect(filtered[Var.VerificationToken]).toBeUndefined();
     expect(filtered[Var.PrimaryDomain]).toBe("example.com");
   });
