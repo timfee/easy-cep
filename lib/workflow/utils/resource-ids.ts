@@ -28,6 +28,7 @@ export const ResourceTypes = {
   // Google
   InboundSsoAssignments: "inboundSsoAssignments",
   InboundSamlSsoProfiles: "inboundSamlSsoProfiles",
+  OrgUnitId: "id",
   OrgUnits: "orgUnits",
   Roles: "roles",
   RoleAssignments: "roleassignments",
