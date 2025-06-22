@@ -48,6 +48,13 @@ export default defineStep(StepId.ConfigureGoogleSamlProfile)
           ProfilesSchema,
           { flatten: "inboundSamlSsoProfiles" }
         );
+
+        if (inboundSamlSsoProfiles.length > 90) {
+          log(
+            LogLevel.Warn,
+            `Found ${inboundSamlSsoProfiles.length} SAML profiles - nearing API limits`
+          );
+        }
         // Extract: samlProfileId = inboundSamlSsoProfiles[0]?.name
 
         if (inboundSamlSsoProfiles.length > 0) {

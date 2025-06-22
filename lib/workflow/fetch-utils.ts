@@ -98,6 +98,7 @@ export function createAuthenticatedFetch(
       if (!res.ok) {
         let detail = res.statusText;
         let body: unknown;
+        const errorClone = res.clone();
         try {
           body = await res.json();
           const err = (body as { error?: { message?: string } }).error;
@@ -108,7 +109,7 @@ export function createAuthenticatedFetch(
           }
         } catch {
           try {
-            detail = await res.text();
+            detail = await errorClone.text();
           } catch {
             // ignore
           }

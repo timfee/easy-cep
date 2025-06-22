@@ -44,13 +44,25 @@ if (
     // Clean environment before ALL tests
     beforeAll(async () => {
       console.log("\uD83E\uDDF9 Cleaning test environment before tests...");
-      try {
-        await cleanupGoogleEnvironment();
-        await cleanupMicrosoftEnvironment();
-        console.log("✅ Environment cleaned");
-      } catch (error) {
-        console.error("❌ Cleanup failed:", error);
-        throw error;
+
+      let retries = 3;
+      while (retries > 0) {
+        try {
+          await cleanupGoogleEnvironment();
+          await cleanupMicrosoftEnvironment();
+          console.log("✅ Environment cleaned");
+          break;
+        } catch (error) {
+          retries--;
+          if (retries === 0) {
+            console.error("❌ Cleanup failed after 3 attempts:", error);
+            throw error;
+          }
+          console.warn(
+            `⚠️ Cleanup attempt failed, retrying... (${retries} attempts left)`
+          );
+          await new Promise((resolve) => setTimeout(resolve, 2000));
+        }
       }
     });
 

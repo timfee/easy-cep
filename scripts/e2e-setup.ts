@@ -78,7 +78,7 @@ export async function cleanupGoogleEnvironment() {
     });
   }
 
-  // 4. Delete SAML profiles
+  // 4. Delete ALL test SAML profiles
   const samlRes = await fetch(ApiEndpoint.Google.SsoProfiles, {
     headers: { Authorization: `Bearer ${GOOGLE_TOKEN}` }
   });
@@ -86,11 +86,23 @@ export async function cleanupGoogleEnvironment() {
     inboundSamlSsoProfiles?: Array<{ name: string; displayName: string }>;
   };
   for (const profile of samlData.inboundSamlSsoProfiles || []) {
-    if (profile.displayName === "Azure AD") {
-      await fetch(ApiEndpoint.Google.SamlProfile(profile.name), {
-        method: "DELETE",
-        headers: { Authorization: `Bearer ${GOOGLE_TOKEN}` }
-      });
+    if (
+      profile.displayName?.includes("Test SAML")
+      || profile.displayName?.includes("Azure AD")
+      || profile.displayName?.includes("Entra ID")
+    ) {
+      try {
+        await fetch(ApiEndpoint.Google.SamlProfile(profile.name), {
+          method: "DELETE",
+          headers: { Authorization: `Bearer ${GOOGLE_TOKEN}` }
+        });
+        console.log(`🗑️ Deleted SAML profile: ${profile.displayName}`);
+      } catch (e) {
+        console.warn(
+          `⚠️ Failed to delete SAML profile ${profile.displayName}:`,
+          e
+        );
+      }
     }
   }
 
