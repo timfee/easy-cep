@@ -2,6 +2,7 @@ import { ApiEndpoint } from "@/constants";
 import {
   EmptyResponseSchema,
   isConflictError,
+  isHttpError,
   isNotFoundError
 } from "@/lib/workflow/utils";
 
@@ -113,7 +114,8 @@ export default defineStep(StepId.AssignUsersToSso)
           idpConfig: z
             .object({
               entityId: z.string(),
-              singleSignOnServiceUri: z.string()
+              singleSignOnServiceUri: z.string(),
+              signOutUri: z.string().optional()
             })
             .optional()
         });
@@ -129,11 +131,16 @@ export default defineStep(StepId.AssignUsersToSso)
         if (
           !profile.idpConfig?.entityId
           || !profile.idpConfig.singleSignOnServiceUri
+          || !profile.idpConfig.signOutUri
           || profile.idpConfig.entityId === ""
           || profile.idpConfig.singleSignOnServiceUri === ""
+          || profile.idpConfig.signOutUri === ""
         ) {
           log(LogLevel.Info, "SAML profile not fully configured");
-          markIncomplete("SAML profile missing configuration", {});
+          markIncomplete(
+            "SAML profile missing configuration or certificate",
+            {}
+          );
           return;
         }
 
@@ -255,6 +262,11 @@ export default defineStep(StepId.AssignUsersToSso)
       // isConflictError handles: 409
       if (isConflictError(error)) {
         output({});
+      } else if (isHttpError(error, 400)) {
+        log(LogLevel.Error, "Invalid SSO profile", { error });
+        markFailed(
+          "SSO profile incomplete or missing. Run 'Complete Google SSO setup' first."
+        );
       } else {
         log(LogLevel.Error, "Failed to assign users to SSO", { error });
         markFailed(error instanceof Error ? error.message : "Execute failed");
