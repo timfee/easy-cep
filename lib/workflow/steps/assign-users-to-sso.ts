@@ -110,7 +110,18 @@ export default defineStep(StepId.AssignUsersToSso)
         const automationOuPath = vars.require(Var.AutomationOuPath);
 
         // start (possibly duplicate SAML check)
-        
+
+        const ProfileSchema = z.object({
+          name: z.string(),
+          idpConfig: z
+            .object({
+              entityId: z.string(),
+              singleSignOnServiceUri: z.string(),
+              signOutUri: z.string().optional()
+            })
+            .optional()
+        });
+
         const profile = await google.get(
           ApiEndpoint.Google.SamlProfile(profileId),
           ProfileSchema

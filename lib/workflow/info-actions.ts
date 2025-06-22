@@ -103,10 +103,42 @@ const createMicrosoftDeleteAction = (
   );
 
 export async function deleteOrgUnits(ids: string[]): Promise<DeleteResult> {
-  return createGoogleDeleteAction(
-    (id) => `${ApiEndpoint.Google.OrgUnits}/${encodeURIComponent(id)}`,
-    "Organizational Unit"
-  )(ids);
+  checkPurgeAllowed();
+
+  const token = await refreshTokenIfNeeded(PROVIDERS.GOOGLE);
+  if (!token) throw new Error("No Google token available");
+
+  const results: DeleteResult = { deleted: [], failed: [] };
+
+  for (const [index, id] of ids.entries()) {
+    try {
+      const res = await fetch(
+        `${ApiEndpoint.Google.OrgUnits}/${encodeURIComponent(id)}`,
+        {
+          method: "DELETE",
+          headers: { Authorization: `Bearer ${token.accessToken}` }
+        }
+      );
+
+      if (!res.ok) {
+        const text = await res.text();
+        throw new Error(`HTTP ${res.status}: ${text}`);
+      }
+
+      results.deleted.push(id);
+    } catch (error) {
+      results.failed.push({
+        id,
+        error: error instanceof Error ? error.message : String(error)
+      });
+    }
+
+    if (index < ids.length - 1) {
+      await new Promise((resolve) => setTimeout(resolve, 1500));
+    }
+  }
+
+  return results;
 }
 
 export async function deleteSamlProfiles(ids: string[]): Promise<DeleteResult> {
