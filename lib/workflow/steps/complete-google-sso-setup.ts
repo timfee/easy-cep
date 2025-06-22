@@ -55,11 +55,24 @@ export default defineStep(StepId.CompleteGoogleSsoSetup)
           ProfileSchema
         );
 
+        const CredsSchema = z.object({
+          idpCredentials: z.array(z.object({ name: z.string() })).optional()
+        });
+
+        const { idpCredentials = [] } = await google.get(
+          ApiEndpoint.Google.SamlProfileCredentialsList(profileId),
+          CredsSchema,
+          { flatten: "idpCredentials" }
+        );
+
         if (
           profile.idpConfig?.entityId
           && profile.idpConfig.singleSignOnServiceUri
+          && profile.idpConfig.signOutUri
           && profile.idpConfig.entityId !== ""
           && profile.idpConfig.singleSignOnServiceUri !== ""
+          && profile.idpConfig.signOutUri !== ""
+          && idpCredentials.length > 0
         ) {
           log(LogLevel.Info, "Google SSO already configured");
           markComplete({});
