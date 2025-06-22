@@ -73,7 +73,10 @@ export function StepCardContent({ definition, state, vars, executing }: Props) {
   const missingTransient = missingAll.filter(
     (v) => WORKFLOW_VARIABLES[v]?.ephemeral
   );
-  const canExecute = missingAll.length === 0;
+  const canExecute =
+    missingAll.length === 0
+    && state?.status !== "failed"
+    && state?.status !== "checking";
   const missingMessages = missingAll.map((v) => {
     const meta = WORKFLOW_VARIABLES[v];
     const producer = meta?.producedBy;

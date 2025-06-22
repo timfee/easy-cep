@@ -123,8 +123,9 @@ export default defineStep(StepId.CreateServiceUser)
       try {
         vars.require(Var.PrimaryDomain);
 
-        const BYTES = 4;
-        const password = `Temp${crypto.randomBytes(BYTES).toString("hex")}!`;
+        const BYTES = 16;
+        const password =
+          crypto.randomBytes(BYTES).toString("base64url") + "!Aa1";
         const CreateSchema = z.object({
           id: z.string(),
           primaryEmail: z.string()

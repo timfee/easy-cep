@@ -182,21 +182,21 @@ function createHttpClient(
     post: (url, schema, body, options) =>
       fetchFn(url, schema, {
         method: "POST",
-        body: body ? JSON.stringify(body) : undefined,
+        body: body as BodyInit,
         ...options
       }),
 
     put: (url, schema, body, options) =>
       fetchFn(url, schema, {
         method: "PUT",
-        body: body ? JSON.stringify(body) : undefined,
+        body: body as BodyInit,
         ...options
       }),
 
     patch: (url, schema, body, options) =>
       fetchFn(url, schema, {
         method: "PATCH",
-        body: body ? JSON.stringify(body) : undefined,
+        body: body as BodyInit,
         ...options
       }),
 

@@ -6,6 +6,23 @@ import {
   NotFoundError,
   PreconditionFailedError
 } from "./errors";
+import { retryWithBackoff } from "./retry";
+
+const requestQueue = new Map<string, Promise<void>>();
+const RATE_LIMIT_DELAY = 100; // 100ms between requests to same domain
+
+async function rateLimitRequest(url: string): Promise<void> {
+  const domain = new URL(url).hostname;
+  const existing = requestQueue.get(domain);
+
+  const promise = (async () => {
+    if (existing) await existing;
+    await new Promise((resolve) => setTimeout(resolve, RATE_LIMIT_DELAY));
+  })();
+
+  requestQueue.set(domain, promise);
+  await promise;
+}
 
 export type FetchOpts = RequestInit & { flatten?: boolean | string };
 
@@ -28,7 +45,12 @@ export function createAuthenticatedFetch(
 
     const fetchPage = async (pageUrl: string): Promise<T> => {
       const method = reqInit.method ?? "GET";
-      const body = reqInit.body;
+      const body =
+        reqInit.body ?
+          typeof reqInit.body === "string" ?
+            reqInit.body
+          : JSON.stringify(reqInit.body)
+        : undefined;
       let parsedBody: unknown;
       if (body) {
         try {
@@ -52,14 +74,34 @@ export function createAuthenticatedFetch(
         level: LogLevel.Debug
       });
 
-      const res = await fetch(pageUrl, {
-        ...reqInit,
-        headers: {
-          ...(reqInit.headers ?? {}),
-          Authorization: `Bearer ${token}`,
-          "Content-Type": "application/json"
+      await rateLimitRequest(pageUrl);
+      const res = await retryWithBackoff(
+        () =>
+          fetch(pageUrl, {
+            ...reqInit,
+            headers: {
+              ...(reqInit.headers ?? {}),
+              Authorization: `Bearer ${token}`,
+              "Content-Type": "application/json"
+            },
+            body
+          }),
+        {
+          shouldRetry: (error: unknown) => {
+            const code =
+              (
+                typeof error === "object"
+                && error !== null
+                && "statusCode" in error
+                && typeof (error as { statusCode?: unknown }).statusCode
+                  === "number"
+              ) ?
+                (error as { statusCode: number }).statusCode
+              : undefined;
+            return code === undefined || code === 429 || code >= 500;
+          }
         }
-      });
+      );
 
       const clone = res.clone();
       let logData: unknown;
@@ -116,7 +158,30 @@ export function createAuthenticatedFetch(
       } catch {
         json = {};
       }
-      return schema.parse(json);
+
+      // Validate response matches schema
+      try {
+        const parsed = schema.parse(json);
+        return parsed;
+      } catch (parseError) {
+        context.addLog({
+          timestamp: Date.now(),
+          message: `Schema validation failed`,
+          method,
+          url: pageUrl,
+          data: {
+            parseError:
+              parseError instanceof Error ? parseError.message : parseError,
+            receivedData: json
+          },
+          level: LogLevel.Error
+        });
+        throw new Error(
+          `Invalid response format: ${
+            parseError instanceof Error ? parseError.message : "Schema mismatch"
+          }`
+        );
+      }
     };
 
     if (flatten) {

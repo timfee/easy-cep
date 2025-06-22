@@ -1,5 +1,5 @@
 import { ApiEndpoint } from "@/constants";
-import { isNotFoundError } from "@/lib/workflow/errors";
+import { isConflictError, isNotFoundError } from "@/lib/workflow/errors";
 import { EmptyResponseSchema } from "@/lib/workflow/utils";
 import { LogLevel, StepId, Var } from "@/types";
 import { z } from "zod";
@@ -70,25 +70,6 @@ export default defineStep(StepId.ConfigureGoogleSamlProfile)
     }
   )
   .execute(async ({ vars, google, output, markFailed, markPending, log }) => {
-    /**
-     * POST https://cloudidentity.googleapis.com/v1/customers/my_customer/inboundSamlSsoProfiles
-     * Headers: { Authorization: Bearer {googleAccessToken} }
-     * Body:
-     * {
-     *   "displayName": "Azure AD",
-     *   "idpConfig": { "entityId": "", "singleSignOnServiceUri": "" }
-     * }
-     *
-     * Success response (200)
-     * {
-     *   "name": "operations/abc123",
-     *   "done": true,
-     *   "response": { "name": "inboundSamlSsoProfiles/010xi5tr1szon40" }
-     * }
-     *
-     * Error response (400)
-     * { "error": { "code": 400, "message": "Invalid request" } }
-     */
     try {
       const CreateSchema = z.object({
         name: z.string(),
@@ -115,35 +96,80 @@ export default defineStep(StepId.ConfigureGoogleSamlProfile)
         "/inboundSamlSsoProfiles",
         "/customers/my_customer/inboundSamlSsoProfiles"
       )}`;
-      const op = await google.post(createUrl, opSchema, {
-        displayName: vars.require(Var.SamlProfileDisplayName),
-        idpConfig: { entityId: "", singleSignOnServiceUri: "" }
-      });
-      // Extract: samlProfileId = op.response?.name
 
-      if (!op.done) {
-        markPending("SAML profile creation in progress");
-        return;
+      try {
+        const op = await google.post(createUrl, opSchema, {
+          displayName: vars.require(Var.SamlProfileDisplayName),
+          idpConfig: { entityId: "", singleSignOnServiceUri: "" }
+        });
+
+        if (!op.done) {
+          markPending("SAML profile creation in progress");
+          return;
+        }
+
+        if (op.error) {
+          log(LogLevel.Error, "Operation failed", { error: op.error });
+          markFailed(op.error.message);
+          return;
+        }
+
+        const profile = op.response;
+        if (!profile) {
+          markFailed("Missing profile in response");
+          return;
+        }
+
+        output({
+          samlProfileId: profile.name,
+          entityId: profile.spConfig.entityId,
+          acsUrl: profile.spConfig.assertionConsumerServiceUri
+        });
+      } catch (error) {
+        // Handle 409 by finding existing profile
+        if (isConflictError(error)) {
+          log(LogLevel.Info, "SAML profile already exists, fetching it");
+
+          const ProfilesSchema = z.object({
+            inboundSamlSsoProfiles: z
+              .array(
+                z.object({
+                  name: z.string(),
+                  displayName: z.string(),
+                  spConfig: z.object({
+                    entityId: z.string(),
+                    assertionConsumerServiceUri: z.string()
+                  })
+                })
+              )
+              .optional()
+          });
+
+          const { inboundSamlSsoProfiles = [] } = await google.get(
+            ApiEndpoint.Google.SsoProfiles,
+            ProfilesSchema,
+            { flatten: "inboundSamlSsoProfiles" }
+          );
+
+          const displayName = vars.require(Var.SamlProfileDisplayName);
+          const existing = inboundSamlSsoProfiles.find(
+            (p) => p.displayName === displayName
+          );
+
+          if (existing) {
+            output({
+              samlProfileId: existing.name,
+              entityId: existing.spConfig.entityId,
+              acsUrl: existing.spConfig.assertionConsumerServiceUri
+            });
+            return;
+          }
+
+          markFailed("SAML profile exists but couldn't fetch it");
+          return;
+        }
+        throw error;
       }
-
-      if (op.error) {
-        log(LogLevel.Error, "Operation failed", { error: op.error });
-        markFailed(op.error.message);
-        return;
-      }
-
-      const profile = op.response;
-
-      if (!profile) {
-        markFailed("Missing profile in response");
-        return;
-      }
-
-      output({
-        samlProfileId: profile.name,
-        entityId: profile.spConfig.entityId,
-        acsUrl: profile.spConfig.assertionConsumerServiceUri
-      });
     } catch (error) {
       log(LogLevel.Error, "Failed to create SAML profile", { error });
       markFailed(error instanceof Error ? error.message : "Execute failed");
