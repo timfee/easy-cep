@@ -281,9 +281,10 @@ export async function listUsers(): Promise<InfoItem[]> {
       .optional()
   });
 
-  const res = await fetch(`${ApiEndpoint.Google.Users}?maxResults=25`, {
-    headers: { Authorization: `Bearer ${token.accessToken}` }
-  });
+  const res = await fetch(
+    `${ApiEndpoint.Google.Users}?customer=my_customer&maxResults=25`,
+    { headers: { Authorization: `Bearer ${token.accessToken}` } }
+  );
   if (!res.ok) throw new Error(`HTTP ${res.status}`);
   const data = Schema.parse(await res.json());
   return (
