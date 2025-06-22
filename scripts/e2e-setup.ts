@@ -4,6 +4,7 @@
  */
 
 import { ApiEndpoint } from "@/constants";
+import { existsSync, readFileSync } from "fs";
 import { fetch, ProxyAgent, setGlobalDispatcher } from "undici";
 
 if (process.env.USE_UNDICI_PROXY !== "false") {
@@ -13,8 +14,28 @@ if (process.env.USE_UNDICI_PROXY !== "false") {
   }
 }
 
-const GOOGLE_TOKEN = process.env.TEST_GOOGLE_BEARER_TOKEN;
-const MS_TOKEN = process.env.TEST_MS_BEARER_TOKEN;
+// Set tokens from files if not already set
+if (
+  !process.env.TEST_GOOGLE_BEARER_TOKEN
+  && existsSync("./google_bearer.token")
+) {
+  process.env.TEST_GOOGLE_BEARER_TOKEN = readFileSync(
+    "./google_bearer.token",
+    "utf8"
+  ).trim();
+}
+if (
+  !process.env.TEST_MS_BEARER_TOKEN
+  && existsSync("./microsoft_bearer.token")
+) {
+  process.env.TEST_MS_BEARER_TOKEN = readFileSync(
+    "./microsoft_bearer.token",
+    "utf8"
+  ).trim();
+}
+
+const GOOGLE_TOKEN = process.env.TEST_GOOGLE_BEARER_TOKEN!;
+const MS_TOKEN = process.env.TEST_MS_BEARER_TOKEN!;
 const TEST_DOMAIN = process.env.TEST_DOMAIN || "test.example.com";
 
 export async function cleanupGoogleEnvironment() {
@@ -148,7 +169,7 @@ export async function setupEnvironment() {
   console.log("\uD83C\uDF89 Environment ready for testing!");
 }
 
-if (require.main === module) {
+if (typeof require !== "undefined" && require.main === module) {
   setupEnvironment().catch((err) => {
     console.error(err);
     process.exitCode = 1;
