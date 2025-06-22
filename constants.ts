@@ -19,6 +19,8 @@ export const ApiEndpoint = {
       `https://cloudidentity.googleapis.com/v1/${profileId}`,
     SamlProfileCredentials: (profileId: string) =>
       `https://cloudidentity.googleapis.com/v1/${profileId}/idpCredentials:add`,
+    SamlProfileCredentialsList: (profileId: string) =>
+      `https://cloudidentity.googleapis.com/v1/${profileId}/idpCredentials`,
     SiteVerification: "https://www.googleapis.com/siteVerification/v1"
   },
   GoogleAuth: {
