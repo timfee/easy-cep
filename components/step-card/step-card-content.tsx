@@ -101,49 +101,51 @@ export function StepCardContent({ definition, state, vars, executing }: Props) {
         onClick={(e) => e.stopPropagation()}>
         <StepApiCalls stepId={definition.id} />
       </div>
-      <div className="flex items-center justify-between my-6 px-6">
-        <div className="flex items-center gap-2">
-          {missingTransient.length > 0 ?
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <Button
-                  size="sm"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    actions.onExecute(definition.id);
-                  }}
-                  disabled>
-                  <Play className="h-3.5 w-3.5" /> Execute
-                </Button>
-              </TooltipTrigger>
-              <TooltipContent side="top">{`Requires transient data from ${missingTransient
-                .map((v) => {
-                  const p = WORKFLOW_VARIABLES[v]?.producedBy;
-                  return p ? STEP_DETAILS[p]?.title || p : v;
-                })
-                .join(
-                  ", "
-                )}. Re-run the producing step first.`}</TooltipContent>
-            </Tooltip>
-          : <Button
-              size="sm"
-              onClick={(e) => {
-                e.stopPropagation();
-                actions.onExecute(definition.id);
-              }}
-              disabled={
-                !canExecute || executing || state?.status === "complete"
-              }>
-              <Play className="h-3.5 w-3.5" /> Execute
-            </Button>
-          }
-          {InfoBtn && <InfoBtn />}
+      <div className="flex items-start justify-between my-6 px-6">
+        <div>
+          <div className="flex items-center gap-2">
+            {missingTransient.length > 0 ?
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button
+                    size="sm"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      actions.onExecute(definition.id);
+                    }}
+                    disabled>
+                    <Play className="h-3.5 w-3.5" /> Execute
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent side="top">{`Requires transient data from ${missingTransient
+                  .map((v) => {
+                    const p = WORKFLOW_VARIABLES[v]?.producedBy;
+                    return p ? STEP_DETAILS[p]?.title || p : v;
+                  })
+                  .join(
+                    ", "
+                  )}. Re-run the producing step first.`}</TooltipContent>
+              </Tooltip>
+            : <Button
+                size="sm"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  actions.onExecute(definition.id);
+                }}
+                disabled={
+                  !canExecute || executing || state?.status === "complete"
+                }>
+                <Play className="h-3.5 w-3.5" /> Execute
+              </Button>
+            }
+            {InfoBtn && <InfoBtn />}
+          </div>
+          {!canExecute && (
+            <p className="text-xs text-destructive mt-2">
+              {`Missing required input${missingMessages.length > 1 ? "s" : ""}: ${missingMessages.join(", ")}`}
+            </p>
+          )}
         </div>
-        {!canExecute && (
-          <p className="text-xs text-destructive mt-2">
-            {`Missing required input${missingMessages.length > 1 ? "s" : ""}: ${missingMessages.join(", ")}`}
-          </p>
-        )}
         <div className="flex items-center gap-2">
           {canUndo && (
             <Button
