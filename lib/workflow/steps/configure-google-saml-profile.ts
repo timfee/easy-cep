@@ -1,11 +1,7 @@
-import { ApiEndpoint } from "@/constants";
 import { isNotFoundError } from "@/lib/workflow/errors";
-import { EmptyResponseSchema } from "@/lib/workflow/utils";
 import { LogLevel, StepId, Var } from "@/types";
-import { z } from "zod";
 import { WORKFLOW_LIMITS } from "../constants/workflow-limits";
 import { defineStep } from "../step-builder";
-import { GoogleOperationSchema } from "../types/api-schemas";
 
 export default defineStep(StepId.ConfigureGoogleSamlProfile)
   .requires(
@@ -31,25 +27,9 @@ export default defineStep(StepId.ConfigureGoogleSamlProfile)
   .check(
     async ({ google, markComplete, markIncomplete, markCheckFailed, log }) => {
       try {
-        const ProfilesSchema = z.object({
-          inboundSamlSsoProfiles: z
-            .array(
-              z.object({
-                name: z.string(),
-                spConfig: z.object({
-                  entityId: z.string(),
-                  assertionConsumerServiceUri: z.string()
-                })
-              })
-            )
-            .optional()
-        });
-
-        const { inboundSamlSsoProfiles = [] } = await google.get(
-          ApiEndpoint.Google.SsoProfiles,
-          ProfilesSchema,
-          { flatten: "inboundSamlSsoProfiles" }
-        );
+        const { inboundSamlSsoProfiles = [] } = await google.samlProfiles
+          .list()
+          .get();
 
         if (
           inboundSamlSsoProfiles.length
@@ -103,28 +83,12 @@ export default defineStep(StepId.ConfigureGoogleSamlProfile)
      * { "error": { "code": 400, "message": "Invalid request" } }
      */
     try {
-      const CreateSchema = z.object({ name: z.string() });
-
-      const ProfileSchema = z.object({
-        name: z.string(),
-        spConfig: z.object({
-          entityId: z.string(),
-          assertionConsumerServiceUri: z.string()
-        })
-      });
-
-      const opSchema = GoogleOperationSchema.extend({
-        response: CreateSchema.optional()
-      });
-
-      const createUrl = `${ApiEndpoint.Google.SsoProfiles.replace(
-        "/inboundSamlSsoProfiles",
-        "/customers/my_customer/inboundSamlSsoProfiles"
-      )}`;
-      const op = await google.post(createUrl, opSchema, {
-        displayName: vars.require(Var.SamlProfileDisplayName),
-        idpConfig: { entityId: "", singleSignOnServiceUri: "" }
-      });
+      const op = await google.samlProfiles
+        .create()
+        .post({
+          displayName: vars.require(Var.SamlProfileDisplayName),
+          idpConfig: { entityId: "", singleSignOnServiceUri: "" }
+        });
       // Extract: samlProfileId = op.response?.name
 
       if (!op.done) {
@@ -145,10 +109,7 @@ export default defineStep(StepId.ConfigureGoogleSamlProfile)
         return;
       }
 
-      const profile = await google.get(
-        ApiEndpoint.Google.SamlProfile(profileName),
-        ProfileSchema
-      );
+      const profile = await google.samlProfiles.get(profileName).get();
 
       output({
         samlProfileId: profile.name,
@@ -167,10 +128,7 @@ export default defineStep(StepId.ConfigureGoogleSamlProfile)
         markFailed("Missing samlProfileId");
         return;
       }
-      await google.delete(
-        ApiEndpoint.Google.SamlProfile(id),
-        EmptyResponseSchema
-      );
+      await google.samlProfiles.delete(id).delete();
       markReverted();
     } catch (error) {
       // isNotFoundError handles: 404

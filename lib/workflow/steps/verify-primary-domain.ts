@@ -1,6 +1,4 @@
-import { ApiEndpoint } from "@/constants";
 import { LogLevel, StepId, Var } from "@/types";
-import { z } from "zod";
 import { defineStep } from "../step-builder";
 
 export default defineStep(StepId.VerifyPrimaryDomain)
@@ -35,21 +33,7 @@ export default defineStep(StepId.VerifyPrimaryDomain)
   .check(
     async ({ google, markComplete, markIncomplete, markCheckFailed, log }) => {
       try {
-        const DomainsResponse = z.object({
-          domains: z.array(
-            z.object({
-              domainName: z.string(),
-              isPrimary: z.boolean(),
-              verified: z.boolean()
-            })
-          )
-        });
-
-        const { domains } = await google.get(
-          ApiEndpoint.Google.Domains,
-          DomainsResponse,
-          { flatten: "domains" }
-        );
+        const { domains } = await google.domains.get();
         // Extract: primaryDomain = domains.find(d => d.isPrimary)?.domainName
 
         const primary = domains.find((domain) => domain.isPrimary);
@@ -64,13 +48,6 @@ export default defineStep(StepId.VerifyPrimaryDomain)
         }
 
         if (primary) {
-          const TokenSchema = z.object({
-            method: z.string(),
-            type: z.string(),
-            site: z.object({ type: z.string(), identifier: z.string() }),
-            token: z.string()
-          });
-
           try {
             /**
              * POST https://www.googleapis.com/siteVerification/v1/token
@@ -87,14 +64,12 @@ export default defineStep(StepId.VerifyPrimaryDomain)
              * Error response (401)
              * { "error": { "code": 401, "message": "Auth error" } }
              */
-            const verificationData = await google.post(
-              `${ApiEndpoint.Google.SiteVerification}/token`,
-              TokenSchema,
-              {
+            const verificationData = await google.siteVerification
+              .getToken()
+              .post({
                 site: { type: "INET_DOMAIN", identifier: primary.domainName },
                 verificationMethod: "DNS_TXT"
-              }
-            );
+              });
             // Extract: verificationToken = verificationData.token
 
             log(LogLevel.Info, "Domain verification pending");
@@ -132,11 +107,6 @@ export default defineStep(StepId.VerifyPrimaryDomain)
           return;
         }
 
-        const VerifySchema = z.object({
-          id: z.string(),
-          site: z.object({ type: z.string(), identifier: z.string() })
-        });
-
         try {
           /**
            * POST https://www.googleapis.com/siteVerification/v1/webResource?verificationMethod=DNS_TXT
@@ -153,17 +123,15 @@ export default defineStep(StepId.VerifyPrimaryDomain)
            * Error response (400)
            * { "error": { "code": 400, "message": "DNS record not found" } }
            */
-          const verified = await google.post(
-            `${ApiEndpoint.Google.SiteVerification}/webResource`,
-            VerifySchema,
-            {
+          const verified = await google.siteVerification
+            .verify()
+            .post({
               site: {
                 type: "INET_DOMAIN",
                 identifier: checkData.primaryDomain
               },
               verificationMethod: "DNS_TXT"
-            }
-          );
+            });
           // Extract: isDomainVerified = "true"
 
           log(LogLevel.Info, "Domain verified successfully", { verified });

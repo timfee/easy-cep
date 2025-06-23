@@ -99,7 +99,16 @@ export default defineStep(StepId.StepName)
 Shared interfaces for API operations and HTTP clients live under
 `lib/workflow/types/`, while reusable workflow constants can be found in
 `lib/workflow/constants/`. Import these helpers rather than redefining them in
-individual steps.
+individual steps. The `google` and `microsoft` clients use a fluent API
+implemented by `ResourceBuilder` so requests are written as chainable
+expressions:
+
+```ts
+const user = await google.users.get("alice@example.com").get();
+const created = await microsoft.applications
+  .instantiate(templateId)
+  .post({ displayName: "My App" });
+```
 
 ## Testing
 

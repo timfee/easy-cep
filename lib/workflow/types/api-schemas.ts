@@ -15,13 +15,6 @@ export const GoogleOperationSchema = z.object({
 
 export type GoogleOperation = z.infer<typeof GoogleOperationSchema>;
 
-export const GraphListSchema = <T extends z.ZodTypeAny>(itemSchema: T) =>
-  z.object({
-    value: z.array(itemSchema),
-    "@odata.nextLink": z.string().optional(),
-    nextPageToken: z.string().optional()
-  });
-
 export const ServicePrincipalIdSchema = z.object({
   value: z.array(z.object({ id: z.string() }))
 });

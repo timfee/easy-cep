@@ -47,10 +47,14 @@ ctx.log(LogLevel.Info, "Created SSO assignment");
 
 ## ✅ Fetching
 
-Use the `google` and `microsoft` HTTP clients provided by the step builder:
+Use the `google` and `microsoft` HTTP clients provided by the step builder. They
+expose a fluent API so each resource and method is strongly typed:
 
 ```ts
-const user = await google.get(ApiEndpoint.Google.Users, UserSchema);
+const { domains } = await google.domains.get();
+const app = await microsoft.applications
+  .instantiate("id")
+  .post({ displayName: "My App" });
 ```
 
 ### Shared Types & Constants

@@ -1,9 +1,7 @@
-import { ApiEndpoint } from "@/constants";
 import { isConflictError, isNotFoundError } from "@/lib/workflow/errors";
-import { EmptyResponseSchema, safeDelete } from "@/lib/workflow/utils";
+import { safeDelete } from "@/lib/workflow/utils";
 
 import { LogLevel, StepId, Var } from "@/types";
-import { z } from "zod";
 import { defineStep } from "../step-builder";
 
 export default defineStep(StepId.CreateAutomationOU)
@@ -45,16 +43,7 @@ export default defineStep(StepId.CreateAutomationOU)
         const ouName = vars.require(Var.AutomationOuName);
         const ouPath = vars.require(Var.AutomationOuPath);
 
-        const OrgUnitSchema = z.object({
-          orgUnitPath: z.string(),
-          name: z.string()
-        });
-        const ou = await google.get(
-          `${ApiEndpoint.Google.OrgUnits}/${encodeURIComponent(
-            ouPath.replace(/^\//, "")
-          )}`,
-          OrgUnitSchema
-        );
+        const ou = await google.orgUnits.get(ouPath).get();
 
         if (ou.orgUnitPath === ouPath && ou.name === ouName) {
           log(LogLevel.Info, "Automation OU already exists");
@@ -94,16 +83,12 @@ export default defineStep(StepId.CreateAutomationOU)
      * { "error": { "code": 409, "message": "Invalid Ou Id" } }
      */
     try {
-      const CreateSchema = z.object({
-        orgUnitPath: z.string(),
-        name: z.string(),
-        parentOrgUnitId: z.string()
-      });
-
-      await google.post(ApiEndpoint.Google.OrgUnits, CreateSchema, {
-        name: vars.require(Var.AutomationOuName),
-        parentOrgUnitPath: "/"
-      });
+      await google.orgUnits
+        .create()
+        .post({
+          name: vars.require(Var.AutomationOuName),
+          parentOrgUnitPath: "/"
+        });
       // isConflictError handles: 409
 
       log(LogLevel.Info, "Automation OU created or already exists");
@@ -126,13 +111,7 @@ export default defineStep(StepId.CreateAutomationOU)
       }
 
       await safeDelete(
-        () =>
-          google.delete(
-            `${ApiEndpoint.Google.OrgUnits}/${encodeURIComponent(
-              path.replace(/^\//, "")
-            )}`,
-            EmptyResponseSchema
-          ),
+        () => google.orgUnits.delete(path).delete(),
         log,
         "Organizational Unit"
       );
