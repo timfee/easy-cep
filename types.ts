@@ -90,6 +90,8 @@ export interface StepUndoContext {
 export interface StepUIState {
   status:
     | "idle"
+    | "ready"
+    | "blocked"
     | "checking"
     | "executing"
     | "complete"
@@ -101,4 +103,10 @@ export interface StepUIState {
   error?: string;
   notes?: string;
   logs?: StepLogEntry[];
+  lro?: {
+    detected: boolean;
+    startTime: number;
+    estimatedDuration?: number;
+    operationType?: string;
+  };
 }

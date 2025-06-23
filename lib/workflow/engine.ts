@@ -28,6 +28,7 @@ import {
 } from "@/types";
 import { inspect } from "node:util";
 import { createAuthenticatedFetch } from "./fetch-utils";
+import type { LROMetadata } from "./lro-detector";
 import { getStep } from "./step-registry";
 
 async function processStep<T extends StepIdValue>(
@@ -43,6 +44,20 @@ async function processStep<T extends StepIdValue>(
 
   const pushState = (data: Partial<StepUIState>) => {
     currentState = { ...currentState, ...data, logs };
+  };
+
+  const recordLro = (lro: LROMetadata) => {
+    if (!currentState.lro) {
+      currentState = {
+        ...currentState,
+        lro: {
+          detected: true,
+          startTime: Date.now(),
+          estimatedDuration: lro.estimatedSeconds,
+          operationType: lro.type
+        }
+      };
+    }
   };
 
   const addLog = (entry: StepLogEntry) => {
@@ -73,12 +88,12 @@ async function processStep<T extends StepIdValue>(
     fetchGoogle: createAuthenticatedFetch(
       googleTokenObj?.accessToken
         ?? (vars[Var.GoogleAccessToken] as string | undefined),
-      { addLog }
+      { addLog, onLroDetected: recordLro }
     ),
     fetchMicrosoft: createAuthenticatedFetch(
       microsoftTokenObj?.accessToken
         ?? (vars[Var.MsGraphToken] as string | undefined),
-      { addLog }
+      { addLog, onLroDetected: recordLro }
     ),
     log: (level: LogLevel, message: string, data?: unknown) => {
       addLog({ timestamp: Date.now(), message, data, level });
@@ -194,6 +209,20 @@ async function processUndoStep<T extends StepIdValue>(
     currentState = { ...currentState, ...data, logs };
   };
 
+  const recordLro = (lro: LROMetadata) => {
+    if (!currentState.lro) {
+      currentState = {
+        ...currentState,
+        lro: {
+          detected: true,
+          startTime: Date.now(),
+          estimatedDuration: lro.estimatedSeconds,
+          operationType: lro.type
+        }
+      };
+    }
+  };
+
   const addLog = (entry: StepLogEntry) => {
     logs = [...logs, entry];
     if (process.env.NODE_ENV === "development") {
@@ -214,12 +243,12 @@ async function processUndoStep<T extends StepIdValue>(
     fetchGoogle: createAuthenticatedFetch(
       googleTokenObj?.accessToken
         ?? (vars[Var.GoogleAccessToken] as string | undefined),
-      { addLog }
+      { addLog, onLroDetected: recordLro }
     ),
     fetchMicrosoft: createAuthenticatedFetch(
       microsoftTokenObj?.accessToken
         ?? (vars[Var.MsGraphToken] as string | undefined),
-      { addLog }
+      { addLog, onLroDetected: recordLro }
     ),
     log: (level: LogLevel, message: string, data?: unknown) => {
       addLog({ timestamp: Date.now(), message, data, level });

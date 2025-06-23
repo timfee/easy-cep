@@ -8,6 +8,24 @@ export const STEP_STATE_CONFIG = {
     indicatorClass: "bg-slate-600 text-white",
     borderClass: "border-slate-200 hover:border-slate-300"
   },
+  ready: {
+    badge: {
+      variant: "outline" as const,
+      className: "bg-green-50 text-green-700 border-green-200"
+    },
+    icon: null,
+    indicatorClass: "bg-green-600 text-white",
+    borderClass: "border-green-200 hover:border-green-300"
+  },
+  blocked: {
+    badge: {
+      variant: "outline" as const,
+      className: "bg-gray-50 text-gray-500 border-gray-200"
+    },
+    icon: null,
+    indicatorClass: "bg-gray-400 text-white",
+    borderClass: "border-gray-200"
+  },
   checking: {
     badge: {
       variant: "default" as const,
