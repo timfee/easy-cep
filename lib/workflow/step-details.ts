@@ -1,6 +1,7 @@
 export interface StepDetail {
   title: string;
   description: string;
+  estimatedDuration?: { typical: number; maximum: number };
 }
 
 export const STEP_DETAILS: Record<string, StepDetail> = {
@@ -27,7 +28,8 @@ export const STEP_DETAILS: Record<string, StepDetail> = {
   "configure-google-saml-profile": {
     title: "Configure Google SAML Profile",
     description:
-      "Ensures a SAML profile exists in Google Workspace for Azure AD. If one is not found the step creates a new profile using the provided display name."
+      "Ensures a SAML profile exists in Google Workspace for Azure AD. If one is not found the step creates a new profile using the provided display name.",
+    estimatedDuration: { typical: 15, maximum: 60 }
   },
   "create-microsoft-apps": {
     title: "Create Microsoft Apps",

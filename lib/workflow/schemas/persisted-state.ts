@@ -49,7 +49,15 @@ const StepUIStateSchema = z.object({
   status: StepStatusSchema,
   summary: z.string().optional(),
   error: z.string().optional(),
-  notes: z.string().optional()
+  notes: z.string().optional(),
+  lro: z
+    .object({
+      detected: z.literal(true),
+      startTime: z.number(),
+      estimatedDuration: z.number().optional(),
+      operationType: z.string().optional()
+    })
+    .optional()
 });
 
 // Schema for persisted workflow vars (filters out ephemeral ones)

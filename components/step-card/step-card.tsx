@@ -3,6 +3,7 @@
 import { StepCardContent } from "@/components/step-card/step-card-content";
 import { StepCardProvider } from "@/components/step-card/step-card-context";
 import { StepCardHeader } from "@/components/step-card/step-card-header";
+import { StepLROIndicator } from "@/components/step-card/step-lro-indicator";
 import { Card } from "@/components/ui/card";
 import { Collapsible, CollapsibleContent } from "@/components/ui/collapsible";
 import { cn } from "@/lib/utils";
@@ -63,13 +64,18 @@ export const StepCard = memo(function StepCard({
             isExpanded={isExpanded}
             onToggle={() => setIsExpanded(!isExpanded)}
           />
-          {(executing || state?.status === "pending") && (
-            <div className="my-6 px-6">
-              <div className="relative h-1 bg-slate-200 overflow-hidden rounded">
-                <div className="absolute inset-0 bg-primary animate-indeterminate" />
-              </div>
-            </div>
-          )}
+          {(executing || state?.status === "pending")
+            && (state?.lro?.detected ?
+              <StepLROIndicator
+                startTime={state.lro.startTime}
+                estimatedDuration={state.lro.estimatedDuration}
+                operationType={state.lro.operationType}
+              />
+            : <div className="my-6 px-6">
+                <div className="relative h-1 bg-slate-200 overflow-hidden rounded">
+                  <div className="absolute inset-0 bg-primary animate-indeterminate" />
+                </div>
+              </div>)}
           <CollapsibleContent className="overflow-hidden data-[state=closed]:animate-collapsible-up data-[state=open]:animate-collapsible-down">
             <StepCardContent
               definition={definition}

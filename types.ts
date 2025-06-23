@@ -101,4 +101,10 @@ export interface StepUIState {
   error?: string;
   notes?: string;
   logs?: StepLogEntry[];
+  lro?: {
+    detected: boolean;
+    startTime: number;
+    estimatedDuration?: number;
+    operationType?: string;
+  };
 }
