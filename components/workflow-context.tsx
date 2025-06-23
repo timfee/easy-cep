@@ -311,9 +311,14 @@ export function WorkflowProvider({
   }, [vars, steps, status, updateStep, updateVars]);
 
   // Auto-check steps when vars change
+
   useEffect(() => {
-    checkSteps();
-  }, [checkSteps]);
+    const timeoutId = setTimeout(() => {
+      checkSteps();
+    }, 100);
+
+    return () => clearTimeout(timeoutId);
+  }, [vars]);
 
   useEffect(() => {
     if (typeof window !== "undefined") {

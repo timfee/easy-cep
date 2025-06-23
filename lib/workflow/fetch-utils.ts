@@ -18,12 +18,12 @@ export interface FetchContext {
 
 export function createAuthenticatedFetch(
   token: string | undefined,
-  context: FetchContext
+  context: FetchContext & { suppressExpectedErrors?: boolean }
 ) {
   return async <T>(
     url: string,
     schema: z.ZodSchema<T>,
-    init?: FetchOpts
+    init?: FetchOpts & { expectNotFound?: boolean }
   ): Promise<T> => {
     if (!token) throw new Error("No auth token available");
 
@@ -88,6 +88,9 @@ export function createAuthenticatedFetch(
         logData = await clone.text();
       }
 
+      const is404 = res.status === HttpStatus.NotFound;
+      const isExpected404 = is404 && init?.expectNotFound;
+
       context.addLog({
         timestamp: Date.now(),
         message: `Response`,
@@ -98,7 +101,7 @@ export function createAuthenticatedFetch(
         level: LogLevel.Debug
       });
 
-      if (!res.ok) {
+      if (!res.ok && !isExpected404) {
         let detail = res.statusText;
         let body: unknown;
         const errorClone = res.clone();

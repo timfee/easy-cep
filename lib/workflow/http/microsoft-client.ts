@@ -80,6 +80,24 @@ export class MicrosoftClient {
             })
           ),
 
+      getPartial: (spId: string) =>
+        new ResourceBuilder(client, {})
+          .path(`${ApiEndpoint.Microsoft.ServicePrincipals}/${spId}`)
+          .accepts(
+            z
+              .object({
+                id: z.string().optional(),
+                appId: z.string().optional(),
+                displayName: z.string().optional(),
+                preferredSingleSignOnMode: z.string().nullable().optional(),
+                samlSingleSignOnSettings: z
+                  .object({ relayState: z.string().nullable() })
+                  .nullable()
+                  .optional()
+              })
+              .passthrough()
+          ),
+
       update: (spId: string) =>
         new ResourceBuilder(client, {})
           .path(`${ApiEndpoint.Microsoft.ServicePrincipals}/${spId}`)

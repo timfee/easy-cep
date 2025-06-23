@@ -41,7 +41,7 @@ export default defineStep(StepId.ConfigureMicrosoftSso)
         const spId = vars.require(Var.SsoServicePrincipalId);
 
         const sp = await microsoft.servicePrincipals
-          .get(spId)
+          .getPartial(spId)
           .query({
             $select: "preferredSingleSignOnMode,samlSingleSignOnSettings"
           })
