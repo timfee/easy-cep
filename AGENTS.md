@@ -47,10 +47,10 @@ ctx.log(LogLevel.Info, "Created SSO assignment");
 
 ## ✅ Fetching
 
-Use the `google` and `microsoft` HTTP clients provided by the step builder:
+Use the `google` and `microsoft` fluent HTTP clients provided by the step builder:
 
 ```ts
-const user = await google.get(ApiEndpoint.Google.Users, UserSchema);
+const user = await google.users.get("user@example.com").get();
 ```
 
 ### Shared Types & Constants

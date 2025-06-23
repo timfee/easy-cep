@@ -9,7 +9,8 @@ import {
 } from "@/types";
 import { z } from "zod";
 import { createStep } from "./create-step";
-import { HttpMethod } from "./http-constants";
+import { GoogleClient } from "./http/google-client";
+import { MicrosoftClient } from "./http/microsoft-client";
 import type { HttpClient } from "./types/http-client";
 import { createVarStore, type BasicVarStore } from "./var-store";
 
@@ -34,8 +35,8 @@ interface StepBuilder<
 
 interface BuilderCheckContext<T> {
   vars: BasicVarStore;
-  google: HttpClient;
-  microsoft: HttpClient;
+  google: GoogleClient;
+  microsoft: MicrosoftClient;
   log: StepCheckContext<T>["log"];
   markComplete: StepCheckContext<T>["markComplete"];
   markIncomplete: StepCheckContext<T>["markIncomplete"];
@@ -44,8 +45,8 @@ interface BuilderCheckContext<T> {
 
 interface BuilderExecuteContext<T> {
   vars: BasicVarStore;
-  google: HttpClient;
-  microsoft: HttpClient;
+  google: GoogleClient;
+  microsoft: MicrosoftClient;
   checkData: T;
   log: StepExecuteContext<T>["log"];
   output(vars: Partial<WorkflowVars>): void;
@@ -55,8 +56,8 @@ interface BuilderExecuteContext<T> {
 
 interface BuilderUndoContext {
   vars: BasicVarStore;
-  google: HttpClient;
-  microsoft: HttpClient;
+  google: GoogleClient;
+  microsoft: MicrosoftClient;
   log: StepUndoContext["log"];
   markReverted: StepUndoContext["markReverted"];
   markFailed: StepUndoContext["markFailed"];
@@ -146,34 +147,7 @@ function createHttpClient(
     init?: RequestInit & { flatten?: boolean | string }
   ) => Promise<R>
 ): HttpClient {
-  return {
-    get: (url, schema, options) =>
-      fetchFn(url, schema, { method: HttpMethod.GET, ...options }),
-
-    post: (url, schema, body, options) =>
-      fetchFn(url, schema, {
-        method: HttpMethod.POST,
-        body: body ? JSON.stringify(body) : undefined,
-        ...options
-      }),
-
-    put: (url, schema, body, options) =>
-      fetchFn(url, schema, {
-        method: HttpMethod.PUT,
-        body: body ? JSON.stringify(body) : undefined,
-        ...options
-      }),
-
-    patch: (url, schema, body, options) =>
-      fetchFn(url, schema, {
-        method: HttpMethod.PATCH,
-        body: body ? JSON.stringify(body) : undefined,
-        ...options
-      }),
-
-    delete: (url, schema, options) =>
-      fetchFn(url, schema, { method: HttpMethod.DELETE, ...options })
-  };
+  return { request: (url, schema, init) => fetchFn(url, schema, init) };
 }
 
 function wrapContext<
@@ -186,15 +160,15 @@ function wrapContext<
   ctx: C
 ): Omit<C, "fetchGoogle" | "fetchMicrosoft" | "vars"> & {
   vars: BasicVarStore;
-  google: HttpClient;
-  microsoft: HttpClient;
+  google: GoogleClient;
+  microsoft: MicrosoftClient;
 } {
   const { fetchGoogle, fetchMicrosoft, vars, ...rest } = ctx;
 
   return {
     ...rest,
     vars: createVarStore(vars),
-    google: createHttpClient(fetchGoogle),
-    microsoft: createHttpClient(fetchMicrosoft)
+    google: new GoogleClient(createHttpClient(fetchGoogle)),
+    microsoft: new MicrosoftClient(createHttpClient(fetchMicrosoft))
   };
 }

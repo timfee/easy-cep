@@ -1,11 +1,7 @@
-import { ApiEndpoint } from "@/constants";
 import { isNotFoundError } from "@/lib/workflow/errors";
-import { EmptyResponseSchema } from "@/lib/workflow/utils";
 import { LogLevel, StepId, Var } from "@/types";
-import { z } from "zod";
 import { TIME } from "../constants/workflow-limits";
 import { defineStep } from "../step-builder";
-import { ServicePrincipalIdSchema } from "../types/api-schemas";
 
 export default defineStep(StepId.ConfigureMicrosoftSso)
   .requires(
@@ -44,39 +40,23 @@ export default defineStep(StepId.ConfigureMicrosoftSso)
       try {
         const spId = vars.require(Var.SsoServicePrincipalId);
 
-        const SpSchema = z.object({
-          preferredSingleSignOnMode: z.string().nullable(),
-          samlSingleSignOnSettings: z
-            .object({ relayState: z.string().nullable() })
-            .nullable()
-        });
-
-        const sp = await microsoft.get(
-          `${ApiEndpoint.Microsoft.ServicePrincipals}/${spId}?$select=preferredSingleSignOnMode,samlSingleSignOnSettings`,
-          SpSchema
-        );
+        const sp = await microsoft.servicePrincipals
+          .get(spId)
+          .query({
+            $select: "preferredSingleSignOnMode,samlSingleSignOnSettings"
+          })
+          .get();
 
         if (sp.preferredSingleSignOnMode === "saml") {
           log(LogLevel.Info, "Microsoft SSO already configured");
 
           // Need to fetch certificate to pass to Google
-          const CertSchema = z.object({
-            value: z.array(
-              z.object({
-                keyId: z.string(),
-                startDateTime: z.string(),
-                endDateTime: z.string(),
-                key: z.string().nullable()
-              })
-            )
-          });
-
-          let certs: z.infer<typeof CertSchema>;
+          let certs;
           try {
-            certs = await microsoft.get(
-              ApiEndpoint.Microsoft.TokenSigningCertificates(spId),
-              CertSchema
-            );
+            certs = await microsoft.servicePrincipals
+              .tokenSigningCertificates(spId)
+              .list()
+              .get();
           } catch (error) {
             // isNotFoundError handles: 404
             if (isNotFoundError(error)) {
@@ -94,11 +74,7 @@ export default defineStep(StepId.ConfigureMicrosoftSso)
           });
 
           if (activeCert?.key) {
-            const TenantSchema = ServicePrincipalIdSchema;
-            const tenantInfo = await microsoft.get(
-              ApiEndpoint.Microsoft.Organization,
-              TenantSchema
-            );
+            const tenantInfo = await microsoft.organization.get();
             const tenantId = tenantInfo.value[0]?.id;
 
             markComplete({
@@ -157,28 +133,20 @@ export default defineStep(StepId.ConfigureMicrosoftSso)
       log(LogLevel.Info, "Setting SSO mode to SAML");
 
       // 1. Set preferred SSO mode on service principal
-      await microsoft.patch(
-        `${ApiEndpoint.Microsoft.ServicePrincipals}/${spId}`,
-        EmptyResponseSchema,
-        { preferredSingleSignOnMode: "saml" }
-      );
+      await microsoft.servicePrincipals
+        .update(spId)
+        .patch({ preferredSingleSignOnMode: "saml" });
       completedOps.push({
         description: "Reset SSO mode",
         rollback: async () => {
-          await microsoft.patch(
-            `${ApiEndpoint.Microsoft.ServicePrincipals}/${spId}`,
-            EmptyResponseSchema,
-            { preferredSingleSignOnMode: null }
-          );
+          await microsoft.servicePrincipals
+            .update(spId)
+            .patch({ preferredSingleSignOnMode: null });
         }
       });
 
       // 2. Get tenant ID for URLs
-      const TenantSchema = ServicePrincipalIdSchema;
-      const tenantInfo = await microsoft.get(
-        ApiEndpoint.Microsoft.Organization,
-        TenantSchema
-      );
+      const tenantInfo = await microsoft.organization.get();
       const tenantId = tenantInfo.value[0]?.id;
       if (!tenantId) {
         throw new Error("Unable to determine Microsoft tenant ID");
@@ -188,28 +156,23 @@ export default defineStep(StepId.ConfigureMicrosoftSso)
       const msSsoEntityId = `https://sts.windows.net/${tenantId}/`;
 
       // 3. Configure SAML settings on service principal
-      await microsoft.patch(
-        `${ApiEndpoint.Microsoft.ServicePrincipals}/${spId}`,
-        EmptyResponseSchema,
-        { samlSingleSignOnSettings: { relayState: "" } }
-      );
+      await microsoft.servicePrincipals
+        .update(spId)
+        .patch({ samlSingleSignOnSettings: { relayState: "" } });
       completedOps.push({
         description: "Clear SAML settings",
         rollback: async () => {
-          await microsoft.patch(
-            `${ApiEndpoint.Microsoft.ServicePrincipals}/${spId}`,
-            EmptyResponseSchema,
-            { samlSingleSignOnSettings: null }
-          );
+          await microsoft.servicePrincipals
+            .update(spId)
+            .patch({ samlSingleSignOnSettings: null });
         }
       });
 
       // 4. Get the application object ID (different from appId)
-      const AppFilterSchema = ServicePrincipalIdSchema;
-      const apps = await microsoft.get(
-        `${ApiEndpoint.Microsoft.Applications}?$filter=appId eq '${appId}'`,
-        AppFilterSchema
-      );
+      const apps = await microsoft.applications
+        .list()
+        .query({ $filter: `appId eq '${appId}'` })
+        .get();
       const applicationObjectId = apps.value[0]?.id;
       if (!applicationObjectId) {
         throw new Error("Unable to find application object");
@@ -217,46 +180,33 @@ export default defineStep(StepId.ConfigureMicrosoftSso)
 
       // 5. Set identifier URIs and reply URLs on APPLICATION object
       log(LogLevel.Info, "Configuring application URLs");
-      await microsoft.patch(
-        `${ApiEndpoint.Microsoft.Applications}/${applicationObjectId}`,
-        EmptyResponseSchema,
-        { identifierUris: [entityId], web: { redirectUris: [acsUrl] } }
-      );
+      await microsoft.applications
+        .update(applicationObjectId)
+        .patch({ identifierUris: [entityId], web: { redirectUris: [acsUrl] } });
       completedOps.push({
         description: "Reset application URLs",
         rollback: async () => {
-          await microsoft.patch(
-            `${ApiEndpoint.Microsoft.Applications}/${applicationObjectId}`,
-            EmptyResponseSchema,
-            { identifierUris: [], web: { redirectUris: [] } }
-          );
+          await microsoft.applications
+            .update(applicationObjectId)
+            .patch({ identifierUris: [], web: { redirectUris: [] } });
         }
       });
 
       // 6. Create signing certificate
       log(LogLevel.Info, "Creating SAML signing certificate");
-      const CertSchema = z.object({
-        keyId: z.string(),
-        type: z.string(),
-        usage: z.string(),
-        key: z.string().nullable()
-      });
-
-      const certResponse = await microsoft.post(
-        ApiEndpoint.Microsoft.AddTokenSigningCertificate(spId),
-        CertSchema,
-        {
+      const certResponse = await microsoft.servicePrincipals
+        .addTokenSigningCertificate(spId)
+        .post({
           displayName: "CN=Google Workspace SSO",
           endDateTime: new Date(Date.now() + TIME.YEAR).toISOString()
-        }
-      );
+        });
       completedOps.push({
         description: "Delete token signing certificate",
         rollback: async () => {
-          await microsoft.delete(
-            `${ApiEndpoint.Microsoft.TokenSigningCertificates(spId)}/${certResponse.keyId}`,
-            EmptyResponseSchema
-          );
+          await microsoft.servicePrincipals
+            .tokenSigningCertificates(spId)
+            .delete(certResponse.keyId)
+            .delete();
         }
       });
 
@@ -302,30 +252,25 @@ export default defineStep(StepId.ConfigureMicrosoftSso)
 
       // Reset SSO mode
       try {
-        await microsoft.patch(
-          `${ApiEndpoint.Microsoft.ServicePrincipals}/${spId}`,
-          EmptyResponseSchema,
-          { preferredSingleSignOnMode: null }
-        );
+        await microsoft.servicePrincipals
+          .update(spId)
+          .patch({ preferredSingleSignOnMode: null });
       } catch (error) {
         log(LogLevel.Warn, "Failed to reset SSO mode", { error });
       }
 
       // Remove signing certificates
       try {
-        const CertSchema = z.object({
-          value: z.array(z.object({ keyId: z.string() }))
-        });
-        const certs = await microsoft.get(
-          ApiEndpoint.Microsoft.TokenSigningCertificates(spId),
-          CertSchema
-        );
+        const certs = await microsoft.servicePrincipals
+          .tokenSigningCertificates(spId)
+          .list()
+          .get();
 
         for (const cert of certs.value) {
-          await microsoft.delete(
-            `${ApiEndpoint.Microsoft.TokenSigningCertificates(spId)}/${cert.keyId}`,
-            EmptyResponseSchema
-          );
+          await microsoft.servicePrincipals
+            .tokenSigningCertificates(spId)
+            .delete(cert.keyId)
+            .delete();
         }
       } catch (error) {
         log(LogLevel.Warn, "Failed to remove certificates", { error });

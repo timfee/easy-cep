@@ -57,16 +57,18 @@ Examples of URL usage:
 
 ```ts
 // Static URLs
-await google.get(ApiEndpoint.Google.Domains, DomainsSchema);
+await google.domains.get();
 
 // Parameterized URLs
 const email = vars.build("{prefix}@{domain}");
-await google.get(ApiEndpoint.Google.user(email), UserSchema);
+await google.users.get(email).get();
 
 // With POST body
-await google.post(ApiEndpoint.Google.Users, CreateUserSchema, {
+await google.users.create().post({
   primaryEmail: email,
-  name: { givenName: "Test", familyName: "User" }
+  name: { givenName: "Test", familyName: "User" },
+  password: "example-pass",
+  orgUnitPath: "/Automation"
 });
 ```
 
@@ -85,7 +87,9 @@ export default defineStep(StepId.MyStep)
       const Schema = z.object({
         /* ... */
       });
-      const data = await google.get(ApiEndpoint.Google.Something, Schema);
+      const data = await google.someResource
+        .accepts(Schema)
+        .get();
 
       if (alreadyDone) {
         markComplete({ fieldFromCheck: data.field });

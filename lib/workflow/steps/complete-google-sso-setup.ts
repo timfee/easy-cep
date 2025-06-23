@@ -1,10 +1,6 @@
-import { ApiEndpoint } from "@/constants";
 import { isNotFoundError } from "@/lib/workflow/errors";
-import { EmptyResponseSchema } from "@/lib/workflow/utils";
 import { LogLevel, StepId, Var } from "@/types";
-import { z } from "zod";
 import { defineStep } from "../step-builder";
-import { GoogleOperationSchema } from "../types/api-schemas";
 
 export default defineStep(StepId.CompleteGoogleSsoSetup)
   .requires(
@@ -35,35 +31,12 @@ export default defineStep(StepId.CompleteGoogleSsoSetup)
       try {
         const profileId = vars.require(Var.SamlProfileId);
 
-        const ProfileSchema = z.object({
-          name: z.string(),
-          idpConfig: z
-            .object({
-              entityId: z.string(),
-              singleSignOnServiceUri: z.string(),
-              signOutUri: z.string().optional()
-            })
-            .optional(),
-          spConfig: z.object({
-            entityId: z.string(),
-            assertionConsumerServiceUri: z.string()
-          })
-        });
+        const profile = await google.samlProfiles.get(profileId).get();
 
-        const profile = await google.get(
-          ApiEndpoint.Google.SamlProfile(profileId),
-          ProfileSchema
-        );
-
-        const CredsSchema = z.object({
-          idpCredentials: z.array(z.object({ name: z.string() })).optional()
-        });
-
-        const { idpCredentials = [] } = await google.get(
-          ApiEndpoint.Google.SamlProfileCredentialsList(profileId),
-          CredsSchema,
-          { flatten: "idpCredentials" }
-        );
+        const { idpCredentials = [] } = await google.samlProfiles
+          .credentials(profileId)
+          .list()
+          .get();
 
         if (
           profile.idpConfig?.entityId
@@ -110,23 +83,20 @@ export default defineStep(StepId.CompleteGoogleSsoSetup)
         "Updating Google SAML profile with Azure AD configuration"
       );
 
-      const UpdateSchema = GoogleOperationSchema.extend({
-        response: z.unknown().optional()
-      });
-
       const updateMask =
         "idpConfig.entityId,idpConfig.singleSignOnServiceUri,idpConfig.signOutUri,idpConfig.changePasswordUri";
 
-      const patchUrl = `${ApiEndpoint.Google.SamlProfile(profileId)}?updateMask=${encodeURIComponent(updateMask)}`;
-
-      const updateOp = await google.patch(patchUrl, UpdateSchema, {
-        idpConfig: {
-          entityId: entityId,
-          singleSignOnServiceUri: loginUrl,
-          signOutUri: loginUrl,
-          changePasswordUri: `https://account.activedirectory.windowsazure.com/ChangePassword.aspx`
-        }
-      });
+      const updateOp = await google.samlProfiles
+        .update(profileId)
+        .query({ updateMask })
+        .patch({
+          idpConfig: {
+            entityId: entityId,
+            singleSignOnServiceUri: loginUrl,
+            signOutUri: loginUrl,
+            changePasswordUri: `https://account.activedirectory.windowsazure.com/ChangePassword.aspx`
+          }
+        });
 
       if (!updateOp.done) {
         markFailed("SAML profile update operation not completed");
@@ -148,13 +118,10 @@ export default defineStep(StepId.CompleteGoogleSsoSetup)
           `-----BEGIN CERTIFICATE-----\n${signingCert}\n-----END CERTIFICATE-----`
         );
 
-      const CertUploadSchema = GoogleOperationSchema;
-
-      const certUrl = ApiEndpoint.Google.SamlProfileCredentials(profileId);
-
-      const certOp = await google.post(certUrl, CertUploadSchema, {
-        pemData: pemCert
-      });
+      const certOp = await google.samlProfiles
+        .credentials(profileId)
+        .add()
+        .post({ pemData: pemCert });
 
       if (!certOp.done) {
         markFailed("Certificate upload operation not completed");
@@ -187,28 +154,19 @@ export default defineStep(StepId.CompleteGoogleSsoSetup)
         return;
       }
 
-      const CredsSchema = z.object({
-        idpCredentials: z
-          .array(
-            z.object({ name: z.string(), updateTime: z.string().optional() })
-          )
-          .optional()
-      });
-
-      const { idpCredentials = [] } = await google.get(
-        ApiEndpoint.Google.SamlProfileCredentialsList(profileId),
-        CredsSchema,
-        { flatten: "idpCredentials" }
-      );
+      const { idpCredentials = [] } = await google.samlProfiles
+        .credentials(profileId)
+        .list()
+        .get();
 
       for (const cred of idpCredentials) {
         try {
           const credId = cred.name.split("/").pop();
           if (credId) {
-            await google.delete(
-              `${ApiEndpoint.Google.SamlProfileCredentialsList(profileId)}/${credId}`,
-              EmptyResponseSchema
-            );
+            await google.samlProfiles
+              .credentials(profileId)
+              .delete(credId)
+              .delete();
             log(LogLevel.Info, `Deleted certificate ${credId}`);
           }
         } catch (error) {

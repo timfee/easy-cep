@@ -1,10 +1,6 @@
-import { ApiEndpoint } from "@/constants";
 import { isConflictError, isNotFoundError } from "@/lib/workflow/errors";
-import { EmptyResponseSchema } from "@/lib/workflow/utils";
 import { LogLevel, StepId, Var } from "@/types";
-import { z } from "zod";
 import { defineStep } from "../step-builder";
-import { ServicePrincipalIdSchema } from "../types/api-schemas";
 
 export default defineStep(StepId.SetupMicrosoftClaimsPolicy)
   .requires(
@@ -40,13 +36,10 @@ export default defineStep(StepId.SetupMicrosoftClaimsPolicy)
       try {
         const spId = vars.require(Var.SsoServicePrincipalId);
 
-        const PoliciesSchema = ServicePrincipalIdSchema;
-
-        const { value } = await microsoft.get(
-          ApiEndpoint.Microsoft.ReadClaimsPolicy(spId),
-          PoliciesSchema,
-          { flatten: "value" }
-        );
+        const { value } = await microsoft.servicePrincipals
+          .claimsMappingPolicies(spId)
+          .list()
+          .get();
         // Extract: claimsPolicyId = value[0]?.id
 
         if (value.length > 0) {
@@ -85,32 +78,23 @@ export default defineStep(StepId.SetupMicrosoftClaimsPolicy)
     try {
       const spId = vars.require(Var.SsoServicePrincipalId);
 
-      const PolicySchema = z.object({ id: z.string() });
-
       let policyId: string | undefined;
       try {
-        const created = await microsoft.post(
-          ApiEndpoint.Microsoft.ClaimsPolicies,
-          PolicySchema,
-          {
+        const created = await microsoft.claimsPolicies
+          .create()
+          .post({
             definition: [
               '{"ClaimsMappingPolicy":{"Version":1,"IncludeBasicClaimSet":true,"ClaimsSchema":[]}}'
             ],
             displayName: vars.require(Var.ClaimsPolicyDisplayName),
             isOrganizationDefault: false
-          }
-        );
+          });
         policyId = created.id;
         // Extract: claimsPolicyId = created.id
       } catch (error) {
         // isConflictError handles: 409
         if (isConflictError(error)) {
-          const listSchema = ServicePrincipalIdSchema;
-          const { value } = await microsoft.get(
-            ApiEndpoint.Microsoft.ClaimsPolicies,
-            listSchema,
-            { flatten: "value" }
-          );
+          const { value } = await microsoft.claimsPolicies.list().get();
           policyId = value[0]?.id;
         } else {
           throw error;
@@ -120,13 +104,12 @@ export default defineStep(StepId.SetupMicrosoftClaimsPolicy)
       if (!policyId) throw new Error("Policy ID unavailable");
 
       try {
-        await microsoft.post(
-          ApiEndpoint.Microsoft.AssignClaimsPolicy(spId),
-          EmptyResponseSchema,
-          {
+        await microsoft.servicePrincipals
+          .claimsMappingPolicies(spId)
+          .assign()
+          .post({
             "@odata.id": `https://graph.microsoft.com/v1.0/policies/claimsMappingPolicies/${policyId}`
-          }
-        );
+          });
       } catch (error) {
         // isConflictError handles: 409
         if (!isConflictError(error)) {
@@ -151,16 +134,13 @@ export default defineStep(StepId.SetupMicrosoftClaimsPolicy)
       }
 
       if (spId) {
-        await microsoft.delete(
-          ApiEndpoint.Microsoft.UnassignClaimsPolicy(spId, policyId),
-          EmptyResponseSchema
-        );
+        await microsoft.servicePrincipals
+          .claimsMappingPolicies(spId)
+          .unassign(policyId)
+          .delete();
       }
 
-      await microsoft.delete(
-        `${ApiEndpoint.Microsoft.ClaimsPolicies}/${policyId}`,
-        EmptyResponseSchema
-      );
+      await microsoft.claimsPolicies.delete(policyId).delete();
 
       markReverted();
     } catch (error) {

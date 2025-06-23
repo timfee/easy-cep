@@ -99,7 +99,8 @@ export default defineStep(StepId.StepName)
 Shared interfaces for API operations and HTTP clients live under
 `lib/workflow/types/`, while reusable workflow constants can be found in
 `lib/workflow/constants/`. Import these helpers rather than redefining them in
-individual steps.
+individual steps. HTTP calls use the fluent clients available on `google` and
+`microsoft` which provide typed methods for each resource.
 
 ## Testing
 
