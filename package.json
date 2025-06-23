@@ -80,7 +80,7 @@
     "framer-motion": "^12.18.1",
     "jest": "^30.0.2",
     "jest-environment-jsdom": "^30.0.2",
-    "lucide-react": "^0.519.0",
+    "lucide-react": "^0.522.0",
     "next": "^15.3.4",
     "prettier": "^3.5.3",
     "prettier-plugin-organize-imports": "^4.1.0",
