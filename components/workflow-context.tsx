@@ -334,6 +334,7 @@ export function WorkflowProvider({
       };
     }
     return computed;
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [steps, vars, status]);
 
   const value: WorkflowContextValue = {

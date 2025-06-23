@@ -29,29 +29,29 @@ export const STEP_STATE_CONFIG = {
   checking: {
     badge: {
       variant: "default" as const,
-      className: "bg-primary/10 text-primary border-primary/20"
+      className: "bg-chart-1/10 text-chart-1 border-chart-1/20"
     },
     icon: "Loader2",
-    indicatorClass: "bg-primary text-white animate-breathing",
-    borderClass: "border-primary/30"
+    indicatorClass: "bg-chart-1 text-white animate-breathing",
+    borderClass: "border-chart-1/30"
   },
   executing: {
     badge: {
       variant: "default" as const,
-      className: "bg-primary/10 text-primary border-primary/20"
+      className: "bg-chart-1/10 text-chart-1 border-chart-1/20"
     },
     icon: "Loader2",
-    indicatorClass: "bg-primary text-white animate-breathing",
-    borderClass: "border-primary ring-1 ring-primary/30"
+    indicatorClass: "bg-chart-1 text-white animate-breathing",
+    borderClass: "border-chart-1 ring-1 ring-chart-1/30"
   },
   complete: {
     badge: {
       variant: "default" as const,
-      className: "bg-secondary/10 text-secondary border-secondary/20"
+      className: "bg-primary/10 text-primary border-primary/20"
     },
     icon: "CheckCircle",
-    indicatorClass: "bg-secondary text-white",
-    borderClass: "border-secondary"
+    indicatorClass: "bg-primary text-white",
+    borderClass: "border-primary/20"
   },
   failed: {
     badge: {

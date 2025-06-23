@@ -1,5 +1,3 @@
-"use client";
-
 import { Badge } from "@/components/ui/badge";
 import { CardHeader } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
