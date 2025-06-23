@@ -1,5 +1,5 @@
 import { TemplateId } from "@/constants";
-import { safeDelete } from "@/lib/workflow/utils";
+import { isNotFoundError } from "@/lib/workflow/core/errors";
 import { LogLevel, StepId, Var } from "@/types";
 import { defineStep } from "../step-builder";
 
@@ -184,27 +184,45 @@ export default defineStep(StepId.CreateMicrosoftApps)
       const appId = vars.get(Var.SsoAppId);
 
       if (provSpId) {
-        await safeDelete(
-          () => microsoft.servicePrincipals.delete(provSpId).delete(),
-          log,
-          "Service Principal"
-        );
+        try {
+          await microsoft.servicePrincipals.delete(provSpId).delete();
+        } catch (error) {
+          if (isNotFoundError(error)) {
+            log(
+              LogLevel.Info,
+              "Service Principal already deleted or not found"
+            );
+          } else {
+            throw error;
+          }
+        }
       }
 
       if (ssoSpId && ssoSpId !== provSpId) {
-        await safeDelete(
-          () => microsoft.servicePrincipals.delete(ssoSpId).delete(),
-          log,
-          "Service Principal"
-        );
+        try {
+          await microsoft.servicePrincipals.delete(ssoSpId).delete();
+        } catch (error) {
+          if (isNotFoundError(error)) {
+            log(
+              LogLevel.Info,
+              "Service Principal already deleted or not found"
+            );
+          } else {
+            throw error;
+          }
+        }
       }
 
       if (appId) {
-        await safeDelete(
-          () => microsoft.applications.delete(appId).delete(),
-          log,
-          "Application"
-        );
+        try {
+          await microsoft.applications.delete(appId).delete();
+        } catch (error) {
+          if (isNotFoundError(error)) {
+            log(LogLevel.Info, "Application already deleted or not found");
+          } else {
+            throw error;
+          }
+        }
       }
 
       markReverted();

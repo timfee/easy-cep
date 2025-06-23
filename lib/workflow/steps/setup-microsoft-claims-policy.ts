@@ -1,4 +1,4 @@
-import { isConflictError, isNotFoundError } from "@/lib/workflow/errors";
+import { isConflictError, isNotFoundError } from "@/lib/workflow/core/errors";
 import { LogLevel, StepId, Var } from "@/types";
 import { defineStep } from "../step-builder";
 

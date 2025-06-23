@@ -1,9 +1,8 @@
-import { isConflictError, isNotFoundError } from "@/lib/workflow/errors";
-import { findInTree } from "@/lib/workflow/utils";
+import { isConflictError, isNotFoundError } from "@/lib/workflow/core/errors";
 import { LogLevel, StepId, Var } from "@/types";
 import { GOOGLE_ADMIN_PRIVILEGES } from "../constants/google-admin";
+import { retryWithBackoff } from "../core/http";
 import { defineStep } from "../step-builder";
-import { retryWithBackoff } from "../utils/retry";
 
 export default defineStep(StepId.CreateAdminRoleAndAssignUser)
   .requires(
@@ -130,11 +129,18 @@ export default defineStep(StepId.CreateAdminRoleAndAssignUser)
     try {
       const { items } = await google.roles.privileges().get();
 
-      const serviceId = findInTree(
-        items,
-        (priv) => priv.privilegeName === "USERS_RETRIEVE",
-        (priv) => priv.childPrivileges
-      )?.serviceId;
+      let serviceId: string | undefined;
+      const stack = [...items];
+      while (stack.length > 0) {
+        const priv = stack.shift()!;
+        if (priv.privilegeName === "USERS_RETRIEVE") {
+          serviceId = priv.serviceId;
+          break;
+        }
+        if (priv.childPrivileges) {
+          stack.push(...priv.childPrivileges);
+        }
+      }
       // Extract: directoryServiceId = serviceId
 
       if (!serviceId)
@@ -265,14 +271,14 @@ export default defineStep(StepId.CreateAdminRoleAndAssignUser)
             );
           } catch (error) {
             log(
-              LogLevel.Warn,
+              LogLevel.Info,
               `Failed to remove assignment ${assignment.roleAssignmentId}`,
               { error }
             );
           }
         }
       } catch (error) {
-        log(LogLevel.Warn, "Could not query role assignments", { error });
+        log(LogLevel.Info, "Could not query role assignments", { error });
       }
 
       try {

@@ -2,14 +2,183 @@ import { ApiEndpoint } from "@/constants";
 import { z } from "zod";
 import { GoogleOperationSchema } from "../types/api-schemas";
 import type { HttpClient } from "../types/http-client";
+import { createCrudMethods, CrudSchemas, empty } from "./crud-factory";
 import { ResourceBuilder } from "./fluent-builder";
-
+const userSchemas: CrudSchemas = {
+  get: z
+    .object({
+      id: z.string().optional(),
+      primaryEmail: z.string().optional(),
+      orgUnitPath: z.string().optional()
+    })
+    .passthrough(),
+  list: z.object({
+    users: z
+      .array(z.object({ id: z.string(), primaryEmail: z.string() }))
+      .optional()
+  }),
+  flatten: "users",
+  create: z.object({
+    primaryEmail: z.string(),
+    name: z.object({ givenName: z.string(), familyName: z.string() }),
+    password: z.string(),
+    orgUnitPath: z.string()
+  }),
+  response: z.object({ id: z.string(), primaryEmail: z.string() }),
+  update: z.object({ password: z.string() })
+};
+const ouSchemas: CrudSchemas = {
+  get: z.object({ orgUnitPath: z.string(), name: z.string() }),
+  list: z.object({
+    organizationUnits: z
+      .array(
+        z.object({
+          orgUnitId: z.string(),
+          parentOrgUnitId: z.string().optional(),
+          orgUnitPath: z.string()
+        })
+      )
+      .optional()
+  }),
+  flatten: "organizationUnits",
+  create: z.object({ name: z.string(), parentOrgUnitPath: z.string() }),
+  response: z.object({
+    orgUnitPath: z.string(),
+    name: z.string(),
+    parentOrgUnitId: z.string()
+  }),
+  update: empty
+};
+const roleSchemas: CrudSchemas = {
+  get: z.object({
+    roleId: z.string(),
+    roleName: z.string(),
+    rolePrivileges: z.array(
+      z.object({ serviceId: z.string(), privilegeName: z.string() })
+    )
+  }),
+  list: z.object({
+    items: z
+      .array(
+        z.object({
+          roleId: z.string(),
+          roleName: z.string(),
+          rolePrivileges: z.array(
+            z.object({ serviceId: z.string(), privilegeName: z.string() })
+          )
+        })
+      )
+      .optional()
+  }),
+  flatten: true,
+  create: z.object({
+    roleName: z.string(),
+    roleDescription: z.string(),
+    rolePrivileges: z.array(
+      z.object({ serviceId: z.string(), privilegeName: z.string() })
+    )
+  }),
+  response: z.object({ roleId: z.string() }),
+  update: empty
+};
+const assignmentSchemas: CrudSchemas = {
+  get: empty,
+  list: z.object({
+    items: z
+      .array(
+        z.object({
+          roleAssignmentId: z.string(),
+          roleId: z.string(),
+          assignedTo: z.string()
+        })
+      )
+      .optional()
+  }),
+  flatten: false,
+  create: z.object({
+    roleId: z.string(),
+    assignedTo: z.string(),
+    scopeType: z.string()
+  }),
+  response: z.object({ kind: z.string().optional() }),
+  update: empty
+};
+const samlSchemas: CrudSchemas = {
+  get: z.object({
+    name: z.string(),
+    idpConfig: z
+      .object({
+        entityId: z.string(),
+        singleSignOnServiceUri: z.string(),
+        signOutUri: z.string().optional()
+      })
+      .optional(),
+    spConfig: z.object({
+      entityId: z.string(),
+      assertionConsumerServiceUri: z.string()
+    })
+  }),
+  list: z.object({
+    inboundSamlSsoProfiles: z
+      .array(
+        z.object({
+          name: z.string(),
+          displayName: z.string().optional(),
+          spConfig: z.object({
+            entityId: z.string(),
+            assertionConsumerServiceUri: z.string()
+          })
+        })
+      )
+      .optional()
+  }),
+  flatten: "inboundSamlSsoProfiles",
+  create: z.object({
+    displayName: z.string(),
+    idpConfig: z.object({
+      entityId: z.string(),
+      singleSignOnServiceUri: z.string()
+    })
+  }),
+  response: GoogleOperationSchema.extend({
+    response: z.object({ name: z.string() }).optional()
+  }),
+  update: empty
+};
+const ssoSchemas: CrudSchemas = {
+  get: empty,
+  list: z.object({
+    inboundSsoAssignments: z
+      .array(
+        z.object({
+          name: z.string(),
+          targetGroup: z.string().optional(),
+          targetOrgUnit: z.string().optional(),
+          ssoMode: z.string().optional(),
+          samlSsoInfo: z
+            .object({ inboundSamlSsoProfile: z.string() })
+            .optional()
+        })
+      )
+      .optional()
+  }),
+  flatten: "inboundSsoAssignments",
+  create: z.object({
+    targetGroup: z.string().optional(),
+    targetOrgUnit: z.string().optional(),
+    samlSsoInfo: z.object({ inboundSamlSsoProfile: z.string() }).optional(),
+    ssoMode: z.string()
+  }),
+  response: GoogleOperationSchema,
+  update: empty
+};
 export class GoogleClient {
-  constructor(private baseClient: HttpClient) {}
-
-  // Domains
+  constructor(private client: HttpClient) {}
+  private builder() {
+    return new ResourceBuilder(this.client, {});
+  }
   get domains() {
-    return new ResourceBuilder(this.baseClient, {})
+    return this.builder()
       .path(ApiEndpoint.Google.Domains)
       .accepts(
         z.object({
@@ -24,325 +193,49 @@ export class GoogleClient {
       )
       .flatten("domains");
   }
-
-  // Users
   get users() {
-    const client = this.baseClient;
-    return {
-      get: (email: string) =>
-        new ResourceBuilder(client, {})
-          .path(`${ApiEndpoint.Google.Users}/${encodeURIComponent(email)}`)
-          .accepts(
-            z
-              .object({
-                id: z.string().optional(),
-                primaryEmail: z.string().optional(),
-                orgUnitPath: z.string().optional()
-              })
-              .passthrough()
-          ),
-
-      create: () =>
-        new ResourceBuilder(client, {})
-          .path(ApiEndpoint.Google.Users)
-          .sends(
-            z.object({
-              primaryEmail: z.string(),
-              name: z.object({ givenName: z.string(), familyName: z.string() }),
-              password: z.string(),
-              orgUnitPath: z.string()
-            })
-          )
-          .accepts(z.object({ id: z.string(), primaryEmail: z.string() })),
-
-      update: (userId: string) =>
-        new ResourceBuilder(client, {})
-          .path(`${ApiEndpoint.Google.Users}/${userId}`)
-          .sends(z.object({ password: z.string() }))
-          .accepts(z.object({})),
-
-      delete: (userId: string) =>
-        new ResourceBuilder(client, {})
-          .path(`${ApiEndpoint.Google.Users}/${userId}`)
-          .accepts(z.object({})),
-
-      list: () =>
-        new ResourceBuilder(client, {})
-          .path(ApiEndpoint.Google.Users)
-          .accepts(
-            z.object({
-              users: z
-                .array(z.object({ id: z.string(), primaryEmail: z.string() }))
-                .optional()
-            })
-          )
-    };
+    return createCrudMethods(
+      this.client,
+      ApiEndpoint.Google.Users,
+      userSchemas
+    );
   }
-
-  // Organizational Units
   get orgUnits() {
-    const client = this.baseClient;
-    return {
-      get: (path: string) =>
-        new ResourceBuilder(client, {})
-          .path(
-            `${ApiEndpoint.Google.OrgUnits}/${encodeURIComponent(path.replace(/^\//, ""))}`
-          )
-          .accepts(z.object({ orgUnitPath: z.string(), name: z.string() })),
-
-      create: () =>
-        new ResourceBuilder(client, {})
-          .path(ApiEndpoint.Google.OrgUnits)
-          .sends(z.object({ name: z.string(), parentOrgUnitPath: z.string() }))
-          .accepts(
-            z.object({
-              orgUnitPath: z.string(),
-              name: z.string(),
-              parentOrgUnitId: z.string()
-            })
-          ),
-
-      delete: (path: string) =>
-        new ResourceBuilder(client, {})
-          .path(
-            `${ApiEndpoint.Google.OrgUnits}/${encodeURIComponent(path.replace(/^\//, ""))}`
-          )
-          .accepts(z.object({})),
-
-      list: () =>
-        new ResourceBuilder(client, {})
-          .path(ApiEndpoint.Google.OrgUnits)
-          .accepts(
-            z.object({
-              organizationUnits: z
-                .array(
-                  z.object({
-                    orgUnitId: z.string(),
-                    parentOrgUnitId: z.string().optional(),
-                    orgUnitPath: z.string()
-                  })
-                )
-                .optional()
-            })
-          )
-          .flatten("organizationUnits")
-    };
+    return createCrudMethods(
+      this.client,
+      ApiEndpoint.Google.OrgUnits,
+      ouSchemas
+    );
   }
-
-  // Roles
   get roles() {
-    const client = this.baseClient;
-    return {
-      get: (roleId: string) =>
-        new ResourceBuilder(client, {})
-          .path(`${ApiEndpoint.Google.Roles}/${roleId}`)
-          .accepts(
-            z.object({
-              roleId: z.string(),
-              roleName: z.string(),
-              rolePrivileges: z.array(
-                z.object({ serviceId: z.string(), privilegeName: z.string() })
-              )
-            })
-          ),
-
-      create: () =>
-        new ResourceBuilder(client, {})
-          .path(ApiEndpoint.Google.Roles)
-          .sends(
-            z.object({
-              roleName: z.string(),
-              roleDescription: z.string(),
-              rolePrivileges: z.array(
-                z.object({ serviceId: z.string(), privilegeName: z.string() })
-              )
-            })
-          )
-          .accepts(z.object({ roleId: z.string() })),
-
-      delete: (roleId: string) =>
-        new ResourceBuilder(client, {})
-          .path(`${ApiEndpoint.Google.Roles}/${roleId}`)
-          .accepts(z.object({})),
-
-      list: () =>
-        new ResourceBuilder(client, {})
-          .path(ApiEndpoint.Google.Roles)
-          .accepts(
-            z.object({
-              items: z
-                .array(
-                  z.object({
-                    roleId: z.string(),
-                    roleName: z.string(),
-                    rolePrivileges: z.array(
-                      z.object({
-                        serviceId: z.string(),
-                        privilegeName: z.string()
-                      })
-                    )
-                  })
-                )
-                .optional()
-            })
-          )
-          .flatten(true),
-
-      privileges: () =>
-        new ResourceBuilder(client, {})
-          .path(ApiEndpoint.Google.RolePrivileges)
-          .accepts(
-            z.object({
-              items: z.array(
-                z.lazy(() =>
-                  z.object({
-                    serviceId: z.string(),
-                    privilegeName: z.string(),
-                    childPrivileges: z
-                      .array(
-                        z.lazy(() =>
-                          z.object({
-                            serviceId: z.string(),
-                            privilegeName: z.string(),
-                            childPrivileges: z.array(z.any()).optional()
-                          })
-                        )
-                      )
-                      .optional()
-                  })
-                )
-              )
-            })
-          )
-    };
+    return createCrudMethods(
+      this.client,
+      ApiEndpoint.Google.Roles,
+      roleSchemas
+    );
   }
-
-  // Role Assignments
   get roleAssignments() {
-    const client = this.baseClient;
-    return {
-      create: () =>
-        new ResourceBuilder(client, {})
-          .path(ApiEndpoint.Google.RoleAssignments)
-          .sends(
-            z.object({
-              roleId: z.string(),
-              assignedTo: z.string(),
-              scopeType: z.string()
-            })
-          )
-          .accepts(z.object({ kind: z.string().optional() })),
-
-      delete: (assignmentId: string) =>
-        new ResourceBuilder(client, {})
-          .path(`${ApiEndpoint.Google.RoleAssignments}/${assignmentId}`)
-          .accepts(z.object({})),
-
-      list: () =>
-        new ResourceBuilder(client, {})
-          .path(ApiEndpoint.Google.RoleAssignments)
-          .accepts(
-            z.object({
-              items: z
-                .array(
-                  z.object({
-                    roleAssignmentId: z.string(),
-                    roleId: z.string(),
-                    assignedTo: z.string()
-                  })
-                )
-                .optional()
-            })
-          )
-    };
+    return createCrudMethods(
+      this.client,
+      ApiEndpoint.Google.RoleAssignments,
+      assignmentSchemas
+    );
   }
-
-  // SAML Profiles
   get samlProfiles() {
-    const client = this.baseClient;
     return {
-      get: (profileId: string) =>
-        new ResourceBuilder(client, {})
-          .path(ApiEndpoint.Google.SamlProfile(profileId))
-          .accepts(
-            z.object({
-              name: z.string(),
-              idpConfig: z
-                .object({
-                  entityId: z.string(),
-                  singleSignOnServiceUri: z.string(),
-                  signOutUri: z.string().optional()
-                })
-                .optional(),
-              spConfig: z.object({
-                entityId: z.string(),
-                assertionConsumerServiceUri: z.string()
-              })
-            })
-          ),
-
-      create: () =>
-        new ResourceBuilder(client, {})
-          .path(
-            `${ApiEndpoint.Google.SsoProfiles.replace("/inboundSamlSsoProfiles", "/customers/my_customer/inboundSamlSsoProfiles")}`
-          )
-          .sends(
-            z.object({
-              displayName: z.string(),
-              idpConfig: z.object({
-                entityId: z.string(),
-                singleSignOnServiceUri: z.string()
-              })
-            })
-          )
-          .accepts(
-            GoogleOperationSchema.extend({
-              response: z.object({ name: z.string() }).optional()
-            })
-          ),
-
-      update: (profileId: string) =>
-        new ResourceBuilder(client, {})
-          .path(ApiEndpoint.Google.SamlProfile(profileId))
-          .accepts(
-            GoogleOperationSchema.extend({ response: z.unknown().optional() })
-          ),
-
-      delete: (profileId: string) =>
-        new ResourceBuilder(client, {})
-          .path(ApiEndpoint.Google.SamlProfile(profileId))
-          .accepts(z.object({})),
-
-      list: () =>
-        new ResourceBuilder(client, {})
-          .path(ApiEndpoint.Google.SsoProfiles)
-          .accepts(
-            z.object({
-              inboundSamlSsoProfiles: z
-                .array(
-                  z.object({
-                    name: z.string(),
-                    displayName: z.string().optional(),
-                    spConfig: z.object({
-                      entityId: z.string(),
-                      assertionConsumerServiceUri: z.string()
-                    })
-                  })
-                )
-                .optional()
-            })
-          )
-          .flatten("inboundSamlSsoProfiles"),
-
+      ...createCrudMethods(
+        this.client,
+        ApiEndpoint.Google.SsoProfiles,
+        samlSchemas
+      ),
       credentials: (profileId: string) => ({
         add: () =>
-          new ResourceBuilder(client, {})
+          this.builder()
             .path(ApiEndpoint.Google.SamlProfileCredentials(profileId))
             .sends(z.object({ pemData: z.string() }))
             .accepts(GoogleOperationSchema),
-
         list: () =>
-          new ResourceBuilder(client, {})
+          this.builder()
             .path(ApiEndpoint.Google.SamlProfileCredentialsList(profileId))
             .accepts(
               z.object({
@@ -357,73 +250,26 @@ export class GoogleClient {
               })
             )
             .flatten("idpCredentials"),
-
         delete: (credentialId: string) =>
-          new ResourceBuilder(client, {})
+          this.builder()
             .path(
               `${ApiEndpoint.Google.SamlProfileCredentialsList(profileId)}/${credentialId}`
             )
-            .accepts(z.object({}))
+            .accepts(empty)
       })
     };
   }
-
-  // SSO Assignments
   get ssoAssignments() {
-    const client = this.baseClient;
-    return {
-      create: () =>
-        new ResourceBuilder(client, {})
-          .path(ApiEndpoint.Google.SsoAssignments)
-          .sends(
-            z.object({
-              targetGroup: z.string().optional(),
-              targetOrgUnit: z.string().optional(),
-              samlSsoInfo: z
-                .object({ inboundSamlSsoProfile: z.string() })
-                .optional(),
-              ssoMode: z.string()
-            })
-          )
-          .accepts(GoogleOperationSchema),
-
-      delete: (assignmentId: string) =>
-        new ResourceBuilder(client, {})
-          .path(
-            `${ApiEndpoint.Google.SsoAssignments}/${encodeURIComponent(assignmentId)}`
-          )
-          .accepts(z.object({})),
-
-      list: () =>
-        new ResourceBuilder(client, {})
-          .path(ApiEndpoint.Google.SsoAssignments)
-          .accepts(
-            z.object({
-              inboundSsoAssignments: z
-                .array(
-                  z.object({
-                    name: z.string(),
-                    targetGroup: z.string().optional(),
-                    targetOrgUnit: z.string().optional(),
-                    ssoMode: z.string().optional(),
-                    samlSsoInfo: z
-                      .object({ inboundSamlSsoProfile: z.string() })
-                      .optional()
-                  })
-                )
-                .optional()
-            })
-          )
-          .flatten("inboundSsoAssignments")
-    };
+    return createCrudMethods(
+      this.client,
+      ApiEndpoint.Google.SsoAssignments,
+      ssoSchemas
+    );
   }
-
-  // Site Verification
   get siteVerification() {
-    const client = this.baseClient;
     return {
       getToken: () =>
-        new ResourceBuilder(client, {})
+        this.builder()
           .path(`${ApiEndpoint.Google.SiteVerification}/token`)
           .sends(
             z.object({
@@ -439,9 +285,8 @@ export class GoogleClient {
               token: z.string()
             })
           ),
-
       verify: () =>
-        new ResourceBuilder(client, {})
+        this.builder()
           .path(`${ApiEndpoint.Google.SiteVerification}/webResource`)
           .sends(
             z.object({

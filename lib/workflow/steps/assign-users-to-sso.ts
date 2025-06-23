@@ -1,14 +1,10 @@
 import {
+  isBadRequestError,
   isConflictError,
-  isHttpError,
-  isNotFoundError,
-  safeDelete
-} from "@/lib/workflow/utils";
+  isNotFoundError
+} from "@/lib/workflow/core/errors";
 
-import {
-  extractResourceId,
-  ResourceTypes
-} from "@/lib/workflow/utils/resource-ids";
+import { extractResourceId, ResourceTypes } from "@/lib/workflow/core/http";
 
 import { LogLevel, StepId, Var } from "@/types";
 import { defineStep } from "../step-builder";
@@ -198,7 +194,7 @@ export default defineStep(StepId.AssignUsersToSso)
         markFailed(
           "SAML profile missing. Run 'Complete Google SSO setup' first."
         );
-      } else if (isHttpError(error, 400)) {
+      } else if (isBadRequestError(error)) {
         log(LogLevel.Error, "Invalid SSO profile", { error });
         markFailed(
           "SSO profile incomplete or missing. Run 'Complete Google SSO setup' first."
@@ -236,11 +232,18 @@ export default defineStep(StepId.AssignUsersToSso)
           rootAssignment.name,
           ResourceTypes.InboundSsoAssignments
         );
-        await safeDelete(
-          () => google.ssoAssignments.delete(id).delete(),
-          log,
-          "Inbound SSO Assignment"
-        );
+        try {
+          await google.ssoAssignments.delete(id).delete();
+        } catch (error) {
+          if (isNotFoundError(error)) {
+            log(
+              LogLevel.Info,
+              "Inbound SSO Assignment already deleted or not found"
+            );
+          } else {
+            throw error;
+          }
+        }
       }
 
       const automationAssignment = inboundSsoAssignments.find(
@@ -253,11 +256,18 @@ export default defineStep(StepId.AssignUsersToSso)
           automationAssignment.name,
           ResourceTypes.InboundSsoAssignments
         );
-        await safeDelete(
-          () => google.ssoAssignments.delete(id).delete(),
-          log,
-          "Inbound SSO Assignment"
-        );
+        try {
+          await google.ssoAssignments.delete(id).delete();
+        } catch (error) {
+          if (isNotFoundError(error)) {
+            log(
+              LogLevel.Info,
+              "Inbound SSO Assignment already deleted or not found"
+            );
+          } else {
+            throw error;
+          }
+        }
       }
 
       markReverted();

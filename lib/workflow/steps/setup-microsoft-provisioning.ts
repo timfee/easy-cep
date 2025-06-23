@@ -1,5 +1,5 @@
 import { ApiEndpoint, SyncTemplateTag } from "@/constants";
-import { isNotFoundError } from "@/lib/workflow/errors";
+import { isNotFoundError } from "@/lib/workflow/core/errors";
 import { LogLevel, StepId, Var } from "@/types";
 import { defineStep } from "../step-builder";
 

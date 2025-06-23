@@ -9,10 +9,7 @@ import {
 } from "@/constants";
 import { env } from "@/env";
 import { refreshTokenIfNeeded } from "@/lib/auth";
-import {
-  extractResourceId,
-  ResourceTypes
-} from "@/lib/workflow/utils/resource-ids";
+import { extractResourceId, ResourceTypes } from "@/lib/workflow/core/http";
 import { z } from "zod";
 
 import pLimit from "p-limit";

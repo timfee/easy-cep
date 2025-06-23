@@ -125,6 +125,7 @@ export class ResourceBuilder<TContext = Record<string, never>> {
     let url = this.config.basePath || "";
 
     if (this.config.pathParams) {
+      // ENCODING: Path parameters are encoded here and ONLY here
       Object.entries(this.config.pathParams).forEach(([key, value]) => {
         url = url.replace(`{${key}}`, encodeURIComponent(value));
       });

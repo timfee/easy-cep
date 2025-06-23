@@ -1,11 +1,15 @@
 import { runStep, undoStep } from "@/lib/workflow/engine";
-import { generateSecurePassword } from "@/lib/workflow/utils/password";
 import { StepId, Var } from "@/types";
 import { jest } from "@jest/globals";
 import { randomBytes } from "crypto";
 import fs from "fs";
 import path from "path";
 import { fileURLToPath } from "url";
+function generateSecurePassword() {
+  const chars =
+    "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!@#$%^&*";
+  return Array.from(randomBytes(16), (b) => chars[b % chars.length]).join("");
+}
 
 import {
   cleanupGoogleEnvironment,

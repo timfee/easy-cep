@@ -8,6 +8,7 @@ import { Card } from "@/components/ui/card";
 import { Collapsible, CollapsibleContent } from "@/components/ui/collapsible";
 import { cn } from "@/lib/utils";
 import { STEP_STATE_CONFIG } from "@/lib/workflow/step-constants";
+import { StepStatus } from "@/lib/workflow/step-status";
 import {
   StepDefinition,
   StepIdValue,
@@ -40,10 +41,10 @@ export const StepCard = memo(function StepCard({
   actions
 }: StepCardProps) {
   const [isExpanded, setIsExpanded] = useState(false);
-  const currentState = executing ? "executing" : state?.status || "idle";
+  const currentState = state?.status || StepStatus.Ready;
   const config = STEP_STATE_CONFIG[currentState];
 
-  const shouldExpand = executing || state?.status === "pending";
+  const shouldExpand = executing;
   if (shouldExpand && !isExpanded) setIsExpanded(true);
 
   return (
@@ -52,12 +53,16 @@ export const StepCard = memo(function StepCard({
         <Card
           className={cn(
             "transition-all duration-300 ease-out bg-white shadow-none",
-            state?.status !== "blocked" && "hover:shadow-md",
+            state?.status !== StepStatus.Blocked && "hover:shadow-md",
             config.borderClass,
-            !isExpanded && state?.status !== "blocked" && "cursor-pointer"
+            !isExpanded
+              && state?.status !== StepStatus.Blocked
+              && "cursor-pointer"
           )}
           onClick={() =>
-            !isExpanded && state?.status !== "blocked" && setIsExpanded(true)
+            !isExpanded
+            && state?.status !== StepStatus.Blocked
+            && setIsExpanded(true)
           }>
           <StepCardHeader
             index={index}
@@ -67,7 +72,7 @@ export const StepCard = memo(function StepCard({
             isExpanded={isExpanded}
             onToggle={() => setIsExpanded(!isExpanded)}
           />
-          {(executing || state?.status === "pending")
+          {executing
             && (state?.lro?.detected ?
               <StepLROIndicator
                 startTime={state.lro.startTime}

@@ -1,4 +1,4 @@
-import { isNotFoundError } from "@/lib/workflow/errors";
+import { isNotFoundError } from "@/lib/workflow/core/errors";
 import { LogLevel, StepId, Var } from "@/types";
 import { WORKFLOW_LIMITS } from "../constants/workflow-limits";
 import { defineStep } from "../step-builder";
@@ -36,7 +36,7 @@ export default defineStep(StepId.ConfigureGoogleSamlProfile)
           > WORKFLOW_LIMITS.SAML_PROFILES_WARNING_THRESHOLD
         ) {
           log(
-            LogLevel.Warn,
+            LogLevel.Info,
             `Found ${inboundSamlSsoProfiles.length} SAML profiles - nearing API limits`
           );
         }

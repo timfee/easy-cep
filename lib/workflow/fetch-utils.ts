@@ -5,7 +5,7 @@ import {
   HttpError,
   NotFoundError,
   PreconditionFailedError
-} from "./errors";
+} from "./core/errors";
 import { HttpMethod, HttpStatus } from "./http-constants";
 import { detectLRO, type LROMetadata } from "./lro-detector";
 

@@ -1,14 +1,8 @@
 export enum StepStatus {
-  Idle = "idle",
-  Ready = "ready",
   Blocked = "blocked",
-  Checking = "checking",
-  Executing = "executing",
+  Ready = "ready",
   Complete = "complete",
-  Failed = "failed",
-  Pending = "pending",
-  Undoing = "undoing",
-  Reverted = "reverted"
+  Stale = "stale"
 }
 
 export type StepStatusValue = `${StepStatus}`;

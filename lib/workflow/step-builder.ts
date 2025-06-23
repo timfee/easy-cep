@@ -40,6 +40,7 @@ interface BuilderCheckContext<T> {
   log: StepCheckContext<T>["log"];
   markComplete: StepCheckContext<T>["markComplete"];
   markIncomplete: StepCheckContext<T>["markIncomplete"];
+  markStale: StepCheckContext<T>["markStale"];
   markCheckFailed: StepCheckContext<T>["markCheckFailed"];
 }
 

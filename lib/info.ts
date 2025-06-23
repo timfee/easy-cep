@@ -8,10 +8,7 @@ import {
   TemplateId
 } from "@/constants";
 import { refreshTokenIfNeeded } from "@/lib/auth";
-import {
-  extractResourceId,
-  ResourceTypes
-} from "@/lib/workflow/utils/resource-ids";
+import { extractResourceId, ResourceTypes } from "@/lib/workflow/core/http";
 import { z } from "zod";
 
 export interface InfoItem {

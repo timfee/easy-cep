@@ -2,10 +2,9 @@ import {
   isConflictError,
   isNotFoundError,
   isPreconditionFailedError
-} from "@/lib/workflow/errors";
-
-import { generateSecurePassword } from "@/lib/workflow/utils/password";
+} from "@/lib/workflow/core/errors";
 import { LogLevel, StepId, Var } from "@/types";
+import crypto from "node:crypto";
 import { defineStep } from "../step-builder";
 
 export default defineStep(StepId.CreateServiceUser)
@@ -42,6 +41,7 @@ export default defineStep(StepId.CreateServiceUser)
       google,
       markComplete,
       markIncomplete,
+      markStale,
       markCheckFailed,
       log
     }) => {
@@ -55,10 +55,16 @@ export default defineStep(StepId.CreateServiceUser)
 
         if (user.id && user.primaryEmail) {
           log(LogLevel.Info, "Service user already exists");
-          markComplete({
-            provisioningUserId: user.id,
-            provisioningUserEmail: user.primaryEmail
-          });
+          if (!vars.get(Var.GeneratedPassword)) {
+            markStale(
+              "User exists but password lost. Re-run to generate new password."
+            );
+          } else {
+            markComplete({
+              provisioningUserId: user.id,
+              provisioningUserEmail: user.primaryEmail
+            });
+          }
         } else {
           log(LogLevel.Error, "Unexpected user response", { user });
           markCheckFailed("Malformed user object returned");
@@ -66,7 +72,7 @@ export default defineStep(StepId.CreateServiceUser)
       } catch (error) {
         // isNotFoundError handles: 404
         if (isNotFoundError(error)) {
-          log(LogLevel.Info, "Service user missing");
+          log(LogLevel.Debug, "Service user missing");
           markIncomplete("Service user missing", {});
         } else {
           log(LogLevel.Error, "Failed to check service user", { error });
@@ -113,7 +119,12 @@ export default defineStep(StepId.CreateServiceUser)
       try {
         vars.require(Var.PrimaryDomain);
 
-        const password = generateSecurePassword();
+        const chars =
+          "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!@#$%^&*";
+        const password = Array.from(
+          crypto.randomBytes(16),
+          (b) => chars[b % chars.length]
+        ).join("");
 
         let user;
         try {

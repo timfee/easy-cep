@@ -1,15 +1,9 @@
 import { Input } from "@/components/ui/input";
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipTrigger
-} from "@/components/ui/tooltip";
 import { cn } from "@/lib/utils";
-import { STEP_DETAILS } from "@/lib/workflow/step-details";
 import { WORKFLOW_VARIABLES, WorkflowVars } from "@/lib/workflow/variables";
 import { StepIdValue, VarName } from "@/types";
 
-import { AlertTriangle, Database } from "lucide-react";
+import { Database } from "lucide-react";
 import { useMemo } from "react";
 
 interface StepVariablesProps {
@@ -71,18 +65,7 @@ export function StepVariables({
         )}>
         <Database className="h-3 w-3 text-accent" />
         <span>{varKey}</span>
-        {meta.ephemeral && (
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <span className="text-[10px] text-chart-1 cursor-help">
-                (transient)
-              </span>
-            </TooltipTrigger>
-            <TooltipContent side="top">
-              Temporary value; rerun the producing step if missing
-            </TooltipContent>
-          </Tooltip>
-        )}
+        {/* transient flag removed */}
       </label>
       {isEditable ?
         <Input
@@ -108,23 +91,7 @@ export function StepVariables({
           : <span className="italic text-slate-400 text-2xs">Not set</span>}
         </div>
       }
-      {meta.ephemeral && (
-        <>
-          <div className="text-xs text-chart-1 mt-1">
-            ⚠️ This value will be lost if you refresh the page
-          </div>
-          {!vars[varKey] && (
-            <div className="text-xs text-amber-600 mt-1 flex items-center gap-1">
-              <AlertTriangle className="h-3 w-3" />
-              This value was lost. Re-run &quot;
-              {meta.producedBy ?
-                STEP_DETAILS[meta.producedBy]?.title
-              : "previous step"}
-              &quot; to regenerate.
-            </div>
-          )}
-        </>
-      )}
+      {/* ephemeral warnings removed */}
     </div>
   );
 

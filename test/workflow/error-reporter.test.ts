@@ -1,4 +1,4 @@
-import { logUncaughtError } from "@/lib/workflow/utils/error-reporter";
+import { logUncaughtError } from "@/lib/workflow/core/errors";
 import { jest } from "@jest/globals";
 
 describe("logUncaughtError", () => {

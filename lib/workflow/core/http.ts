@@ -1,31 +1,37 @@
-/**
- * Extracts resource ID from Google/Microsoft resource names
- *
- * Examples:
- * - "inboundSsoAssignments/abc123" → "abc123"
- * - "customers/C123/inboundSsoAssignments/abc123" → "abc123"
- * - "abc123" → "abc123" (already extracted)
- */
+export async function retryWithBackoff<T>(
+  fn: () => Promise<T>,
+  maxRetries: number = 3,
+  initialDelay: number = 1000
+): Promise<T> {
+  let lastError: unknown;
+  for (let i = 0; i < maxRetries; i++) {
+    try {
+      return await fn();
+    } catch (error) {
+      lastError = error;
+      if (i < maxRetries - 1) {
+        await new Promise((resolve) =>
+          setTimeout(resolve, initialDelay * Math.pow(2, i))
+        );
+      }
+    }
+  }
+  throw lastError;
+}
+
 export function extractResourceId(
   resourceName: string,
   resourceType: string
 ): string {
-  // If it doesn't contain the resource type, assume it's already an ID
   if (!resourceName.includes(resourceType)) {
     return resourceName;
   }
-
-  // Match everything after the last occurrence of resourceType/
   const regex = new RegExp(`(?:.*\\/)?${resourceType}\\/(.*)`);
   const match = resourceName.match(regex);
   return match?.[1] || resourceName;
 }
 
-/**
- * Common resource types
- */
 export const ResourceTypes = {
-  // Google
   InboundSsoAssignments: "inboundSsoAssignments",
   InboundSamlSsoProfiles: "inboundSamlSsoProfiles",
   OrgUnitId: "id",
@@ -33,17 +39,12 @@ export const ResourceTypes = {
   Roles: "roles",
   RoleAssignments: "roleassignments",
   Users: "users",
-
-  // Microsoft
   ServicePrincipals: "servicePrincipals",
   Applications: "applications",
   SynchronizationJobs: "synchronization/jobs",
   ClaimsMappingPolicies: "claimsMappingPolicies"
 } as const;
 
-/**
- * Builds a resource name from components
- */
 export function buildResourceName(
   resourceType: string,
   id: string,

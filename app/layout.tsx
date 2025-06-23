@@ -4,10 +4,19 @@ import { WorkflowHeader } from "@/components/workflow-header";
 import { PROTECTED_RESOURCES } from "@/constants";
 import { env } from "@/env";
 import { getAllSteps } from "@/lib/workflow/step-registry";
-import { generateSecurePassword } from "@/lib/workflow/utils/password";
 import { Var } from "@/types";
 import type { Metadata } from "next";
 import localFont from "next/font/local";
+import crypto from "node:crypto";
+
+function generateSecurePassword() {
+  const chars =
+    "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!@#$%^&*";
+  return Array.from(
+    crypto.randomBytes(16),
+    (b) => chars[b % chars.length]
+  ).join("");
+}
 
 const inter = localFont({
   src: [
