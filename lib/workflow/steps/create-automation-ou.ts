@@ -43,15 +43,25 @@ export default defineStep(StepId.CreateAutomationOU)
     }) => {
       try {
         const ouName = vars.require(Var.AutomationOuName);
+        const ouPath = vars.require(Var.AutomationOuPath);
 
-        const OrgUnitSchema = z.object({ orgUnitPath: z.string() });
-        await google.get(
-          `${ApiEndpoint.Google.OrgUnits}/${encodeURIComponent(ouName)}`,
+        const OrgUnitSchema = z.object({
+          orgUnitPath: z.string(),
+          name: z.string()
+        });
+        const ou = await google.get(
+          `${ApiEndpoint.Google.OrgUnits}/${encodeURIComponent(
+            ouPath.replace(/^\//, "")
+          )}`,
           OrgUnitSchema
         );
-        // isNotFoundError handles: 404
-        log(LogLevel.Info, "Automation OU already exists");
-        markComplete({});
+
+        if (ou.orgUnitPath === ouPath && ou.name === ouName) {
+          log(LogLevel.Info, "Automation OU already exists");
+          markComplete({});
+        } else {
+          markIncomplete("Automation OU missing", {});
+        }
       } catch (error) {
         if (isNotFoundError(error)) {
           markIncomplete("Automation OU missing", {});
@@ -114,7 +124,9 @@ export default defineStep(StepId.CreateAutomationOU)
       }
 
       await google.delete(
-        `${ApiEndpoint.Google.OrgUnits}/${encodeURIComponent(path)}`,
+        `${ApiEndpoint.Google.OrgUnits}/${encodeURIComponent(
+          path.replace(/^\//, "")
+        )}`,
         EmptyResponseSchema
       );
       markReverted();
