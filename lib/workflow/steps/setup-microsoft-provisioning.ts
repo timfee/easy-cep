@@ -52,6 +52,7 @@ export default defineStep(StepId.SetupMicrosoftProvisioning)
           log(LogLevel.Info, "Synchronization already active");
           markComplete({});
         } else {
+          log(LogLevel.Info, "Synchronization not started");
           markIncomplete("Synchronization not started", {});
         }
       } catch (error) {

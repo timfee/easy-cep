@@ -107,9 +107,11 @@ export default defineStep(StepId.ConfigureMicrosoftSso)
               msSsoEntityId: `https://sts.windows.net/${tenantId}/`
             });
           } else {
+            log(LogLevel.Info, "SSO configured but certificate missing");
             markIncomplete("SSO configured but certificate missing", {});
           }
         } else {
+          log(LogLevel.Info, "Microsoft SSO not configured");
           markIncomplete("Microsoft SSO not configured", {});
         }
       } catch (error) {

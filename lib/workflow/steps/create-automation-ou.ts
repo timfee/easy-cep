@@ -60,10 +60,12 @@ export default defineStep(StepId.CreateAutomationOU)
           log(LogLevel.Info, "Automation OU already exists");
           markComplete({});
         } else {
+          log(LogLevel.Info, "Automation OU missing");
           markIncomplete("Automation OU missing", {});
         }
       } catch (error) {
         if (isNotFoundError(error)) {
+          log(LogLevel.Info, "Automation OU missing");
           markIncomplete("Automation OU missing", {});
         } else {
           log(LogLevel.Error, "Failed to check OU", { error });

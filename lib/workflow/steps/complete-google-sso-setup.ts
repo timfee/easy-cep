@@ -77,6 +77,7 @@ export default defineStep(StepId.CompleteGoogleSsoSetup)
           log(LogLevel.Info, "Google SSO already configured");
           markComplete({});
         } else {
+          log(LogLevel.Info, "Google SSO configuration incomplete");
           markIncomplete("Google SSO configuration incomplete", {});
         }
       } catch (error) {

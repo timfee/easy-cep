@@ -77,6 +77,7 @@ export default defineStep(StepId.CreateServiceUser)
       } catch (error) {
         // isNotFoundError handles: 404
         if (isNotFoundError(error)) {
+          log(LogLevel.Info, "Service user missing");
           markIncomplete("Service user missing", {});
         } else {
           log(LogLevel.Error, "Failed to check service user", { error });

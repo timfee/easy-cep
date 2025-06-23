@@ -148,6 +148,7 @@ export default defineStep(StepId.AssignUsersToSso)
           log(LogLevel.Info, "All users already assigned to SSO");
           markComplete({});
         } else {
+          log(LogLevel.Info, "Users not assigned to SSO");
           markIncomplete("Users not assigned to SSO", {});
         }
       } catch (error) {
