@@ -1,13 +1,22 @@
 import type { JestConfigWithTsJest } from "ts-jest";
 import { pathsToModuleNameMapper } from "ts-jest";
-// Import the entire tsconfig.json as the default export
-import tsconfig from "./tsconfig.json" with { type: "json" };
 
-// Destructure compilerOptions from the imported tsconfig object
+import * as fs from "fs";
+import * as path from "path";
+import { fileURLToPath } from "url";
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
+const tsconfigFile = fs.readFileSync(
+  path.resolve(__dirname, "./tsconfig.json"),
+  "utf-8"
+);
+const tsconfig = JSON.parse(tsconfigFile);
+
 const { compilerOptions } = tsconfig;
 
 const config: JestConfigWithTsJest = {
-  // Use the recommended ESM preset string
   preset: "ts-jest/presets/default-esm",
 
   testEnvironment: "node",
