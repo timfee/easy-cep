@@ -43,13 +43,26 @@ async function getRootOrgUnitId(google: HttpClient) {
   );
 
   if (organizationUnits.length === 0) {
-    throw new Error("No org units found");
+    throw new Error("No organizational units found");
   }
 
-  const root = organizationUnits.find((ou) => ou.orgUnitPath === "/");
-  const id =
-    root ? root.orgUnitId : (organizationUnits[0].parentOrgUnitId ?? "");
-  return extractResourceId(id, ResourceTypes.OrgUnitId);
+  const rootOU = organizationUnits.find(
+    (ou) => !ou.parentOrgUnitId || ou.orgUnitPath === "/"
+  );
+
+  if (rootOU) {
+    return extractResourceId(rootOU.orgUnitId, ResourceTypes.OrgUnitId);
+  }
+
+  const firstOU = organizationUnits[0];
+  if (!firstOU.parentOrgUnitId) {
+    throw new Error(
+      "Cannot determine root organizational unit - no parent ID found"
+    );
+  }
+
+  return extractResourceId(firstOU.parentOrgUnitId, ResourceTypes.OrgUnitId);
+
 }
 
 export default defineStep(StepId.AssignUsersToSso)

@@ -4,6 +4,7 @@ import { WorkflowHeader } from "@/components/workflow-header";
 import { PROTECTED_RESOURCES } from "@/constants";
 import { env } from "@/env";
 import { getAllSteps } from "@/lib/workflow/step-registry";
+import { generateSecurePassword } from "@/lib/workflow/utils/password";
 import { Var } from "@/types";
 import type { Metadata } from "next";
 import localFont from "next/font/local";
@@ -42,7 +43,7 @@ export default function RootLayout({
     [Var.ProvisioningAppDisplayName]: "Google Workspace Provisioning",
     [Var.SsoAppDisplayName]: "Google Workspace SSO",
     [Var.ClaimsPolicyDisplayName]: "Google Workspace Basic Claims",
-    [Var.GeneratedPassword]: Math.random().toString(36).slice(-12)
+    [Var.GeneratedPassword]: generateSecurePassword()
   };
 
   return (

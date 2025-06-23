@@ -6,8 +6,8 @@ import {
 } from "@/lib/workflow/errors";
 import { EmptyResponseSchema } from "@/lib/workflow/utils";
 
+import { generateSecurePassword } from "@/lib/workflow/utils/password";
 import { LogLevel, StepId, Var } from "@/types";
-import crypto from "crypto";
 import { z } from "zod";
 import { defineStep } from "../step-builder";
 
@@ -123,8 +123,7 @@ export default defineStep(StepId.CreateServiceUser)
       try {
         vars.require(Var.PrimaryDomain);
 
-        const BYTES = 4;
-        const password = `Temp${crypto.randomBytes(BYTES).toString("hex")}!`;
+        const password = generateSecurePassword();
         const CreateSchema = z.object({
           id: z.string(),
           primaryEmail: z.string()

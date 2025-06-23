@@ -1,7 +1,7 @@
 import { runStep, undoStep } from "@/lib/workflow/engine";
+import { generateSecurePassword } from "@/lib/workflow/utils/password";
 import { StepId, Var } from "@/types";
 import { jest } from "@jest/globals";
-import crypto from "crypto";
 import fs from "fs";
 import path from "path";
 import { fileURLToPath } from "url";
@@ -77,6 +77,7 @@ if (
       [Var.PrimaryDomain]: process.env.TEST_DOMAIN || "test.example.com",
       [Var.IsDomainVerified]: "true",
       // Use unique names with test run ID to avoid conflicts
+      [Var.GeneratedPassword]: generateSecurePassword(),
       [Var.AutomationOuName]: `test-automation-${testRunId}`,
       [Var.AutomationOuPath]: `/test-automation-${testRunId}`,
       [Var.ProvisioningUserPrefix]: `test-azuread-provisioning-${testRunId}`,

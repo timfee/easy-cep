@@ -339,41 +339,65 @@ export default defineStep(StepId.CreateAdminRoleAndAssignUser)
     try {
       const roleId = vars.get(Var.AdminRoleId);
       const userId = vars.get(Var.ProvisioningUserId);
-      if (!roleId || !userId) {
-        markFailed("Missing role or user id");
+
+      if (!roleId) {
+        markReverted();
         return;
       }
-      const AssignSchema = z.object({
-        items: z
-          .array(
-            z.object({
-              roleAssignmentId: z.string(),
-              roleId: z.string(),
-              assignedTo: z.string()
-            })
-          )
-          .optional()
-      });
 
-      const { items = [] } = await google.get(
-        `${ApiEndpoint.Google.RoleAssignments}?userKey=${encodeURIComponent(userId)}`,
-        AssignSchema
-      );
-      const assignment = items.find((item) => item.roleId === roleId);
-      if (assignment) {
-        await google.delete(
-          `${ApiEndpoint.Google.RoleAssignments}/${assignment.roleAssignmentId}`,
-          EmptyResponseSchema
+      try {
+        const AllAssignSchema = z.object({
+          items: z
+            .array(
+              z.object({
+                roleAssignmentId: z.string(),
+                roleId: z.string(),
+                assignedTo: z.string()
+              })
+            )
+            .optional()
+        });
+
+        const { items = [] } = await google.get(
+          `${ApiEndpoint.Google.RoleAssignments}?roleId=${encodeURIComponent(roleId)}`,
+          AllAssignSchema
         );
+
+        for (const assignment of items) {
+          try {
+            await google.delete(
+              `${ApiEndpoint.Google.RoleAssignments}/${assignment.roleAssignmentId}`,
+              EmptyResponseSchema
+            );
+            log(
+              LogLevel.Info,
+              `Removed role assignment ${assignment.roleAssignmentId}`
+            );
+          } catch (error) {
+            log(
+              LogLevel.Warn,
+              `Failed to remove assignment ${assignment.roleAssignmentId}`,
+              { error }
+            );
+          }
+        }
+      } catch (error) {
+        log(LogLevel.Warn, "Could not query role assignments", { error });
       }
 
-      await google.delete(
-        `${ApiEndpoint.Google.Roles}/${roleId}`,
-        EmptyResponseSchema
-      );
+      try {
+        await google.delete(
+          `${ApiEndpoint.Google.Roles}/${roleId}`,
+          EmptyResponseSchema
+        );
+      } catch (error) {
+        if (!isNotFoundError(error)) {
+          throw error;
+        }
+      }
+
       markReverted();
     } catch (error) {
-      // isNotFoundError handles: 404
       if (isNotFoundError(error)) {
         markReverted();
       } else {
