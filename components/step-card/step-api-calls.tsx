@@ -77,8 +77,8 @@ export function StepApiCalls({ stepId }: StepApiCallsProps) {
   return (
     <TooltipProvider>
       <div className="space-y-1 text-xs" onClick={(e) => e.stopPropagation()}>
-        {apiTemplates.map((template) => (
-          <Tooltip key={`${template.method}-${template.endpoint}`}>
+        {apiTemplates.map((template, index) => (
+          <Tooltip key={`${template.method}-${template.endpoint}-${index}`}>
             <TooltipTrigger asChild>
               <div className="flex items-center gap-3 rounded py-2 hover:bg-slate-100 cursor-pointer">
                 <div className="flex-shrink-0">
