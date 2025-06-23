@@ -110,7 +110,7 @@ export function StepCardHeader({
         </div>
       </div>
       {state?.error && isExpanded && (
-        <div className="mt-3 p-4 bg-destructive/10 border-l-4 border-destructive rounded">
+        <div className="mt-3 p-4 bg-destructive/10 border-l-4 border-destructive rounded max-h-32 overflow-y-auto">
           <div className="flex items-start gap-2">
             <AlertTriangle className="h-4 w-4 text-destructive flex-shrink-0 mt-0.5" />
             <div>
