@@ -1,6 +1,6 @@
 import { ApiEndpoint } from "@/constants";
 import { isConflictError, isNotFoundError } from "@/lib/workflow/errors";
-import { EmptyResponseSchema } from "@/lib/workflow/utils";
+import { EmptyResponseSchema, safeDelete } from "@/lib/workflow/utils";
 
 import { LogLevel, StepId, Var } from "@/types";
 import { z } from "zod";
@@ -123,21 +123,21 @@ export default defineStep(StepId.CreateAutomationOU)
         return;
       }
 
-      await google.delete(
-        `${ApiEndpoint.Google.OrgUnits}/${encodeURIComponent(
-          path.replace(/^\//, "")
-        )}`,
-        EmptyResponseSchema
+      await safeDelete(
+        () =>
+          google.delete(
+            `${ApiEndpoint.Google.OrgUnits}/${encodeURIComponent(
+              path.replace(/^\//, "")
+            )}`,
+            EmptyResponseSchema
+          ),
+        log,
+        "Organizational Unit"
       );
       markReverted();
     } catch (error) {
-      // isNotFoundError handles: 404
-      if (isNotFoundError(error)) {
-        markReverted();
-      } else {
-        log(LogLevel.Error, "Failed to delete OU", { error });
-        markFailed(error instanceof Error ? error.message : "Undo failed");
-      }
+      log(LogLevel.Error, "Failed to delete OU", { error });
+      markFailed(error instanceof Error ? error.message : "Undo failed");
     }
   })
   .build();

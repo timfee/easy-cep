@@ -1,4 +1,6 @@
+import { LogLevel } from "@/types";
 import { z } from "zod";
+import { isNotFoundError } from "./errors";
 
 // Re-export error utilities from errors.ts
 export {
@@ -24,4 +26,20 @@ export function findInTree<T>(
     }
   }
   return undefined;
+}
+
+export async function safeDelete<T>(
+  deleteFn: () => Promise<T>,
+  log: (level: LogLevel, message: string, data?: unknown) => void,
+  resourceType: string
+): Promise<void> {
+  try {
+    await deleteFn();
+  } catch (error) {
+    if (isNotFoundError(error)) {
+      log(LogLevel.Info, `${resourceType} already deleted or not found`);
+    } else {
+      throw error;
+    }
+  }
 }

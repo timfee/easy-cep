@@ -5,10 +5,11 @@ import {
   TooltipTrigger
 } from "@/components/ui/tooltip";
 import { cn } from "@/lib/utils";
+import { STEP_DETAILS } from "@/lib/workflow/step-details";
 import { WORKFLOW_VARIABLES, WorkflowVars } from "@/lib/workflow/variables";
 import { StepIdValue, VarName } from "@/types";
 
-import { Database } from "lucide-react";
+import { AlertTriangle, Database } from "lucide-react";
 import { useMemo } from "react";
 
 interface StepVariablesProps {
@@ -108,9 +109,21 @@ export function StepVariables({
         </div>
       }
       {meta.ephemeral && (
-        <div className="text-xs text-chart-1 mt-1">
-          ⚠️ This value will be lost if you refresh the page
-        </div>
+        <>
+          <div className="text-xs text-chart-1 mt-1">
+            ⚠️ This value will be lost if you refresh the page
+          </div>
+          {!vars[varKey] && (
+            <div className="text-xs text-amber-600 mt-1 flex items-center gap-1">
+              <AlertTriangle className="h-3 w-3" />
+              This value was lost. Re-run &quot;
+              {meta.producedBy ?
+                STEP_DETAILS[meta.producedBy]?.title
+              : "previous step"}
+              &quot; to regenerate.
+            </div>
+          )}
+        </>
       )}
     </div>
   );
