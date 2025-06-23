@@ -139,6 +139,13 @@ export default defineStep(StepId.ConfigureMicrosoftSso)
      */
   )
   .execute(async ({ vars, microsoft, output, markFailed, log }) => {
+    interface RollbackOperation {
+      description: string;
+      rollback: () => Promise<void>;
+    }
+
+    const completedOps: RollbackOperation[] = [];
+
     try {
       const spId = vars.require(Var.SsoServicePrincipalId);
       const appId = vars.require(Var.SsoAppId);
@@ -153,6 +160,16 @@ export default defineStep(StepId.ConfigureMicrosoftSso)
         EmptyResponseSchema,
         { preferredSingleSignOnMode: "saml" }
       );
+      completedOps.push({
+        description: "Reset SSO mode",
+        rollback: async () => {
+          await microsoft.patch(
+            `${ApiEndpoint.Microsoft.ServicePrincipals}/${spId}`,
+            EmptyResponseSchema,
+            { preferredSingleSignOnMode: null }
+          );
+        }
+      });
 
       // 2. Get tenant ID for URLs
       const TenantSchema = ServicePrincipalIdSchema;
@@ -174,6 +191,16 @@ export default defineStep(StepId.ConfigureMicrosoftSso)
         EmptyResponseSchema,
         { samlSingleSignOnSettings: { relayState: "" } }
       );
+      completedOps.push({
+        description: "Clear SAML settings",
+        rollback: async () => {
+          await microsoft.patch(
+            `${ApiEndpoint.Microsoft.ServicePrincipals}/${spId}`,
+            EmptyResponseSchema,
+            { samlSingleSignOnSettings: null }
+          );
+        }
+      });
 
       // 4. Get the application object ID (different from appId)
       const AppFilterSchema = ServicePrincipalIdSchema;
@@ -193,6 +220,16 @@ export default defineStep(StepId.ConfigureMicrosoftSso)
         EmptyResponseSchema,
         { identifierUris: [entityId], web: { redirectUris: [acsUrl] } }
       );
+      completedOps.push({
+        description: "Reset application URLs",
+        rollback: async () => {
+          await microsoft.patch(
+            `${ApiEndpoint.Microsoft.Applications}/${applicationObjectId}`,
+            EmptyResponseSchema,
+            { identifierUris: [], web: { redirectUris: [] } }
+          );
+        }
+      });
 
       // 6. Create signing certificate
       log(LogLevel.Info, "Creating SAML signing certificate");
@@ -211,6 +248,15 @@ export default defineStep(StepId.ConfigureMicrosoftSso)
           endDateTime: new Date(Date.now() + TIME.YEAR).toISOString()
         }
       );
+      completedOps.push({
+        description: "Delete token signing certificate",
+        rollback: async () => {
+          await microsoft.delete(
+            `${ApiEndpoint.Microsoft.TokenSigningCertificates(spId)}/${certResponse.keyId}`,
+            EmptyResponseSchema
+          );
+        }
+      });
 
       if (!certResponse.key) {
         throw new Error("Failed to generate signing certificate");
@@ -223,7 +269,21 @@ export default defineStep(StepId.ConfigureMicrosoftSso)
         msSsoEntityId: msSsoEntityId
       });
     } catch (error) {
-      log(LogLevel.Error, "Failed to configure Microsoft SSO", { error });
+      log(LogLevel.Error, "SSO configuration failed, attempting rollback", {
+        error
+      });
+
+      for (const op of completedOps.reverse()) {
+        try {
+          await op.rollback();
+          log(LogLevel.Info, `Rolled back: ${op.description}`);
+        } catch (rollbackError) {
+          log(LogLevel.Warn, `Failed to rollback: ${op.description}`, {
+            rollbackError
+          });
+        }
+      }
+
       markFailed(error instanceof Error ? error.message : "Execute failed");
     }
   })

@@ -1,6 +1,5 @@
 import { ApiEndpoint, TemplateId } from "@/constants";
-import { isNotFoundError } from "@/lib/workflow/errors";
-import { EmptyResponseSchema } from "@/lib/workflow/utils";
+import { EmptyResponseSchema, safeDelete } from "@/lib/workflow/utils";
 import { LogLevel, StepId, Var } from "@/types";
 import { z } from "zod";
 import { defineStep } from "../step-builder";
@@ -169,12 +168,11 @@ export default defineStep(StepId.CreateMicrosoftApps)
           ssoAppId: ssoAppId
         });
       } catch (ssoError) {
-        // SSO app failed, clean up provisioning app
-        log(
-          LogLevel.Error,
-          "SSO app creation failed, cleaning up provisioning app",
-          { ssoError }
-        );
+        log(LogLevel.Error, "SSO app creation failed, attempting cleanup", {
+          ssoError
+        });
+
+        const cleanupErrors: string[] = [];
 
         try {
           if (provisioningSpId) {
@@ -183,16 +181,27 @@ export default defineStep(StepId.CreateMicrosoftApps)
               EmptyResponseSchema
             );
           }
+        } catch (err) {
+          cleanupErrors.push(`Failed to delete service principal: ${err}`);
+        }
+
+        try {
           if (provisioningAppId) {
             await microsoft.delete(
               `${ApiEndpoint.Microsoft.Applications}/${provisioningAppId}`,
               EmptyResponseSchema
             );
           }
-        } catch (cleanupError) {
-          log(LogLevel.Error, "Failed to cleanup provisioning app", {
-            cleanupError
-          });
+        } catch (err) {
+          cleanupErrors.push(`Failed to delete application: ${err}`);
+        }
+
+        if (cleanupErrors.length > 0) {
+          throw new Error(
+            `SSO creation failed and cleanup was incomplete. Manual cleanup required for: ${cleanupErrors.join(
+              "; "
+            )}. Original error: ${ssoError}`
+          );
         }
 
         throw ssoError;
@@ -209,35 +218,45 @@ export default defineStep(StepId.CreateMicrosoftApps)
       const appId = vars.get(Var.SsoAppId);
 
       if (provSpId) {
-        await microsoft.delete(
-          `${ApiEndpoint.Microsoft.ServicePrincipals}/${provSpId}`,
-          EmptyResponseSchema
+        await safeDelete(
+          () =>
+            microsoft.delete(
+              `${ApiEndpoint.Microsoft.ServicePrincipals}/${provSpId}`,
+              EmptyResponseSchema
+            ),
+          log,
+          "Service Principal"
         );
       }
 
       if (ssoSpId && ssoSpId !== provSpId) {
-        await microsoft.delete(
-          `${ApiEndpoint.Microsoft.ServicePrincipals}/${ssoSpId}`,
-          EmptyResponseSchema
+        await safeDelete(
+          () =>
+            microsoft.delete(
+              `${ApiEndpoint.Microsoft.ServicePrincipals}/${ssoSpId}`,
+              EmptyResponseSchema
+            ),
+          log,
+          "Service Principal"
         );
       }
 
       if (appId) {
-        await microsoft.delete(
-          `${ApiEndpoint.Microsoft.Applications}/${appId}`,
-          EmptyResponseSchema
+        await safeDelete(
+          () =>
+            microsoft.delete(
+              `${ApiEndpoint.Microsoft.Applications}/${appId}`,
+              EmptyResponseSchema
+            ),
+          log,
+          "Application"
         );
       }
 
       markReverted();
     } catch (error) {
-      // isNotFoundError handles: 404
-      if (isNotFoundError(error)) {
-        markReverted();
-      } else {
-        log(LogLevel.Error, "Failed to delete Microsoft apps", { error });
-        markFailed(error instanceof Error ? error.message : "Undo failed");
-      }
+      log(LogLevel.Error, "Failed to delete Microsoft apps", { error });
+      markFailed(error instanceof Error ? error.message : "Undo failed");
     }
   })
   .build();

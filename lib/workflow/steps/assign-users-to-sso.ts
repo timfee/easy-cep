@@ -3,7 +3,8 @@ import {
   EmptyResponseSchema,
   isConflictError,
   isHttpError,
-  isNotFoundError
+  isNotFoundError,
+  safeDelete
 } from "@/lib/workflow/utils";
 
 import {
@@ -41,21 +42,32 @@ async function getRootOrgUnitId(google: HttpClient) {
   }
 
   const rootOU = organizationUnits.find(
-    (ou) => !ou.parentOrgUnitId || ou.orgUnitPath === "/"
+    (ou) =>
+      !ou.parentOrgUnitId
+      || ou.orgUnitPath === "/"
+      || ou.orgUnitId === ou.parentOrgUnitId
   );
 
   if (rootOU) {
     return extractResourceId(rootOU.orgUnitId, ResourceTypes.OrgUnitId);
   }
 
-  const firstOU = organizationUnits[0];
-  if (!firstOU.parentOrgUnitId) {
-    throw new Error(
-      "Cannot determine root organizational unit - no parent ID found"
+  // If no obvious root found, look for OUs without valid parents
+  const orphanOU = organizationUnits.find((ou) => {
+    if (!ou.parentOrgUnitId) return true;
+    const parentExists = organizationUnits.some(
+      (parent) => parent.orgUnitId === ou.parentOrgUnitId
     );
+    return !parentExists;
+  });
+
+  if (orphanOU) {
+    return extractResourceId(orphanOU.orgUnitId, ResourceTypes.OrgUnitId);
   }
 
-  return extractResourceId(firstOU.parentOrgUnitId, ResourceTypes.OrgUnitId);
+  throw new Error(
+    "Cannot determine root organizational unit from available data"
+  );
 }
 
 export default defineStep(StepId.AssignUsersToSso)
@@ -280,9 +292,14 @@ export default defineStep(StepId.AssignUsersToSso)
           rootAssignment.name,
           ResourceTypes.InboundSsoAssignments
         );
-        await google.delete(
-          `${ApiEndpoint.Google.SsoAssignments}/${encodeURIComponent(id)}`,
-          EmptyResponseSchema
+        await safeDelete(
+          () =>
+            google.delete(
+              `${ApiEndpoint.Google.SsoAssignments}/${encodeURIComponent(id)}`,
+              EmptyResponseSchema
+            ),
+          log,
+          "Inbound SSO Assignment"
         );
       }
 
@@ -296,21 +313,21 @@ export default defineStep(StepId.AssignUsersToSso)
           automationAssignment.name,
           ResourceTypes.InboundSsoAssignments
         );
-        await google.delete(
-          `${ApiEndpoint.Google.SsoAssignments}/${encodeURIComponent(id)}`,
-          EmptyResponseSchema
+        await safeDelete(
+          () =>
+            google.delete(
+              `${ApiEndpoint.Google.SsoAssignments}/${encodeURIComponent(id)}`,
+              EmptyResponseSchema
+            ),
+          log,
+          "Inbound SSO Assignment"
         );
       }
 
       markReverted();
     } catch (error) {
-      // isNotFoundError handles: 404
-      if (isNotFoundError(error)) {
-        markReverted();
-      } else {
-        log(LogLevel.Error, "Failed to delete SSO assignment", { error });
-        markFailed(error instanceof Error ? error.message : "Undo failed");
-      }
+      log(LogLevel.Error, "Failed to delete SSO assignment", { error });
+      markFailed(error instanceof Error ? error.message : "Undo failed");
     }
   })
   .build();
