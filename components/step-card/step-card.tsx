@@ -51,11 +51,14 @@ export const StepCard = memo(function StepCard({
       <Collapsible open={isExpanded} onOpenChange={setIsExpanded}>
         <Card
           className={cn(
-            "transition-all duration-300 ease-out bg-white shadow-none hover:shadow-md",
+            "transition-all duration-300 ease-out bg-white shadow-none",
+            state?.status !== "blocked" && "hover:shadow-md",
             config.borderClass,
-            !isExpanded && "cursor-pointer"
+            !isExpanded && state?.status !== "blocked" && "cursor-pointer"
           )}
-          onClick={() => !isExpanded && setIsExpanded(true)}>
+          onClick={() =>
+            !isExpanded && state?.status !== "blocked" && setIsExpanded(true)
+          }>
           <StepCardHeader
             index={index}
             stepId={definition.id}

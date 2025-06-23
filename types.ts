@@ -90,6 +90,8 @@ export interface StepUndoContext {
 export interface StepUIState {
   status:
     | "idle"
+    | "ready"
+    | "blocked"
     | "checking"
     | "executing"
     | "complete"

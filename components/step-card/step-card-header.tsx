@@ -47,7 +47,9 @@ export function StepCardHeader({
     executing ? "Executing..."
     : state?.status === "checking" ? "Checking..."
     : state?.status === "undoing" ? "Undoing..."
-    : state?.summary || "Ready to execute";
+    : state?.status === "blocked" ? "Waiting for prerequisites"
+    : state?.status === "ready" ? "Ready to execute"
+    : state?.summary || "Initializing";
   const currentState = executing ? "executing" : state?.status || "idle";
   const config = STEP_STATE_CONFIG[currentState];
 
@@ -92,6 +94,10 @@ export function StepCardHeader({
             className={config.badge.className}>
             {executing ?
               "Executing"
+            : state?.status === "blocked" ?
+              "Blocked"
+            : state?.status === "ready" ?
+              "Ready"
             : state?.status ?
               state.status.charAt(0).toUpperCase() + state.status.slice(1)
             : "Idle"}
