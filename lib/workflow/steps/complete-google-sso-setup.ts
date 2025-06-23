@@ -4,6 +4,7 @@ import { EmptyResponseSchema } from "@/lib/workflow/utils";
 import { LogLevel, StepId, Var } from "@/types";
 import { z } from "zod";
 import { defineStep } from "../step-builder";
+import { GoogleOperationSchema } from "../types/api-schemas";
 
 export default defineStep(StepId.CompleteGoogleSsoSetup)
   .requires(
@@ -108,12 +109,7 @@ export default defineStep(StepId.CompleteGoogleSsoSetup)
         "Updating Google SAML profile with Azure AD configuration"
       );
 
-      const UpdateSchema = z.object({
-        name: z.string(),
-        done: z.boolean(),
-        error: z
-          .object({ message: z.string(), code: z.number().optional() })
-          .optional(),
+      const UpdateSchema = GoogleOperationSchema.extend({
         response: z.unknown().optional()
       });
 
@@ -151,11 +147,7 @@ export default defineStep(StepId.CompleteGoogleSsoSetup)
           `-----BEGIN CERTIFICATE-----\n${signingCert}\n-----END CERTIFICATE-----`
         );
 
-      const CertUploadSchema = z.object({
-        name: z.string(),
-        done: z.boolean(),
-        error: z.object({ message: z.string() }).optional()
-      });
+      const CertUploadSchema = GoogleOperationSchema;
 
       const certUrl = ApiEndpoint.Google.SamlProfileCredentials(profileId);
 

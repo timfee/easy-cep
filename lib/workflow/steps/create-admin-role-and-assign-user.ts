@@ -3,42 +3,10 @@ import { isConflictError, isNotFoundError } from "@/lib/workflow/errors";
 import { EmptyResponseSchema, findInTree } from "@/lib/workflow/utils";
 import { LogLevel, StepId, Var } from "@/types";
 import { z } from "zod";
+import type { AdminPrivilege } from "../constants/google-admin";
+import { GOOGLE_ADMIN_PRIVILEGES } from "../constants/google-admin";
 import { defineStep } from "../step-builder";
-
-async function retryWithBackoff<T>(
-  fn: () => Promise<T>,
-  maxRetries: number = 3,
-  initialDelay: number = 1000
-): Promise<T> {
-  let lastError: unknown;
-  for (let i = 0; i < maxRetries; i++) {
-    try {
-      return await fn();
-    } catch (error) {
-      lastError = error;
-      if (i < maxRetries - 1) {
-        await new Promise((resolve) =>
-          setTimeout(resolve, initialDelay * Math.pow(2, i))
-        );
-      }
-    }
-  }
-  throw lastError;
-}
-
-interface AdminPrivilege {
-  serviceId: string;
-  privilegeName: string;
-  childPrivileges?: AdminPrivilege[];
-}
-
-const REQUIRED_PRIVS = [
-  "ORGANIZATION_UNITS_RETRIEVE",
-  "USERS_RETRIEVE",
-  "USERS_CREATE",
-  "USERS_UPDATE",
-  "GROUPS_ALL"
-];
+import { retryWithBackoff } from "../utils/retry";
 
 export default defineStep(StepId.CreateAdminRoleAndAssignUser)
   .requires(
@@ -104,7 +72,7 @@ export default defineStep(StepId.CreateAdminRoleAndAssignUser)
           const privilegeNames = role.rolePrivileges.map(
             (privilege) => privilege.privilegeName
           );
-          const hasPrivs = REQUIRED_PRIVS.every((priv) =>
+          const hasPrivs = GOOGLE_ADMIN_PRIVILEGES.REQUIRED.every((priv) =>
             privilegeNames.includes(priv)
           );
           if (!hasPrivs) {

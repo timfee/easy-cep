@@ -9,6 +9,7 @@ import {
 } from "@/types";
 import { z } from "zod";
 import { createStep } from "./create-step";
+import type { HttpClient } from "./types/http-client";
 import { createVarStore, type BasicVarStore } from "./var-store";
 
 interface StepBuilder<
@@ -28,37 +29,6 @@ interface StepBuilder<
     execute(ctx: StepExecuteContext<TData>): Promise<void>;
     undo?(ctx: StepUndoContext): Promise<void>;
   };
-}
-
-interface HttpClient {
-  get<R>(
-    url: string,
-    schema: z.ZodSchema<R>,
-    options?: { flatten?: boolean | string }
-  ): Promise<R>;
-  post<R>(
-    url: string,
-    schema: z.ZodSchema<R>,
-    body?: unknown,
-    options?: { flatten?: boolean | string }
-  ): Promise<R>;
-  put<R>(
-    url: string,
-    schema: z.ZodSchema<R>,
-    body?: unknown,
-    options?: { flatten?: boolean | string }
-  ): Promise<R>;
-  patch<R>(
-    url: string,
-    schema: z.ZodSchema<R>,
-    body?: unknown,
-    options?: { flatten?: boolean | string }
-  ): Promise<R>;
-  delete<R>(
-    url: string,
-    schema: z.ZodSchema<R>,
-    options?: { flatten?: boolean | string }
-  ): Promise<R>;
 }
 
 interface BuilderCheckContext<T> {

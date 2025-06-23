@@ -53,6 +53,12 @@ Use the `google` and `microsoft` HTTP clients provided by the step builder:
 const user = await google.get(ApiEndpoint.Google.Users, UserSchema);
 ```
 
+### Shared Types & Constants
+
+Use the utilities under `lib/workflow/types/` for common schemas and HTTP
+client definitions. Workflow constants live under `lib/workflow/constants/`.
+Import these rather than redefining them within steps.
+
 ## ✅ Type Contracts
 
 All return types must conform to these interfaces:

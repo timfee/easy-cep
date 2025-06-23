@@ -37,12 +37,14 @@ Every step MUST follow this exact pattern:
    `markFailed`, or `markPending`.
 5. Use `ApiEndpoint` constants for ALL URLs.
 6. Define Zod schemas inline before API calls (never use `z.any()`).
-7. You do _not_ need manual token/var checks—`defineStep` automatically fails
+7. Reuse the types and constants under `lib/workflow/types/` and
+   `lib/workflow/constants/` instead of redefining them.
+8. You do _not_ need manual token/var checks—`defineStep` automatically fails
    the check if any declared `requires` variable is missing.
-8. Document the HTTP requests and responses your step performs using block
+9. Document the HTTP requests and responses your step performs using block
    comments above each `check()` and `execute()` section.
-9. Provide an `.undo()` handler for any step that mutates remote state so tests
-   can clean up after themselves.
+10. Provide an `.undo()` handler for any step that mutates remote state so tests
+    can clean up after themselves.
 
 ### Environment Variables in Steps
 

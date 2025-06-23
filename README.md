@@ -96,6 +96,11 @@ export default defineStep(StepId.StepName)
   .build();
 ```
 
+Shared interfaces for API operations and HTTP clients live under
+`lib/workflow/types/`, while reusable workflow constants can be found in
+`lib/workflow/constants/`. Import these helpers rather than redefining them in
+individual steps.
+
 ## Testing
 
 ```bash

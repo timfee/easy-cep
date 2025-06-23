@@ -4,6 +4,7 @@ import { EmptyResponseSchema } from "@/lib/workflow/utils";
 import { LogLevel, StepId, Var } from "@/types";
 import { z } from "zod";
 import { defineStep } from "../step-builder";
+import { ServicePrincipalIdSchema } from "../types/api-schemas";
 
 export default defineStep(StepId.SetupMicrosoftProvisioning)
   .requires(
@@ -154,9 +155,7 @@ export default defineStep(StepId.SetupMicrosoftProvisioning)
         return;
       }
 
-      const JobsSchema = z.object({
-        value: z.array(z.object({ id: z.string() }))
-      });
+      const JobsSchema = ServicePrincipalIdSchema;
       const { value } = await microsoft.get(
         ApiEndpoint.Microsoft.SyncJobs(spId),
         JobsSchema,

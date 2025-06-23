@@ -3,7 +3,9 @@ import { isNotFoundError } from "@/lib/workflow/errors";
 import { EmptyResponseSchema } from "@/lib/workflow/utils";
 import { LogLevel, StepId, Var } from "@/types";
 import { z } from "zod";
+import { TIME } from "../constants/workflow-limits";
 import { defineStep } from "../step-builder";
+import { ServicePrincipalIdSchema } from "../types/api-schemas";
 
 export default defineStep(StepId.ConfigureMicrosoftSso)
   .requires(
@@ -92,9 +94,7 @@ export default defineStep(StepId.ConfigureMicrosoftSso)
           });
 
           if (activeCert?.key) {
-            const TenantSchema = z.object({
-              value: z.array(z.object({ id: z.string() }))
-            });
+            const TenantSchema = ServicePrincipalIdSchema;
             const tenantInfo = await microsoft.get(
               ApiEndpoint.Microsoft.Organization,
               TenantSchema
@@ -155,9 +155,7 @@ export default defineStep(StepId.ConfigureMicrosoftSso)
       );
 
       // 2. Get tenant ID for URLs
-      const TenantSchema = z.object({
-        value: z.array(z.object({ id: z.string() }))
-      });
+      const TenantSchema = ServicePrincipalIdSchema;
       const tenantInfo = await microsoft.get(
         ApiEndpoint.Microsoft.Organization,
         TenantSchema
@@ -178,9 +176,7 @@ export default defineStep(StepId.ConfigureMicrosoftSso)
       );
 
       // 4. Get the application object ID (different from appId)
-      const AppFilterSchema = z.object({
-        value: z.array(z.object({ id: z.string() }))
-      });
+      const AppFilterSchema = ServicePrincipalIdSchema;
       const apps = await microsoft.get(
         `${ApiEndpoint.Microsoft.Applications}?$filter=appId eq '${appId}'`,
         AppFilterSchema
@@ -212,9 +208,7 @@ export default defineStep(StepId.ConfigureMicrosoftSso)
         CertSchema,
         {
           displayName: "CN=Google Workspace SSO",
-          endDateTime: new Date(
-            Date.now() + 365 * 24 * 60 * 60 * 1000
-          ).toISOString()
+          endDateTime: new Date(Date.now() + TIME.YEAR).toISOString()
         }
       );
 
