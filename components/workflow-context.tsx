@@ -7,6 +7,7 @@ import {
   prepareStateForPersistence
 } from "@/lib/workflow/schemas/persisted-state";
 import { STEP_DETAILS } from "@/lib/workflow/step-details";
+import { computeEffectiveStatus } from "@/lib/workflow/utils/compute-effective-status";
 import { createVarStore, type BasicVarStore } from "@/lib/workflow/var-store";
 import { WORKFLOW_VARIABLES } from "@/lib/workflow/variables";
 import {
@@ -322,10 +323,23 @@ export function WorkflowProvider({
     }
   }, [vars, status]);
 
+  const effectiveStatus = useMemo(() => {
+    const computed: Partial<Record<StepIdValue, StepUIState>> = {};
+    for (const step of steps) {
+      const currentState = statusRef.current[step.id];
+      const statusValue = computeEffectiveStatus(step, currentState, vars);
+      computed[step.id] = {
+        ...(currentState || { status: "idle", logs: [] }),
+        status: statusValue
+      };
+    }
+    return computed;
+  }, [steps, vars, status]);
+
   const value: WorkflowContextValue = {
     vars: varStore,
     varsRaw: vars,
-    status,
+    status: effectiveStatus,
     executing,
     steps,
     updateVars,
