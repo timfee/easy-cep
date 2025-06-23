@@ -1,12 +1,13 @@
 # Easy CEP Directory Federation Orchestrator
 
-![screenshot](https://github.com/user-attachments/assets/63ee1ced-3095-40e2-bac7-9bb234827586)
-
 Automates the integration between Google Workspace and Microsoft Entra ID (Azure AD) by orchestrating the API calls necessary to create and configure provisioning and SAML operations.
+
+![Sample Screenshot](https://github.com/user-attachments/assets/12941a04-4544-48aa-8f41-d592c58a2dfd)
+
 
 ## What It Does
 
-This application automates the manual process of setting up federation between Google Workspace and Microsoft 365. It executes a series of 10 steps that:
+This application automates the manual process of setting up federation between Google Workspace and Microsoft 365. It executes a series of steps that:
 
 - Create service accounts and organizational units in Google Workspace
 - Configure SAML profiles and SSO assignments
@@ -143,10 +144,3 @@ The application calls these primary endpoints:
 - No credentials persisted to disk
 - Service accounts use generated passwords
 - Protected resources cannot be deleted through the UI
-
-## Scripts
-
-- `scripts/token-info.sh` - Display token information
-- `scripts/cleanup-apps.sh` - Remove applications created in last 10 days
-- `scripts/full-cleanup.ts` - Remove all test resources
-- `scripts/e2e-setup.ts` - Prepare clean test environment
