@@ -19,7 +19,6 @@ export interface StepLogEntry {
 
 export enum LogLevel {
   Info = "info",
-  Warn = "warn",
   Error = "error",
   Debug = "debug"
 }
@@ -48,6 +47,7 @@ export interface StepCheckContext<T> {
   vars: Partial<WorkflowVars>;
   markComplete(data: T): void;
   markIncomplete(summary: string, data: T): void;
+  markStale(message: string): void;
   markCheckFailed(error: string): void;
 }
 
@@ -101,4 +101,8 @@ export interface StepUIState {
     estimatedDuration?: number;
     operationType?: string;
   };
+  isChecking?: boolean;
+  isExecuting?: boolean;
+  isUndoing?: boolean;
+  blockReason?: string;
 }

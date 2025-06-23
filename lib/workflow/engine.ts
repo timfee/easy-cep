@@ -32,6 +32,22 @@ import type { LROMetadata } from "./lro-detector";
 import { getStep } from "./step-registry";
 import { StepStatus } from "./step-status";
 
+function sanitizeVars(vars: Partial<WorkflowVars>): Record<string, unknown> {
+  return Object.fromEntries(
+    Object.entries(vars).map(([key, value]) => {
+      const lower = key.toLowerCase();
+      if (
+        lower.includes("token")
+        || lower.includes("password")
+        || lower.includes("certificate")
+      ) {
+        return [key, "[REDACTED]"];
+      }
+      return [key, value];
+    })
+  );
+}
+
 async function processStep<T extends StepIdValue>(
   stepId: T,
   vars: Partial<WorkflowVars>,
@@ -40,7 +56,7 @@ async function processStep<T extends StepIdValue>(
   const step = getStep(stepId);
 
   let logs: StepLogEntry[] = [];
-  let currentState: StepUIState = { status: StepStatus.Idle, logs };
+  let currentState: StepUIState = { status: StepStatus.Ready, logs };
   let finalVars: Partial<WorkflowVars> = {};
 
   const pushState = (data: Partial<StepUIState>) => {
@@ -66,7 +82,7 @@ async function processStep<T extends StepIdValue>(
     if (entry.level === LogLevel.Error) {
       data = {
         error: data instanceof Error ? inspect(data, { depth: null }) : data,
-        vars: { ...vars }
+        vars: sanitizeVars(vars)
       };
     } else if (data instanceof Error) {
       data = inspect(data, { depth: null });
@@ -102,7 +118,7 @@ async function processStep<T extends StepIdValue>(
   };
 
   // CHECK PHASE
-  pushState({ status: StepStatus.Checking });
+  pushState({ isChecking: true });
 
   // Data carried from check() into execute() or propagated as newVars
   type CheckType =
@@ -127,19 +143,24 @@ async function processStep<T extends StepIdValue>(
       markIncomplete: (summary: string, data: CheckType) => {
         checkData = data;
         isComplete = false;
-        pushState({ status: StepStatus.Idle, summary });
+        pushState({ status: StepStatus.Ready, summary });
+      },
+      markStale: (message: string) => {
+        checkData = {} as CheckType;
+        isComplete = false;
+        pushState({ status: StepStatus.Stale, summary: message });
       },
       markCheckFailed: (error: string) => {
         checkFailed = true;
         pushState({
-          status: StepStatus.Failed,
+          status: StepStatus.Blocked,
           error: `Check failed: ${error}`
         });
       }
     });
   } catch (error) {
     pushState({
-      status: StepStatus.Failed,
+      status: StepStatus.Blocked,
       error:
         "Check error: "
         + (error instanceof Error ? error.message : "Unknown error")
@@ -158,7 +179,7 @@ async function processStep<T extends StepIdValue>(
 
   if (execute) {
     // EXECUTE PHASE
-    pushState({ status: "executing" });
+    pushState({ isExecuting: true });
 
     try {
       await step.execute({
@@ -170,15 +191,15 @@ async function processStep<T extends StepIdValue>(
           pushState({ status: StepStatus.Complete, summary: "Succeeded" });
         },
         markFailed: (error: string) => {
-          pushState({ status: StepStatus.Failed, error });
+          pushState({ status: StepStatus.Blocked, error });
         },
         markPending: (notes: string) => {
-          pushState({ status: StepStatus.Pending, notes });
+          pushState({ status: StepStatus.Ready, notes });
         }
       });
     } catch (error) {
       pushState({
-        status: StepStatus.Failed,
+        status: StepStatus.Blocked,
         error:
           "Execute error: "
           + (error instanceof Error ? error.message : "Unknown error")
@@ -210,7 +231,11 @@ async function processUndoStep<T extends StepIdValue>(
   const step = getStep(stepId);
 
   let logs: StepLogEntry[] = [];
-  let currentState: StepUIState = { status: StepStatus.Undoing, logs };
+  let currentState: StepUIState = {
+    status: StepStatus.Ready,
+    isUndoing: true,
+    logs
+  };
 
   const pushState = (data: Partial<StepUIState>) => {
     currentState = { ...currentState, ...data, logs };
@@ -231,13 +256,21 @@ async function processUndoStep<T extends StepIdValue>(
   };
 
   const addLog = (entry: StepLogEntry) => {
-    logs = [...logs, entry];
+    let data = entry.data;
+    if (entry.level === LogLevel.Error) {
+      data = {
+        error: data instanceof Error ? inspect(data, { depth: null }) : data,
+        vars: sanitizeVars(vars)
+      };
+    }
+    const logEntry = { ...entry, data };
+    logs = [...logs, logEntry];
     if (process.env.NODE_ENV === "development") {
       const prefix = `[${entry.level?.toUpperCase()}] ${new Date(
         entry.timestamp
       ).toISOString()}`;
 
-      console.log(`${prefix}: ${entry.message}`, entry.data ?? "");
+      console.log(`${prefix}: ${entry.message}`, logEntry.data ?? "");
     }
     pushState({});
   };
@@ -263,7 +296,7 @@ async function processUndoStep<T extends StepIdValue>(
   };
 
   if (!step.undo) {
-    pushState({ status: StepStatus.Failed, error: "Undo not implemented" });
+    pushState({ status: StepStatus.Blocked, error: "Undo not implemented" });
     return { state: currentState };
   }
 
@@ -272,15 +305,15 @@ async function processUndoStep<T extends StepIdValue>(
       ...baseContext,
       vars,
       markReverted: () => {
-        pushState({ status: StepStatus.Reverted, summary: "Reverted" });
+        pushState({ status: StepStatus.Complete, summary: "Reverted" });
       },
       markFailed: (error: string) => {
-        pushState({ status: StepStatus.Failed, error });
+        pushState({ status: StepStatus.Blocked, error });
       }
     });
   } catch (error) {
     pushState({
-      status: StepStatus.Failed,
+      status: StepStatus.Blocked,
       error:
         "Undo error: "
         + (error instanceof Error ? error.message : "Unknown error")

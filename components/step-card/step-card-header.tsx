@@ -44,17 +44,19 @@ export function StepCardHeader({
       .join(" ");
   const descriptor =
     executing ? "Executing..."
-    : state?.status === StepStatus.Checking ? "Checking..."
-    : state?.status === StepStatus.Undoing ? "Undoing..."
-    : state?.status === StepStatus.Blocked ? "Waiting for prerequisites"
+    : state?.isChecking ? "Checking..."
+    : state?.isUndoing ? "Undoing..."
+    : state?.status === StepStatus.Blocked ?
+      state.blockReason || "Waiting for prerequisites"
     : state?.status === StepStatus.Ready ? "Ready to execute"
     : state?.summary || "Initializing";
-  const currentState =
-    executing ? StepStatus.Executing : state?.status || StepStatus.Idle;
+  const currentState = state?.status || StepStatus.Ready;
   const config = STEP_STATE_CONFIG[currentState];
 
+  const showSpinner = executing || state?.isChecking || state?.isUndoing;
   const Icon =
-    config.icon ?
+    showSpinner ? Loader2
+    : config.icon ?
       (
         ICONS as Record<string, (props: { className?: string }) => ReactElement>
       )[config.icon]
@@ -75,12 +77,7 @@ export function StepCardHeader({
               config.indicatorClass
             )}>
             {Icon ?
-              <Icon
-                className={cn(
-                  "h-4 w-4",
-                  config.icon === "Loader2" && "animate-spin"
-                )}
-              />
+              <Icon className={cn("h-4 w-4", showSpinner && "animate-spin")} />
             : index + 1}
           </div>
           <div className="flex-1 min-w-0">

@@ -4,7 +4,6 @@ Automates the integration between Google Workspace and Microsoft Entra ID (Azure
 
 ![Sample Screenshot](https://github.com/user-attachments/assets/12941a04-4544-48aa-8f41-d592c58a2dfd)
 
-
 ## What It Does
 
 This application automates the manual process of setting up federation between Google Workspace and Microsoft 365. It executes a series of steps that:

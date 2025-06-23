@@ -57,19 +57,13 @@ const eslintConfig = [
       "workflow/require-var-enum-in-steps": "error",
 
       // 6. Error handling consistency
-      "workflow/use-error-utils": "error"
+      "workflow/use-error-utils": "error",
+      "workflow/no-old-step-status": "error"
     }
   },
   {
     files: ["lib/workflow/engine.ts", "lib/workflow/fetch-utils.ts"],
-    rules: {
-      // Engine-specific rules
-      "workflow/no-duplicate-code-blocks": [
-        "error",
-        { minLines: 20, threshold: 0.8 }
-      ],
-      "workflow/require-token-refresh": "error"
-    }
+    rules: {}
   },
   {
     files: ["**/__tests__/**", "test/**"],
@@ -107,13 +101,7 @@ const eslintConfig = [
       "workflow/import-constants-from-constants": "error",
 
       // 4. Error handling
-      "workflow/use-error-utils": "error",
-
-      // 5. Code quality
-      "workflow/no-duplicate-code-blocks": [
-        "warn",
-        { minLines: 15, threshold: 0.7 }
-      ]
+      "workflow/use-error-utils": "error"
     }
   },
   {

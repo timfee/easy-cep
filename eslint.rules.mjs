@@ -1,4 +1,3 @@
-/* eslint-disable workflow/no-hardcoded-config, workflow/no-duplicate-code-blocks */
 // eslint.rules.mjs
 import { ESLintUtils } from "@typescript-eslint/utils";
 import * as fs from "fs";
@@ -79,6 +78,7 @@ function getConfigVarNames(projectRoot) {
   }
 
   // Return a map of common hardcoded values to their suggested variable
+  /* eslint-disable workflow/no-hardcoded-config */
   return new Map([
     ["Automation", "Var.AutomationOuName"],
     ["/Automation", "Var.AutomationOuPath"],
@@ -89,6 +89,7 @@ function getConfigVarNames(projectRoot) {
     ["Google Workspace SSO", "Var.SsoAppDisplayName"],
     ["Google Workspace Basic Claims", "Var.ClaimsPolicyDisplayName"]
   ]);
+  /* eslint-enable workflow/no-hardcoded-config */
 }
 export const noHardcodedConfig = createRule({
   name: "no-hardcoded-config",
@@ -208,142 +209,6 @@ export const useErrorUtils = createRule({
                 }
               }
             }
-          }
-        }
-      }
-    };
-  }
-});
-
-export const noDuplicateCodeBlocks = createRule({
-  name: "no-duplicate-code-blocks",
-  meta: {
-    type: "suggestion",
-    docs: {
-      description:
-        "Detect duplicate code blocks that should be extracted to utilities"
-    },
-    messages: {
-      duplicateCode:
-        "This code block appears to be duplicated. Consider extracting to a shared utility."
-    },
-    schema: [
-      {
-        type: "object",
-        properties: {
-          minLines: { type: "number" },
-          threshold: { type: "number" }
-        }
-      }
-    ]
-  },
-  defaultOptions: [{ minLines: 10, threshold: 0.8 }],
-  create(context) {
-    const sourceCode = context.getSourceCode();
-    const functionBodies = [];
-
-    return {
-      FunctionExpression(node) {
-        if (node.body.type === "BlockStatement") {
-          functionBodies.push(node.body);
-        }
-      },
-      ArrowFunctionExpression(node) {
-        if (node.body.type === "BlockStatement") {
-          functionBodies.push(node.body);
-        }
-      },
-      "Program:exit"() {
-        // Compare function bodies for similarity
-        for (let i = 0; i < functionBodies.length; i++) {
-          for (let j = i + 1; j < functionBodies.length; j++) {
-            const body1 = sourceCode.getText(functionBodies[i]);
-            const body2 = sourceCode.getText(functionBodies[j]);
-
-            // Skip small functions
-            const lines1 = body1.split("\n").length;
-            if (lines1 < context.options[0].minLines) continue;
-
-            // Very basic similarity check - in production you'd want something more sophisticated
-            if (body1.length > 500 && body2.length > 500) {
-              const similarity = calculateSimilarity(body1, body2);
-              if (similarity > context.options[0].threshold) {
-                context.report({
-                  node: functionBodies[j],
-                  messageId: "duplicateCode"
-                });
-              }
-            }
-          }
-        }
-      }
-    };
-  }
-});
-
-// Simple similarity calculation (Jaccard similarity on tokens)
-function calculateSimilarity(str1, str2) {
-  const tokens1 = new Set(str1.match(/\b\w+\b/g) || []);
-  const tokens2 = new Set(str2.match(/\b\w+\b/g) || []);
-
-  const intersection = new Set([...tokens1].filter((x) => tokens2.has(x)));
-  const union = new Set([...tokens1, ...tokens2]);
-
-  return intersection.size / union.size;
-}
-
-export const requireTokenRefresh = createRule({
-  name: "require-token-refresh",
-  meta: {
-    type: "problem",
-    docs: {
-      description:
-        "Ensure token refresh logic is implemented where tokens are used"
-    },
-    messages: {
-      missingRefreshCheck:
-        "Token usage should check expiration and refresh if needed"
-    },
-    schema: []
-  },
-  defaultOptions: [],
-  create(context) {
-    return {
-      MemberExpression(node) {
-        // Look for vars[Var.GoogleAccessToken] or vars[Var.MsGraphToken]
-        if (
-          node.object.type === "Identifier"
-          && node.object.name === "vars"
-          && node.property.type === "MemberExpression"
-          && node.property.object.type === "Identifier"
-          && node.property.object.name === "Var"
-          && node.property.property.type === "Identifier"
-          && (node.property.property.name === "GoogleAccessToken"
-            || node.property.property.name === "MsGraphToken")
-        ) {
-          // Check if this is inside a function that has refresh logic
-          let currentScope = node;
-          let hasRefreshCheck = false;
-
-          while (currentScope.parent) {
-            currentScope = currentScope.parent;
-            if (
-              currentScope.type === "FunctionDeclaration"
-              || currentScope.type === "ArrowFunctionExpression"
-            ) {
-              const funcBody = context.getSourceCode().getText(currentScope);
-              if (
-                funcBody.includes("refreshTokenIfNeeded")
-                || funcBody.includes("expiresAt")
-              ) {
-                hasRefreshCheck = true;
-                break;
-              }
-            }
-          }
-
-          if (!hasRefreshCheck) {
-            context.report({ node, messageId: "missingRefreshCheck" });
           }
         }
       }
@@ -1155,6 +1020,44 @@ export const noProcessEnv = createRule({
   }
 });
 
+export const noOldStepStatus = createRule({
+  name: "no-old-step-status",
+  meta: {
+    type: "problem",
+    docs: { description: "Disallow deprecated StepStatus values" },
+    messages: { oldStatus: "Deprecated StepStatus '{{status}}'" },
+    schema: []
+  },
+  defaultOptions: [],
+  create(context) {
+    const deprecated = new Set([
+      "Idle",
+      "Checking",
+      "Failed",
+      "Pending",
+      "Undoing",
+      "Reverted",
+      "Executing"
+    ]);
+    return {
+      MemberExpression(node) {
+        if (
+          node.object.type === "Identifier"
+          && node.object.name === "StepStatus"
+          && node.property.type === "Identifier"
+          && deprecated.has(node.property.name)
+        ) {
+          context.report({
+            node: node.property,
+            messageId: "oldStatus",
+            data: { status: node.property.name }
+          });
+        }
+      }
+    };
+  }
+});
+
 export const rules = {
   "check-data-type-required": checkDataTypeRequired,
   "import-constants-from-constants": importConstantsFromConstants,
@@ -1176,8 +1079,7 @@ export const rules = {
   // New rules
   "no-hardcoded-config": noHardcodedConfig,
   "use-error-utils": useErrorUtils,
-  "no-duplicate-code-blocks": noDuplicateCodeBlocks,
-  "require-token-refresh": requireTokenRefresh,
+  "no-old-step-status": noOldStepStatus,
   "require-var-enum-in-steps": requireVarEnumInSteps
 };
 

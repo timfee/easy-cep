@@ -1,14 +1,9 @@
 "use client";
-/* eslint-disable workflow/no-duplicate-code-blocks */
 
+import { computeEffectiveStatus } from "@/lib/workflow/core/status";
 import { checkStep, runStep, undoStep } from "@/lib/workflow/engine";
-import {
-  parsePersistedState,
-  prepareStateForPersistence
-} from "@/lib/workflow/schemas/persisted-state";
 import { STEP_DETAILS } from "@/lib/workflow/step-details";
 import { StepStatus } from "@/lib/workflow/step-status";
-import { computeEffectiveStatus } from "@/lib/workflow/utils/compute-effective-status";
 import { createVarStore, type BasicVarStore } from "@/lib/workflow/var-store";
 import { WORKFLOW_VARIABLES } from "@/lib/workflow/variables";
 import {
@@ -27,17 +22,6 @@ import {
   useRef,
   useState
 } from "react";
-
-export function filterEphemeralVars(
-  vars: Partial<WorkflowVars>
-): Partial<WorkflowVars> {
-  return Object.entries(vars).reduce((acc, [key, value]) => {
-    if (!WORKFLOW_VARIABLES[key as VarName]?.ephemeral) {
-      acc[key as VarName] = value;
-    }
-    return acc;
-  }, {} as Partial<WorkflowVars>);
-}
 
 interface VarStore extends BasicVarStore {
   set(updates: Partial<WorkflowVars>): void;
@@ -80,29 +64,6 @@ export function WorkflowProvider({
   steps,
   initialVars = {}
 }: WorkflowProviderProps) {
-  const loadStoredState = useCallback(() => {
-    if (typeof window === "undefined") return null;
-    try {
-      const raw = localStorage.getItem("workflowState");
-      if (!raw) return null;
-
-      const parsed = JSON.parse(raw);
-      const validated = parsePersistedState(parsed);
-
-      if (!validated) {
-        localStorage.removeItem("workflowState");
-        console.warn("Cleared corrupted workflow state from localStorage");
-        return null;
-      }
-
-      return validated;
-    } catch (error) {
-      console.error("Failed to load workflow state:", error);
-      localStorage.removeItem("workflowState");
-      return null;
-    }
-  }, []);
-
   const [vars, setVarsState] = useState<Partial<WorkflowVars>>(() => ({
     ...initialVars
   }));
@@ -118,20 +79,9 @@ export function WorkflowProvider({
     new Map()
   );
 
-  // Load stored workflow state on mount
   useEffect(() => {
-    const stored = loadStoredState();
-    if (stored) {
-      if (stored.vars) {
-        setVarsState((prev) => ({ ...prev, ...stored.vars }));
-      }
-      if (stored.status) {
-        setStatus(stored.status);
-        statusRef.current = stored.status;
-      }
-    }
     setSessionLoaded(true);
-  }, [loadStoredState]);
+  }, []);
 
   const updateVars = useCallback(
     (newVars: Partial<WorkflowVars>) => {
@@ -221,20 +171,20 @@ export function WorkflowProvider({
           const producer = meta?.producedBy;
           const producerName =
             producer ? STEP_DETAILS[producer]?.title || producer : null;
-          if (meta?.ephemeral && producerName) {
-            return `${key} (from \"${producerName}\" – rerun this step)`;
-          }
           return producerName ? `${key} (from \"${producerName}\")` : key;
         });
         updateStep(id, {
-          status: StepStatus.Failed,
+          status: StepStatus.Blocked,
           error: `Missing required vars: ${messages.join(", ")}`
         });
         return;
       }
 
       setExecuting(id);
-      updateStep(id, { status: StepStatus.Executing });
+      updateStep(id, {
+        status: statusRef.current[id]?.status ?? StepStatus.Ready,
+        isExecuting: true
+      });
 
       try {
         const result = await runStep(id, vars);
@@ -243,7 +193,7 @@ export function WorkflowProvider({
       } catch (error) {
         console.error("Failed to run step:", error);
         updateStep(id, {
-          status: StepStatus.Failed,
+          status: StepStatus.Blocked,
           error:
             error instanceof Error ? error.message : "Unknown error occurred"
         });
@@ -259,13 +209,16 @@ export function WorkflowProvider({
       const step = steps.find((workflowStep) => workflowStep.id === id);
       if (!step) return;
 
-      updateStep(id, { status: StepStatus.Undoing });
+      updateStep(id, {
+        status: statusRef.current[id]?.status ?? StepStatus.Ready,
+        isUndoing: true
+      });
 
       try {
         const result = await undoStep(id, vars);
         updateStep(id, result.state);
 
-        if (result.state.status === "reverted") {
+        if (result.state.status === StepStatus.Complete) {
           // Clear provided vars
           const clearedVars = Object.fromEntries(
             Object.entries(vars).filter(
@@ -274,12 +227,12 @@ export function WorkflowProvider({
           ) as Partial<WorkflowVars>;
           setVarsState(clearedVars);
           checkedSteps.current.delete(id);
-          updateStep(id, { status: StepStatus.Idle });
+          updateStep(id, { status: StepStatus.Ready });
         }
       } catch (error) {
         console.error("Failed to undo step:", error);
         updateStep(id, {
-          status: StepStatus.Failed,
+          status: StepStatus.Blocked,
           error: error instanceof Error ? error.message : "Failed to undo step"
         });
       }
@@ -299,7 +252,10 @@ export function WorkflowProvider({
       if (step.requires.some((varName) => !vars[varName])) continue;
 
       checkedSteps.current.add(step.id);
-      updateStep(step.id, { status: StepStatus.Checking });
+      updateStep(step.id, {
+        status: statusRef.current[step.id]?.status ?? StepStatus.Ready,
+        isChecking: true
+      });
 
       const result = await checkStep(step.id, vars);
       updateStep(step.id, result.state);
@@ -320,25 +276,20 @@ export function WorkflowProvider({
     return () => clearTimeout(timeoutId);
   }, [vars]);
 
-  useEffect(() => {
-    if (typeof window !== "undefined") {
-      try {
-        const stateJson = prepareStateForPersistence(vars, statusRef.current);
-        localStorage.setItem("workflowState", stateJson);
-      } catch (error) {
-        console.error("Failed to save workflow state:", error);
-      }
-    }
-  }, [vars, status]);
-
   const effectiveStatus = useMemo(() => {
     const computed: Partial<Record<StepIdValue, StepUIState>> = {};
     for (const step of steps) {
       const currentState = statusRef.current[step.id];
-      const statusValue = computeEffectiveStatus(step, currentState, vars);
+      const info = computeEffectiveStatus(
+        step,
+        currentState,
+        vars,
+        statusRef.current
+      );
       computed[step.id] = {
-        ...(currentState || { status: StepStatus.Idle, logs: [] }),
-        status: statusValue
+        ...(currentState || { status: StepStatus.Ready, logs: [] }),
+        status: info.status,
+        blockReason: info.blockReason
       };
     }
     return computed;

@@ -2,7 +2,7 @@ import {
   buildResourceName,
   extractResourceId,
   ResourceTypes
-} from "@/lib/workflow/utils/resource-ids";
+} from "@/lib/workflow/core/http";
 
 describe("Resource ID utilities", () => {
   describe("extractResourceId", () => {

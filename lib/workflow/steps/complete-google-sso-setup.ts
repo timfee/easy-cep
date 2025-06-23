@@ -1,4 +1,4 @@
-import { isNotFoundError } from "@/lib/workflow/errors";
+import { isNotFoundError } from "@/lib/workflow/core/errors";
 import { LogLevel, StepId, Var } from "@/types";
 import { defineStep } from "../step-builder";
 
@@ -170,7 +170,7 @@ export default defineStep(StepId.CompleteGoogleSsoSetup)
             log(LogLevel.Info, `Deleted certificate ${credId}`);
           }
         } catch (error) {
-          log(LogLevel.Warn, `Failed to delete certificate`, { error });
+          log(LogLevel.Info, `Failed to delete certificate`, { error });
         }
       }
 

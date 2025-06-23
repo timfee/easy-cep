@@ -9,12 +9,6 @@ export interface VariableMetadata {
   consumedBy?: StepIdValue[];
   configurable?: boolean;
   sensitive?: boolean;
-  /**
-   * Whether the value only exists for the current session and cannot be
-   * recovered from remote systems. Ephemeral variables should be surfaced to
-   * users so they know a previous step must be repeated if the data is lost.
-   */
-  ephemeral?: boolean;
 }
 
 export const WORKFLOW_VARIABLES: Record<string, VariableMetadata> = {
@@ -69,8 +63,7 @@ export const WORKFLOW_VARIABLES: Record<string, VariableMetadata> = {
     type: "string",
     category: "domain",
     description: "DNS verification token",
-    producedBy: StepId.VerifyPrimaryDomain,
-    ephemeral: true
+    producedBy: StepId.VerifyPrimaryDomain
   },
   automationOuName: {
     type: "string",

@@ -1,4 +1,4 @@
-import { isNotFoundError } from "@/lib/workflow/errors";
+import { isNotFoundError } from "@/lib/workflow/core/errors";
 import { LogLevel, StepId, Var } from "@/types";
 import { TIME } from "../constants/workflow-limits";
 import { defineStep } from "../step-builder";
@@ -34,6 +34,7 @@ export default defineStep(StepId.ConfigureMicrosoftSso)
       microsoft,
       markComplete,
       markIncomplete,
+      markStale,
       markCheckFailed,
       log
     }) => {
@@ -84,7 +85,17 @@ export default defineStep(StepId.ConfigureMicrosoftSso)
             });
           } else {
             log(LogLevel.Info, "SSO configured but certificate missing");
-            markIncomplete("SSO configured but certificate missing", {});
+            if (
+              vars.get(Var.MsSigningCertificate)
+              && vars.get(Var.MsSsoLoginUrl)
+              && vars.get(Var.MsSsoEntityId)
+            ) {
+              markIncomplete("SSO configured but certificate missing", {});
+            } else {
+              markStale(
+                "SSO configured but certificate lost. Re-run to regenerate."
+              );
+            }
           }
         } else {
           log(LogLevel.Info, "Microsoft SSO not configured");
@@ -230,7 +241,7 @@ export default defineStep(StepId.ConfigureMicrosoftSso)
           await op.rollback();
           log(LogLevel.Info, `Rolled back: ${op.description}`);
         } catch (rollbackError) {
-          log(LogLevel.Warn, `Failed to rollback: ${op.description}`, {
+          log(LogLevel.Info, `Failed to rollback: ${op.description}`, {
             rollbackError
           });
         }
@@ -256,7 +267,7 @@ export default defineStep(StepId.ConfigureMicrosoftSso)
           .update(spId)
           .patch({ preferredSingleSignOnMode: null });
       } catch (error) {
-        log(LogLevel.Warn, "Failed to reset SSO mode", { error });
+        log(LogLevel.Info, "Failed to reset SSO mode", { error });
       }
 
       // Remove signing certificates
@@ -273,7 +284,7 @@ export default defineStep(StepId.ConfigureMicrosoftSso)
             .delete();
         }
       } catch (error) {
-        log(LogLevel.Warn, "Failed to remove certificates", { error });
+        log(LogLevel.Info, "Failed to remove certificates", { error });
       }
 
       markReverted();

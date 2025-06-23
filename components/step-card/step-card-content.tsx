@@ -18,11 +18,6 @@ import {
   CollapsibleContent,
   CollapsibleTrigger
 } from "@/components/ui/collapsible";
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipTrigger
-} from "@/components/ui/tooltip";
 import { cn } from "@/lib/utils";
 import { STEP_DETAILS } from "@/lib/workflow/step-details";
 import { WORKFLOW_VARIABLES } from "@/lib/workflow/variables";
@@ -66,22 +61,16 @@ export function StepCardContent({ definition, state, vars, executing }: Props) {
   const detail = STEP_DETAILS[definition.id];
   const InfoBtn = INFO_BTN[definition.id];
   useEffect(() => {
-    if (executing || state?.status === "pending") setLogsOpen(true);
-  }, [executing, state?.status]);
+    if (executing) setLogsOpen(true);
+  }, [executing]);
 
   const missingAll = definition.requires.filter((v) => vars[v] === undefined);
-  const missingTransient = missingAll.filter(
-    (v) => WORKFLOW_VARIABLES[v]?.ephemeral
-  );
   const canExecute = missingAll.length === 0;
   const missingMessages = missingAll.map((v) => {
     const meta = WORKFLOW_VARIABLES[v];
     const producer = meta?.producedBy;
     const producerName =
       producer ? STEP_DETAILS[producer]?.title || producer : null;
-    if (meta?.ephemeral && producerName) {
-      return `${v} (from "${producerName}" – rerun this step)`;
-    }
     return producerName ? `${v} (from "${producerName}")` : v;
   });
   const canUndo = state?.status === "complete";
@@ -104,46 +93,21 @@ export function StepCardContent({ definition, state, vars, executing }: Props) {
       <div className="flex items-start justify-between my-6 px-6">
         <div>
           <div className="flex items-center gap-2">
-            {missingTransient.length > 0 ?
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <Button
-                    size="sm"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      actions.onExecute(definition.id);
-                    }}
-                    disabled>
-                    <Play className="h-3.5 w-3.5" /> Execute
-                  </Button>
-                </TooltipTrigger>
-                <TooltipContent side="top">{`Requires transient data from ${missingTransient
-                  .map((v) => {
-                    const p = WORKFLOW_VARIABLES[v]?.producedBy;
-                    return p ? STEP_DETAILS[p]?.title || p : v;
-                  })
-                  .join(
-                    ", "
-                  )}. Re-run the producing step first.`}</TooltipContent>
-              </Tooltip>
-            : <Button
-                size="sm"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  actions.onExecute(definition.id);
-                }}
-                disabled={
-                  !canExecute || executing || state?.status === "complete"
-                }>
-                <Play className="h-3.5 w-3.5" /> Execute
-              </Button>
-            }
+            <Button
+              size="sm"
+              onClick={(e) => {
+                e.stopPropagation();
+                actions.onExecute(definition.id);
+              }}
+              disabled={
+                !canExecute || executing || state?.status === "complete"
+              }>
+              <Play className="h-3.5 w-3.5" /> Execute
+            </Button>
             {InfoBtn && <InfoBtn />}
           </div>
-          {!canExecute && (
-            <p className="text-xs text-destructive mt-2">
-              {`Missing required input${missingMessages.length > 1 ? "s" : ""}: ${missingMessages.join(", ")}`}
-            </p>
+          {!canExecute && state?.blockReason && (
+            <p className="text-xs text-destructive mt-2">{state.blockReason}</p>
           )}
         </div>
         <div className="flex items-center gap-2">

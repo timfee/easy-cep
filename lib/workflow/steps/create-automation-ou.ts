@@ -1,5 +1,4 @@
-import { isConflictError, isNotFoundError } from "@/lib/workflow/errors";
-import { safeDelete } from "@/lib/workflow/utils";
+import { isConflictError, isNotFoundError } from "@/lib/workflow/core/errors";
 
 import { LogLevel, StepId, Var } from "@/types";
 import { defineStep } from "../step-builder";
@@ -54,7 +53,7 @@ export default defineStep(StepId.CreateAutomationOU)
         }
       } catch (error) {
         if (isNotFoundError(error)) {
-          log(LogLevel.Info, "Automation OU missing");
+          log(LogLevel.Debug, "Automation OU missing");
           markIncomplete("Automation OU missing", {});
         } else {
           log(LogLevel.Error, "Failed to check OU", { error });
@@ -110,11 +109,18 @@ export default defineStep(StepId.CreateAutomationOU)
         return;
       }
 
-      await safeDelete(
-        () => google.orgUnits.delete(path).delete(),
-        log,
-        "Organizational Unit"
-      );
+      try {
+        await google.orgUnits.delete(path).delete();
+      } catch (error) {
+        if (isNotFoundError(error)) {
+          log(
+            LogLevel.Info,
+            "Organizational Unit already deleted or not found"
+          );
+        } else {
+          throw error;
+        }
+      }
       markReverted();
     } catch (error) {
       log(LogLevel.Error, "Failed to delete OU", { error });
