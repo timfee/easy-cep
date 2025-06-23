@@ -6,6 +6,7 @@ import {
   WORKFLOW_CONSTANTS
 } from "@/constants";
 import { env } from "@/env";
+import { TIME } from "@/lib/workflow/constants/workflow-limits";
 import {
   createCipheriv,
   createDecipheriv,
@@ -122,8 +123,6 @@ const microsoftOAuthConfig: OAuthConfig = {
   ]
 };
 
-const MS_IN_SECOND = 1000;
-
 function getOAuthConfig(provider: Provider): OAuthConfig {
   return provider === PROVIDERS.GOOGLE ?
       googleOAuthConfig
@@ -193,7 +192,7 @@ export async function exchangeCodeForToken(
   return {
     accessToken: data.access_token,
     refreshToken: data.refresh_token,
-    expiresAt: Date.now() + data.expires_in * MS_IN_SECOND,
+    expiresAt: Date.now() + data.expires_in * TIME.MS_IN_SECOND,
     scope: data.scope?.split(" ") || config.scopes
   };
 }
@@ -251,7 +250,7 @@ export async function refreshTokenIfNeeded(
     const newToken: Token = {
       accessToken: data.access_token,
       refreshToken: data.refresh_token || token.refreshToken,
-      expiresAt: Date.now() + data.expires_in * MS_IN_SECOND,
+      expiresAt: Date.now() + data.expires_in * TIME.MS_IN_SECOND,
       scope: data.scope?.split(" ") || token.scope
     };
 

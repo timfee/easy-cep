@@ -1,5 +1,7 @@
+import { StepStatus } from "./step-status";
+
 export const STEP_STATE_CONFIG = {
-  idle: {
+  [StepStatus.Idle]: {
     badge: {
       variant: "outline" as const,
       className: "bg-slate-100 text-slate-600 border-slate-200"
@@ -8,7 +10,7 @@ export const STEP_STATE_CONFIG = {
     indicatorClass: "bg-slate-600 text-white",
     borderClass: "border-slate-200 hover:border-slate-300"
   },
-  ready: {
+  [StepStatus.Ready]: {
     badge: {
       variant: "outline" as const,
       className: "bg-green-50 text-green-700 border-green-200"
@@ -17,7 +19,7 @@ export const STEP_STATE_CONFIG = {
     indicatorClass: "bg-green-600 text-white",
     borderClass: "border-green-200 hover:border-green-300"
   },
-  blocked: {
+  [StepStatus.Blocked]: {
     badge: {
       variant: "outline" as const,
       className: "bg-gray-50 text-gray-500 border-gray-200"
@@ -26,7 +28,7 @@ export const STEP_STATE_CONFIG = {
     indicatorClass: "bg-gray-400 text-white",
     borderClass: "border-gray-200"
   },
-  checking: {
+  [StepStatus.Checking]: {
     badge: {
       variant: "default" as const,
       className: "bg-chart-1/10 text-chart-1 border-chart-1/20"
@@ -35,7 +37,7 @@ export const STEP_STATE_CONFIG = {
     indicatorClass: "bg-chart-1 text-white animate-breathing",
     borderClass: "border-chart-1/30"
   },
-  executing: {
+  [StepStatus.Executing]: {
     badge: {
       variant: "default" as const,
       className: "bg-chart-1/10 text-chart-1 border-chart-1/20"
@@ -44,7 +46,7 @@ export const STEP_STATE_CONFIG = {
     indicatorClass: "bg-chart-1 text-white animate-breathing",
     borderClass: "border-chart-1 ring-1 ring-chart-1/30"
   },
-  complete: {
+  [StepStatus.Complete]: {
     badge: {
       variant: "default" as const,
       className: "bg-primary/10 text-primary border-primary/20"
@@ -53,7 +55,7 @@ export const STEP_STATE_CONFIG = {
     indicatorClass: "bg-primary text-white",
     borderClass: "border-primary/20"
   },
-  failed: {
+  [StepStatus.Failed]: {
     badge: {
       variant: "destructive" as const,
       className: "bg-destructive/10 text-destructive border-destructive/20"
@@ -62,7 +64,7 @@ export const STEP_STATE_CONFIG = {
     indicatorClass: "bg-destructive text-white",
     borderClass: "border-destructive"
   },
-  pending: {
+  [StepStatus.Pending]: {
     badge: {
       variant: "default" as const,
       className: "bg-chart-1/10 text-chart-1 border-chart-1/20"
@@ -71,7 +73,7 @@ export const STEP_STATE_CONFIG = {
     indicatorClass: "bg-chart-1 text-white",
     borderClass: "border-chart-1"
   },
-  undoing: {
+  [StepStatus.Undoing]: {
     badge: {
       variant: "default" as const,
       className: "bg-chart-1/10 text-chart-1 border-chart-1/20"
@@ -80,7 +82,7 @@ export const STEP_STATE_CONFIG = {
     indicatorClass: "bg-chart-1 text-white animate-breathing",
     borderClass: "border-chart-1 ring-1 ring-chart-1/30"
   },
-  reverted: {
+  [StepStatus.Reverted]: {
     badge: {
       variant: "outline" as const,
       className: "bg-slate-100 text-slate-700 border-slate-200"

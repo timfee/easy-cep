@@ -9,6 +9,7 @@ import {
 } from "@/types";
 import { z } from "zod";
 import { createStep } from "./create-step";
+import { HttpMethod } from "./http-constants";
 import type { HttpClient } from "./types/http-client";
 import { createVarStore, type BasicVarStore } from "./var-store";
 
@@ -147,31 +148,31 @@ function createHttpClient(
 ): HttpClient {
   return {
     get: (url, schema, options) =>
-      fetchFn(url, schema, { method: "GET", ...options }),
+      fetchFn(url, schema, { method: HttpMethod.GET, ...options }),
 
     post: (url, schema, body, options) =>
       fetchFn(url, schema, {
-        method: "POST",
+        method: HttpMethod.POST,
         body: body ? JSON.stringify(body) : undefined,
         ...options
       }),
 
     put: (url, schema, body, options) =>
       fetchFn(url, schema, {
-        method: "PUT",
+        method: HttpMethod.PUT,
         body: body ? JSON.stringify(body) : undefined,
         ...options
       }),
 
     patch: (url, schema, body, options) =>
       fetchFn(url, schema, {
-        method: "PATCH",
+        method: HttpMethod.PATCH,
         body: body ? JSON.stringify(body) : undefined,
         ...options
       }),
 
     delete: (url, schema, options) =>
-      fetchFn(url, schema, { method: "DELETE", ...options })
+      fetchFn(url, schema, { method: HttpMethod.DELETE, ...options })
   };
 }
 

@@ -6,6 +6,7 @@ import {
   NotFoundError,
   PreconditionFailedError
 } from "./errors";
+import { HttpMethod, HttpStatus } from "./http-constants";
 import { detectLRO, type LROMetadata } from "./lro-detector";
 
 export type FetchOpts = RequestInit & { flatten?: boolean | string };
@@ -29,7 +30,7 @@ export function createAuthenticatedFetch(
     const { flatten, ...reqInit } = (init as FetchOpts) ?? {};
 
     const fetchPage = async (pageUrl: string): Promise<T> => {
-      const method = reqInit.method ?? "GET";
+      const method = reqInit.method ?? HttpMethod.GET;
       const body = reqInit.body;
       let parsedBody: unknown;
       if (body) {
@@ -118,11 +119,11 @@ export function createAuthenticatedFetch(
         }
 
         switch (res.status) {
-          case 404:
+          case HttpStatus.NotFound:
             throw new NotFoundError(detail, body);
-          case 409:
+          case HttpStatus.Conflict:
             throw new ConflictError(detail, body);
-          case 412:
+          case HttpStatus.PreconditionFailed:
             throw new PreconditionFailedError(detail, body);
           default:
             throw new HttpError(res.status, detail, body);

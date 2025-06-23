@@ -1,6 +1,7 @@
 import { WORKFLOW_VARIABLES } from "@/lib/workflow/variables";
 import { Var } from "@/types";
 import { z } from "zod";
+import { StepStatus } from "../step-status";
 
 // Create a union of all valid Var values
 const VarSchema = z.enum([
@@ -34,16 +35,7 @@ const VarSchema = z.enum([
   Var.MsSsoEntityId
 ] as const);
 
-const StepStatusSchema = z.enum([
-  "idle",
-  "checking",
-  "executing",
-  "complete",
-  "failed",
-  "pending",
-  "undoing",
-  "reverted"
-]);
+const StepStatusSchema = z.nativeEnum(StepStatus);
 
 const StepUIStateSchema = z.object({
   status: StepStatusSchema,
