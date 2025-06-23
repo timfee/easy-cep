@@ -13,7 +13,7 @@ export function logUncaughtError(
     (acc, [key, value]) => {
       if (
         key.toLowerCase().includes("token")
-        || key.toLowerCase().includes("password")
+        || key.toLowerCase().includes("certificate")
       ) {
         acc[key] = "[REDACTED]";
       } else {
