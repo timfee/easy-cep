@@ -289,9 +289,10 @@ export function WorkflowProvider({
 
   const checkSteps = useCallback(async () => {
     for (const step of steps) {
+      const current = status[step.id];
       if (
         checkedSteps.current.has(step.id)
-        || status[step.id]?.status === StepStatus.Complete
+        || (current?.status === StepStatus.Complete && current.logs?.length)
       ) {
         continue;
       }
