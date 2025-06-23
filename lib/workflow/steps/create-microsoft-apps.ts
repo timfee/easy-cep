@@ -115,9 +115,11 @@ export default defineStep(StepId.CreateMicrosoftApps)
               ssoAppId: ssoApp.appId
             });
           } else {
+            log(LogLevel.Info, "Microsoft service principals not found");
             markIncomplete("Microsoft service principals not found", {});
           }
         } else {
+          log(LogLevel.Info, "Microsoft apps not found");
           markIncomplete("Microsoft apps not found", {});
         }
       } catch (error) {

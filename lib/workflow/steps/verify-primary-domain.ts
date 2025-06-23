@@ -97,18 +97,21 @@ export default defineStep(StepId.VerifyPrimaryDomain)
             );
             // Extract: verificationToken = verificationData.token
 
+            log(LogLevel.Info, "Domain verification pending");
             markIncomplete("Domain verification pending", {
               isDomainVerified: "false",
               primaryDomain: primary.domainName,
               verificationToken: verificationData.token
             });
           } catch {
+            log(LogLevel.Info, "Domain not verified");
             markIncomplete("Domain not verified", {
               isDomainVerified: "false",
               primaryDomain: primary.domainName
             });
           }
         } else {
+          log(LogLevel.Info, "No primary domain found");
           markIncomplete("No primary domain found", {
             isDomainVerified: "false"
           });

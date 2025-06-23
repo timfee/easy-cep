@@ -117,6 +117,7 @@ export default defineStep(StepId.CreateAdminRoleAndAssignUser)
             });
           }
         } else {
+          log(LogLevel.Info, "Custom admin role missing");
           markIncomplete("Custom admin role missing", {});
         }
       } catch (error) {

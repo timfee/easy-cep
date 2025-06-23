@@ -53,6 +53,7 @@ export default defineStep(StepId.SetupMicrosoftClaimsPolicy)
           log(LogLevel.Info, "Claims policy already assigned");
           markComplete({ claimsPolicyId: value[0].id });
         } else {
+          log(LogLevel.Info, "Claims policy not assigned");
           markIncomplete("Claims policy not assigned", {});
         }
       } catch (error) {

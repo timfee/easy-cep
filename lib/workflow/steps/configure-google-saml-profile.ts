@@ -71,6 +71,7 @@ export default defineStep(StepId.ConfigureGoogleSamlProfile)
             acsUrl: profile.spConfig.assertionConsumerServiceUri
           });
         } else {
+          log(LogLevel.Info, "SAML profile missing");
           markIncomplete("SAML profile missing", {});
         }
       } catch (error) {
