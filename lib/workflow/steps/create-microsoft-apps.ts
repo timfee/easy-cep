@@ -1,9 +1,7 @@
-import { ApiEndpoint, TemplateId } from "@/constants";
-import { EmptyResponseSchema, safeDelete } from "@/lib/workflow/utils";
+import { TemplateId } from "@/constants";
+import { safeDelete } from "@/lib/workflow/utils";
 import { LogLevel, StepId, Var } from "@/types";
-import { z } from "zod";
 import { defineStep } from "../step-builder";
-import { ServicePrincipalIdSchema } from "../types/api-schemas";
 
 export default defineStep(StepId.CreateMicrosoftApps)
   .requires(
@@ -40,16 +38,6 @@ export default defineStep(StepId.CreateMicrosoftApps)
       log
     }) => {
       try {
-        const AppsSchema = z.object({
-          value: z.array(
-            z.object({
-              id: z.string(),
-              appId: z.string(),
-              displayName: z.string()
-            })
-          )
-        });
-
         const provFilter = encodeURIComponent(
           `applicationTemplateId eq '${TemplateId.GoogleWorkspaceConnector}'`
         );
@@ -57,32 +45,27 @@ export default defineStep(StepId.CreateMicrosoftApps)
           `applicationTemplateId eq '${TemplateId.GoogleWorkspaceConnector}'`
         );
 
-        const { value: provApps } = await microsoft.get(
-          `${ApiEndpoint.Microsoft.Applications}?$filter=${provFilter}`,
-          AppsSchema,
-          { flatten: "value" }
-        );
+        const { value: provApps } = await microsoft.applications
+          .list()
+          .query({ $filter: provFilter })
+          .get();
         // Extract: provisioning app info from provApps[0]
 
-        const { value: ssoApps } = await microsoft.get(
-          `${ApiEndpoint.Microsoft.Applications}?$filter=${ssoFilter}`,
-          AppsSchema,
-          { flatten: "value" }
-        );
+        const { value: ssoApps } = await microsoft.applications
+          .list()
+          .query({ $filter: ssoFilter })
+          .get();
         // Extract: ssoAppId = ssoApps[0]?.appId
-
-        const SpSchema = ServicePrincipalIdSchema;
 
         async function findAppWithSp(
           apps: Array<{ id: string; appId: string }>
         ) {
           for (const app of apps) {
             const filter = encodeURIComponent(`appId eq '${app.appId}'`);
-            const { value } = await microsoft.get(
-              `${ApiEndpoint.Microsoft.ServicePrincipals}?$filter=${filter}`,
-              SpSchema,
-              { flatten: "value" }
-            );
+            const { value } = await microsoft.servicePrincipals
+              .list()
+              .query({ $filter: filter })
+              .get();
             const spId = value[0]?.id;
             if (spId) return { app, spId };
           }
@@ -137,29 +120,20 @@ export default defineStep(StepId.CreateMicrosoftApps)
     let ssoAppId: string | undefined;
 
     try {
-      const CreateSchema = z.object({
-        servicePrincipal: z.object({ id: z.string() }),
-        application: z.object({ id: z.string(), appId: z.string() })
-      });
-
       // Create provisioning app
       log(LogLevel.Info, "Creating provisioning app");
-      const res1 = await microsoft.post(
-        ApiEndpoint.Microsoft.Templates(TemplateId.GoogleWorkspaceConnector),
-        CreateSchema,
-        { displayName: vars.require(Var.ProvisioningAppDisplayName) }
-      );
+      const res1 = await microsoft.applications
+        .instantiate(TemplateId.GoogleWorkspaceConnector)
+        .post({ displayName: vars.require(Var.ProvisioningAppDisplayName) });
       provisioningSpId = res1.servicePrincipal.id;
       provisioningAppId = res1.application.id;
 
       // Create SSO app
       try {
         log(LogLevel.Info, "Creating SSO app");
-        const res2 = await microsoft.post(
-          ApiEndpoint.Microsoft.Templates(TemplateId.GoogleWorkspaceConnector),
-          CreateSchema,
-          { displayName: vars.require(Var.SsoAppDisplayName) }
-        );
+        const res2 = await microsoft.applications
+          .instantiate(TemplateId.GoogleWorkspaceConnector)
+          .post({ displayName: vars.require(Var.SsoAppDisplayName) });
         ssoSpId = res2.servicePrincipal.id;
         ssoAppId = res2.application.appId;
 
@@ -178,10 +152,7 @@ export default defineStep(StepId.CreateMicrosoftApps)
 
         try {
           if (provisioningSpId) {
-            await microsoft.delete(
-              `${ApiEndpoint.Microsoft.ServicePrincipals}/${provisioningSpId}`,
-              EmptyResponseSchema
-            );
+            await microsoft.servicePrincipals.delete(provisioningSpId).delete();
           }
         } catch (err) {
           cleanupErrors.push(`Failed to delete service principal: ${err}`);
@@ -189,10 +160,7 @@ export default defineStep(StepId.CreateMicrosoftApps)
 
         try {
           if (provisioningAppId) {
-            await microsoft.delete(
-              `${ApiEndpoint.Microsoft.Applications}/${provisioningAppId}`,
-              EmptyResponseSchema
-            );
+            await microsoft.applications.delete(provisioningAppId).delete();
           }
         } catch (err) {
           cleanupErrors.push(`Failed to delete application: ${err}`);
@@ -221,11 +189,7 @@ export default defineStep(StepId.CreateMicrosoftApps)
 
       if (provSpId) {
         await safeDelete(
-          () =>
-            microsoft.delete(
-              `${ApiEndpoint.Microsoft.ServicePrincipals}/${provSpId}`,
-              EmptyResponseSchema
-            ),
+          () => microsoft.servicePrincipals.delete(provSpId).delete(),
           log,
           "Service Principal"
         );
@@ -233,11 +197,7 @@ export default defineStep(StepId.CreateMicrosoftApps)
 
       if (ssoSpId && ssoSpId !== provSpId) {
         await safeDelete(
-          () =>
-            microsoft.delete(
-              `${ApiEndpoint.Microsoft.ServicePrincipals}/${ssoSpId}`,
-              EmptyResponseSchema
-            ),
+          () => microsoft.servicePrincipals.delete(ssoSpId).delete(),
           log,
           "Service Principal"
         );
@@ -245,11 +205,7 @@ export default defineStep(StepId.CreateMicrosoftApps)
 
       if (appId) {
         await safeDelete(
-          () =>
-            microsoft.delete(
-              `${ApiEndpoint.Microsoft.Applications}/${appId}`,
-              EmptyResponseSchema
-            ),
+          () => microsoft.applications.delete(appId).delete(),
           log,
           "Application"
         );

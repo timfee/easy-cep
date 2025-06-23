@@ -1,6 +1,4 @@
-import { ApiEndpoint } from "@/constants";
 import {
-  EmptyResponseSchema,
   isConflictError,
   isHttpError,
   isNotFoundError,
@@ -13,29 +11,14 @@ import {
 } from "@/lib/workflow/utils/resource-ids";
 
 import { LogLevel, StepId, Var } from "@/types";
-import { z } from "zod";
 import { defineStep } from "../step-builder";
-import { GoogleOperationSchema } from "../types/api-schemas";
-import type { HttpClient } from "../types/http-client";
+import type { GoogleClient } from "../types/http-client";
 
-async function getRootOrgUnitId(google: HttpClient) {
-  const OrgUnitsSchema = z.object({
-    organizationUnits: z
-      .array(
-        z.object({
-          orgUnitId: z.string(),
-          parentOrgUnitId: z.string().optional(),
-          orgUnitPath: z.string()
-        })
-      )
-      .optional()
-  });
-
-  const { organizationUnits = [] } = await google.get(
-    `${ApiEndpoint.Google.OrgUnits}?orgUnitPath=%2F&type=allIncludingParent`,
-    OrgUnitsSchema,
-    { flatten: "organizationUnits" }
-  );
+async function getRootOrgUnitId(google: GoogleClient) {
+  const { organizationUnits = [] } = await google.orgUnits
+    .list()
+    .query({ orgUnitPath: "/", type: "allIncludingParent" })
+    .get();
 
   if (organizationUnits.length === 0) {
     throw new Error("No organizational units found");
@@ -105,29 +88,12 @@ export default defineStep(StepId.AssignUsersToSso)
       log
     }) => {
       try {
-        const AssignSchema = z.object({
-          inboundSsoAssignments: z
-            .array(
-              z.object({
-                targetGroup: z.string().optional(),
-                targetOrgUnit: z.string().optional(),
-                ssoMode: z.string().optional(),
-                samlSsoInfo: z
-                  .object({ inboundSamlSsoProfile: z.string() })
-                  .optional()
-              })
-            )
-            .optional()
-        });
-
         const profileId = vars.require(Var.SamlProfileId);
         const automationOuPath = vars.require(Var.AutomationOuPath);
 
-        const { inboundSsoAssignments = [] } = await google.get(
-          ApiEndpoint.Google.SsoAssignments,
-          AssignSchema,
-          { flatten: "inboundSsoAssignments" }
-        );
+        const { inboundSsoAssignments = [] } = await google.ssoAssignments
+          .list()
+          .get();
         // Extract: assignmentExists = inboundSsoAssignments.some(...)
 
         const rootId = await getRootOrgUnitId(google);
@@ -182,8 +148,6 @@ export default defineStep(StepId.AssignUsersToSso)
       const profileId = vars.require(Var.SamlProfileId);
       const automationOuPath = vars.require(Var.AutomationOuPath);
 
-      const OpSchema = GoogleOperationSchema;
-
       /**
        * POST https://cloudidentity.googleapis.com/v1/inboundSsoAssignments
        * Headers: { Authorization: Bearer {googleAccessToken} }
@@ -201,15 +165,13 @@ export default defineStep(StepId.AssignUsersToSso)
        * { "error": { "code": 409, "message": "Assignment exists" } }
        */
       const rootId = await getRootOrgUnitId(google);
-      const op = await google.post(
-        ApiEndpoint.Google.SsoAssignments,
-        OpSchema,
-        {
+      const op = await google.ssoAssignments
+        .create()
+        .post({
           targetOrgUnit: `orgUnits/${rootId}`,
           samlSsoInfo: { inboundSamlSsoProfile: profileId },
           ssoMode: "SAML_SSO"
-        }
-      );
+        });
       if (!op.done) {
         markPending("User assignment operation in progress");
         return;
@@ -222,10 +184,9 @@ export default defineStep(StepId.AssignUsersToSso)
       }
 
       // Exclude automation OU from SSO
-      await google.post(ApiEndpoint.Google.SsoAssignments, OpSchema, {
-        targetOrgUnit: automationOuPath,
-        ssoMode: "SSO_OFF"
-      });
+      await google.ssoAssignments
+        .create()
+        .post({ targetOrgUnit: automationOuPath, ssoMode: "SSO_OFF" });
 
       output({});
     } catch (error) {
@@ -255,27 +216,9 @@ export default defineStep(StepId.AssignUsersToSso)
         markFailed("Missing samlProfileId");
         return;
       }
-      const AssignSchema = z.object({
-        inboundSsoAssignments: z
-          .array(
-            z.object({
-              name: z.string(),
-              targetGroup: z.string().optional(),
-              targetOrgUnit: z.string().optional(),
-              ssoMode: z.string().optional(),
-              samlSsoInfo: z
-                .object({ inboundSamlSsoProfile: z.string() })
-                .optional()
-            })
-          )
-          .optional()
-      });
-
-      const { inboundSsoAssignments = [] } = await google.get(
-        ApiEndpoint.Google.SsoAssignments,
-        AssignSchema,
-        { flatten: "inboundSsoAssignments" }
-      );
+      const { inboundSsoAssignments = [] } = await google.ssoAssignments
+        .list()
+        .get();
       // Extract: assignmentName = inboundSsoAssignments.find(...).name
 
       const automationOuPath = vars.require(Var.AutomationOuPath);
@@ -294,11 +237,7 @@ export default defineStep(StepId.AssignUsersToSso)
           ResourceTypes.InboundSsoAssignments
         );
         await safeDelete(
-          () =>
-            google.delete(
-              `${ApiEndpoint.Google.SsoAssignments}/${encodeURIComponent(id)}`,
-              EmptyResponseSchema
-            ),
+          () => google.ssoAssignments.delete(id).delete(),
           log,
           "Inbound SSO Assignment"
         );
@@ -315,11 +254,7 @@ export default defineStep(StepId.AssignUsersToSso)
           ResourceTypes.InboundSsoAssignments
         );
         await safeDelete(
-          () =>
-            google.delete(
-              `${ApiEndpoint.Google.SsoAssignments}/${encodeURIComponent(id)}`,
-              EmptyResponseSchema
-            ),
+          () => google.ssoAssignments.delete(id).delete(),
           log,
           "Inbound SSO Assignment"
         );

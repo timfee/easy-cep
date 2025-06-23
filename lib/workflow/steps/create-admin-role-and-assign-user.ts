@@ -1,9 +1,6 @@
-import { ApiEndpoint } from "@/constants";
 import { isConflictError, isNotFoundError } from "@/lib/workflow/errors";
-import { EmptyResponseSchema, findInTree } from "@/lib/workflow/utils";
+import { findInTree } from "@/lib/workflow/utils";
 import { LogLevel, StepId, Var } from "@/types";
-import { z } from "zod";
-import type { AdminPrivilege } from "../constants/google-admin";
 import { GOOGLE_ADMIN_PRIVILEGES } from "../constants/google-admin";
 import { defineStep } from "../step-builder";
 import { retryWithBackoff } from "../utils/retry";
@@ -45,26 +42,7 @@ export default defineStep(StepId.CreateAdminRoleAndAssignUser)
       log
     }) => {
       try {
-        const RolesSchema = z.object({
-          items: z
-            .array(
-              z.object({
-                roleId: z.string(),
-                roleName: z.string(),
-                rolePrivileges: z.array(
-                  z.object({ serviceId: z.string(), privilegeName: z.string() })
-                )
-              })
-            )
-            .optional(),
-          nextPageToken: z.string().optional()
-        });
-
-        const { items = [] } = await google.get(
-          ApiEndpoint.Google.Roles,
-          RolesSchema,
-          { flatten: true }
-        );
+        const { items = [] } = await google.roles.list().flatten(true).get();
         // Extract: adminRoleId = role.roleId when found
         const roleName = vars.require(Var.AdminRoleName);
         const role = items.find((roleItem) => roleItem.roleName === roleName);
@@ -85,18 +63,10 @@ export default defineStep(StepId.CreateAdminRoleAndAssignUser)
           }
           const userId = vars.require(Var.ProvisioningUserId);
 
-          const AssignmentsSchema = z.object({
-            items: z
-              .array(z.object({ roleId: z.string(), assignedTo: z.string() }))
-              .optional()
-          });
-          const assignUrl = `${ApiEndpoint.Google.RoleAssignments}?userKey=${encodeURIComponent(
-            userId
-          )}`;
-          const { items: assignments = [] } = await google.get(
-            assignUrl,
-            AssignmentsSchema
-          );
+          const { items: assignments = [] } = await google.roleAssignments
+            .list()
+            .query({ userKey: userId })
+            .get();
           // Extract: existing assignment = assignments.some(...)
 
           const exists = assignments.some(
@@ -158,27 +128,7 @@ export default defineStep(StepId.CreateAdminRoleAndAssignUser)
      * { "error": { "code": 409, "message": "Another role exists with the same role name" } }
      */
     try {
-      const PrivilegeSchema: z.ZodType<AdminPrivilege> = z.lazy(() =>
-        z.object({
-          serviceId: z.string(),
-          privilegeName: z.string(),
-          childPrivileges: z.array(PrivilegeSchema).optional()
-        })
-      );
-
-      const PrivListSchema = z.object({ items: z.array(PrivilegeSchema) });
-
-      /**
-       * GET https://admin.googleapis.com/admin/directory/v1/customer/my_customer/roles/ALL/privileges
-       * Headers: { Authorization: Bearer {googleAccessToken} }
-       *
-       * Success response (200)
-       * { "items": [ { "privilegeName": "USERS_RETRIEVE", "childPrivileges": [...] } ] }
-       */
-      const { items } = await google.get(
-        ApiEndpoint.Google.RolePrivileges,
-        PrivListSchema
-      );
+      const { items } = await google.roles.privileges().get();
 
       const serviceId = findInTree(
         items,
@@ -190,11 +140,9 @@ export default defineStep(StepId.CreateAdminRoleAndAssignUser)
       if (!serviceId)
         throw new Error("Service ID not found in role privileges");
 
-      const CreateSchema = z.object({ roleId: z.string() });
-
       let roleId = checkData.adminRoleId;
       try {
-        const res = await google.post(ApiEndpoint.Google.Roles, CreateSchema, {
+        const res = await google.roles.create().post({
           roleName: vars.require(Var.AdminRoleName),
           roleDescription: "Custom role for Microsoft provisioning",
           rolePrivileges: [
@@ -210,27 +158,10 @@ export default defineStep(StepId.CreateAdminRoleAndAssignUser)
       } catch (error) {
         if (isConflictError(error)) {
           if (!roleId) {
-            const RolesSchema = z.object({
-              items: z
-                .array(
-                  z.object({
-                    roleId: z.string(),
-                    roleName: z.string(),
-                    rolePrivileges: z.array(
-                      z.object({
-                        serviceId: z.string(),
-                        privilegeName: z.string()
-                      })
-                    )
-                  })
-                )
-                .optional()
-            });
-            const { items: rolesList = [] } = await google.get(
-              ApiEndpoint.Google.Roles,
-              RolesSchema,
-              { flatten: true }
-            );
+            const { items: rolesList = [] } = await google.roles
+              .list()
+              .flatten(true)
+              .get();
             const roleName = vars.require(Var.AdminRoleName);
             roleId = rolesList.find(
               (roleItem) => roleItem.roleName === roleName
@@ -244,7 +175,6 @@ export default defineStep(StepId.CreateAdminRoleAndAssignUser)
       if (!roleId) throw new Error("Role ID unavailable after create");
 
       const userId = vars.require(Var.ProvisioningUserId);
-      const AssignSchema = z.object({ kind: z.string().optional() });
       try {
         /**
          * POST https://admin.googleapis.com/admin/directory/v1/customer/my_customer/roleassignments
@@ -282,11 +212,9 @@ export default defineStep(StepId.CreateAdminRoleAndAssignUser)
         log(LogLevel.Info, "Assigning role to user (with retry)");
 
         await retryWithBackoff(async () => {
-          await google.post(ApiEndpoint.Google.RoleAssignments, AssignSchema, {
-            roleId,
-            assignedTo: userId,
-            scopeType: "CUSTOMER"
-          });
+          await google.roleAssignments
+            .create()
+            .post({ roleId, assignedTo: userId, scopeType: "CUSTOMER" });
         });
 
         log(LogLevel.Info, "Role assignment succeeded");
@@ -315,27 +243,10 @@ export default defineStep(StepId.CreateAdminRoleAndAssignUser)
       }
 
       try {
-        const AllAssignSchema = z.object({
-          items: z
-            .array(
-              z.object({
-                roleAssignmentId: z.string(),
-                roleId: z.string(),
-                assignedTo: z.string()
-              })
-            )
-            .optional()
-        });
-
-        const queryUrl =
-          userId ?
-            `${ApiEndpoint.Google.RoleAssignments}?userKey=${encodeURIComponent(userId)}`
-          : `${ApiEndpoint.Google.RoleAssignments}?roleId=${encodeURIComponent(roleId)}`;
-
-        const { items: assignments = [] } = await google.get(
-          queryUrl,
-          AllAssignSchema
-        );
+        const builder = google.roleAssignments.list();
+        const { items: assignments = [] } = await (userId ?
+          builder.query({ userKey: userId }).get()
+        : builder.query({ roleId }).get());
 
         const toRemove = assignments.filter(
           (assignment) =>
@@ -345,10 +256,9 @@ export default defineStep(StepId.CreateAdminRoleAndAssignUser)
 
         for (const assignment of toRemove) {
           try {
-            await google.delete(
-              `${ApiEndpoint.Google.RoleAssignments}/${assignment.roleAssignmentId}`,
-              EmptyResponseSchema
-            );
+            await google.roleAssignments
+              .delete(assignment.roleAssignmentId)
+              .delete();
             log(
               LogLevel.Info,
               `Removed role assignment ${assignment.roleAssignmentId}`
@@ -366,10 +276,7 @@ export default defineStep(StepId.CreateAdminRoleAndAssignUser)
       }
 
       try {
-        await google.delete(
-          `${ApiEndpoint.Google.Roles}/${roleId}`,
-          EmptyResponseSchema
-        );
+        await google.roles.delete(roleId).delete();
       } catch (error) {
         if (!isNotFoundError(error)) {
           throw error;

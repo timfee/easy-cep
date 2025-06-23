@@ -1,14 +1,11 @@
-import { ApiEndpoint } from "@/constants";
 import {
   isConflictError,
   isNotFoundError,
   isPreconditionFailedError
 } from "@/lib/workflow/errors";
-import { EmptyResponseSchema } from "@/lib/workflow/utils";
 
 import { generateSecurePassword } from "@/lib/workflow/utils/password";
 import { LogLevel, StepId, Var } from "@/types";
-import { z } from "zod";
 import { defineStep } from "../step-builder";
 
 export default defineStep(StepId.CreateServiceUser)
@@ -52,16 +49,8 @@ export default defineStep(StepId.CreateServiceUser)
         vars.require(Var.PrimaryDomain);
         vars.require(Var.ProvisioningUserPrefix);
 
-        const UserSchema = z
-          .object({
-            id: z.string().optional(),
-            primaryEmail: z.string().optional(),
-            orgUnitPath: z.string().optional()
-          })
-          .passthrough();
         const email = vars.build("{provisioningUserPrefix}@{primaryDomain}");
-        const url = `${ApiEndpoint.Google.Users}/${encodeURIComponent(email)}?fields=id,primaryEmail`;
-        const user = await google.get(url, UserSchema);
+        const user = await google.users.get(email).get();
         // Extract: provisioningUserId = user.id; provisioningUserEmail = user.primaryEmail
 
         if (user.id && user.primaryEmail) {
@@ -125,46 +114,32 @@ export default defineStep(StepId.CreateServiceUser)
         vars.require(Var.PrimaryDomain);
 
         const password = generateSecurePassword();
-        const CreateSchema = z.object({
-          id: z.string(),
-          primaryEmail: z.string()
-        });
 
         let user;
         try {
           vars.require(Var.ProvisioningUserPrefix);
           const ouPath = vars.require(Var.AutomationOuPath);
-          user = await google.post(ApiEndpoint.Google.Users, CreateSchema, {
-            primaryEmail: vars.build(
-              "{provisioningUserPrefix}@{primaryDomain}"
-            ),
-            name: { givenName: "Microsoft", familyName: "Provisioning" },
-            password,
-            orgUnitPath: ouPath
-          });
+          user = await google.users
+            .create()
+            .post({
+              primaryEmail: vars.build(
+                "{provisioningUserPrefix}@{primaryDomain}"
+              ),
+              name: { givenName: "Microsoft", familyName: "Provisioning" },
+              password,
+              orgUnitPath: ouPath
+            });
           // isConflictError handles: 409
         } catch (error) {
           if (isConflictError(error)) {
             const fallbackEmail = vars.build(
               "{provisioningUserPrefix}@{primaryDomain}"
             );
-            const getUrl = `${ApiEndpoint.Google.Users}/${encodeURIComponent(
-              fallbackEmail
-            )}?fields=id,primaryEmail`;
-            user = await google.get(getUrl, CreateSchema);
+            user = await google.users.get(fallbackEmail).get();
 
-            /**
-             * PUT https://admin.googleapis.com/admin/directory/v1/users/{userId}
-             * Headers: { Authorization: Bearer {googleAccessToken} }
-             * Body: { "password": "TempXXXX!" }
-             *
-             * Success response (200) {}
-             */
-            await google.put(
-              `${ApiEndpoint.Google.Users}/${user.id}`,
-              z.object({}),
-              { password }
-            );
+            if (!user.id) throw new Error("User ID missing");
+
+            await google.users.update(user.id).put({ password });
           } else {
             throw error;
           }
@@ -188,10 +163,7 @@ export default defineStep(StepId.CreateServiceUser)
         markFailed("Missing provisioning user id");
         return;
       }
-      await google.delete(
-        `${ApiEndpoint.Google.Users}/${id}`,
-        EmptyResponseSchema
-      );
+      await google.users.delete(id).delete();
       markReverted();
     } catch (error) {
       // isNotFoundError handles: 404

@@ -1,10 +1,7 @@
 import { ApiEndpoint, SyncTemplateTag } from "@/constants";
 import { isNotFoundError } from "@/lib/workflow/errors";
-import { EmptyResponseSchema } from "@/lib/workflow/utils";
 import { LogLevel, StepId, Var } from "@/types";
-import { z } from "zod";
 import { defineStep } from "../step-builder";
-import { ServicePrincipalIdSchema } from "../types/api-schemas";
 
 export default defineStep(StepId.SetupMicrosoftProvisioning)
   .requires(
@@ -36,17 +33,12 @@ export default defineStep(StepId.SetupMicrosoftProvisioning)
       try {
         const spId = vars.require(Var.ProvisioningServicePrincipalId);
 
-        const JobsSchema = z.object({
-          value: z.array(z.object({ status: z.object({ code: z.string() }) }))
-        });
+        const { value } = await microsoft.synchronization
+          .jobs(spId)
+          .list()
+          .get();
 
-        const { value } = await microsoft.get(
-          ApiEndpoint.Microsoft.SyncJobs(spId),
-          JobsSchema,
-          { flatten: "value" }
-        );
-
-        const active = value.some((job) => job.status.code !== "Paused");
+        const active = value.some((job) => job.status?.code !== "Paused");
 
         if (active) {
           log(LogLevel.Info, "Synchronization already active");
@@ -94,48 +86,28 @@ export default defineStep(StepId.SetupMicrosoftProvisioning)
       const password = vars.require(Var.GeneratedPassword);
       const baseAddress = ApiEndpoint.Google.Users.replace("/users", "");
 
-      const TemplatesSchema = z.object({
-        value: z.array(z.object({ id: z.string(), factoryTag: z.string() }))
-      });
-
-      const { value: templates } = await microsoft.get(
-        ApiEndpoint.Microsoft.SyncTemplates(spId),
-        TemplatesSchema,
-        { flatten: "value" }
-      );
+      const { value: templates } = await microsoft.synchronization
+        .templates(spId)
+        .get();
 
       const templateId =
         templates.find(
           (template) => template.factoryTag === SyncTemplateTag.GoogleWorkspace
         )?.id ?? SyncTemplateTag.GoogleWorkspace;
 
-      const CreateJobSchema = z.object({
-        id: z.string(),
-        templateId: z.string(),
-        status: z.object({ code: z.string() }).optional()
+      const job = await microsoft.synchronization
+        .jobs(spId)
+        .create()
+        .post({ templateId });
+
+      await microsoft.synchronization.secrets(spId).put({
+        value: [
+          { key: "BaseAddress", value: baseAddress },
+          { key: "SecretToken", value: password }
+        ]
       });
 
-      const job = await microsoft.post(
-        ApiEndpoint.Microsoft.SyncJobs(spId),
-        CreateJobSchema,
-        { templateId }
-      );
-
-      await microsoft.put(
-        ApiEndpoint.Microsoft.SyncSecrets(spId),
-        EmptyResponseSchema,
-        {
-          value: [
-            { key: "BaseAddress", value: baseAddress },
-            { key: "SecretToken", value: password }
-          ]
-        }
-      );
-
-      await microsoft.post(
-        ApiEndpoint.Microsoft.StartSync(spId, job.id),
-        EmptyResponseSchema
-      );
+      await microsoft.synchronization.jobs(spId).start(job.id).post();
 
       log(LogLevel.Info, "Microsoft provisioning setup completed");
       output({});
@@ -156,18 +128,10 @@ export default defineStep(StepId.SetupMicrosoftProvisioning)
         return;
       }
 
-      const JobsSchema = ServicePrincipalIdSchema;
-      const { value } = await microsoft.get(
-        ApiEndpoint.Microsoft.SyncJobs(spId),
-        JobsSchema,
-        { flatten: "value" }
-      );
+      const { value } = await microsoft.synchronization.jobs(spId).list().get();
 
       for (const job of value) {
-        await microsoft.delete(
-          `${ApiEndpoint.Microsoft.SyncJobs(spId)}/${job.id}`,
-          EmptyResponseSchema
-        );
+        await microsoft.synchronization.jobs(spId).delete(job.id).delete();
       }
 
       markReverted();
