@@ -2,8 +2,12 @@ import type { JestConfigWithTsJest } from "ts-jest";
 import { pathsToModuleNameMapper } from "ts-jest";
 
 import * as fs from "fs";
+import * as path from "path";
 
-const tsconfigFile = fs.readFileSync("./tsconfig.json", "utf-8");
+const tsconfigFile = fs.readFileSync(
+  path.resolve(__dirname, "./tsconfig.json"),
+  "utf-8"
+);
 const tsconfig = JSON.parse(tsconfigFile);
 
 const { compilerOptions } = tsconfig;

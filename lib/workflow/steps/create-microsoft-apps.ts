@@ -38,12 +38,8 @@ export default defineStep(StepId.CreateMicrosoftApps)
       log
     }) => {
       try {
-        const provFilter = encodeURIComponent(
-          `applicationTemplateId eq '${TemplateId.GoogleWorkspaceConnector}'`
-        );
-        const ssoFilter = encodeURIComponent(
-          `applicationTemplateId eq '${TemplateId.GoogleWorkspaceConnector}'`
-        );
+        const provFilter = `applicationTemplateId eq '${TemplateId.GoogleWorkspaceConnector}'`;
+        const ssoFilter = `applicationTemplateId eq '${TemplateId.GoogleWorkspaceConnector}'`;
 
         const { value: provApps } = await microsoft.applications
           .list()
@@ -61,7 +57,7 @@ export default defineStep(StepId.CreateMicrosoftApps)
           apps: Array<{ id: string; appId: string }>
         ) {
           for (const app of apps) {
-            const filter = encodeURIComponent(`appId eq '${app.appId}'`);
+            const filter = `appId eq '${app.appId}'`;
             const { value } = await microsoft.servicePrincipals
               .list()
               .query({ $filter: filter })

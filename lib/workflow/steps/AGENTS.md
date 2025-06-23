@@ -35,7 +35,7 @@ Every step MUST follow this exact pattern:
    `markIncomplete`, or `markCheckFailed`.
 4. In `execute()`: wrap in `try/catch`, then call exactly one of `output`,
    `markFailed`, or `markPending`.
-5. Use `ApiEndpoint` constants for ALL URLs.
+5. Use the fluent `google` and `microsoft` clients for all API calls.
 6. Define Zod schemas inline before API calls (never use `z.any()`).
 7. Reuse the types and constants under `lib/workflow/types/` and
    `lib/workflow/constants/` instead of redefining them.
@@ -64,12 +64,13 @@ const email = vars.build("{prefix}@{domain}");
 await google.users.get(email).get();
 
 // With POST body
-await google.users.create().post({
-  primaryEmail: email,
-  name: { givenName: "Test", familyName: "User" },
-  password: "example-pass",
-  orgUnitPath: "/Automation"
-});
+await google.users
+  .create()
+  .post({
+    primaryEmail: email,
+    name: { givenName: "Test", familyName: "User" },
+    password: "secret"
+  });
 ```
 
 Example:
@@ -84,12 +85,7 @@ export default defineStep(StepId.MyStep)
   .provides(Var.Something)
   .check(async ({ google, markComplete, markIncomplete, markCheckFailed }) => {
     try {
-      const Schema = z.object({
-        /* ... */
-      });
-      const data = await google.someResource
-        .accepts(Schema)
-        .get();
+      const data = await google.samlProfiles.list().get();
 
       if (alreadyDone) {
         markComplete({ fieldFromCheck: data.field });

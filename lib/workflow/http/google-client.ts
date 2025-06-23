@@ -199,11 +199,15 @@ export class GoogleClient {
                     serviceId: z.string(),
                     privilegeName: z.string(),
                     childPrivileges: z
-                      .array(z.lazy(() => z.object({
-                        serviceId: z.string(),
-                        privilegeName: z.string(),
-                        childPrivileges: z.array(z.any()).optional()
-                      })))
+                      .array(
+                        z.lazy(() =>
+                          z.object({
+                            serviceId: z.string(),
+                            privilegeName: z.string(),
+                            childPrivileges: z.array(z.any()).optional()
+                          })
+                        )
+                      )
                       .optional()
                   })
                 )
