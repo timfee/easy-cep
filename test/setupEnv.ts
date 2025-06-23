@@ -1,3 +1,5 @@
+import "tsconfig-paths/register";
+
 import { existsSync, readFileSync } from "fs";
 import { fetch, ProxyAgent, setGlobalDispatcher } from "undici";
 
