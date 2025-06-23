@@ -6,11 +6,13 @@ import {
   NotFoundError,
   PreconditionFailedError
 } from "./errors";
+import { detectLRO, type LROMetadata } from "./lro-detector";
 
 export type FetchOpts = RequestInit & { flatten?: boolean | string };
 
 export interface FetchContext {
   addLog: (entry: StepLogEntry) => void;
+  onLroDetected?: (lro: LROMetadata) => void;
 }
 
 export function createAuthenticatedFetch(
@@ -132,6 +134,11 @@ export function createAuthenticatedFetch(
         json = await res.json();
       } catch {
         json = {};
+      }
+
+      const lroMeta = detectLRO(json, res.status);
+      if (lroMeta) {
+        context.onLroDetected?.(lroMeta);
       }
       return schema.parse(json);
     };
