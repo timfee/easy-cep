@@ -2,7 +2,7 @@
 
 Automates the integration between Google Workspace and Microsoft Entra ID (Azure AD) by orchestrating the API calls necessary to create and configure provisioning and SAML operations.
 
-![easy-cep](https://github.com/user-attachments/assets/3646279b-1f71-47c5-a55d-cd73a884ae51)
+![Sample Screenshot](https://github.com/user-attachments/assets/12941a04-4544-48aa-8f41-d592c58a2dfd)
 
 
 ## What It Does
