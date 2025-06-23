@@ -4,6 +4,7 @@ import { EmptyResponseSchema } from "@/lib/workflow/utils";
 import { LogLevel, StepId, Var } from "@/types";
 import { z } from "zod";
 import { defineStep } from "../step-builder";
+import { ServicePrincipalIdSchema } from "../types/api-schemas";
 
 export default defineStep(StepId.SetupMicrosoftClaimsPolicy)
   .requires(
@@ -39,9 +40,7 @@ export default defineStep(StepId.SetupMicrosoftClaimsPolicy)
       try {
         const spId = vars.require(Var.SsoServicePrincipalId);
 
-        const PoliciesSchema = z.object({
-          value: z.array(z.object({ id: z.string() }))
-        });
+        const PoliciesSchema = ServicePrincipalIdSchema;
 
         const { value } = await microsoft.get(
           ApiEndpoint.Microsoft.ReadClaimsPolicy(spId),
@@ -105,9 +104,7 @@ export default defineStep(StepId.SetupMicrosoftClaimsPolicy)
       } catch (error) {
         // isConflictError handles: 409
         if (isConflictError(error)) {
-          const listSchema = z.object({
-            value: z.array(z.object({ id: z.string() }))
-          });
+          const listSchema = ServicePrincipalIdSchema;
           const { value } = await microsoft.get(
             ApiEndpoint.Microsoft.ClaimsPolicies,
             listSchema,

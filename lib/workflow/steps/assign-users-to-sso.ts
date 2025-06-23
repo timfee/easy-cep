@@ -14,14 +14,8 @@ import {
 import { LogLevel, StepId, Var } from "@/types";
 import { z } from "zod";
 import { defineStep } from "../step-builder";
-
-interface HttpClient {
-  get<R>(
-    url: string,
-    schema: z.ZodSchema<R>,
-    options?: { flatten?: boolean | string }
-  ): Promise<R>;
-}
+import { GoogleOperationSchema } from "../types/api-schemas";
+import type { HttpClient } from "../types/http-client";
 
 async function getRootOrgUnitId(google: HttpClient) {
   const OrgUnitsSchema = z.object({
@@ -62,7 +56,6 @@ async function getRootOrgUnitId(google: HttpClient) {
   }
 
   return extractResourceId(firstOU.parentOrgUnitId, ResourceTypes.OrgUnitId);
-
 }
 
 export default defineStep(StepId.AssignUsersToSso)
@@ -176,17 +169,7 @@ export default defineStep(StepId.AssignUsersToSso)
       const profileId = vars.require(Var.SamlProfileId);
       const automationOuPath = vars.require(Var.AutomationOuPath);
 
-      const OpSchema = z.object({
-        name: z.string(),
-        done: z.boolean(),
-        error: z
-          .object({
-            message: z.string(),
-            code: z.number().optional(),
-            status: z.string().optional()
-          })
-          .optional()
-      });
+      const OpSchema = GoogleOperationSchema;
 
       /**
        * POST https://cloudidentity.googleapis.com/v1/inboundSsoAssignments

@@ -4,6 +4,7 @@ import { EmptyResponseSchema } from "@/lib/workflow/utils";
 import { LogLevel, StepId, Var } from "@/types";
 import { z } from "zod";
 import { defineStep } from "../step-builder";
+import { ServicePrincipalIdSchema } from "../types/api-schemas";
 
 export default defineStep(StepId.CreateMicrosoftApps)
   .requires(
@@ -71,9 +72,7 @@ export default defineStep(StepId.CreateMicrosoftApps)
         );
         // Extract: ssoAppId = ssoApps[0]?.appId
 
-        const SpSchema = z.object({
-          value: z.array(z.object({ id: z.string() }))
-        });
+        const SpSchema = ServicePrincipalIdSchema;
 
         async function findAppWithSp(
           apps: Array<{ id: string; appId: string }>

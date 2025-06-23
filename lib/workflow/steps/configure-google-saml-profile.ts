@@ -3,7 +3,9 @@ import { isNotFoundError } from "@/lib/workflow/errors";
 import { EmptyResponseSchema } from "@/lib/workflow/utils";
 import { LogLevel, StepId, Var } from "@/types";
 import { z } from "zod";
+import { WORKFLOW_LIMITS } from "../constants/workflow-limits";
 import { defineStep } from "../step-builder";
+import { GoogleOperationSchema } from "../types/api-schemas";
 
 export default defineStep(StepId.ConfigureGoogleSamlProfile)
   .requires(
@@ -49,7 +51,10 @@ export default defineStep(StepId.ConfigureGoogleSamlProfile)
           { flatten: "inboundSamlSsoProfiles" }
         );
 
-        if (inboundSamlSsoProfiles.length > 90) {
+        if (
+          inboundSamlSsoProfiles.length
+          > WORKFLOW_LIMITS.SAML_PROFILES_WARNING_THRESHOLD
+        ) {
           log(
             LogLevel.Warn,
             `Found ${inboundSamlSsoProfiles.length} SAML profiles - nearing API limits`
@@ -107,17 +112,8 @@ export default defineStep(StepId.ConfigureGoogleSamlProfile)
         })
       });
 
-      const opSchema = z.object({
-        name: z.string(),
-        done: z.boolean(),
-        response: CreateSchema.optional(),
-        error: z
-          .object({
-            message: z.string(),
-            code: z.number().optional(),
-            status: z.string().optional()
-          })
-          .optional()
+      const opSchema = GoogleOperationSchema.extend({
+        response: CreateSchema.optional()
       });
 
       const createUrl = `${ApiEndpoint.Google.SsoProfiles.replace(
