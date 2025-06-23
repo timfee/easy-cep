@@ -37,7 +37,7 @@ async function getRootOrgUnitId(google: HttpClient) {
   });
 
   const { organizationUnits = [] } = await google.get(
-    `${ApiEndpoint.Google.OrgUnits}?type=children`,
+    `${ApiEndpoint.Google.OrgUnits}?orgUnitPath=%2F&type=allIncludingParent`,
     OrgUnitsSchema,
     { flatten: "organizationUnits" }
   );
@@ -62,6 +62,7 @@ async function getRootOrgUnitId(google: HttpClient) {
   }
 
   return extractResourceId(firstOU.parentOrgUnitId, ResourceTypes.OrgUnitId);
+
 }
 
 export default defineStep(StepId.AssignUsersToSso)

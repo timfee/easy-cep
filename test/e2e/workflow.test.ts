@@ -77,15 +77,16 @@ if (
       [Var.PrimaryDomain]: process.env.TEST_DOMAIN || "test.example.com",
       [Var.IsDomainVerified]: "true",
       // Use unique names with test run ID to avoid conflicts
-      [Var.AutomationOuName]: `Automation-${testRunId}`,
-      [Var.AutomationOuPath]: `/Automation-${testRunId}`,
-      [Var.ProvisioningUserPrefix]: `azuread-provisioning-${testRunId}`,
-      [Var.AdminRoleName]: `Microsoft Entra Provisioning ${testRunId}`,
-      [Var.SamlProfileDisplayName]: `Azure AD ${testRunId}`,
-      [Var.ProvisioningAppDisplayName]: `Google Workspace Provisioning ${testRunId}`,
-      [Var.SsoAppDisplayName]: `Google Workspace SSO ${testRunId}`,
-      [Var.ClaimsPolicyDisplayName]: `Google Workspace Basic Claims ${testRunId}`,
-      [Var.GeneratedPassword]: generateSecurePassword()
+      [Var.GeneratedPassword]: generateSecurePassword(),
+      [Var.AutomationOuName]: `test-automation-${testRunId}`,
+      [Var.AutomationOuPath]: `/test-automation-${testRunId}`,
+      [Var.ProvisioningUserPrefix]: `test-azuread-provisioning-${testRunId}`,
+      [Var.AdminRoleName]: `Test Microsoft Entra Provisioning ${testRunId}`,
+      [Var.SamlProfileDisplayName]: `Test Azure AD ${testRunId}`,
+      [Var.ProvisioningAppDisplayName]: `Test Google Workspace Provisioning ${testRunId}`,
+      [Var.SsoAppDisplayName]: `Test Google Workspace SSO ${testRunId}`,
+      [Var.ClaimsPolicyDisplayName]: `Test Google Workspace Basic Claims ${testRunId}`,
+      [Var.GeneratedPassword]: crypto.randomBytes(16).toString("hex") + "!Aa1"
     } as const;
 
     const steps = [
