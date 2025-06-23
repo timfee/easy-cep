@@ -9,6 +9,7 @@ import {
 } from "@/components/ui/tooltip";
 import { API_PREFIXES, ApiEndpoint } from "@/constants";
 import { extractPath } from "@/lib/utils/url";
+import { HttpMethod } from "@/lib/workflow/http-constants";
 import { Var } from "@/types";
 
 type StepIdValue = string;
@@ -54,10 +55,11 @@ export function StepApiCalls({ stepId }: StepApiCallsProps) {
 
   const getMethodBadge = (method: string) => {
     const colors = {
-      GET: "bg-primary/10 text-primary border-primary/20",
-      POST: "bg-secondary/10 text-secondary border-secondary/20",
-      PUT: "bg-chart-1/10 text-chart-1 border-chart-1/20",
-      DELETE: "bg-destructive/10 text-destructive border-destructive/20"
+      [HttpMethod.GET]: "bg-primary/10 text-primary border-primary/20",
+      [HttpMethod.POST]: "bg-secondary/10 text-secondary border-secondary/20",
+      [HttpMethod.PUT]: "bg-chart-1/10 text-chart-1 border-chart-1/20",
+      [HttpMethod.DELETE]:
+        "bg-destructive/10 text-destructive border-destructive/20"
     } as const;
 
     return (

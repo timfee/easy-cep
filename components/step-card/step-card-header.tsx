@@ -5,6 +5,7 @@ import { CardHeader } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
 import { STEP_STATE_CONFIG } from "@/lib/workflow/step-constants";
 import { STEP_DETAILS } from "@/lib/workflow/step-details";
+import { StepStatus } from "@/lib/workflow/step-status";
 import { StepIdValue, StepUIState } from "@/types";
 import {
   AlertTriangle,
@@ -45,12 +46,13 @@ export function StepCardHeader({
       .join(" ");
   const descriptor =
     executing ? "Executing..."
-    : state?.status === "checking" ? "Checking..."
-    : state?.status === "undoing" ? "Undoing..."
-    : state?.status === "blocked" ? "Waiting for prerequisites"
-    : state?.status === "ready" ? "Ready to execute"
+    : state?.status === StepStatus.Checking ? "Checking..."
+    : state?.status === StepStatus.Undoing ? "Undoing..."
+    : state?.status === StepStatus.Blocked ? "Waiting for prerequisites"
+    : state?.status === StepStatus.Ready ? "Ready to execute"
     : state?.summary || "Initializing";
-  const currentState = executing ? "executing" : state?.status || "idle";
+  const currentState =
+    executing ? StepStatus.Executing : state?.status || StepStatus.Idle;
   const config = STEP_STATE_CONFIG[currentState];
 
   const Icon =

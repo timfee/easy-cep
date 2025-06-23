@@ -7,6 +7,7 @@ export const WORKFLOW_LIMITS = {
 } as const;
 
 export const TIME = {
+  MS_IN_SECOND: 1000,
   SECOND: 1000,
   MINUTE: 60 * 1000,
   HOUR: 60 * 60 * 1000,

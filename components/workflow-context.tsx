@@ -7,6 +7,7 @@ import {
   prepareStateForPersistence
 } from "@/lib/workflow/schemas/persisted-state";
 import { STEP_DETAILS } from "@/lib/workflow/step-details";
+import { StepStatus } from "@/lib/workflow/step-status";
 import { computeEffectiveStatus } from "@/lib/workflow/utils/compute-effective-status";
 import { createVarStore, type BasicVarStore } from "@/lib/workflow/var-store";
 import { WORKFLOW_VARIABLES } from "@/lib/workflow/variables";
@@ -150,7 +151,8 @@ export function WorkflowProvider({
           const dependsOnChangedVar = step.requires.some((reqVar) =>
             keys.includes(reqVar)
           );
-          const isCompleted = statusRef.current[step.id]?.status === "complete";
+          const isCompleted =
+            statusRef.current[step.id]?.status === StepStatus.Complete;
           if (dependsOnChangedVar && !isCompleted) {
             checkedSteps.current.delete(step.id);
           }
@@ -225,14 +227,14 @@ export function WorkflowProvider({
           return producerName ? `${key} (from \"${producerName}\")` : key;
         });
         updateStep(id, {
-          status: "failed",
+          status: StepStatus.Failed,
           error: `Missing required vars: ${messages.join(", ")}`
         });
         return;
       }
 
       setExecuting(id);
-      updateStep(id, { status: "executing" });
+      updateStep(id, { status: StepStatus.Executing });
 
       try {
         const result = await runStep(id, vars);
@@ -241,7 +243,7 @@ export function WorkflowProvider({
       } catch (error) {
         console.error("Failed to run step:", error);
         updateStep(id, {
-          status: "failed",
+          status: StepStatus.Failed,
           error:
             error instanceof Error ? error.message : "Unknown error occurred"
         });
@@ -257,7 +259,7 @@ export function WorkflowProvider({
       const step = steps.find((workflowStep) => workflowStep.id === id);
       if (!step) return;
 
-      updateStep(id, { status: "undoing" });
+      updateStep(id, { status: StepStatus.Undoing });
 
       try {
         const result = await undoStep(id, vars);
@@ -272,12 +274,12 @@ export function WorkflowProvider({
           ) as Partial<WorkflowVars>;
           setVarsState(clearedVars);
           checkedSteps.current.delete(id);
-          updateStep(id, { status: "idle" });
+          updateStep(id, { status: StepStatus.Idle });
         }
       } catch (error) {
         console.error("Failed to undo step:", error);
         updateStep(id, {
-          status: "failed",
+          status: StepStatus.Failed,
           error: error instanceof Error ? error.message : "Failed to undo step"
         });
       }
@@ -289,14 +291,14 @@ export function WorkflowProvider({
     for (const step of steps) {
       if (
         checkedSteps.current.has(step.id)
-        || status[step.id]?.status === "complete"
+        || status[step.id]?.status === StepStatus.Complete
       ) {
         continue;
       }
       if (step.requires.some((varName) => !vars[varName])) continue;
 
       checkedSteps.current.add(step.id);
-      updateStep(step.id, { status: "checking" });
+      updateStep(step.id, { status: StepStatus.Checking });
 
       const result = await checkStep(step.id, vars);
       updateStep(step.id, result.state);
@@ -329,7 +331,7 @@ export function WorkflowProvider({
       const currentState = statusRef.current[step.id];
       const statusValue = computeEffectiveStatus(step, currentState, vars);
       computed[step.id] = {
-        ...(currentState || { status: "idle", logs: [] }),
+        ...(currentState || { status: StepStatus.Idle, logs: [] }),
         status: statusValue
       };
     }

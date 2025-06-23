@@ -30,6 +30,7 @@ import { inspect } from "node:util";
 import { createAuthenticatedFetch } from "./fetch-utils";
 import type { LROMetadata } from "./lro-detector";
 import { getStep } from "./step-registry";
+import { StepStatus } from "./step-status";
 
 async function processStep<T extends StepIdValue>(
   stepId: T,
@@ -39,7 +40,7 @@ async function processStep<T extends StepIdValue>(
   const step = getStep(stepId);
 
   let logs: StepLogEntry[] = [];
-  let currentState: StepUIState = { status: "idle", logs };
+  let currentState: StepUIState = { status: StepStatus.Idle, logs };
   let finalVars: Partial<WorkflowVars> = {};
 
   const pushState = (data: Partial<StepUIState>) => {
@@ -101,7 +102,7 @@ async function processStep<T extends StepIdValue>(
   };
 
   // CHECK PHASE
-  pushState({ status: "checking" });
+  pushState({ status: StepStatus.Checking });
 
   // Data carried from check() into execute() or propagated as newVars
   type CheckType =
@@ -118,21 +119,27 @@ async function processStep<T extends StepIdValue>(
       markComplete: (data: CheckType) => {
         checkData = data;
         isComplete = true;
-        pushState({ status: "complete", summary: "Step already complete" });
+        pushState({
+          status: StepStatus.Complete,
+          summary: "Step already complete"
+        });
       },
       markIncomplete: (summary: string, data: CheckType) => {
         checkData = data;
         isComplete = false;
-        pushState({ status: "idle", summary });
+        pushState({ status: StepStatus.Idle, summary });
       },
       markCheckFailed: (error: string) => {
         checkFailed = true;
-        pushState({ status: "failed", error: `Check failed: ${error}` });
+        pushState({
+          status: StepStatus.Failed,
+          error: `Check failed: ${error}`
+        });
       }
     });
   } catch (error) {
     pushState({
-      status: "failed",
+      status: StepStatus.Failed,
       error:
         "Check error: "
         + (error instanceof Error ? error.message : "Unknown error")
@@ -160,18 +167,18 @@ async function processStep<T extends StepIdValue>(
         checkData,
         markSucceeded: (newVars: Partial<WorkflowVars>) => {
           finalVars = newVars;
-          pushState({ status: "complete", summary: "Succeeded" });
+          pushState({ status: StepStatus.Complete, summary: "Succeeded" });
         },
         markFailed: (error: string) => {
-          pushState({ status: "failed", error });
+          pushState({ status: StepStatus.Failed, error });
         },
         markPending: (notes: string) => {
-          pushState({ status: "pending", notes });
+          pushState({ status: StepStatus.Pending, notes });
         }
       });
     } catch (error) {
       pushState({
-        status: "failed",
+        status: StepStatus.Failed,
         error:
           "Execute error: "
           + (error instanceof Error ? error.message : "Unknown error")
@@ -203,7 +210,7 @@ async function processUndoStep<T extends StepIdValue>(
   const step = getStep(stepId);
 
   let logs: StepLogEntry[] = [];
-  let currentState: StepUIState = { status: "undoing", logs };
+  let currentState: StepUIState = { status: StepStatus.Undoing, logs };
 
   const pushState = (data: Partial<StepUIState>) => {
     currentState = { ...currentState, ...data, logs };
@@ -256,7 +263,7 @@ async function processUndoStep<T extends StepIdValue>(
   };
 
   if (!step.undo) {
-    pushState({ status: "failed", error: "Undo not implemented" });
+    pushState({ status: StepStatus.Failed, error: "Undo not implemented" });
     return { state: currentState };
   }
 
@@ -265,15 +272,15 @@ async function processUndoStep<T extends StepIdValue>(
       ...baseContext,
       vars,
       markReverted: () => {
-        pushState({ status: "reverted", summary: "Reverted" });
+        pushState({ status: StepStatus.Reverted, summary: "Reverted" });
       },
       markFailed: (error: string) => {
-        pushState({ status: "failed", error });
+        pushState({ status: StepStatus.Failed, error });
       }
     });
   } catch (error) {
     pushState({
-      status: "failed",
+      status: StepStatus.Failed,
       error:
         "Undo error: "
         + (error instanceof Error ? error.message : "Unknown error")

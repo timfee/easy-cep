@@ -1,13 +1,15 @@
 import { StepDefinition, StepUIState, VarName, WorkflowVars } from "@/types";
+import type { StepStatusValue } from "../step-status";
+import { StepStatus } from "../step-status";
 
 export function computeEffectiveStatus(
   step: StepDefinition,
   currentState: StepUIState | undefined,
   vars: Partial<WorkflowVars>
-): StepUIState["status"] {
+): StepStatusValue {
   if (
-    currentState?.status === "executing"
-    || currentState?.status === "checking"
+    currentState?.status === StepStatus.Executing
+    || currentState?.status === StepStatus.Checking
   ) {
     return currentState.status;
   }
@@ -17,12 +19,12 @@ export function computeEffectiveStatus(
   );
 
   if (missingPrerequisites.length > 0) {
-    return "blocked";
+    return StepStatus.Blocked;
   }
 
-  if (currentState?.status && currentState.status !== "idle") {
+  if (currentState?.status && currentState.status !== StepStatus.Idle) {
     return currentState.status;
   }
 
-  return "ready";
+  return StepStatus.Ready;
 }

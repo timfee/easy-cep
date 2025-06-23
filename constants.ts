@@ -1,3 +1,5 @@
+import { TIME } from "@/lib/workflow/constants/workflow-limits";
+
 export const ApiEndpoint = {
   Google: {
     Domains:
@@ -100,14 +102,10 @@ export type Provider = (typeof PROVIDERS)[keyof typeof PROVIDERS];
 
 export const OAUTH_STATE_COOKIE_NAME = "oauth_state";
 
-const MINUTE = 60;
-const HOUR = MINUTE * 60;
-const DAY = HOUR * 24;
-
 export const WORKFLOW_CONSTANTS = {
-  TOKEN_COOKIE_MAX_AGE: DAY * 7,
-  OAUTH_STATE_TTL_MS: 10 * MINUTE * 1000,
-  TOKEN_REFRESH_BUFFER_MS: 5 * MINUTE * 1000
+  TOKEN_COOKIE_MAX_AGE: TIME.DAY * 7,
+  OAUTH_STATE_TTL_MS: 10 * TIME.MINUTE,
+  TOKEN_REFRESH_BUFFER_MS: 5 * TIME.MINUTE
 };
 
 export const API_PREFIXES = {
