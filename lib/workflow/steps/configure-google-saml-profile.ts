@@ -97,7 +97,9 @@ export default defineStep(StepId.ConfigureGoogleSamlProfile)
      * { "error": { "code": 400, "message": "Invalid request" } }
      */
     try {
-      const CreateSchema = z.object({
+      const CreateSchema = z.object({ name: z.string() });
+
+      const ProfileSchema = z.object({
         name: z.string(),
         spConfig: z.object({
           entityId: z.string(),
@@ -139,12 +141,17 @@ export default defineStep(StepId.ConfigureGoogleSamlProfile)
         return;
       }
 
-      const profile = op.response;
+      const profileName = op.response?.name;
 
-      if (!profile) {
+      if (!profileName) {
         markFailed("Missing profile in response");
         return;
       }
+
+      const profile = await google.get(
+        ApiEndpoint.Google.SamlProfile(profileName),
+        ProfileSchema
+      );
 
       output({
         samlProfileId: profile.name,

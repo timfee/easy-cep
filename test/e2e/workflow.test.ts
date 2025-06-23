@@ -1,5 +1,6 @@
 import { runStep, undoStep } from "@/lib/workflow/engine";
 import { generateSecurePassword } from "@/lib/workflow/utils/password";
+import { randomBytes } from "crypto";
 import { StepId, Var } from "@/types";
 import { jest } from "@jest/globals";
 import fs from "fs";
@@ -87,7 +88,7 @@ if (
       [Var.ProvisioningAppDisplayName]: `Test Google Workspace Provisioning ${testRunId}`,
       [Var.SsoAppDisplayName]: `Test Google Workspace SSO ${testRunId}`,
       [Var.ClaimsPolicyDisplayName]: `Test Google Workspace Basic Claims ${testRunId}`,
-      [Var.GeneratedPassword]: crypto.randomBytes(16).toString("hex") + "!Aa1"
+      [Var.GeneratedPassword]: randomBytes(16).toString("hex") + "!Aa1"
     } as const;
 
     const steps = [
