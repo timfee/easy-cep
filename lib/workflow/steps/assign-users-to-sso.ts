@@ -37,7 +37,7 @@ async function getRootOrgUnitId(google: HttpClient) {
   });
 
   const { organizationUnits = [] } = await google.get(
-    `${ApiEndpoint.Google.OrgUnits}?type=children`,
+    `${ApiEndpoint.Google.OrgUnits}?orgUnitPath=%2F&type=allIncludingParent`,
     OrgUnitsSchema,
     { flatten: "organizationUnits" }
   );
@@ -46,7 +46,9 @@ async function getRootOrgUnitId(google: HttpClient) {
     throw new Error("No org units found");
   }
 
-  const id = organizationUnits[0].parentOrgUnitId ?? "";
+  const root = organizationUnits.find((ou) => ou.orgUnitPath === "/");
+  const id =
+    root ? root.orgUnitId : (organizationUnits[0].parentOrgUnitId ?? "");
   return extractResourceId(id, ResourceTypes.OrgUnitId);
 }
 
