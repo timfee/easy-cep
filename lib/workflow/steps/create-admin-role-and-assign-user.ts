@@ -326,12 +326,23 @@ export default defineStep(StepId.CreateAdminRoleAndAssignUser)
             .optional()
         });
 
-        const { items = [] } = await google.get(
-          `${ApiEndpoint.Google.RoleAssignments}?roleId=${encodeURIComponent(roleId)}`,
+        const queryUrl =
+          userId ?
+            `${ApiEndpoint.Google.RoleAssignments}?userKey=${encodeURIComponent(userId)}`
+          : `${ApiEndpoint.Google.RoleAssignments}?roleId=${encodeURIComponent(roleId)}`;
+
+        const { items: assignments = [] } = await google.get(
+          queryUrl,
           AllAssignSchema
         );
 
-        for (const assignment of items) {
+        const toRemove = assignments.filter(
+          (assignment) =>
+            assignment.roleId === roleId
+            && (!userId || assignment.assignedTo === userId)
+        );
+
+        for (const assignment of toRemove) {
           try {
             await google.delete(
               `${ApiEndpoint.Google.RoleAssignments}/${assignment.roleAssignmentId}`,
