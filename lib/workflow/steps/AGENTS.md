@@ -479,7 +479,7 @@ acsUrl = .inboundSamlSsoProfiles[0].spConfig.assertionConsumerServiceUri
 #### Step 5 Execution Request
 
 ```http
-POST https://cloudidentity.googleapis.com/v1/customers/my_customer/inboundSamlSsoProfiles
+POST https://cloudidentity.googleapis.com/v1/inboundSamlSsoProfiles
 Authorization: Bearer {googleAccessToken}
 Content-Type: application/json
 
