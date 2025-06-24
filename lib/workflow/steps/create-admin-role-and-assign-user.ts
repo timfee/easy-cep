@@ -1,7 +1,6 @@
 import { isConflictError, isNotFoundError } from "@/lib/workflow/core/errors";
 import { LogLevel, StepId, Var } from "@/types";
 import { GOOGLE_ADMIN_PRIVILEGES } from "../constants/google-admin";
-import { retryWithBackoff } from "../core/http";
 import { defineStep } from "../step-builder";
 
 export default defineStep(StepId.CreateAdminRoleAndAssignUser)
@@ -217,11 +216,10 @@ export default defineStep(StepId.CreateAdminRoleAndAssignUser)
          */
         log(LogLevel.Info, "Assigning role to user (with retry)");
 
-        await retryWithBackoff(async () => {
-          await google.roleAssignments
-            .create()
-            .post({ roleId, assignedTo: userId, scopeType: "CUSTOMER" });
-        });
+        await google.roleAssignments
+          .create()
+          .retry(3)
+          .post({ roleId, assignedTo: userId, scopeType: "CUSTOMER" });
 
         log(LogLevel.Info, "Role assignment succeeded");
       } catch (error) {

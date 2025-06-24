@@ -82,8 +82,6 @@ export const ApiEndpoint = {
   }
 };
 
-export const OrgUnit = { RootPath: "/" } as const;
-
 export const TemplateId = {
   GoogleWorkspaceConnector: "01303a13-8322-4e06-bee5-80d612907131",
   GoogleWorkspaceSaml: "01303a13-8322-4e06-bee5-80d612907131"
@@ -93,8 +91,6 @@ export const TemplateId = {
 // Workspace connector exposes a template with factory tag `gsuite`. We
 // dynamically look up the corresponding template ID before job creation.
 export const SyncTemplateTag = { GoogleWorkspace: "gsuite" };
-
-export const GroupId = { AllUsers: "allUsers" };
 
 export const PROVIDERS = { GOOGLE: "google", MICROSOFT: "microsoft" } as const;
 

@@ -65,7 +65,6 @@ export function StepVariables({
         )}>
         <Database className="h-3 w-3 text-accent" />
         <span>{varKey}</span>
-        {/* transient flag removed */}
       </label>
       {isEditable ?
         <Input
