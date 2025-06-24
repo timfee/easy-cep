@@ -1,4 +1,4 @@
-import { LogLevel, StepLogEntry } from "@/types";
+import { LogLevel, StepLogEntry, HttpMethod, HttpStatus } from "@/types";
 import { z } from "zod";
 import {
   ConflictError,
@@ -6,7 +6,6 @@ import {
   NotFoundError,
   PreconditionFailedError
 } from "./core/errors";
-import { HttpMethod, HttpStatus } from "./http-constants";
 import { detectLRO, type LROMetadata } from "./lro-detector";
 
 export type FetchOpts = RequestInit & { flatten?: boolean | string };

@@ -1,15 +1,10 @@
+import { generateSecurePassword } from "@/lib/utils";
 import { runStep, undoStep } from "@/lib/workflow/engine";
 import { StepId, Var } from "@/types";
 import { jest } from "@jest/globals";
-import { randomBytes } from "crypto";
 import fs from "fs";
 import path from "path";
 import { fileURLToPath } from "url";
-function generateSecurePassword() {
-  const chars =
-    "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!@#$%^&*";
-  return Array.from(randomBytes(16), (b) => chars[b % chars.length]).join("");
-}
 
 import {
   cleanupGoogleEnvironment,
@@ -83,7 +78,6 @@ if (
       [Var.PrimaryDomain]: process.env.TEST_DOMAIN || "test.example.com",
       [Var.IsDomainVerified]: "true",
       // Use unique names with test run ID to avoid conflicts
-      [Var.GeneratedPassword]: generateSecurePassword(),
       [Var.AutomationOuName]: `test-automation-${testRunId}`,
       [Var.AutomationOuPath]: `/test-automation-${testRunId}`,
       [Var.ProvisioningUserPrefix]: `test-azuread-provisioning-${testRunId}`,
@@ -92,7 +86,7 @@ if (
       [Var.ProvisioningAppDisplayName]: `Test Google Workspace Provisioning ${testRunId}`,
       [Var.SsoAppDisplayName]: `Test Google Workspace SSO ${testRunId}`,
       [Var.ClaimsPolicyDisplayName]: `Test Google Workspace Basic Claims ${testRunId}`,
-      [Var.GeneratedPassword]: randomBytes(16).toString("hex") + "!Aa1"
+      [Var.GeneratedPassword]: generateSecurePassword()
     } as const;
 
     const steps = [
