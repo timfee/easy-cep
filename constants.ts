@@ -113,12 +113,6 @@ export const API_PREFIXES = {
   MS_GRAPH_V1: "https://graph.microsoft.com/v1.0"
 } as const;
 
-export const OAuthScope = {
-  Google:
-    "openid https://www.googleapis.com/auth/admin.directory.user.readonly",
-  Microsoft: "https://graph.microsoft.com/.default offline_access"
-};
-
 export const PROTECTED_RESOURCES = {
   microsoftAppIds: new Set<string>(),
   googleRoleNames: new Set<string>([

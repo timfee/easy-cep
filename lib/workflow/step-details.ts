@@ -1,10 +1,4 @@
-export interface StepDetail {
-  title: string;
-  description: string;
-  estimatedDuration?: { typical: number; maximum: number };
-}
-
-export const STEP_DETAILS: Record<string, StepDetail> = {
+export const STEP_DETAILS = {
   "verify-primary-domain": {
     title: "Verify Primary Domain",
     description:
@@ -61,4 +55,4 @@ export const STEP_DETAILS: Record<string, StepDetail> = {
     description:
       "Enables SAML single sign‑on for all users by creating an inbound assignment that points to the configured SAML profile."
   }
-};
+} as const;

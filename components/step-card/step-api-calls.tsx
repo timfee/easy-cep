@@ -9,7 +9,7 @@ import {
 } from "@/components/ui/tooltip";
 import { API_PREFIXES, ApiEndpoint } from "@/constants";
 import { extractPath } from "@/lib/utils/url";
-import { HttpMethod } from "@/lib/workflow/http-constants";
+import { HttpMethod } from "@/types";
 import { Var } from "@/types";
 
 type StepIdValue = string;

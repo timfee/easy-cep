@@ -48,6 +48,24 @@ function sanitizeVars(vars: Partial<WorkflowVars>): Record<string, unknown> {
   );
 }
 
+function appendLog(
+  entry: StepLogEntry,
+  vars: Partial<WorkflowVars>,
+  logs: StepLogEntry[]
+): StepLogEntry[] {
+  let data = entry.data;
+  if (entry.level === LogLevel.Error) {
+    data = {
+      error: data instanceof Error ? inspect(data, { depth: null }) : data,
+      vars: sanitizeVars(vars)
+    };
+  } else if (data instanceof Error) {
+    data = inspect(data, { depth: null });
+  }
+
+  return [...logs, { ...entry, data }];
+}
+
 async function processStep<T extends StepIdValue>(
   stepId: T,
   vars: Partial<WorkflowVars>,
@@ -78,22 +96,7 @@ async function processStep<T extends StepIdValue>(
   };
 
   const addLog = (entry: StepLogEntry) => {
-    let data = entry.data;
-    if (entry.level === LogLevel.Error) {
-      data = {
-        error: data instanceof Error ? inspect(data, { depth: null }) : data,
-        vars: sanitizeVars(vars)
-      };
-    } else if (data instanceof Error) {
-      data = inspect(data, { depth: null });
-    }
-
-    const logEntry = { ...entry, data };
-    logs = [...logs, logEntry];
-    if (process.env.NODE_ENV === "development") {
-      const prefix = `[${entry.level?.toUpperCase()}] ${new Date(entry.timestamp).toISOString()}`;
-      console.log(`${prefix}: ${entry.message}`, logEntry.data ?? "");
-    }
+    logs = appendLog(entry, vars, logs);
     pushState({});
   };
 
@@ -259,22 +262,7 @@ async function processUndoStep<T extends StepIdValue>(
   };
 
   const addLog = (entry: StepLogEntry) => {
-    let data = entry.data;
-    if (entry.level === LogLevel.Error) {
-      data = {
-        error: data instanceof Error ? inspect(data, { depth: null }) : data,
-        vars: sanitizeVars(vars)
-      };
-    }
-    const logEntry = { ...entry, data };
-    logs = [...logs, logEntry];
-    if (process.env.NODE_ENV === "development") {
-      const prefix = `[${entry.level?.toUpperCase()}] ${new Date(
-        entry.timestamp
-      ).toISOString()}`;
-
-      console.log(`${prefix}: ${entry.message}`, logEntry.data ?? "");
-    }
+    logs = appendLog(entry, vars, logs);
     pushState({});
   };
 
