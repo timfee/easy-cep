@@ -165,15 +165,18 @@ async function processStep<T extends StepIdValue>(
         "Check error: "
         + (error instanceof Error ? error.message : "Unknown error")
     });
+    pushState({ isChecking: false, isExecuting: false });
     return { state: currentState, newVars: finalVars };
   }
 
   if (checkFailed) {
+    pushState({ isChecking: false });
     return { state: currentState, newVars: finalVars };
   }
 
   if (isComplete) {
     // Propagate any variables gathered during check for completed steps
+    pushState({ isChecking: false });
     return { state: currentState, newVars: checkData };
   }
 
@@ -206,7 +209,7 @@ async function processStep<T extends StepIdValue>(
       });
     }
   }
-
+  pushState({ isChecking: false, isExecuting: false });
   return { state: currentState, newVars: finalVars };
 }
 
@@ -297,6 +300,7 @@ async function processUndoStep<T extends StepIdValue>(
 
   if (!step.undo) {
     pushState({ status: StepStatus.Blocked, error: "Undo not implemented" });
+    pushState({ isUndoing: false });
     return { state: currentState };
   }
 
@@ -319,7 +323,7 @@ async function processUndoStep<T extends StepIdValue>(
         + (error instanceof Error ? error.message : "Unknown error")
     });
   }
-
+  pushState({ isUndoing: false });
   return { state: currentState };
 }
 

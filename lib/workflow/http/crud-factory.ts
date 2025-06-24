@@ -4,19 +4,25 @@ import { ResourceBuilder } from "./fluent-builder";
 
 export const empty = z.object({});
 
-export interface CrudSchemas {
-  get: z.ZodSchema<unknown>;
-  list: z.ZodSchema<unknown>;
+export interface CrudSchemas<
+  G = unknown,
+  L = unknown,
+  C = unknown,
+  R = unknown,
+  U = unknown
+> {
+  get: z.ZodSchema<G>;
+  list: z.ZodSchema<L>;
   flatten?: string | boolean;
-  create: z.ZodSchema<unknown>;
-  response: z.ZodSchema<unknown>;
-  update: z.ZodSchema<unknown>;
+  create: z.ZodSchema<C>;
+  response: z.ZodSchema<R>;
+  update: z.ZodSchema<U>;
 }
 
-export function createCrudMethods(
+export function createCrudMethods<G, L, C, R, U>(
   client: HttpClient,
   basePath: string,
-  schemas: CrudSchemas
+  schemas: CrudSchemas<G, L, C, R, U>
 ) {
   return {
     get: (id: string) =>
@@ -43,5 +49,6 @@ export function createCrudMethods(
       new ResourceBuilder(client, {})
         .path(`${basePath}/${id}`)
         .sends(schemas.update)
+        .accepts(schemas.response)
   };
 }

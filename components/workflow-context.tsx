@@ -274,7 +274,7 @@ export function WorkflowProvider({
     }, 100);
 
     return () => clearTimeout(timeoutId);
-  }, [vars]);
+  }, [vars, checkSteps]);
 
   const effectiveStatus = useMemo(() => {
     const computed: Partial<Record<StepIdValue, StepUIState>> = {};

@@ -1,177 +1,249 @@
 import { ApiEndpoint } from "@/constants";
 import { z } from "zod";
+import type { AdminPrivilege } from "../constants/google-admin";
 import { GoogleOperationSchema } from "../types/api-schemas";
 import type { HttpClient } from "../types/http-client";
 import { createCrudMethods, CrudSchemas, empty } from "./crud-factory";
 import { ResourceBuilder } from "./fluent-builder";
-const userSchemas: CrudSchemas = {
-  get: z
-    .object({
-      id: z.string().optional(),
-      primaryEmail: z.string().optional(),
-      orgUnitPath: z.string().optional()
-    })
-    .passthrough(),
-  list: z.object({
-    users: z
-      .array(z.object({ id: z.string(), primaryEmail: z.string() }))
-      .optional()
-  }),
+
+const userGetSchema = z
+  .object({
+    id: z.string().optional(),
+    primaryEmail: z.string().optional(),
+    orgUnitPath: z.string().optional()
+  })
+  .passthrough();
+const userListSchema = z.object({
+  users: z
+    .array(z.object({ id: z.string(), primaryEmail: z.string() }))
+    .optional()
+});
+const userCreateSchema = z.object({
+  primaryEmail: z.string(),
+  name: z.object({ givenName: z.string(), familyName: z.string() }),
+  password: z.string(),
+  orgUnitPath: z.string()
+});
+const userResponseSchema = z.object({
+  id: z.string(),
+  primaryEmail: z.string()
+});
+const userUpdateSchema = z.object({ password: z.string() });
+
+const userSchemas = {
+  get: userGetSchema,
+  list: userListSchema,
   flatten: "users",
-  create: z.object({
-    primaryEmail: z.string(),
-    name: z.object({ givenName: z.string(), familyName: z.string() }),
-    password: z.string(),
-    orgUnitPath: z.string()
-  }),
-  response: z.object({ id: z.string(), primaryEmail: z.string() }),
-  update: z.object({ password: z.string() })
-};
-const ouSchemas: CrudSchemas = {
-  get: z.object({ orgUnitPath: z.string(), name: z.string() }),
-  list: z.object({
-    organizationUnits: z
-      .array(
-        z.object({
-          orgUnitId: z.string(),
-          parentOrgUnitId: z.string().optional(),
-          orgUnitPath: z.string()
-        })
-      )
-      .optional()
-  }),
-  flatten: "organizationUnits",
-  create: z.object({ name: z.string(), parentOrgUnitPath: z.string() }),
-  response: z.object({
-    orgUnitPath: z.string(),
-    name: z.string(),
-    parentOrgUnitId: z.string()
-  }),
-  update: empty
-};
-const roleSchemas: CrudSchemas = {
-  get: z.object({
-    roleId: z.string(),
-    roleName: z.string(),
-    rolePrivileges: z.array(
-      z.object({ serviceId: z.string(), privilegeName: z.string() })
-    )
-  }),
-  list: z.object({
-    items: z
-      .array(
-        z.object({
-          roleId: z.string(),
-          roleName: z.string(),
-          rolePrivileges: z.array(
-            z.object({ serviceId: z.string(), privilegeName: z.string() })
-          )
-        })
-      )
-      .optional()
-  }),
-  flatten: true,
-  create: z.object({
-    roleName: z.string(),
-    roleDescription: z.string(),
-    rolePrivileges: z.array(
-      z.object({ serviceId: z.string(), privilegeName: z.string() })
-    )
-  }),
-  response: z.object({ roleId: z.string() }),
-  update: empty
-};
-const assignmentSchemas: CrudSchemas = {
-  get: empty,
-  list: z.object({
-    items: z
-      .array(
-        z.object({
-          roleAssignmentId: z.string(),
-          roleId: z.string(),
-          assignedTo: z.string()
-        })
-      )
-      .optional()
-  }),
-  flatten: false,
-  create: z.object({
-    roleId: z.string(),
-    assignedTo: z.string(),
-    scopeType: z.string()
-  }),
-  response: z.object({ kind: z.string().optional() }),
-  update: empty
-};
-const samlSchemas: CrudSchemas = {
-  get: z.object({
-    name: z.string(),
-    idpConfig: z
-      .object({
-        entityId: z.string(),
-        singleSignOnServiceUri: z.string(),
-        signOutUri: z.string().optional()
+  create: userCreateSchema,
+  response: userResponseSchema,
+  update: userUpdateSchema
+} satisfies CrudSchemas<
+  z.infer<typeof userGetSchema>,
+  z.infer<typeof userListSchema>,
+  z.infer<typeof userCreateSchema>,
+  z.infer<typeof userResponseSchema>,
+  z.infer<typeof userUpdateSchema>
+>;
+const ouGetSchema = z.object({ orgUnitPath: z.string(), name: z.string() });
+const ouListSchema = z.object({
+  organizationUnits: z
+    .array(
+      z.object({
+        orgUnitId: z.string(),
+        parentOrgUnitId: z.string().optional(),
+        orgUnitPath: z.string()
       })
-      .optional(),
-    spConfig: z.object({
-      entityId: z.string(),
-      assertionConsumerServiceUri: z.string()
-    })
-  }),
-  list: z.object({
-    inboundSamlSsoProfiles: z
-      .array(
-        z.object({
-          name: z.string(),
-          displayName: z.string().optional(),
-          spConfig: z.object({
-            entityId: z.string(),
-            assertionConsumerServiceUri: z.string()
-          })
-        })
-      )
-      .optional()
-  }),
-  flatten: "inboundSamlSsoProfiles",
-  create: z.object({
-    displayName: z.string(),
-    idpConfig: z.object({
-      entityId: z.string(),
-      singleSignOnServiceUri: z.string()
-    })
-  }),
-  response: GoogleOperationSchema.extend({
-    response: z.object({ name: z.string() }).optional()
-  }),
+    )
+    .optional()
+});
+const ouCreateSchema = z.object({
+  name: z.string(),
+  parentOrgUnitPath: z.string()
+});
+const ouResponseSchema = z.object({
+  orgUnitPath: z.string(),
+  name: z.string(),
+  parentOrgUnitId: z.string()
+});
+
+const ouSchemas = {
+  get: ouGetSchema,
+  list: ouListSchema,
+  flatten: "organizationUnits",
+  create: ouCreateSchema,
+  response: ouResponseSchema,
   update: empty
-};
-const ssoSchemas: CrudSchemas = {
-  get: empty,
-  list: z.object({
-    inboundSsoAssignments: z
-      .array(
-        z.object({
-          name: z.string(),
-          targetGroup: z.string().optional(),
-          targetOrgUnit: z.string().optional(),
-          ssoMode: z.string().optional(),
-          samlSsoInfo: z
-            .object({ inboundSamlSsoProfile: z.string() })
-            .optional()
+} satisfies CrudSchemas<
+  z.infer<typeof ouGetSchema>,
+  z.infer<typeof ouListSchema>,
+  z.infer<typeof ouCreateSchema>,
+  z.infer<typeof ouResponseSchema>,
+  z.infer<typeof empty>
+>;
+const roleGetSchema = z.object({
+  roleId: z.string(),
+  roleName: z.string(),
+  rolePrivileges: z.array(
+    z.object({ serviceId: z.string(), privilegeName: z.string() })
+  )
+});
+const roleListSchema = z.object({
+  items: z
+    .array(
+      z.object({
+        roleId: z.string(),
+        roleName: z.string(),
+        rolePrivileges: z.array(
+          z.object({ serviceId: z.string(), privilegeName: z.string() })
+        )
+      })
+    )
+    .optional()
+});
+const roleCreateSchema = z.object({
+  roleName: z.string(),
+  roleDescription: z.string(),
+  rolePrivileges: z.array(
+    z.object({ serviceId: z.string(), privilegeName: z.string() })
+  )
+});
+const roleResponseSchema = z.object({ roleId: z.string() });
+
+const roleSchemas = {
+  get: roleGetSchema,
+  list: roleListSchema,
+  flatten: true,
+  create: roleCreateSchema,
+  response: roleResponseSchema,
+  update: empty
+} satisfies CrudSchemas<
+  z.infer<typeof roleGetSchema>,
+  z.infer<typeof roleListSchema>,
+  z.infer<typeof roleCreateSchema>,
+  z.infer<typeof roleResponseSchema>,
+  z.infer<typeof empty>
+>;
+const assignmentGetSchema = empty;
+const assignmentListSchema = z.object({
+  items: z
+    .array(
+      z.object({
+        roleAssignmentId: z.string(),
+        roleId: z.string(),
+        assignedTo: z.string()
+      })
+    )
+    .optional()
+});
+const assignmentCreateSchema = z.object({
+  roleId: z.string(),
+  assignedTo: z.string(),
+  scopeType: z.string()
+});
+const assignmentResponseSchema = z.object({ kind: z.string().optional() });
+
+const assignmentSchemas = {
+  get: assignmentGetSchema,
+  list: assignmentListSchema,
+  flatten: false,
+  create: assignmentCreateSchema,
+  response: assignmentResponseSchema,
+  update: empty
+} satisfies CrudSchemas<
+  z.infer<typeof assignmentGetSchema>,
+  z.infer<typeof assignmentListSchema>,
+  z.infer<typeof assignmentCreateSchema>,
+  z.infer<typeof assignmentResponseSchema>,
+  z.infer<typeof empty>
+>;
+const samlGetSchema = z.object({
+  name: z.string(),
+  idpConfig: z
+    .object({
+      entityId: z.string(),
+      singleSignOnServiceUri: z.string(),
+      signOutUri: z.string().optional()
+    })
+    .optional(),
+  spConfig: z.object({
+    entityId: z.string(),
+    assertionConsumerServiceUri: z.string()
+  })
+});
+const samlListSchema = z.object({
+  inboundSamlSsoProfiles: z
+    .array(
+      z.object({
+        name: z.string(),
+        displayName: z.string().optional(),
+        spConfig: z.object({
+          entityId: z.string(),
+          assertionConsumerServiceUri: z.string()
         })
-      )
-      .optional()
-  }),
+      })
+    )
+    .optional()
+});
+const samlCreateSchema = z.object({
+  displayName: z.string(),
+  idpConfig: z.object({
+    entityId: z.string(),
+    singleSignOnServiceUri: z.string()
+  })
+});
+const samlResponseSchema = GoogleOperationSchema.extend({
+  response: z.object({ name: z.string() }).optional()
+});
+
+const samlSchemas = {
+  get: samlGetSchema,
+  list: samlListSchema,
+  flatten: "inboundSamlSsoProfiles",
+  create: samlCreateSchema,
+  response: samlResponseSchema,
+  update: empty
+} satisfies CrudSchemas<
+  z.infer<typeof samlGetSchema>,
+  z.infer<typeof samlListSchema>,
+  z.infer<typeof samlCreateSchema>,
+  z.infer<typeof samlResponseSchema>,
+  z.infer<typeof empty>
+>;
+const ssoGetSchema = empty;
+const ssoListSchema = z.object({
+  inboundSsoAssignments: z
+    .array(
+      z.object({
+        name: z.string(),
+        targetGroup: z.string().optional(),
+        targetOrgUnit: z.string().optional(),
+        ssoMode: z.string().optional(),
+        samlSsoInfo: z.object({ inboundSamlSsoProfile: z.string() }).optional()
+      })
+    )
+    .optional()
+});
+const ssoCreateSchema = z.object({
+  targetGroup: z.string().optional(),
+  targetOrgUnit: z.string().optional(),
+  samlSsoInfo: z.object({ inboundSamlSsoProfile: z.string() }).optional(),
+  ssoMode: z.string()
+});
+
+const ssoSchemas = {
+  get: ssoGetSchema,
+  list: ssoListSchema,
   flatten: "inboundSsoAssignments",
-  create: z.object({
-    targetGroup: z.string().optional(),
-    targetOrgUnit: z.string().optional(),
-    samlSsoInfo: z.object({ inboundSamlSsoProfile: z.string() }).optional(),
-    ssoMode: z.string()
-  }),
+  create: ssoCreateSchema,
   response: GoogleOperationSchema,
   update: empty
-};
+} satisfies CrudSchemas<
+  z.infer<typeof ssoGetSchema>,
+  z.infer<typeof ssoListSchema>,
+  z.infer<typeof ssoCreateSchema>,
+  z.infer<typeof GoogleOperationSchema>,
+  z.infer<typeof empty>
+>;
 export class GoogleClient {
   constructor(private client: HttpClient) {}
   private builder() {
@@ -208,11 +280,26 @@ export class GoogleClient {
     );
   }
   get roles() {
-    return createCrudMethods(
+    const base = createCrudMethods(
       this.client,
       ApiEndpoint.Google.Roles,
       roleSchemas
     );
+    const privilegeSchema: z.ZodType<AdminPrivilege> = z.lazy(() =>
+      z.object({
+        serviceId: z.string(),
+        privilegeName: z.string(),
+        childPrivileges: z.array(privilegeSchema).optional()
+      })
+    );
+    return {
+      ...base,
+      privileges: () =>
+        this.builder()
+          .path(ApiEndpoint.Google.RolePrivileges)
+          .accepts(z.object({ items: z.array(privilegeSchema) }))
+          .flatten("items")
+    };
   }
   get roleAssignments() {
     return createCrudMethods(
@@ -228,6 +315,11 @@ export class GoogleClient {
         ApiEndpoint.Google.SsoProfiles,
         samlSchemas
       ),
+      createForCustomer: () =>
+        this.builder()
+          .path(ApiEndpoint.Google.SsoProfilesCustomer)
+          .sends(samlSchemas.create)
+          .accepts(samlSchemas.response),
       credentials: (profileId: string) => ({
         add: () =>
           this.builder()

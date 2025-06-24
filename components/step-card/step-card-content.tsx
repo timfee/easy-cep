@@ -20,7 +20,6 @@ import {
 } from "@/components/ui/collapsible";
 import { cn } from "@/lib/utils";
 import { STEP_DETAILS } from "@/lib/workflow/step-details";
-import { WORKFLOW_VARIABLES } from "@/lib/workflow/variables";
 import {
   StepDefinition,
   StepId,
@@ -66,13 +65,6 @@ export function StepCardContent({ definition, state, vars, executing }: Props) {
 
   const missingAll = definition.requires.filter((v) => vars[v] === undefined);
   const canExecute = missingAll.length === 0;
-  const missingMessages = missingAll.map((v) => {
-    const meta = WORKFLOW_VARIABLES[v];
-    const producer = meta?.producedBy;
-    const producerName =
-      producer ? STEP_DETAILS[producer]?.title || producer : null;
-    return producerName ? `${v} (from "${producerName}")` : v;
-  });
   const canUndo = state?.status === "complete";
   return (
     <CardContent className="px-6 pb-8">
