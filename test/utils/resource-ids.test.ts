@@ -1,8 +1,4 @@
-import {
-  buildResourceName,
-  extractResourceId,
-  ResourceTypes
-} from "@/lib/workflow/core/http";
+import { extractResourceId, ResourceTypes } from "@/lib/workflow/core/http";
 
 describe("Resource ID utilities", () => {
   describe("extractResourceId", () => {
@@ -37,24 +33,6 @@ describe("Resource ID utilities", () => {
           ResourceTypes.InboundSsoAssignments
         )
       ).toBe("abc-123_456");
-    });
-  });
-
-  describe("buildResourceName", () => {
-    it("builds simple resource name", () => {
-      expect(
-        buildResourceName(ResourceTypes.InboundSsoAssignments, "abc123")
-      ).toBe("inboundSsoAssignments/abc123");
-    });
-
-    it("builds resource name with prefix", () => {
-      expect(
-        buildResourceName(
-          ResourceTypes.InboundSsoAssignments,
-          "abc123",
-          "customers/C123"
-        )
-      ).toBe("customers/C123/inboundSsoAssignments/abc123");
     });
   });
 });

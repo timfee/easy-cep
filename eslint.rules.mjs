@@ -616,19 +616,21 @@ export const useVarEnum = createRule({
   }
 });
 
-export const mustExportCreateStep = createRule({
-  name: "must-export-create-step",
+export const mustExportDefineStep = createRule({
+  name: "must-export-define-step",
   meta: {
     type: "problem",
     docs: {
-      description: "Step files must export result of createStep as default"
+      description: "Step files must export result of defineStep as default"
     },
-    messages: { missingCreateStep: "Must export default createStep<...>(...)" }
+    messages: {
+      missingDefineStep: "Must export default defineStep(...).build()"
+    }
   },
   defaultOptions: [],
   create(context) {
     let hasDefaultExport = false;
-    let usesCreateStep = false;
+    let usesDefineStep = false;
 
     return {
       ExportDefaultDeclaration(node) {
@@ -636,16 +638,16 @@ export const mustExportCreateStep = createRule({
         if (
           node.declaration.type === "CallExpression"
           && node.declaration.callee.type === "Identifier"
-          && node.declaration.callee.name === "createStep"
+          && node.declaration.callee.name === "defineStep"
         ) {
-          usesCreateStep = true;
+          usesDefineStep = true;
         }
       },
       "Program:exit"() {
-        if (!hasDefaultExport || !usesCreateStep) {
+        if (!hasDefaultExport || !usesDefineStep) {
           context.report({
             node: context.getSourceCode().ast,
-            messageId: "missingCreateStep"
+            messageId: "missingDefineStep"
           });
         }
       }
@@ -657,10 +659,10 @@ export const checkDataTypeRequired = createRule({
   name: "check-data-type-required",
   meta: {
     type: "problem",
-    docs: { description: "createStep must have explicit CheckData type" },
+    docs: { description: "defineStep must have explicit CheckData type" },
     messages: {
       missingCheckDataType:
-        "Define CheckData interface and pass to createStep<CheckData>"
+        "Define CheckData interface and pass to defineStep<CheckData>"
     }
   },
   defaultOptions: [],
@@ -669,7 +671,7 @@ export const checkDataTypeRequired = createRule({
       CallExpression(node) {
         if (
           node.callee.type === "Identifier"
-          && node.callee.name === "createStep"
+          && node.callee.name === "defineStep"
         ) {
           // Check if it has type arguments
           if (!node.typeArguments || node.typeArguments.params.length === 0) {
@@ -1065,7 +1067,7 @@ export const rules = {
   "must-call-required-callbacks": mustCallRequiredCallbacks,
   "must-define-schema-inline": mustDefineSchemaInline,
   "must-destructure-context": mustDestructureContext,
-  "must-export-create-step": mustExportCreateStep,
+  "must-export-define-step": mustExportDefineStep,
   "must-use-context-fetch": mustUseContextFetch,
   "must-use-try-catch": mustUseTryCatch,
   "no-any-in-schemas": noAnyInSchemas,

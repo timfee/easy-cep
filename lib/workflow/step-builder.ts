@@ -1,3 +1,10 @@
+/**
+ * Fluent builder for creating strongly-typed workflow steps.
+ *
+ * The builder ensures required variables exist and wraps the check, execute and
+ * undo callbacks with typed HTTP clients. Steps authored with `defineStep` are
+ * the only valid default exports for files under `lib/workflow/steps/`.
+ */
 import {
   StepCheckContext,
   StepDefinition,
@@ -8,7 +15,6 @@ import {
   WorkflowVars
 } from "@/types";
 import { z } from "zod";
-import { createStep } from "./create-step";
 import { GoogleClient } from "./http/google-client";
 import { MicrosoftClient } from "./http/microsoft-client";
 import type { HttpClient } from "./types/http-client";
@@ -64,6 +70,12 @@ interface BuilderUndoContext {
   markFailed: StepUndoContext["markFailed"];
 }
 
+/**
+ * Create a new workflow step.
+ *
+ * The returned builder exposes `.requires()`, `.provides()`, `.check()`, `.execute()` and `.undo()`
+ * chainable methods. Call `.build()` to produce the final `StepDefinition` used by the engine.
+ */
 export function defineStep<
   TData extends Partial<WorkflowVars> = Partial<WorkflowVars>
 >(id: StepIdValue): StepBuilder<TData> {
@@ -108,33 +120,52 @@ export function defineStep<
         );
       }
 
-      return createStep<TData>({
+      const check = async (originalCtx: StepCheckContext<TData>) => {
+        for (const key of requires) {
+          if (originalCtx.vars[key] === undefined) {
+            return originalCtx.markCheckFailed(
+              `Missing required variable ${key}`
+            );
+          }
+        }
+        const ctx = wrapContext(originalCtx);
+        await checkFn!(ctx);
+      };
+
+      const execute = async (originalCtx: StepExecuteContext<TData>) => {
+        for (const key of requires) {
+          if (originalCtx.vars[key] === undefined) {
+            throw new Error(`Missing required variable ${key}`);
+          }
+        }
+        const ctx = {
+          ...wrapContext(originalCtx),
+          checkData: originalCtx.checkData,
+          output: (vars: Partial<WorkflowVars>) =>
+            originalCtx.markSucceeded(vars)
+        };
+        await executeFn!(ctx);
+      };
+
+      const undo = async (originalCtx: StepUndoContext) => {
+        if (undoFn) {
+          const ctx = wrapContext(originalCtx);
+          await undoFn(ctx);
+        }
+      };
+
+      return {
         id,
         requires,
         provides,
-
-        async check(originalCtx) {
-          const ctx = wrapContext(originalCtx);
-          await checkFn!(ctx);
-        },
-
-        async execute(originalCtx) {
-          const ctx = {
-            ...wrapContext(originalCtx),
-            checkData: originalCtx.checkData,
-            output: (vars: Partial<WorkflowVars>) =>
-              originalCtx.markSucceeded(vars)
-          };
-          await executeFn!(ctx);
-        },
-
-        async undo(originalCtx) {
-          if (undoFn) {
-            const ctx = wrapContext(originalCtx);
-            await undoFn(ctx);
-          }
-        }
-      });
+        check,
+        execute,
+        undo: undoFn ? undo : undefined
+      } as StepDefinition & {
+        check(ctx: StepCheckContext<TData>): Promise<void>;
+        execute(ctx: StepExecuteContext<TData>): Promise<void>;
+        undo?(ctx: StepUndoContext): Promise<void>;
+      };
     }
   };
 
