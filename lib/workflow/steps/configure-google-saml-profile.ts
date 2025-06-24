@@ -84,7 +84,7 @@ export default defineStep(StepId.ConfigureGoogleSamlProfile)
      */
     try {
       const op = await google.samlProfiles
-        .create()
+        .createForCustomer()
         .post({
           displayName: vars.require(Var.SamlProfileDisplayName),
           idpConfig: { entityId: "", singleSignOnServiceUri: "" }

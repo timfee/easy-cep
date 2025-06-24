@@ -127,10 +127,10 @@ export default defineStep(StepId.CreateAdminRoleAndAssignUser)
      * { "error": { "code": 409, "message": "Another role exists with the same role name" } }
      */
     try {
-      const { items } = await google.roles.privileges().get();
+      const { items: privileges } = await google.roles.privileges().get();
 
       let serviceId: string | undefined;
-      const stack = [...items];
+      const stack = [...privileges];
       while (stack.length > 0) {
         const priv = stack.shift()!;
         if (priv.privilegeName === "USERS_RETRIEVE") {

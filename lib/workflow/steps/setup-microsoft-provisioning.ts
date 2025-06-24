@@ -3,6 +3,12 @@ import { isNotFoundError } from "@/lib/workflow/core/errors";
 import { LogLevel, StepId, Var } from "@/types";
 import { defineStep } from "../step-builder";
 
+interface SyncJob {
+  id?: string;
+  templateId?: string;
+  status?: { code?: string };
+}
+
 export default defineStep(StepId.SetupMicrosoftProvisioning)
   .requires(
     Var.MsGraphToken,
@@ -33,12 +39,14 @@ export default defineStep(StepId.SetupMicrosoftProvisioning)
       try {
         const spId = vars.require(Var.ProvisioningServicePrincipalId);
 
-        const { value } = await microsoft.synchronization
+        const { value = [] } = await microsoft.synchronization
           .jobs(spId)
           .list()
           .get();
 
-        const active = value.some((job) => job.status?.code !== "Paused");
+        const active = value.some(
+          (job: SyncJob) => job.status?.code !== "Paused"
+        );
 
         if (active) {
           log(LogLevel.Info, "Synchronization already active");
@@ -107,7 +115,10 @@ export default defineStep(StepId.SetupMicrosoftProvisioning)
         ]
       });
 
-      await microsoft.synchronization.jobs(spId).start(job.id).post();
+      const jobId = job.id ?? job.value?.[0]?.id;
+      if (jobId) {
+        await microsoft.synchronization.jobs(spId).start(jobId).post();
+      }
 
       log(LogLevel.Info, "Microsoft provisioning setup completed");
       output({});
@@ -128,7 +139,10 @@ export default defineStep(StepId.SetupMicrosoftProvisioning)
         return;
       }
 
-      const { value } = await microsoft.synchronization.jobs(spId).list().get();
+      const { value = [] } = await microsoft.synchronization
+        .jobs(spId)
+        .list()
+        .get();
 
       for (const job of value) {
         await microsoft.synchronization.jobs(spId).delete(job.id).delete();
