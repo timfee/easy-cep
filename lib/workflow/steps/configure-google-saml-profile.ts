@@ -64,7 +64,7 @@ export default defineStep(StepId.ConfigureGoogleSamlProfile)
   )
   .execute(async ({ vars, google, output, markFailed, markPending, log }) => {
     /**
-     * POST https://cloudidentity.googleapis.com/v1/customers/my_customer/inboundSamlSsoProfiles
+     * POST https://cloudidentity.googleapis.com/v1/inboundSamlSsoProfiles
      * Headers: { Authorization: Bearer {googleAccessToken} }
      * Body:
      * {
@@ -84,7 +84,7 @@ export default defineStep(StepId.ConfigureGoogleSamlProfile)
      */
     try {
       const op = await google.samlProfiles
-        .createForCustomer()
+        .create()
         .post({
           displayName: vars.require(Var.SamlProfileDisplayName),
           idpConfig: { entityId: "", singleSignOnServiceUri: "" }

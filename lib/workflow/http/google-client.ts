@@ -317,7 +317,7 @@ export class GoogleClient {
       ),
       createForCustomer: () =>
         this.builder()
-          .path(ApiEndpoint.Google.SsoProfilesCustomer)
+          .path(ApiEndpoint.Google.SsoProfiles)
           .sends(samlSchemas.create)
           .accepts(samlSchemas.response),
       credentials: (profileId: string) => ({

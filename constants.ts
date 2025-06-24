@@ -15,8 +15,6 @@ export const ApiEndpoint = {
       "https://admin.googleapis.com/admin/directory/v1/customer/my_customer/roles/ALL/privileges",
     SsoProfiles:
       "https://cloudidentity.googleapis.com/v1/inboundSamlSsoProfiles",
-    SsoProfilesCustomer:
-      "https://cloudidentity.googleapis.com/v1/customers/my_customer/inboundSamlSsoProfiles",
     SsoAssignments:
       "https://cloudidentity.googleapis.com/v1/inboundSsoAssignments",
     SamlProfile: (profileId: string) =>
