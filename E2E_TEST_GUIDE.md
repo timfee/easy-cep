@@ -17,6 +17,7 @@ You need bearer tokens for both Google Workspace and Microsoft Graph with approp
 #### Google Workspace Token
 
 **Required Scopes:**
+
 ```
 https://www.googleapis.com/auth/admin.directory.domain.readonly
 https://www.googleapis.com/auth/admin.directory.orgunit
@@ -26,11 +27,13 @@ https://www.googleapis.com/auth/cloud-identity.inboundsso
 ```
 
 **How to Obtain:**
+
 1. Set up an OAuth 2.0 client in Google Cloud Console
 2. Use OAuth 2.0 Playground or custom flow to get access token
 3. Ensure the authenticated user has Super Admin privileges in Google Workspace
 
 **Save Token:**
+
 ```bash
 echo "YOUR_GOOGLE_ACCESS_TOKEN" > google_bearer.token
 ```
@@ -38,6 +41,7 @@ echo "YOUR_GOOGLE_ACCESS_TOKEN" > google_bearer.token
 #### Microsoft Graph Token
 
 **Required Permissions:**
+
 ```
 Application.ReadWrite.All
 Directory.ReadWrite.All
@@ -46,12 +50,14 @@ Policy.ReadWrite.ApplicationConfiguration
 ```
 
 **How to Obtain:**
+
 1. Register an application in Azure AD / Microsoft Entra ID
 2. Grant the required permissions (may require admin consent)
 3. Use OAuth 2.0 authorization code flow or device code flow
 4. Ensure the authenticated user has Global Administrator role
 
 **Save Token:**
+
 ```bash
 echo "YOUR_MICROSOFT_ACCESS_TOKEN" > microsoft_bearer.token
 ```
@@ -77,6 +83,7 @@ pnpm tsx scripts/validate-test-credentials.ts
 ```
 
 Expected output:
+
 ```
 ✅ VALID - Google Workspace Credentials
 ✅ VALID - Microsoft Graph Credentials
@@ -93,12 +100,14 @@ pnpm tsx scripts/test-api-contracts.ts
 ```
 
 This will:
+
 - Test each API endpoint used in the workflow
 - Verify request/response formats
 - Check for permission issues
 - Generate detailed reports in JSON and Markdown format
 
 Review the generated files:
+
 - `api-contract-test-results.json` - Machine-readable results
 - `api-contract-test-results.md` - Human-readable report
 
@@ -111,6 +120,7 @@ Use the built-in script to see token metadata:
 ```
 
 This displays:
+
 - Token expiration time
 - Authorized scopes
 - Organization information
@@ -127,6 +137,7 @@ The convenience script handles setup and execution:
 ```
 
 This script:
+
 1. Validates tokens exist
 2. Runs pre-test cleanup
 3. Executes the E2E test suite
@@ -162,6 +173,7 @@ pnpm test test/e2e/workflow.test.ts
 ### Success Criteria
 
 Each step should complete with status `complete` or `blocked`:
+
 - `complete` - Step executed successfully
 - `blocked` - Step cannot execute due to API limitations (acceptable in some cases)
 
@@ -172,6 +184,7 @@ Each step should complete with status `complete` or `blocked`:
 **Symptom:** 401 Unauthorized errors
 
 **Solution:**
+
 ```bash
 # Refresh tokens and update files
 echo "NEW_TOKEN" > google_bearer.token
@@ -186,6 +199,7 @@ pnpm tsx scripts/validate-test-credentials.ts
 **Symptom:** 403 Forbidden errors
 
 **Solution:**
+
 - Review required scopes/permissions in `api-contracts-analysis.md`
 - Ensure tokens have all required permissions
 - Check that user has admin privileges
@@ -195,6 +209,7 @@ pnpm tsx scripts/validate-test-credentials.ts
 **Symptom:** 429 Too Many Requests
 
 **Solution:**
+
 - Wait for rate limit window to reset (usually 1 minute)
 - Run tests with longer delays between operations
 - Check for concurrent API usage
@@ -204,6 +219,7 @@ pnpm tsx scripts/validate-test-credentials.ts
 **Symptom:** Test fails because resource from previous run exists
 
 **Solution:**
+
 ```bash
 # Run cleanup
 pnpm tsx scripts/e2e-setup.ts
@@ -220,6 +236,7 @@ pnpm test test/e2e/workflow.test.ts
 **Symptom:** Step fails because previous operation still processing
 
 **Solution:**
+
 - Increase Jest timeout in test file
 - Add polling/wait logic in step implementation
 - Check for long-running operations (LROs)
@@ -229,6 +246,7 @@ pnpm test test/e2e/workflow.test.ts
 The E2E test executes these stages in order:
 
 ### Stage 1: Pre-Test Cleanup
+
 - Deletes test service users
 - Removes test organizational units
 - Deletes test admin roles
@@ -236,6 +254,7 @@ The E2E test executes these stages in order:
 - Removes Microsoft apps and policies
 
 ### Stage 2: Execute Forward Steps
+
 1. **Verify Primary Domain** - Confirms domain is verified
 2. **Create Automation OU** - Creates `/test-automation-{id}` OU
 3. **Create Service User** - Creates `test-azuread-provisioning-{id}@domain`
@@ -249,9 +268,11 @@ The E2E test executes these stages in order:
 11. **Assign Users to SSO** - Enables SSO for users
 
 ### Stage 3: Execute Undo Steps
+
 Reverses all operations in reverse order to clean up test resources.
 
 ### Stage 4: Post-Test Cleanup
+
 Final cleanup to ensure environment is clean.
 
 ## Debugging Failed Tests
@@ -273,7 +294,7 @@ To debug a single step:
 const steps = [
   // StepId.VerifyPrimaryDomain,
   // StepId.CreateAutomationOU,
-  StepId.CreateServiceUser  // Only test this step
+  StepId.CreateServiceUser // Only test this step
   // ... rest commented
 ];
 ```
@@ -287,7 +308,7 @@ Use curl to test API calls directly:
 curl -H "Authorization: Bearer $(cat google_bearer.token)" \
   https://admin.googleapis.com/admin/directory/v1/customer/my_customer/domains
 
-# Microsoft example  
+# Microsoft example
 curl -H "Authorization: Bearer $(cat microsoft_bearer.token)" \
   https://graph.microsoft.com/v1.0/organization
 ```
@@ -317,6 +338,7 @@ This prevents conflicts with resources from previous runs.
 ### 2. Use Unique Test Identifiers
 
 The test suite uses `testRunId` (timestamp) to create unique resource names:
+
 ```typescript
 const testRunId = Date.now().toString(36);
 [Var.AutomationOuName]: `test-automation-${testRunId}`
@@ -327,6 +349,7 @@ This allows multiple test runs without conflicts.
 ### 3. Monitor Token Expiration
 
 Tokens typically expire in 1 hour. For long test runs:
+
 - Refresh tokens periodically
 - Use refresh tokens if available
 - Monitor token expiration warnings
@@ -334,6 +357,7 @@ Tokens typically expire in 1 hour. For long test runs:
 ### 4. Run Tests in Isolation
 
 Avoid running multiple test suites simultaneously:
+
 - Race conditions may occur
 - Rate limits may be hit
 - Resources may conflict
@@ -377,7 +401,7 @@ For CI/CD pipelines:
 
 - name: Test API contracts
   run: pnpm tsx scripts/test-api-contracts.ts
-  
+
 - name: Run E2E tests
   run: pnpm test test/e2e/workflow.test.ts
 ```
@@ -410,6 +434,7 @@ For CI/CD pipelines:
 **Cause:** Token files don't exist or environment variables not set
 
 **Fix:**
+
 ```bash
 # Create token files
 echo "your-token-here" > google_bearer.token
@@ -439,6 +464,7 @@ export TEST_MS_BEARER_TOKEN="your-token"
 **Cause:** Cleanup failed or skipped
 
 **Fix:**
+
 ```bash
 # Run full cleanup
 pnpm tsx scripts/full-cleanup.ts
@@ -453,6 +479,7 @@ pnpm tsx scripts/test-api-contracts.ts
 **Cause:** Too many API calls in short time
 
 **Fix:**
+
 - Wait 1-2 minutes before retrying
 - Add delays between test steps
 - Check for other processes using APIs

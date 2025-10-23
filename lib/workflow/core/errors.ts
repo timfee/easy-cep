@@ -1,6 +1,5 @@
-import { WorkflowVars } from "@/types";
+import { HttpStatus, WorkflowVars } from "@/types";
 import { inspect } from "node:util";
-import { HttpStatus } from "@/types";
 
 export class HttpError extends Error {
   constructor(

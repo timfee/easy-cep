@@ -23,9 +23,7 @@ interface ValidationResult {
   info: Record<string, unknown>;
 }
 
-async function validateGoogleToken(
-  token: string
-): Promise<ValidationResult> {
+async function validateGoogleToken(token: string): Promise<ValidationResult> {
   const result: ValidationResult = {
     provider: "Google",
     valid: false,
@@ -196,9 +194,7 @@ async function validateMicrosoftToken(
     // Test applications endpoint
     const appsRes = await fetch(
       `${ApiEndpoint.Microsoft.Applications}?$top=1`,
-      {
-        headers: { Authorization: `Bearer ${token}` }
-      }
+      { headers: { Authorization: `Bearer ${token}` } }
     );
 
     if (!appsRes.ok) {
@@ -216,9 +212,7 @@ async function validateMicrosoftToken(
     // Test service principals endpoint
     const spRes = await fetch(
       `${ApiEndpoint.Microsoft.ServicePrincipals}?$top=1`,
-      {
-        headers: { Authorization: `Bearer ${token}` }
-      }
+      { headers: { Authorization: `Bearer ${token}` } }
     );
 
     if (!spRes.ok) {
@@ -261,7 +255,7 @@ async function validateMicrosoftToken(
 
 async function main() {
   console.log("🔍 Validating Test Credentials\n");
-  console.log("=" .repeat(60));
+  console.log("=".repeat(60));
 
   // Load tokens
   let googleToken: string | undefined;
@@ -287,7 +281,7 @@ async function main() {
     console.log("✗ Microsoft token not found");
   }
 
-  console.log("=" .repeat(60));
+  console.log("=".repeat(60));
   console.log();
 
   // Validate Google token
@@ -356,7 +350,9 @@ async function main() {
   if (!googleToken && !msToken) {
     console.log("❌ No tokens found. E2E tests cannot run.");
     console.log("\nTo set up test credentials:");
-    console.log("1. Create google_bearer.token with a valid Google access token");
+    console.log(
+      "1. Create google_bearer.token with a valid Google access token"
+    );
     console.log(
       "2. Create microsoft_bearer.token with a valid Microsoft access token"
     );
@@ -374,9 +370,7 @@ async function main() {
   if (allValid) {
     console.log("✅ All available credentials are valid");
     console.log("✅ E2E tests should be able to run");
-    console.log(
-      "\nRun tests with: pnpm test test/e2e/workflow.test.ts"
-    );
+    console.log("\nRun tests with: pnpm test test/e2e/workflow.test.ts");
     console.log("Or use: ./test-live.sh");
   } else {
     console.log("❌ Some credentials are invalid");

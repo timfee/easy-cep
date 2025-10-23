@@ -4,7 +4,7 @@
  * Run with: pnpm tsx scripts/test-api-contracts.ts
  */
 
-import { ApiEndpoint, SyncTemplateTag, TemplateId } from "@/constants";
+import { ApiEndpoint, TemplateId } from "@/constants";
 import { existsSync, readFileSync, writeFileSync } from "fs";
 import { fetch, ProxyAgent, setGlobalDispatcher } from "undici";
 
@@ -37,7 +37,9 @@ function addResult(result: TestResult) {
     : "⏭️";
   console.log(`${icon} [${result.step}] ${result.message}`);
   if (result.details) {
-    console.log(`   Details: ${JSON.stringify(result.details).substring(0, 200)}`);
+    console.log(
+      `   Details: ${JSON.stringify(result.details).substring(0, 200)}`
+    );
   }
 }
 
@@ -61,7 +63,11 @@ async function testGoogleDomains(token: string): Promise<void> {
     }
 
     const data = (await res.json()) as {
-      domains?: Array<{ domainName: string; verified: boolean; isPrimary?: boolean }>;
+      domains?: Array<{
+        domainName: string;
+        verified: boolean;
+        isPrimary?: boolean;
+      }>;
     };
 
     const primaryDomain = data.domains?.find((d) => d.isPrimary);
@@ -273,9 +279,7 @@ async function testMicrosoftOrganization(token: string): Promise<void> {
       method: "GET",
       status: "pass",
       message: `Organization: ${org?.displayName || "Unknown"}`,
-      details: {
-        domains: org?.verifiedDomains?.map((d) => d.name)
-      },
+      details: { domains: org?.verifiedDomains?.map((d) => d.name) },
       duration: Date.now() - start
     });
   } catch (error) {
@@ -295,9 +299,7 @@ async function testMicrosoftApplications(token: string): Promise<void> {
   try {
     const res = await fetch(
       `${ApiEndpoint.Microsoft.Applications}?$top=5&$filter=startswith(displayName,'Test ')`,
-      {
-        headers: { Authorization: `Bearer ${token}` }
-      }
+      { headers: { Authorization: `Bearer ${token}` } }
     );
 
     if (!res.ok) {
@@ -341,9 +343,7 @@ async function testMicrosoftServicePrincipals(token: string): Promise<void> {
   try {
     const res = await fetch(
       `${ApiEndpoint.Microsoft.ServicePrincipals}?$top=5`,
-      {
-        headers: { Authorization: `Bearer ${token}` }
-      }
+      { headers: { Authorization: `Bearer ${token}` } }
     );
 
     if (!res.ok) {
@@ -434,9 +434,7 @@ async function testGoogleWorkspaceTemplateAccess(token: string): Promise<void> {
     const templateId = TemplateId.GoogleWorkspaceConnector;
     const res = await fetch(
       `https://graph.microsoft.com/v1.0/applicationTemplates/${templateId}`,
-      {
-        headers: { Authorization: `Bearer ${token}` }
-      }
+      { headers: { Authorization: `Bearer ${token}` } }
     );
 
     if (!res.ok) {
@@ -476,7 +474,7 @@ async function testGoogleWorkspaceTemplateAccess(token: string): Promise<void> {
 
 async function main() {
   console.log("🧪 API Contract Testing\n");
-  console.log("=" .repeat(80));
+  console.log("=".repeat(80));
   console.log();
 
   // Load tokens
@@ -570,10 +568,18 @@ function generateMarkdownReport(results: TestResult[]): string {
 
   lines.push("## Summary");
   lines.push("");
-  lines.push(`- ✅ Passed: ${results.filter((r) => r.status === "pass").length}`);
-  lines.push(`- ❌ Failed: ${results.filter((r) => r.status === "fail").length}`);
-  lines.push(`- ⚠️  Warned: ${results.filter((r) => r.status === "warn").length}`);
-  lines.push(`- ⏭️  Skipped: ${results.filter((r) => r.status === "skip").length}`);
+  lines.push(
+    `- ✅ Passed: ${results.filter((r) => r.status === "pass").length}`
+  );
+  lines.push(
+    `- ❌ Failed: ${results.filter((r) => r.status === "fail").length}`
+  );
+  lines.push(
+    `- ⚠️  Warned: ${results.filter((r) => r.status === "warn").length}`
+  );
+  lines.push(
+    `- ⏭️  Skipped: ${results.filter((r) => r.status === "skip").length}`
+  );
   lines.push("");
 
   lines.push("## Test Details");

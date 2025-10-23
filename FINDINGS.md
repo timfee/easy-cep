@@ -34,6 +34,7 @@ This document provides a detailed analysis of the E2E test process, API contract
 ### Methodology
 
 All API contract information was obtained from official documentation sources:
+
 - [Google Admin SDK Directory API Reference](https://developers.google.com/admin-sdk/directory)
 - [Google Cloud Identity API Reference](https://cloud.google.com/identity/docs/reference/rest)
 - [Microsoft Graph API Documentation](https://learn.microsoft.com/en-us/graph/api/overview)
@@ -44,6 +45,7 @@ All API contract information was obtained from official documentation sources:
 ### Google Workspace API Analysis
 
 #### 1. Domain Verification (Step 1)
+
 - **Endpoint**: `GET /admin/directory/v1/customer/my_customer/domains`
 - **Contract**: Returns array of domains with `verified` and `isPrimary` flags
 - **Determinism**: ✅ Read-only operation, fully deterministic
@@ -51,6 +53,7 @@ All API contract information was obtained from official documentation sources:
 - **Known Issues**: None
 
 #### 2. Organizational Unit Creation (Step 2)
+
 - **Endpoint**: `POST /admin/directory/v1/customer/my_customer/orgunits`
 - **Contract**: Creates OU with specified path, returns 409 if exists
 - **Determinism**: ⚠️ Requires explicit existence check for idempotency
@@ -58,16 +61,18 @@ All API contract information was obtained from official documentation sources:
 - **Known Issues**: Path encoding required, parent must exist first
 
 **Recommendation**: Current step implementation should include:
+
 ```typescript
 // Pseudo-code for idempotent OU creation
-const existing = await listOUs().find(ou => ou.orgUnitPath === targetPath);
+const existing = await listOUs().find((ou) => ou.orgUnitPath === targetPath);
 if (existing) {
-  return { status: 'complete', output: { ouId: existing.orgUnitId } };
+  return { status: "complete", output: { ouId: existing.orgUnitId } };
 }
 // Otherwise create
 ```
 
 #### 3. User Creation (Step 3)
+
 - **Endpoint**: `POST /admin/directory/v1/users`
 - **Contract**: Creates user, enforces email uniqueness
 - **Determinism**: ✅ Email uniqueness enforced by API
@@ -77,6 +82,7 @@ if (existing) {
 **Recommendation**: Query for user before creation attempt
 
 #### 4. Custom Role Creation (Step 4)
+
 - **Endpoint**: `POST /admin/directory/v1/customer/my_customer/roles`
 - **Contract**: Creates role with specified privileges
 - **Determinism**: ❌ **CRITICAL**: Role names are NOT unique - multiple roles with same name can exist
@@ -84,15 +90,17 @@ if (existing) {
 - **Known Issues**: Must implement client-side uniqueness checks
 
 **Recommendation**: This is a significant determinism issue:
+
 ```typescript
 // Must query by name before creation
-const existing = await listRoles().find(r => r.roleName === targetName);
+const existing = await listRoles().find((r) => r.roleName === targetName);
 if (existing) {
-  return { status: 'complete', output: { roleId: existing.roleId } };
+  return { status: "complete", output: { roleId: existing.roleId } };
 }
 ```
 
 #### 5. SAML Profile Creation (Step 5)
+
 - **Endpoint**: `POST /v1/customers/my_customer/inboundSamlSsoProfiles`
 - **Contract**: Creates inbound SAML SSO profile
 - **Determinism**: ❌ **KNOWN BLOCKER**: API returns 404 in test environment (see `e2e-notes.md`)
@@ -100,12 +108,14 @@ if (existing) {
 - **Known Issues**: ❌ **CRITICAL**: Endpoint may not be available in all Google Workspace editions/environments
 
 **Recommendation**: This is the primary blocker. Research needed:
+
 1. Verify Google Workspace edition supports Cloud Identity API
 2. Check if customer ID is correct (try alternatives to `my_customer`)
 3. Consider if domain needs specific verification
 4. Test if different endpoint format works
 
 **API Documentation Note**: The official API shows the endpoint as:
+
 ```
 POST https://cloudidentity.googleapis.com/v1/inboundSamlSsoProfiles
 ```
@@ -115,6 +125,7 @@ But not all documentation shows the `customers/my_customer` prefix requirement. 
 ### Microsoft Graph API Analysis
 
 #### 6. Application Instantiation from Template (Step 6)
+
 - **Endpoint**: `POST /v1.0/applicationTemplates/{id}/instantiate`
 - **Contract**: Creates app and service principal from template
 - **Determinism**: ⚠️ **ASYNC OPERATION**: Takes 10-30 seconds to complete
@@ -122,6 +133,7 @@ But not all documentation shows the `customers/my_customer` prefix requirement. 
 - **Known Issues**: Service principal may not be immediately available after API returns
 
 **Recommendation**: Add polling mechanism:
+
 ```typescript
 // Wait for service principal to be provisioned
 const maxAttempts = 30;
@@ -134,6 +146,7 @@ for (let i = 0; i < maxAttempts; i++) {
 ```
 
 #### 7. Synchronization Configuration (Step 7)
+
 - **Endpoint**: `POST /v1.0/servicePrincipals/{id}/synchronization/jobs`
 - **Contract**: Creates sync job from template
 - **Determinism**: ⚠️ Template must be found first, job creation is synchronous but validation is async
@@ -143,6 +156,7 @@ for (let i = 0; i < maxAttempts; i++) {
 **Recommendation**: Check for existing jobs by template tag before creation
 
 #### 8. SSO Configuration (Step 8)
+
 - **Endpoint**: `PATCH /beta/servicePrincipals/{id}`
 - **Contract**: Updates SSO settings and certificate
 - **Determinism**: ✅ PATCH operations are idempotent
@@ -152,6 +166,7 @@ for (let i = 0; i < maxAttempts; i++) {
 **Recommendation**: Check for valid existing certificate before generating new one
 
 #### 9. Claims Policy (Step 9)
+
 - **Endpoint**: `POST /beta/policies/claimsMappingPolicies`
 - **Contract**: Creates policy and assigns to service principal
 - **Determinism**: ⚠️ Policy creation not idempotent, assignment is idempotent
@@ -161,6 +176,7 @@ for (let i = 0; i < maxAttempts; i++) {
 **Recommendation**: Query policies before creation, assignment is safe to repeat
 
 #### 10-11. Google SSO Completion and Assignment (Steps 10-11)
+
 - **Dependencies**: Require Microsoft certificate from step 8
 - **Determinism**: ✅ Update operations are idempotent
 - **Idempotency**: ✅ Can safely repeat
@@ -172,33 +188,36 @@ for (let i = 0; i < maxAttempts; i++) {
 
 ### Current State
 
-| Step | Deterministic | Idempotent | Issues |
-|------|--------------|------------|--------|
-| 1. Verify Domain | ✅ Yes | ✅ Yes | None |
-| 2. Create OU | ⚠️ Partial | ⚠️ No | Must check before create |
-| 3. Create User | ✅ Yes | ⚠️ No | Email uniqueness helps |
-| 4. Create Role | ❌ No | ❌ No | **Name not unique** |
-| 5. SAML Profile | ❌ Blocked | ❌ No | **404 error** |
-| 6. MS Apps | ⚠️ Async | ❌ No | **30s delay** |
-| 7. Provisioning | ⚠️ Partial | ⚠️ No | Must check jobs |
-| 8. SSO Config | ✅ Yes | ✅ Yes | Cert generation caveat |
-| 9. Claims Policy | ⚠️ Partial | ⚠️ No | Beta endpoint |
-| 10. Complete SSO | ⚠️ Blocked | ✅ Yes | Depends on step 5 |
-| 11. Assign Users | ✅ Yes | ⚠️ Partial | Assignment logic |
+| Step             | Deterministic | Idempotent | Issues                   |
+| ---------------- | ------------- | ---------- | ------------------------ |
+| 1. Verify Domain | ✅ Yes        | ✅ Yes     | None                     |
+| 2. Create OU     | ⚠️ Partial    | ⚠️ No      | Must check before create |
+| 3. Create User   | ✅ Yes        | ⚠️ No      | Email uniqueness helps   |
+| 4. Create Role   | ❌ No         | ❌ No      | **Name not unique**      |
+| 5. SAML Profile  | ❌ Blocked    | ❌ No      | **404 error**            |
+| 6. MS Apps       | ⚠️ Async      | ❌ No      | **30s delay**            |
+| 7. Provisioning  | ⚠️ Partial    | ⚠️ No      | Must check jobs          |
+| 8. SSO Config    | ✅ Yes        | ✅ Yes     | Cert generation caveat   |
+| 9. Claims Policy | ⚠️ Partial    | ⚠️ No      | Beta endpoint            |
+| 10. Complete SSO | ⚠️ Blocked    | ✅ Yes     | Depends on step 5        |
+| 11. Assign Users | ✅ Yes        | ⚠️ Partial | Assignment logic         |
 
 ### Critical Issues for Determinism
 
 1. **Role Name Uniqueness** (Step 4)
+
    - **Severity**: High
    - **Impact**: Multiple test runs create duplicate roles
    - **Fix Required**: Implement query-before-create pattern
 
 2. **SAML Profile 404** (Step 5)
+
    - **Severity**: Critical - Blocks workflow
    - **Impact**: Cannot complete SSO setup
    - **Investigation Required**: API availability, endpoint format, permissions
 
 3. **Async App Provisioning** (Step 6)
+
    - **Severity**: Medium
    - **Impact**: Race conditions if not properly awaited
    - **Fix Required**: Polling mechanism with timeout
@@ -218,7 +237,7 @@ Every create operation should follow this pattern:
 .check(async ({ vars, google, microsoft }) => {
   // Query for existing resource
   const existing = await findResource(resourceIdentifier);
-  
+
   if (existing) {
     // Verify it matches expected state
     if (matchesExpectedState(existing)) {
@@ -235,7 +254,7 @@ Every create operation should follow this pattern:
       };
     }
   }
-  
+
   return {
     isComplete: false,
     summary: "Resource does not exist",
@@ -254,7 +273,7 @@ For operations like app instantiation:
   const result = await microsoft.templates
     .instantiate(templateId)
     .post({ displayName });
-  
+
   // Poll for completion
   const servicePrincipal = await pollForResource({
     check: () => microsoft.servicePrincipals
@@ -264,10 +283,10 @@ For operations like app instantiation:
     interval: 2000,
     condition: (data) => data.value?.length > 0
   });
-  
+
   return {
     status: 'complete',
-    output: { 
+    output: {
       appId: result.appId,
       servicePrincipalId: servicePrincipal.value[0].id
     }
@@ -278,6 +297,7 @@ For operations like app instantiation:
 #### 3. Resource Cleanup Safety
 
 Cleanup must handle:
+
 - Resources that don't exist (already deleted)
 - Resources that are protected (system resources)
 - Dependencies (delete in correct order)
@@ -285,31 +305,31 @@ Cleanup must handle:
 ```typescript
 .undo(async ({ vars, google }) => {
   const resourceId = vars[Var.ResourceId];
-  
+
   try {
     // Check if exists
     const exists = await google.resource
       .get(resourceId)
       .exists();
-    
+
     if (!exists) {
       // Already deleted
       return { status: 'complete' };
     }
-    
+
     // Check if protected
     if (isProtected(resourceId)) {
-      return { 
+      return {
         status: 'blocked',
         message: 'Resource is protected and cannot be deleted'
       };
     }
-    
+
     // Safe to delete
     await google.resource
       .delete(resourceId)
       .execute();
-    
+
     return { status: 'complete' };
   } catch (error) {
     if (error.status === 404) {
@@ -328,10 +348,12 @@ Cleanup must handle:
 ### Prerequisites for Reliable E2E Testing
 
 1. **Valid Credentials**
+
    - Google: Super Admin with all Directory and Cloud Identity scopes
    - Microsoft: Global Admin with Application.ReadWrite.All, Directory.ReadWrite.All
 
 2. **Test Environment**
+
    - Dedicated test domain (not production)
    - No concurrent API usage during tests
    - Clean state before each run
@@ -374,13 +396,15 @@ pnpm tsx scripts/e2e-setup.ts
 **Status**: ❌ Blocking  
 **Documented In**: `e2e-notes.md`
 
-**Problem**: 
+**Problem**:
+
 ```bash
 POST https://cloudidentity.googleapis.com/v1/customers/my_customer/inboundSamlSsoProfiles
 Response: 404 Not Found
 ```
 
 **Possible Causes**:
+
 1. Cloud Identity API not enabled for customer
 2. Google Workspace edition doesn't support this feature
 3. Incorrect customer ID format
@@ -388,6 +412,7 @@ Response: 404 Not Found
 5. API endpoint format changed
 
 **Investigation Steps**:
+
 ```bash
 # Test 1: List existing profiles (this works according to e2e-notes.md)
 curl -H "Authorization: Bearer $TOKEN" \
@@ -406,7 +431,8 @@ curl -X POST \
 
 **Current Workaround**: Test accepts `blocked` status for this step
 
-**Recommendation**: 
+**Recommendation**:
+
 - Contact Google Cloud Support with API trace
 - Verify Google Workspace edition supports this feature
 - Check if enterprise-specific API key/project required
@@ -441,6 +467,7 @@ curl -X POST \
 ### Phase 1: Credential Validation (Implemented)
 
 Tools created:
+
 - ✅ `scripts/validate-test-credentials.ts` - Validates tokens and permissions
 - ✅ `scripts/test-api-contracts.ts` - Tests each API endpoint independently
 - ✅ `scripts/token-info.sh` - Shows token metadata
@@ -450,12 +477,20 @@ Tools created:
 Create individual tests for each API operation:
 
 ```typescript
-describe('Google Directory API', () => {
-  describe('Organizational Units', () => {
-    it('lists OUs', async () => { /* ... */ });
-    it('creates OU idempotently', async () => { /* ... */ });
-    it('handles duplicate creation gracefully', async () => { /* ... */ });
-    it('deletes OU', async () => { /* ... */ });
+describe("Google Directory API", () => {
+  describe("Organizational Units", () => {
+    it("lists OUs", async () => {
+      /* ... */
+    });
+    it("creates OU idempotently", async () => {
+      /* ... */
+    });
+    it("handles duplicate creation gracefully", async () => {
+      /* ... */
+    });
+    it("deletes OU", async () => {
+      /* ... */
+    });
   });
 });
 ```
@@ -463,6 +498,7 @@ describe('Google Directory API', () => {
 ### Phase 3: Integration Testing (Partially Implemented)
 
 Current E2E test covers full workflow. Enhance with:
+
 - Retry logic for transient failures
 - Better error categorization (transient vs permanent)
 - Parallel execution safety
@@ -471,6 +507,7 @@ Current E2E test covers full workflow. Enhance with:
 ### Phase 4: Chaos Testing (Future)
 
 Test reliability under adverse conditions:
+
 - Random step failures
 - Network interruptions
 - Rate limiting
@@ -485,11 +522,13 @@ Test reliability under adverse conditions:
 **Purpose**: Validate bearer tokens before running tests
 
 **Usage**:
+
 ```bash
 pnpm tsx scripts/validate-test-credentials.ts
 ```
 
 **Output**:
+
 - Token validity status
 - Token expiration time
 - Available scopes/permissions
@@ -501,17 +540,20 @@ pnpm tsx scripts/validate-test-credentials.ts
 **Purpose**: Test each API endpoint used in workflow
 
 **Usage**:
+
 ```bash
 pnpm tsx scripts/test-api-contracts.ts
 ```
 
 **Output**:
+
 - Per-endpoint test results
 - JSON report (`api-contract-test-results.json`)
 - Markdown report (`api-contract-test-results.md`)
 - Success/failure summary
 
 **Endpoints Tested**:
+
 - Google: Domains, OrgUnits, Roles, Users, SAML Profiles
 - Microsoft: Organization, Applications, Service Principals, Claims Policies
 
@@ -520,11 +562,13 @@ pnpm tsx scripts/test-api-contracts.ts
 **Purpose**: Display token metadata
 
 **Usage**:
+
 ```bash
 ./scripts/token-info.sh
 ```
 
 **Output**:
+
 - Token expiration
 - Organization details
 - Verified domains
@@ -537,17 +581,20 @@ pnpm tsx scripts/test-api-contracts.ts
 ### Immediate Actions (High Priority)
 
 1. **Resolve SAML Profile Creation Issue**
+
    - Contact Google Support with detailed API trace
    - Verify Workspace edition compatibility
    - Test alternative endpoints
    - Document if feature is not available in test environment
 
 2. **Implement Universal Idempotency**
+
    - Add check logic to all create operations
    - Ensure steps can be safely re-run
    - Handle "already exists" gracefully
 
 3. **Add Async Operation Handling**
+
    - Implement polling utilities
    - Add configurable timeouts
    - Detect long-running operations automatically
@@ -560,16 +607,19 @@ pnpm tsx scripts/test-api-contracts.ts
 ### Medium-Term Improvements
 
 1. **Token Management**
+
    - Implement token refresh mechanism
    - Add token expiration monitoring
    - Support refresh tokens
 
 2. **Parallel Test Safety**
+
    - Add resource locking
    - Ensure unique resource names
    - Detect and report conflicts
 
 3. **Mock/Replay Mode**
+
    - Record real API responses
    - Replay for fast development testing
    - Maintain contract compatibility
@@ -582,11 +632,13 @@ pnpm tsx scripts/test-api-contracts.ts
 ### Long-Term Vision
 
 1. **Continuous Integration**
+
    - Scheduled E2E test runs
    - API contract monitoring
    - Automatic issue creation on failures
 
 2. **Performance Baselines**
+
    - Track step execution times
    - Detect API performance degradation
    - Alert on anomalies
@@ -627,6 +679,7 @@ pnpm tsx scripts/test-api-contracts.ts
 6. Implement recommended improvements based on findings
 
 **Priority investigations**:
+
 1. Resolve Google SAML profile 404 issue
 2. Verify async app provisioning timing
 3. Test role name uniqueness problem
@@ -646,6 +699,7 @@ The E2E test suite will be **verifiable, deterministic, idempotent, and comprehe
 - ✅ Tests work reliably across different environments
 
 **Current Status**: 60% toward goal
+
 - ✅ Test structure is sound
 - ✅ Cleanup logic exists
 - ⚠️ Idempotency needs improvement
@@ -658,21 +712,25 @@ The E2E test suite will be **verifiable, deterministic, idempotent, and comprehe
 ## Appendix: File Reference
 
 ### Documentation Created
+
 - `api-contracts-analysis.md` - Detailed API contract research
 - `E2E_TEST_GUIDE.md` - Step-by-step testing guide
 - `FINDINGS.md` (this file) - Comprehensive analysis and recommendations
 
 ### Scripts Created
+
 - `scripts/validate-test-credentials.ts` - Token validation
 - `scripts/test-api-contracts.ts` - API endpoint testing
 
 ### Existing Files Referenced
+
 - `e2e-notes.md` - Known issues (SAML 404)
 - `test/e2e/workflow.test.ts` - E2E test implementation
 - `scripts/e2e-setup.ts` - Cleanup logic
 - `scripts/token-info.sh` - Token metadata
 
 ### Reports Generated (when credentials available)
+
 - `api-contract-test-results.json` - Machine-readable results
 - `api-contract-test-results.md` - Human-readable report
 

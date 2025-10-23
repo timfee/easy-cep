@@ -1,5 +1,5 @@
-import { z } from "zod";
 import { HttpMethod } from "@/types";
+import { z } from "zod";
 import type { HttpClient } from "../types/http-client";
 
 export interface BuilderConfig {
