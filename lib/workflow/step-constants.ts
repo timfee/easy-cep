@@ -1,40 +1,51 @@
-import { StepStatus } from "./step-status";
+import type { StepStatus } from "./step-status";
 
-export const STEP_STATE_CONFIG = {
-  [StepStatus.Ready]: {
+type BadgeVariant = "outline" | "default" | "destructive";
+
+interface StepStateConfig {
+  badge: { variant: BadgeVariant; className: string };
+  icon: "CheckCircle" | "AlertTriangle" | null;
+  indicatorClass: string;
+  borderClass: string;
+}
+
+const stepStateConfig: Record<StepStatus, StepStateConfig> = {
+  blocked: {
     badge: {
-      variant: "outline" as const,
-      className: "bg-green-50 text-green-700 border-green-200"
+      variant: "outline",
+      className: "bg-muted/20 text-muted-foreground/70 border-border/30",
     },
     icon: null,
-    indicatorClass: "bg-green-600 text-white",
-    borderClass: "border-green-200 hover:border-green-300"
+    indicatorClass: "bg-muted text-muted-foreground/60",
+    borderClass: "border-border/30 border-dashed",
   },
-  [StepStatus.Blocked]: {
+  ready: {
     badge: {
-      variant: "outline" as const,
-      className: "bg-gray-50 text-gray-500 border-gray-200"
+      variant: "default",
+      className: "bg-primary/15 text-primary border-primary/40",
     },
     icon: null,
-    indicatorClass: "bg-gray-400 text-white",
-    borderClass: "border-gray-200"
+    indicatorClass: "bg-primary text-primary-foreground",
+    borderClass: "border-primary/60 hover:border-primary/80",
   },
-  [StepStatus.Complete]: {
+  complete: {
     badge: {
-      variant: "default" as const,
-      className: "bg-primary/10 text-primary border-primary/20"
+      variant: "outline",
+      className: "bg-accent/50 text-accent-foreground border-accent/60",
     },
     icon: "CheckCircle",
-    indicatorClass: "bg-primary text-white",
-    borderClass: "border-primary/20"
+    indicatorClass: "bg-accent text-accent-foreground",
+    borderClass: "border-accent/60",
   },
-  [StepStatus.Stale]: {
+  stale: {
     badge: {
-      variant: "destructive" as const,
-      className: "bg-destructive/10 text-destructive border-destructive/20"
+      variant: "destructive",
+      className: "bg-destructive/10 text-destructive border-destructive/20",
     },
     icon: "AlertTriangle",
     indicatorClass: "bg-destructive text-white",
-    borderClass: "border-destructive"
-  }
-} as const;
+    borderClass: "border-destructive",
+  },
+};
+
+export const STEP_STATE_CONFIG = stepStateConfig;

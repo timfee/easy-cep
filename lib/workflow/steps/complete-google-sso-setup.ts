@@ -1,5 +1,7 @@
 import { isNotFoundError } from "@/lib/workflow/core/errors";
-import { LogLevel, StepId, Var } from "@/types";
+import { StepId } from "@/lib/workflow/step-ids";
+import { Var } from "@/lib/workflow/variables";
+import { LogLevel } from "@/types";
 import { defineStep } from "../step-builder";
 
 export default defineStep(StepId.CompleteGoogleSsoSetup)
@@ -11,13 +13,6 @@ export default defineStep(StepId.CompleteGoogleSsoSetup)
     Var.MsSsoEntityId
   )
   .provides()
-  /**
-   * GET https://cloudidentity.googleapis.com/v1/inboundSamlSsoProfiles/{samlProfileId}
-   * Headers: { Authorization: Bearer {googleAccessToken} }
-   *
-   * Success response (200)
-   * { "name": "profiles/{id}", "idpConfig": { ... }, "spConfig": { ... } }
-   */
 
   .check(
     async ({
@@ -26,26 +21,32 @@ export default defineStep(StepId.CompleteGoogleSsoSetup)
       markComplete,
       markIncomplete,
       markCheckFailed,
-      log
+      log,
     }) => {
       try {
         const profileId = vars.require(Var.SamlProfileId);
 
-        const profile = await google.samlProfiles.get(profileId).get();
+        const profile = (await google.samlProfiles.get(profileId).get()) as {
+          idpConfig?: {
+            entityId?: string;
+            singleSignOnServiceUri?: string;
+            signOutUri?: string;
+          };
+        };
 
-        const { idpCredentials = [] } = await google.samlProfiles
+        const { idpCredentials = [] } = (await google.samlProfiles
           .credentials(profileId)
           .list()
-          .get();
+          .get()) as { idpCredentials?: Array<{ name: string }> };
 
         if (
-          profile.idpConfig?.entityId
-          && profile.idpConfig.singleSignOnServiceUri
-          && profile.idpConfig.signOutUri
-          && profile.idpConfig.entityId !== ""
-          && profile.idpConfig.singleSignOnServiceUri !== ""
-          && profile.idpConfig.signOutUri !== ""
-          && idpCredentials.length > 0
+          profile.idpConfig?.entityId &&
+          profile.idpConfig.singleSignOnServiceUri &&
+          profile.idpConfig.signOutUri &&
+          profile.idpConfig.entityId !== "" &&
+          profile.idpConfig.singleSignOnServiceUri !== "" &&
+          profile.idpConfig.signOutUri !== "" &&
+          idpCredentials.length > 0
         ) {
           log(LogLevel.Info, "Google SSO already configured");
           markComplete({});
@@ -60,16 +61,6 @@ export default defineStep(StepId.CompleteGoogleSsoSetup)
         );
       }
     }
-    /**
-     * PATCH https://cloudidentity.googleapis.com/v1/{samlProfile}?updateMask=idpConfig.entityId,idpConfig.singleSignOnServiceUri,idpConfig.signOutUri,idpConfig.changePasswordUri
-     * Headers: { Authorization: Bearer {googleAccessToken} }
-     * Body: { idpConfig: { entityId, singleSignOnServiceUri, signOutUri, changePasswordUri } }
-     *
-     * POST https://cloudidentity.googleapis.com/v1/{samlProfile}/certificates
-     * Headers: { Authorization: Bearer {googleAccessToken} }
-     * Body: { pemData: "-----BEGIN CERTIFICATE-----..." }
-     * Success response: { "done": true }
-     */
   )
   .execute(async ({ vars, google, output, markFailed, log }) => {
     try {
@@ -86,17 +77,18 @@ export default defineStep(StepId.CompleteGoogleSsoSetup)
       const updateMask =
         "idpConfig.entityId,idpConfig.singleSignOnServiceUri,idpConfig.signOutUri,idpConfig.changePasswordUri";
 
-      const updateOp = await google.samlProfiles
+      const updateOp = (await google.samlProfiles
         .update(profileId)
         .query({ updateMask })
         .patch({
           idpConfig: {
-            entityId: entityId,
+            entityId,
             singleSignOnServiceUri: loginUrl,
             signOutUri: loginUrl,
-            changePasswordUri: `https://account.activedirectory.windowsazure.com/ChangePassword.aspx`
-          }
-        });
+            changePasswordUri:
+              "https://account.activedirectory.windowsazure.com/ChangePassword.aspx",
+          },
+        })) as { done: boolean; error?: { message: string } };
 
       if (!updateOp.done) {
         markFailed("SAML profile update operation not completed");
@@ -105,7 +97,7 @@ export default defineStep(StepId.CompleteGoogleSsoSetup)
 
       if (updateOp.error) {
         log(LogLevel.Error, "SAML profile update failed", {
-          error: updateOp.error
+          error: updateOp.error,
         });
         markFailed(updateOp.error.message);
         return;
@@ -113,15 +105,17 @@ export default defineStep(StepId.CompleteGoogleSsoSetup)
 
       log(LogLevel.Info, "Uploading SAML certificate to Google");
 
-      const pemCert =
-        signingCert.includes("BEGIN CERTIFICATE") ? signingCert : (
-          `-----BEGIN CERTIFICATE-----\n${signingCert}\n-----END CERTIFICATE-----`
-        );
+      const pemCert = signingCert.includes("BEGIN CERTIFICATE")
+        ? signingCert
+        : `-----BEGIN CERTIFICATE-----\n${signingCert}\n-----END CERTIFICATE-----`;
 
-      const certOp = await google.samlProfiles
+      const certOp = (await google.samlProfiles
         .credentials(profileId)
         .add()
-        .post({ pemData: pemCert });
+        .post({ pemData: pemCert })) as {
+        done: boolean;
+        error?: { message: string };
+      };
 
       if (!certOp.done) {
         markFailed("Certificate upload operation not completed");
@@ -130,7 +124,7 @@ export default defineStep(StepId.CompleteGoogleSsoSetup)
 
       if (certOp.error) {
         log(LogLevel.Error, "Certificate upload failed", {
-          error: certOp.error
+          error: certOp.error,
         });
         markFailed(certOp.error.message);
         return;
@@ -143,34 +137,28 @@ export default defineStep(StepId.CompleteGoogleSsoSetup)
       markFailed(error instanceof Error ? error.message : "Execute failed");
     }
   })
-  /**
-   * Delete any uploaded certificates when reverting
-   */
   .undo(async ({ vars, google, markReverted, markFailed, log }) => {
     try {
-      const profileId = vars.get(Var.SamlProfileId);
-      if (!profileId) {
-        markReverted();
-        return;
-      }
+      const profileId = vars.require(Var.SamlProfileId);
 
-      const { idpCredentials = [] } = await google.samlProfiles
+      const { idpCredentials = [] } = (await google.samlProfiles
         .credentials(profileId)
         .list()
-        .get();
+        .get()) as { idpCredentials?: Array<{ name: string }> };
 
       for (const cred of idpCredentials) {
         try {
           const credId = cred.name.split("/").pop();
-          if (credId) {
-            await google.samlProfiles
-              .credentials(profileId)
-              .delete(credId)
-              .delete();
-            log(LogLevel.Info, `Deleted certificate ${credId}`);
+          if (!credId) {
+            continue;
           }
+          await google.samlProfiles
+            .credentials(profileId)
+            .delete(credId)
+            .delete();
+          log(LogLevel.Info, `Deleted certificate ${credId}`);
         } catch (error) {
-          log(LogLevel.Info, `Failed to delete certificate`, { error });
+          log(LogLevel.Info, "Failed to delete certificate", { error });
         }
       }
 
@@ -178,10 +166,10 @@ export default defineStep(StepId.CompleteGoogleSsoSetup)
     } catch (error) {
       if (isNotFoundError(error)) {
         markReverted();
-      } else {
-        log(LogLevel.Error, "Failed to cleanup certificates", { error });
-        markFailed(error instanceof Error ? error.message : "Undo failed");
+        return;
       }
+      log(LogLevel.Error, "Failed to cleanup certificates", { error });
+      markFailed(error instanceof Error ? error.message : "Undo failed");
     }
   })
   .build();

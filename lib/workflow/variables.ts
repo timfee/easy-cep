@@ -24,8 +24,8 @@ export const WORKFLOW_VARIABLES: Record<string, VariableMetadata> = {
       StepId.CreateAdminRoleAndAssignUser,
       StepId.ConfigureGoogleSamlProfile,
       StepId.CompleteGoogleSsoSetup,
-      StepId.AssignUsersToSso
-    ]
+      StepId.AssignUsersToSso,
+    ],
   },
   msGraphToken: {
     type: "string",
@@ -36,15 +36,15 @@ export const WORKFLOW_VARIABLES: Record<string, VariableMetadata> = {
       StepId.CreateMicrosoftApps,
       StepId.SetupMicrosoftProvisioning,
       StepId.ConfigureMicrosoftSso,
-      StepId.SetupMicrosoftClaimsPolicy
-    ]
+      StepId.SetupMicrosoftClaimsPolicy,
+    ],
   },
   primaryDomain: {
     type: "string",
     category: "domain",
     description: "Primary Google Workspace domain",
     producedBy: StepId.VerifyPrimaryDomain,
-    consumedBy: [StepId.CreateServiceUser]
+    consumedBy: [StepId.CreateServiceUser],
   },
   isDomainVerified: {
     type: "string",
@@ -56,83 +56,83 @@ export const WORKFLOW_VARIABLES: Record<string, VariableMetadata> = {
       StepId.CreateServiceUser,
       StepId.CreateAdminRoleAndAssignUser,
       StepId.ConfigureGoogleSamlProfile,
-      StepId.AssignUsersToSso
-    ]
+      StepId.AssignUsersToSso,
+    ],
   },
   verificationToken: {
     type: "string",
     category: "domain",
     description: "DNS verification token",
-    producedBy: StepId.VerifyPrimaryDomain
+    producedBy: StepId.VerifyPrimaryDomain,
   },
   automationOuName: {
     type: "string",
     category: "config",
     description: "Name for the automation OU",
     consumedBy: [StepId.CreateAutomationOU],
-    configurable: true
+    configurable: true,
   },
   automationOuPath: {
     type: "string",
     category: "config",
     description: "Path of the automation OU",
     consumedBy: [StepId.CreateAutomationOU, StepId.CreateServiceUser],
-    configurable: true
+    configurable: true,
   },
   provisioningUserPrefix: {
     type: "string",
     category: "config",
     description: "Prefix for provisioning user email",
     consumedBy: [StepId.CreateServiceUser],
-    configurable: true
+    configurable: true,
   },
   adminRoleName: {
     type: "string",
     category: "config",
     description: "Name of the custom admin role",
     consumedBy: [StepId.CreateAdminRoleAndAssignUser],
-    configurable: true
+    configurable: true,
   },
   samlProfileDisplayName: {
     type: "string",
     category: "config",
     description: "Display name for SAML profile",
     consumedBy: [StepId.ConfigureGoogleSamlProfile],
-    configurable: true
+    configurable: true,
   },
   provisioningAppDisplayName: {
     type: "string",
     category: "config",
     description: "Display name for provisioning app",
     consumedBy: [StepId.CreateMicrosoftApps],
-    configurable: true
+    configurable: true,
   },
   ssoAppDisplayName: {
     type: "string",
     category: "config",
     description: "Display name for SSO app",
     consumedBy: [StepId.CreateMicrosoftApps],
-    configurable: true
+    configurable: true,
   },
   claimsPolicyDisplayName: {
     type: "string",
     category: "config",
     description: "Display name for claims policy",
     consumedBy: [StepId.SetupMicrosoftClaimsPolicy],
-    configurable: true
+    configurable: true,
   },
   provisioningUserId: {
     type: "string",
     category: "state",
     description: "Google user ID for provisioning account",
     producedBy: StepId.CreateServiceUser,
-    consumedBy: [StepId.CreateAdminRoleAndAssignUser]
+    consumedBy: [StepId.CreateAdminRoleAndAssignUser],
   },
   provisioningUserEmail: {
     type: "string",
     category: "state",
     description: "Email for provisioning account",
-    producedBy: StepId.CreateServiceUser
+    producedBy: StepId.CreateServiceUser,
   },
   generatedPassword: {
     type: "string",
@@ -140,19 +140,19 @@ export const WORKFLOW_VARIABLES: Record<string, VariableMetadata> = {
     description: "Password for provisioning account",
     producedBy: StepId.CreateServiceUser,
     consumedBy: [StepId.SetupMicrosoftProvisioning],
-    sensitive: true
+    sensitive: true,
   },
   adminRoleId: {
     type: "string",
     category: "state",
     description: "Custom admin role ID",
-    producedBy: StepId.CreateAdminRoleAndAssignUser
+    producedBy: StepId.CreateAdminRoleAndAssignUser,
   },
   directoryServiceId: {
     type: "string",
     category: "state",
     description: "Directory service ID",
-    producedBy: StepId.CreateAdminRoleAndAssignUser
+    producedBy: StepId.CreateAdminRoleAndAssignUser,
   },
   ssoServicePrincipalId: {
     type: "string",
@@ -161,49 +161,49 @@ export const WORKFLOW_VARIABLES: Record<string, VariableMetadata> = {
     producedBy: StepId.CreateMicrosoftApps,
     consumedBy: [
       StepId.ConfigureMicrosoftSso,
-      StepId.SetupMicrosoftClaimsPolicy
-    ]
+      StepId.SetupMicrosoftClaimsPolicy,
+    ],
   },
   provisioningServicePrincipalId: {
     type: "string",
     category: "state",
     description: "Service principal for provisioning app",
     producedBy: StepId.CreateMicrosoftApps,
-    consumedBy: [StepId.SetupMicrosoftProvisioning]
+    consumedBy: [StepId.SetupMicrosoftProvisioning],
   },
   ssoAppId: {
     type: "string",
     category: "state",
     description: "Application ID for SSO app",
     producedBy: StepId.CreateMicrosoftApps,
-    consumedBy: [StepId.ConfigureMicrosoftSso]
+    consumedBy: [StepId.ConfigureMicrosoftSso],
   },
   samlProfileId: {
     type: "string",
     category: "state",
     description: "SAML profile identifier",
     producedBy: StepId.ConfigureGoogleSamlProfile,
-    consumedBy: [StepId.CompleteGoogleSsoSetup, StepId.AssignUsersToSso]
+    consumedBy: [StepId.CompleteGoogleSsoSetup, StepId.AssignUsersToSso],
   },
   entityId: {
     type: "string",
     category: "state",
     description: "Service provider entityId",
     producedBy: StepId.ConfigureGoogleSamlProfile,
-    consumedBy: [StepId.ConfigureMicrosoftSso]
+    consumedBy: [StepId.ConfigureMicrosoftSso],
   },
   acsUrl: {
     type: "string",
     category: "state",
     description: "Assertion consumer service URL",
     producedBy: StepId.ConfigureGoogleSamlProfile,
-    consumedBy: [StepId.ConfigureMicrosoftSso]
+    consumedBy: [StepId.ConfigureMicrosoftSso],
   },
   claimsPolicyId: {
     type: "string",
     category: "state",
     description: "Claims policy identifier",
-    producedBy: StepId.SetupMicrosoftClaimsPolicy
+    producedBy: StepId.SetupMicrosoftClaimsPolicy,
   },
   msSigningCertificate: {
     type: "string",
@@ -211,35 +211,45 @@ export const WORKFLOW_VARIABLES: Record<string, VariableMetadata> = {
     description: "Microsoft SAML signing certificate in PEM format",
     producedBy: StepId.ConfigureMicrosoftSso,
     consumedBy: [StepId.CompleteGoogleSsoSetup],
-    sensitive: true
+    sensitive: true,
   },
   msSsoLoginUrl: {
     type: "string",
     category: "state",
     description: "Microsoft SAML SSO login URL",
     producedBy: StepId.ConfigureMicrosoftSso,
-    consumedBy: [StepId.CompleteGoogleSsoSetup]
+    consumedBy: [StepId.CompleteGoogleSsoSetup],
   },
   msSsoEntityId: {
     type: "string",
     category: "state",
     description: "Microsoft SAML entity ID",
     producedBy: StepId.ConfigureMicrosoftSso,
-    consumedBy: [StepId.CompleteGoogleSsoSetup]
-  }
-} as const satisfies Record<string, VariableMetadata>;
+    consumedBy: [StepId.CompleteGoogleSsoSetup],
+  },
+};
 
 // Auto-generate Var enum with PascalCase keys
-function toPascalCase<S extends string>(str: S): Capitalize<S> {
-  return (str.charAt(0).toUpperCase() + str.slice(1)) as Capitalize<S>;
+function toPascalCase(value: string): string {
+  return value.charAt(0).toUpperCase() + value.slice(1);
 }
 
-export const Var = (
-  Object.keys(WORKFLOW_VARIABLES) as Array<keyof typeof WORKFLOW_VARIABLES>
-).reduce(
-  (acc, key) => ({ ...acc, [toPascalCase(key)]: key }),
-  {} as { [K in keyof typeof WORKFLOW_VARIABLES as Capitalize<K>]: K }
-);
+function isVarKey(value: string): value is keyof typeof WORKFLOW_VARIABLES {
+  return value in WORKFLOW_VARIABLES;
+}
+
+function buildVarMap(): Record<string, keyof typeof WORKFLOW_VARIABLES> {
+  const result: Record<string, keyof typeof WORKFLOW_VARIABLES> = {};
+  for (const key of Object.keys(WORKFLOW_VARIABLES)) {
+    if (!isVarKey(key)) {
+      continue;
+    }
+    result[toPascalCase(key)] = key;
+  }
+  return result;
+}
+
+export const Var = buildVarMap();
 
 export type WorkflowVars = {
   [K in keyof typeof WORKFLOW_VARIABLES]: string | undefined;

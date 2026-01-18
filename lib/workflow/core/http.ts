@@ -10,7 +10,33 @@ export function extractResourceId(
   return match?.[1] || resourceName;
 }
 
-export const ResourceTypes = {
+export type ResourceTypeValue =
+  | "inboundSsoAssignments"
+  | "inboundSamlSsoProfiles"
+  | "id"
+  | "orgUnits"
+  | "roles"
+  | "roleassignments"
+  | "users"
+  | "servicePrincipals"
+  | "applications"
+  | "synchronization/jobs"
+  | "claimsMappingPolicies";
+
+export const ResourceTypes: Record<
+  | "InboundSsoAssignments"
+  | "InboundSamlSsoProfiles"
+  | "OrgUnitId"
+  | "OrgUnits"
+  | "Roles"
+  | "RoleAssignments"
+  | "Users"
+  | "ServicePrincipals"
+  | "Applications"
+  | "SynchronizationJobs"
+  | "ClaimsMappingPolicies",
+  ResourceTypeValue
+> = {
   InboundSsoAssignments: "inboundSsoAssignments",
   InboundSamlSsoProfiles: "inboundSamlSsoProfiles",
   OrgUnitId: "id",
@@ -21,5 +47,5 @@ export const ResourceTypes = {
   ServicePrincipals: "servicePrincipals",
   Applications: "applications",
   SynchronizationJobs: "synchronization/jobs",
-  ClaimsMappingPolicies: "claimsMappingPolicies"
-} as const;
+  ClaimsMappingPolicies: "claimsMappingPolicies",
+};

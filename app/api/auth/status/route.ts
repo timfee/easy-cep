@@ -1,6 +1,6 @@
+import { NextResponse } from "next/server";
 import { ApiEndpoint, PROVIDERS } from "@/constants";
 import { getChunkedCookie } from "@/lib/auth";
-import { NextResponse } from "next/server";
 
 export async function GET() {
   const googleToken = await getChunkedCookie(`${PROVIDERS.GOOGLE}_token`);
@@ -23,7 +23,7 @@ export async function GET() {
   if (msToken) {
     try {
       const res = await fetch(ApiEndpoint.Microsoft.Me, {
-        headers: { Authorization: `Bearer ${msToken}` }
+        headers: { Authorization: `Bearer ${msToken}` },
       });
       result.microsoft.valid = res.ok;
     } catch {

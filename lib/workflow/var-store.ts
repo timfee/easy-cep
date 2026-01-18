@@ -6,22 +6,36 @@ export interface BasicVarStore {
   build(template: string): string;
 }
 
+function isVarName(
+  value: string,
+  vars: Partial<WorkflowVars>
+): value is VarName {
+  return value in vars;
+}
+
+function requireVar<K extends VarName>(
+  vars: Partial<WorkflowVars>,
+  key: K
+): NonNullable<WorkflowVars[K]> {
+  const value = vars[key];
+  if (value === undefined) {
+    throw new Error(`Required variable ${key} is missing`);
+  }
+  return value;
+}
+
 export function createVarStore(vars: Partial<WorkflowVars>): BasicVarStore {
   return {
     get: <K extends VarName>(key: K) => vars[key],
-    require: <K extends VarName>(key: K) => {
-      const value = vars[key];
-      if (value === undefined)
-        throw new Error(`Required variable ${key} is missing`);
-      return value as NonNullable<WorkflowVars[K]>;
-    },
+    require: <K extends VarName>(key: K) => requireVar(vars, key),
     build: (template: string) => {
-      return template.replace(/\{(\w+)\}/g, (_, key) => {
-        const value = vars[key as VarName];
-        if (value === undefined)
-          throw new Error(`Template variable ${key} is missing`);
-        return String(value);
+      return template.replace(/\{(\w+)\}/g, (match, rawKey: string) => {
+        if (!isVarName(rawKey, vars)) {
+          throw new Error(`Template variable ${rawKey} is missing`);
+        }
+        const value = requireVar(vars, rawKey);
+        return String(value ?? match);
       });
-    }
+    },
   };
 }

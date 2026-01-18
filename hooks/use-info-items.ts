@@ -1,5 +1,5 @@
-import { InfoItem } from "@/lib/info";
 import { useCallback, useEffect, useState } from "react";
+import type { InfoItem } from "@/lib/info";
 
 export function useInfoItems(
   fetchItems: () => Promise<InfoItem[]>,

@@ -1,3 +1,3 @@
-import { jest } from "@jest/globals";
+import { mock } from "bun:test";
 
-export const refreshTokenIfNeeded = jest.fn();
+export const refreshTokenIfNeeded = mock();

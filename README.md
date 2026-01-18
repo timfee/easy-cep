@@ -16,7 +16,7 @@ This application automates the manual process of setting up federation between G
 
 ## Requirements
 
-- Node.js and pnpm
+- Node.js and Bun
 - Google Workspace admin account
 - Microsoft Entra ID admin account
 - OAuth applications in both platforms
@@ -24,7 +24,7 @@ This application automates the manual process of setting up federation between G
 ## Setup
 
 ```bash
-pnpm install
+bun install
 
 # Create .env.local with:
 AUTH_SECRET=<random-string>
@@ -33,7 +33,7 @@ GOOGLE_OAUTH_CLIENT_SECRET=<your-client-secret>
 MICROSOFT_OAUTH_CLIENT_ID=<your-client-id>
 MICROSOFT_OAUTH_CLIENT_SECRET=<your-client-secret>
 
-pnpm dev
+bun run dev
 ```
 
 ## Workflow Steps
@@ -114,13 +114,16 @@ const created = await microsoft.applications
 
 ```bash
 # Run tests
-pnpm test
+bun test
 
 # Clean test environment
-pnpm tsx scripts/full-cleanup.ts
+bun x tsx scripts/full-cleanup.ts
 
 # Verify tokens
 ./scripts/token-info.sh
+
+# Run live E2E tests
+bun x tsx scripts/test-live.ts
 ```
 
 ## API Endpoints

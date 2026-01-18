@@ -1,23 +1,28 @@
-import { jest } from "@jest/globals";
-import fs from "fs";
-import path from "path";
-import { fileURLToPath } from "url";
+import { afterEach, beforeAll, describe, expect, mock, test } from "bun:test";
+import fs from "node:fs";
+import path from "node:path";
+import { fileURLToPath } from "node:url";
+import type { Token } from "@/lib/auth";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
-const token = { accessToken: "tok", refreshToken: "", expiresAt: 0, scope: [] };
+const token: Token = {
+  accessToken: "tok",
+  refreshToken: "",
+  expiresAt: 0,
+  scope: [],
+};
 
-// Mock authentication helpers
-(jest as any).unstable_mockModule("@/lib/auth", () => ({
-  refreshTokenIfNeeded: jest.fn(() => Promise.resolve(token))
+mock.module("@/lib/auth", () => ({
+  refreshTokenIfNeeded: mock(() => Promise.resolve(token)),
 }));
 
-let listOrgUnits: any;
-let listSamlProfiles: any;
-let listSsoAssignments: any;
-let listProvisioningJobs: any;
-let listClaimsPolicies: any;
-let listEnterpriseApps: any;
+let listOrgUnits: typeof import("@/lib/info").listOrgUnits;
+let listSamlProfiles: typeof import("@/lib/info").listSamlProfiles;
+let listSsoAssignments: typeof import("@/lib/info").listSsoAssignments;
+let listProvisioningJobs: typeof import("@/lib/info").listProvisioningJobs;
+let listClaimsPolicies: typeof import("@/lib/info").listClaimsPolicies;
+let listEnterpriseApps: typeof import("@/lib/info").listEnterpriseApps;
 
 beforeAll(async () => {
   const mod = await import("@/lib/info");
@@ -35,17 +40,31 @@ function load(name: string) {
 }
 
 describe("info server actions", () => {
+  const originalFetch = global.fetch;
+
+  const setFetchMock = (fetchMock: ReturnType<typeof mock>) => {
+    const withPreconnect = Object.assign(fetchMock, { preconnect: mock() });
+    const mockFetch = ((...args: Parameters<typeof fetch>) =>
+      (withPreconnect as (...callArgs: Parameters<typeof fetch>) => unknown)(
+        ...args
+      )) as unknown as typeof fetch;
+    mockFetch.preconnect = withPreconnect.preconnect;
+    global.fetch = mockFetch;
+  };
+
   afterEach(() => {
-    jest.restoreAllMocks();
+    mock.restore();
+    global.fetch = originalFetch;
   });
 
   test("listOrgUnits", async () => {
-    global.fetch = jest
-      .fn<() => Promise<any>>()
-      .mockResolvedValue({
+    const fetchMock = mock(() =>
+      Promise.resolve({
         ok: true,
-        json: async () => load("google-org-units.json")
-      }) as any;
+        json: async () => load("google-org-units.json"),
+      })
+    );
+    setFetchMock(fetchMock);
     const items = await listOrgUnits();
     expect(items).toEqual([
       {
@@ -54,18 +73,19 @@ describe("info server actions", () => {
         href: "https://admin.google.com/ac/orgunits",
         deletable: true,
         deleteEndpoint:
-          "https://admin.googleapis.com/admin/directory/v1/customer/my_customer/orgunits/Automation"
-      }
+          "https://admin.googleapis.com/admin/directory/v1/customer/my_customer/orgunits/Automation",
+      },
     ]);
   });
 
   test("listSamlProfiles", async () => {
-    global.fetch = jest
-      .fn<() => Promise<any>>()
-      .mockResolvedValue({
+    const fetchMock = mock(() =>
+      Promise.resolve({
         ok: true,
-        json: async () => load("google-saml-profiles.json")
-      }) as any;
+        json: async () => load("google-saml-profiles.json"),
+      })
+    );
+    setFetchMock(fetchMock);
     const items = await listSamlProfiles();
     expect(items).toEqual([
       {
@@ -74,18 +94,19 @@ describe("info server actions", () => {
         href: "https://admin.google.com/ac/security/sso/sso-profiles/samlProfiles%2Fabc123",
         deletable: true,
         deleteEndpoint:
-          "https://cloudidentity.googleapis.com/v1/samlProfiles/abc123"
-      }
+          "https://cloudidentity.googleapis.com/v1/samlProfiles/abc123",
+      },
     ]);
   });
 
   test("listSsoAssignments", async () => {
-    global.fetch = jest
-      .fn<() => Promise<any>>()
-      .mockResolvedValue({
+    const fetchMock = mock(() =>
+      Promise.resolve({
         ok: true,
-        json: async () => load("google-sso-assignments.json")
-      }) as any;
+        json: async () => load("google-sso-assignments.json"),
+      })
+    );
+    setFetchMock(fetchMock);
     const items = await listSsoAssignments();
     expect(items).toEqual([
       {
@@ -95,7 +116,7 @@ describe("info server actions", () => {
         href: "https://admin.google.com/ac/security/sso",
         deletable: true,
         deleteEndpoint:
-          "https://cloudidentity.googleapis.com/v1/inboundSsoAssignments/root"
+          "https://cloudidentity.googleapis.com/v1/inboundSsoAssignments/root",
       },
       {
         id: "automation",
@@ -104,18 +125,19 @@ describe("info server actions", () => {
         href: "https://admin.google.com/ac/security/sso",
         deletable: true,
         deleteEndpoint:
-          "https://cloudidentity.googleapis.com/v1/inboundSsoAssignments/automation"
-      }
+          "https://cloudidentity.googleapis.com/v1/inboundSsoAssignments/automation",
+      },
     ]);
   });
 
   test("listSsoAssignments handles prefixed names", async () => {
-    global.fetch = jest
-      .fn<() => Promise<any>>()
-      .mockResolvedValue({
+    const fetchMock = mock(() =>
+      Promise.resolve({
         ok: true,
-        json: async () => load("google-sso-assignments-prefixed.json")
-      }) as any;
+        json: async () => load("google-sso-assignments-prefixed.json"),
+      })
+    );
+    setFetchMock(fetchMock);
     const items = await listSsoAssignments();
     expect(items).toEqual([
       {
@@ -125,22 +147,22 @@ describe("info server actions", () => {
         href: "https://admin.google.com/ac/security/sso",
         deletable: true,
         deleteEndpoint:
-          "https://cloudidentity.googleapis.com/v1/inboundSsoAssignments/abc123"
-      }
+          "https://cloudidentity.googleapis.com/v1/inboundSsoAssignments/abc123",
+      },
     ]);
   });
 
   test("listProvisioningJobs", async () => {
-    global.fetch = jest
-      .fn<() => Promise<any>>()
+    const fetchMock = mock()
       .mockResolvedValueOnce({
         ok: true,
-        json: async () => ({ value: [{ id: "sp1", appId: "abcd1234" }] })
+        json: async () => ({ value: [{ id: "sp1", appId: "abcd1234" }] }),
       })
       .mockResolvedValueOnce({
         ok: true,
-        json: async () => load("ms-sync-jobs.json")
-      }) as any;
+        json: async () => load("ms-sync-jobs.json"),
+      });
+    setFetchMock(fetchMock);
     const items = await listProvisioningJobs();
     expect(items).toEqual([
       {
@@ -150,18 +172,19 @@ describe("info server actions", () => {
         href: "https://portal.azure.com/#view/Microsoft_AAD_Connect_Provisioning/ProvisioningMenuBlade/~/Overview/objectId/sp1/appId/abcd1234",
         deletable: true,
         deleteEndpoint:
-          "https://graph.microsoft.com/v1.0/servicePrincipals/sp1/synchronization/jobs/Initial"
-      }
+          "https://graph.microsoft.com/v1.0/servicePrincipals/sp1/synchronization/jobs/Initial",
+      },
     ]);
   });
 
   test("listClaimsPolicies", async () => {
-    global.fetch = jest
-      .fn<() => Promise<any>>()
-      .mockResolvedValue({
+    const fetchMock = mock(() =>
+      Promise.resolve({
         ok: true,
-        json: async () => load("ms-claims-policies.json")
-      }) as any;
+        json: async () => load("ms-claims-policies.json"),
+      })
+    );
+    setFetchMock(fetchMock);
     const items = await listClaimsPolicies();
     expect(items).toEqual([
       {
@@ -170,18 +193,19 @@ describe("info server actions", () => {
         href: "https://portal.azure.com/#view/Microsoft_AAD_IAM/ActiveDirectoryMenuBlade/~/Overview",
         deletable: true,
         deleteEndpoint:
-          "https://graph.microsoft.com/beta/policies/claimsMappingPolicies/policy123"
-      }
+          "https://graph.microsoft.com/beta/policies/claimsMappingPolicies/policy123",
+      },
     ]);
   });
 
   test("listEnterpriseApps", async () => {
-    global.fetch = jest
-      .fn<() => Promise<any>>()
-      .mockResolvedValue({
+    const fetchMock = mock(() =>
+      Promise.resolve({
         ok: true,
-        json: async () => load("ms-applications.json")
-      }) as any;
+        json: async () => load("ms-applications.json"),
+      })
+    );
+    setFetchMock(fetchMock);
     const items = await listEnterpriseApps();
     expect(items).toEqual([
       {
@@ -189,8 +213,8 @@ describe("info server actions", () => {
         label: "Google Workspace Provisioning",
         href: "https://portal.azure.com/#view/Microsoft_AAD_IAM/ManagedAppMenuBlade/~/SignOn/objectId/app1/appId/abcd1234/preferredSingleSignOnMode~/null/servicePrincipalType/Application/fromNav/",
         deletable: true,
-        deleteEndpoint: "https://graph.microsoft.com/beta/applications/app1"
-      }
+        deleteEndpoint: "https://graph.microsoft.com/beta/applications/app1",
+      },
     ]);
   });
 });

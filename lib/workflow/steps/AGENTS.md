@@ -1,6 +1,6 @@
 # Step API contracts
 
-Below is a complete canvas of **11 steps**, each with:
+Below is a complete canvas of **12 steps**, each with:
 
 - **Purpose**
 - **State Check**: HTTP request, expected response, completion criteria, and extracted variables
@@ -9,9 +9,9 @@ Below is a complete canvas of **11 steps**, each with:
 
 Before running or developing a step that performs live API calls, execute
 `./scripts/token-info.sh` to confirm the Google and Microsoft bearer tokens are
-valid. The script queries Google's tokeninfo endpoint and Microsoft Graph so you
-can quickly verify access. These credentials point to test tenants, so API
-mutations are allowed during step development.
+valid (sourced from `.env.test`). The script queries Google's tokeninfo endpoint
+and Microsoft Graph so you can quickly verify access. These credentials point to
+test tenants, so API mutations are allowed during step development.
 
 ## Step 1: `verifyPrimaryDomain`
 
@@ -20,7 +20,6 @@ mutations are allowed during step development.
 Every step MUST follow this exact pattern:
 
 1. Define the `CheckData` type for data extracted in your `check()` phase:
-
    - For non-empty payloads, declare an `interface CheckData { … }` listing each field.
    - If your step extracts no data, use the empty alias:
 
@@ -41,8 +40,8 @@ Every step MUST follow this exact pattern:
    `lib/workflow/constants/` instead of redefining them.
 8. You do _not_ need manual token/var checks—`defineStep` automatically fails
    the check if any declared `requires` variable is missing.
-9. Document the HTTP requests and responses your step performs using block
-   comments above each `check()` and `execute()` section.
+9. Document the HTTP requests and responses your step performs in this file
+   under the step’s **State Check** and **Execution** sections.
 10. Provide an `.undo()` handler for any step that mutates remote state so tests
     can clean up after themselves.
 
@@ -609,12 +608,64 @@ ssoAppId = .application.appId
 
 Configure Azure AD provisioning to sync users to Google Workspace.
 
+### Step 7 State Check
+
+#### Step 7 Check Request
+
+```http
+GET https://graph.microsoft.com/v1.0/servicePrincipals/{provisioningServicePrincipalId}/synchronization/jobs
+Authorization: Bearer {msGraphToken}
+```
+
+#### Step 7 Success Response (`200 OK`)
+
+```json
+{ "value": [{ "status": { "code": "Active" } }] }
+```
+
+#### Step 7 Completion Criteria
+
+Any job with `status.code != "Paused"`
+
 ### Step 7 Execution
 
-1. Get sync template ID
-2. Create synchronization job
-3. Set credentials (BaseAddress and SecretToken)
-4. Start synchronization
+#### Step 7 Execution Requests
+
+```http
+GET https://graph.microsoft.com/v1.0/servicePrincipals/{provisioningServicePrincipalId}/synchronization/templates
+Authorization: Bearer {msGraphToken}
+```
+
+```http
+POST https://graph.microsoft.com/v1.0/servicePrincipals/{provisioningServicePrincipalId}/synchronization/jobs
+Authorization: Bearer {msGraphToken}
+Content-Type: application/json
+
+{ "templateId": "{templateId}" }
+```
+
+```http
+PUT https://graph.microsoft.com/v1.0/servicePrincipals/{provisioningServicePrincipalId}/synchronization/secrets
+Authorization: Bearer {msGraphToken}
+Content-Type: application/json
+
+{
+  "value": [
+    { "key": "BaseAddress", "value": "https://admin.googleapis.com/admin/directory/v1" },
+    { "key": "SecretToken", "value": "{generatedPassword}" }
+  ]
+}
+```
+
+```http
+POST https://graph.microsoft.com/v1.0/servicePrincipals/{provisioningServicePrincipalId}/synchronization/jobs/{jobId}/start
+Authorization: Bearer {msGraphToken}
+```
+
+#### Step 7 Expected Responses
+
+- `204 No Content`: sync job started
+- `400/403`: error
 
 ## Step 8: `configureMicrosoftSso`
 
@@ -622,51 +673,27 @@ Configure Azure AD provisioning to sync users to Google Workspace.
 
 Configure Microsoft SAML SSO settings and generate signing certificate.
 
-### Step 8 Execution
-
-1. Set preferredSingleSignOnMode to "saml" on service principal
-2. Configure SAML URLs on service principal
-3. Set identifierUris and redirectUris on application object
-4. Generate token signing certificate
-5. Extract certificate and SSO URLs for Google configuration
-
-### Step 8 Purpose
-
-Ensure a claims mapping policy exists and is assigned to the SSO service principal.
-
 ### Step 8 State Check
 
-#### Step 8 Check Request
+#### Step 9 Check Request
 
 ```http
-GET https://graph.microsoft.com/beta/servicePrincipals/{ssoServicePrincipalId}/claimsMappingPolicies
+GET https://graph.microsoft.com/v1.0/servicePrincipals/{ssoServicePrincipalId}?$select=preferredSingleSignOnMode,samlSingleSignOnSettings
 Authorization: Bearer {msGraphToken}
 ```
 
-#### Step 8 Success Response (`200 OK`)
-
-```json
-{ "value": [ { "id": "policy123" }, ... ] }
+```http
+GET https://graph.microsoft.com/beta/servicePrincipals/{ssoServicePrincipalId}/tokenSigningCertificates
+Authorization: Bearer {msGraphToken}
 ```
 
 #### Step 8 Completion Criteria
 
-`value` array length >= 1
-
-#### Step 8 Variables Extracted
-
-```ts
-claimsPolicyId = .value[0].id
-```
+`preferredSingleSignOnMode == "saml"` and at least one active certificate exists
 
 ### Step 8 Execution
 
-#### Step 8 Prerequisites
-
-- `msGraphToken`
-- `ssoServicePrincipalId`
-
-#### Step 8 Execution Requests
+#### Step 9 Execution Requests
 
 1. Create Policy
 
@@ -687,7 +714,7 @@ Expected Responses:
 - `201 Created`: policy created → extract `claimsPolicyId`
 - `409 Conflict`: existing policy → query fetching needed
 
-1. Assign to SP
+2. Assign to SP
 
 ```http
 POST https://graph.microsoft.com/v1.0/servicePrincipals/{ssoServicePrincipalId}/claimsMappingPolicies/$ref
@@ -702,41 +729,65 @@ Expected Responses:
 - `204 No Content`
 - `409 Conflict` if a policy is already assigned (only one allowed)
 
-## Step 9: `completeGoogleSsoSetup`
-
-### Step 9 Purpose
-
-Automatically configure Google SSO using Azure AD metadata.
-
-### Step 9 State Check
-
-Fetch the existing SAML profile and verify `idpConfig` is populated.
-
-### Step 9 Execution
-
-1. Query Microsoft Graph for tenant ID and token signing certificate
-2. PATCH the Google SAML profile with Azure AD SAML endpoints
-3. Upload the signing certificate to Google
-
-Example responses can be found in `test/e2e/fixtures/ms-organization.json`
-and `test/e2e/fixtures/ms-token-certs.json`.
-
-## Step 10: `assignUsersToSso`
+## Step 10: `completeGoogleSsoSetup`
 
 ### Step 10 Purpose
 
-Enable SAML SSO for all users in the domain.
+Automatically configure Google SSO using Azure AD metadata.
 
 ### Step 10 State Check
 
 #### Step 10 Check Request
 
 ```http
+GET https://cloudidentity.googleapis.com/v1/inboundSamlSsoProfiles/{samlProfileId}
+Authorization: Bearer {googleAccessToken}
+```
+
+### Step 10 Execution
+
+#### Step 10 Execution Requests
+
+```http
+PATCH https://cloudidentity.googleapis.com/v1/{samlProfile}?updateMask=idpConfig.entityId,idpConfig.singleSignOnServiceUri,idpConfig.signOutUri,idpConfig.changePasswordUri
+Authorization: Bearer {googleAccessToken}
+Content-Type: application/json
+
+{ "idpConfig": { "entityId": "{entityId}", "singleSignOnServiceUri": "{loginUrl}", "signOutUri": "{loginUrl}", "changePasswordUri": "https://account.activedirectory.windowsazure.com/ChangePassword.aspx" } }
+```
+
+```http
+POST https://cloudidentity.googleapis.com/v1/{samlProfile}/certificates
+Authorization: Bearer {googleAccessToken}
+Content-Type: application/json
+
+{ "pemData": "-----BEGIN CERTIFICATE-----..." }
+```
+
+#### Step 10 Expected Responses
+
+- `200 OK` for profile update
+- `200 OK` operation for certificate upload
+
+Example responses can be found in `test/e2e/fixtures/ms-organization.json`
+and `test/e2e/fixtures/ms-token-certs.json`.
+
+## Step 11: `assignUsersToSso`
+
+### Step 11 Purpose
+
+Enable SAML SSO for all users in the domain.
+
+### Step 11 State Check
+
+#### Step 11 Check Request
+
+```http
 GET https://cloudidentity.googleapis.com/v1/inboundSsoAssignments
 Authorization: Bearer {googleAccessToken}
 ```
 
-#### Step 10 Success Response (`200 OK`)
+#### Step 11 Success Response (`200 OK`)
 
 ```json
 {
@@ -751,21 +802,21 @@ Authorization: Bearer {googleAccessToken}
 }
 ```
 
-#### Step 10 Completion Criteria
+#### Step 11 Completion Criteria
 
 Assignments exist for both:
 
 1. `targetOrgUnit = "orgUnits/{rootOrgUnitId}"` with `ssoMode = "SAML_SSO"` and matching `samlProfileId`
 2. `targetOrgUnit = "{automationOuPath}"` with `ssoMode = "SSO_OFF"`
 
-### Step 10 Execution
+### Step 11 Execution
 
-#### Step 10 Prerequisites
+#### Step 11 Prerequisites
 
 - `googleAccessToken`
 - `samlProfileId`
 
-#### Step 10 Execution Request
+#### Step 11 Execution Request
 
 ```http
 POST https://cloudidentity.googleapis.com/v1/inboundSsoAssignments
@@ -788,27 +839,27 @@ Content-Type: application/json
 }
 ```
 
-#### Step 10 Expected Responses
+#### Step 11 Expected Responses
 
 - `200 OK` returning an [Operation](https://cloud.google.com/identity/docs/reference/rest/Shared.Types/Operation) with `done: true`
 - `409 Conflict` (already assigned)
 
-## Step 11: `testSsoConfiguration`
+## Step 12: `testSsoConfiguration`
 
-### Step 11 Purpose
+### Step 12 Purpose
 
 Verify end-to-end SAML SSO is functioning.
 
-### Step 11 State Check & Execution
+### Step 12 State Check & Execution
 
 Manual step — requires human interaction
 
-#### Step 11 Required Conditions
+#### Step 12 Required Conditions
 
 - Previously configured steps must be complete
 - A test user exists
 
-#### Step 11 Procedure
+#### Step 12 Procedure
 
 1. Open private or incognito browser window
 2. Navigate to Google Workspace login

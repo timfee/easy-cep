@@ -4,12 +4,12 @@ export interface AdminPrivilege {
   childPrivileges?: AdminPrivilege[];
 }
 
-export const GOOGLE_ADMIN_PRIVILEGES = {
+export const GOOGLE_ADMIN_PRIVILEGES: { REQUIRED: string[] } = {
   REQUIRED: [
     "ORGANIZATION_UNITS_RETRIEVE",
     "USERS_RETRIEVE",
     "USERS_CREATE",
     "USERS_UPDATE",
-    "GROUPS_ALL"
-  ]
-} as const;
+    "GROUPS_ALL",
+  ],
+};

@@ -1,27 +1,19 @@
-/**
- * Fluent builder for creating strongly-typed workflow steps.
- *
- * The builder ensures required variables exist and wraps the check, execute and
- * undo callbacks with typed HTTP clients. Steps authored with `defineStep` are
- * the only valid default exports for files under `lib/workflow/steps/`.
- */
-import {
+import type { z } from "zod";
+import type { StepIdValue } from "@/lib/workflow/step-ids";
+import type { VarName, WorkflowVars } from "@/lib/workflow/variables";
+import type {
   StepCheckContext,
   StepDefinition,
   StepExecuteContext,
-  StepIdValue,
   StepUndoContext,
-  VarName,
-  WorkflowVars
 } from "@/types";
-import { z } from "zod";
 import { GoogleClient } from "./http/google-client";
 import { MicrosoftClient } from "./http/microsoft-client";
 import type { HttpClient } from "./types/http-client";
-import { createVarStore, type BasicVarStore } from "./var-store";
+import { type BasicVarStore, createVarStore } from "./var-store";
 
 interface StepBuilder<
-  TData extends Partial<WorkflowVars> = Partial<WorkflowVars>
+  TData extends Partial<WorkflowVars> = Partial<WorkflowVars>,
 > {
   requires(...vars: VarName[]): StepBuilder<TData>;
   provides(...vars: VarName[]): StepBuilder<TData>;
@@ -77,7 +69,7 @@ interface BuilderUndoContext {
  * chainable methods. Call `.build()` to produce the final `StepDefinition` used by the engine.
  */
 export function defineStep<
-  TData extends Partial<WorkflowVars> = Partial<WorkflowVars>
+  TData extends Partial<WorkflowVars> = Partial<WorkflowVars>,
 >(id: StepIdValue): StepBuilder<TData> {
   let requires: VarName[] = [];
   let provides: VarName[] = [];
@@ -114,7 +106,7 @@ export function defineStep<
     },
 
     build() {
-      if (!checkFn || !executeFn) {
+      if (!(checkFn && executeFn)) {
         throw new Error(
           `Step ${id} must have both check and execute functions`
         );
@@ -129,7 +121,7 @@ export function defineStep<
           }
         }
         const ctx = wrapContext(originalCtx);
-        await checkFn!(ctx);
+        await checkFn?.(ctx);
       };
 
       const execute = async (originalCtx: StepExecuteContext<TData>) => {
@@ -142,9 +134,9 @@ export function defineStep<
           ...wrapContext(originalCtx),
           checkData: originalCtx.checkData,
           output: (vars: Partial<WorkflowVars>) =>
-            originalCtx.markSucceeded(vars)
+            originalCtx.markSucceeded(vars),
         };
-        await executeFn!(ctx);
+        await executeFn?.(ctx);
       };
 
       const undo = async (originalCtx: StepUndoContext) => {
@@ -160,13 +152,9 @@ export function defineStep<
         provides,
         check,
         execute,
-        undo: undoFn ? undo : undefined
-      } as StepDefinition & {
-        check(ctx: StepCheckContext<TData>): Promise<void>;
-        execute(ctx: StepExecuteContext<TData>): Promise<void>;
-        undo?(ctx: StepUndoContext): Promise<void>;
+        undo: undoFn ? undo : undefined,
       };
-    }
+    },
   };
 
   return builder;
@@ -187,7 +175,7 @@ function wrapContext<
     fetchGoogle: StepCheckContext<unknown>["fetchGoogle"];
     fetchMicrosoft: StepCheckContext<unknown>["fetchMicrosoft"];
     vars: Partial<WorkflowVars>;
-  }
+  },
 >(
   ctx: C
 ): Omit<C, "fetchGoogle" | "fetchMicrosoft" | "vars"> & {
@@ -201,6 +189,6 @@ function wrapContext<
     ...rest,
     vars: createVarStore(vars),
     google: new GoogleClient(createHttpClient(fetchGoogle)),
-    microsoft: new MicrosoftClient(createHttpClient(fetchMicrosoft))
+    microsoft: new MicrosoftClient(createHttpClient(fetchMicrosoft)),
   };
 }

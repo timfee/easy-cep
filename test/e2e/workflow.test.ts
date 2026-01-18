@@ -1,50 +1,30 @@
+import { afterAll, beforeAll, describe, expect, it, test } from "bun:test";
 import { generateSecurePassword } from "@/lib/utils";
 import { runStep, undoStep } from "@/lib/workflow/engine";
-import { StepId, Var } from "@/types";
-import { jest } from "@jest/globals";
-import fs from "fs";
-import path from "path";
-import { fileURLToPath } from "url";
+import { StepId } from "@/lib/workflow/step-ids";
+import type { WorkflowVars } from "@/lib/workflow/variables";
+import { Var } from "@/lib/workflow/variables";
 
 import {
   cleanupGoogleEnvironment,
-  cleanupMicrosoftEnvironment
+  cleanupMicrosoftEnvironment,
 } from "../../scripts/e2e-setup";
 
-const __dirname = path.dirname(fileURLToPath(import.meta.url));
-
-jest.setTimeout(30000); // Increase timeout for API calls
-
-// Load tokens from files if not in env
-const googleTokenPath = path.join(__dirname, "../../google_bearer.token");
-if (!process.env.TEST_GOOGLE_BEARER_TOKEN && fs.existsSync(googleTokenPath)) {
-  process.env.TEST_GOOGLE_BEARER_TOKEN = fs
-    .readFileSync(googleTokenPath, "utf8")
-    .trim();
-}
-
-const msTokenPath = path.join(__dirname, "../../microsoft_bearer.token");
-if (!process.env.TEST_MS_BEARER_TOKEN && fs.existsSync(msTokenPath)) {
-  process.env.TEST_MS_BEARER_TOKEN = fs
-    .readFileSync(msTokenPath, "utf8")
-    .trim();
-}
-
 if (
-  process.env.SKIP_E2E === "1"
-  || !process.env.TEST_GOOGLE_BEARER_TOKEN
-  || !process.env.TEST_MS_BEARER_TOKEN
+  process.env.SKIP_E2E === "1" ||
+  process.env.RUN_E2E !== "1" ||
+  !process.env.TEST_GOOGLE_BEARER_TOKEN ||
+  !process.env.TEST_MS_BEARER_TOKEN
 ) {
-  test.skip("e2e", () => {
+  test("e2e", () => {
     console.warn(
       "E2E tests require TEST_GOOGLE_BEARER_TOKEN and TEST_MS_BEARER_TOKEN; skipping."
     );
   });
 } else {
   describe("Workflow Live E2E", () => {
-    // Clean environment before ALL tests
     beforeAll(async () => {
-      console.log("\uD83E\uDDF9 Cleaning test environment before tests...");
+      console.log("🧹 Cleaning test environment before tests...");
 
       let retries = 3;
       while (retries > 0) {
@@ -54,7 +34,7 @@ if (
           console.log("✅ Environment cleaned");
           break;
         } catch (error) {
-          retries--;
+          retries -= 1;
           if (retries === 0) {
             console.error("❌ Cleanup failed after 3 attempts:", error);
             throw error;
@@ -67,17 +47,13 @@ if (
       }
     });
 
-    // Use unique names for this test run to avoid conflicts
     const testRunId = Date.now().toString(36);
 
-    const baseVars = {
-      // Tokens
-      [Var.GoogleAccessToken]: process.env.TEST_GOOGLE_BEARER_TOKEN!,
-      [Var.MsGraphToken]: process.env.TEST_MS_BEARER_TOKEN!,
-      // Domain config
+    const baseVars: Partial<WorkflowVars> = {
+      [Var.GoogleAccessToken]: process.env.TEST_GOOGLE_BEARER_TOKEN,
+      [Var.MsGraphToken]: process.env.TEST_MS_BEARER_TOKEN,
       [Var.PrimaryDomain]: process.env.TEST_DOMAIN || "test.example.com",
       [Var.IsDomainVerified]: "true",
-      // Use unique names with test run ID to avoid conflicts
       [Var.AutomationOuName]: `test-automation-${testRunId}`,
       [Var.AutomationOuPath]: `/test-automation-${testRunId}`,
       [Var.ProvisioningUserPrefix]: `test-azuread-provisioning-${testRunId}`,
@@ -86,8 +62,8 @@ if (
       [Var.ProvisioningAppDisplayName]: `Test Google Workspace Provisioning ${testRunId}`,
       [Var.SsoAppDisplayName]: `Test Google Workspace SSO ${testRunId}`,
       [Var.ClaimsPolicyDisplayName]: `Test Google Workspace Basic Claims ${testRunId}`,
-      [Var.GeneratedPassword]: generateSecurePassword()
-    } as const;
+      [Var.GeneratedPassword]: generateSecurePassword(),
+    };
 
     const steps = [
       StepId.VerifyPrimaryDomain,
@@ -100,14 +76,14 @@ if (
       StepId.ConfigureMicrosoftSso,
       StepId.SetupMicrosoftClaimsPolicy,
       StepId.CompleteGoogleSsoSetup,
-      StepId.AssignUsersToSso
-    ] as const;
+      StepId.AssignUsersToSso,
+    ];
 
-    let vars: Record<string, any> = { ...baseVars };
+    let vars: Partial<WorkflowVars> = { ...baseVars };
 
     for (const step of steps) {
       it(`Execute: ${step}`, async () => {
-        console.log(`\n\uD83D\uDCCB Executing ${step}...`);
+        console.log(`\n📋 Executing ${step}...`);
         const result = await runStep(step, vars);
         console.log(`   Status: ${result.state.status}`);
 
@@ -117,15 +93,13 @@ if (
           console.error("Summary:", result.state.summary);
 
           const errorLogs = result.state.logs?.filter(
-            (log) => log.level === "error" || (log as any).method
+            (log) => log.level === "error" || "method" in log
           );
           if (errorLogs?.length) {
             console.error("\nError logs:");
             for (const log of errorLogs) {
-              if ((log as any).method) {
-                console.error(
-                  `  ${(log as any).method} ${(log as any).url} -> ${(log as any).status}`
-                );
+              if ("method" in log && log.method && log.url && log.status) {
+                console.error(`  ${log.method} ${log.url} -> ${log.status}`);
               } else {
                 console.error(`  [${log.level}] ${log.message}`);
               }
@@ -144,7 +118,7 @@ if (
     const undoSteps = [...steps].reverse();
     for (const step of undoSteps) {
       it(`Undo: ${step}`, async () => {
-        console.log(`\n\uD83D\uDD04 Undoing ${step}...`);
+        console.log(`\n🔄 Undoing ${step}...`);
         const result = await undoStep(step, vars);
         console.log(`   Status: ${result.state.status}`);
         expect(["complete", "blocked"]).toContain(result.state.status);
@@ -152,7 +126,7 @@ if (
     }
 
     afterAll(async () => {
-      console.log("\n\uD83E\uDDF9 Final cleanup...");
+      console.log("\n🧹 Final cleanup...");
       try {
         await cleanupGoogleEnvironment();
         await cleanupMicrosoftEnvironment();

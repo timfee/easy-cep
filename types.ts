@@ -1,11 +1,6 @@
-import { z } from "zod";
+import type { z } from "zod";
 import type { StepIdValue } from "./lib/workflow/step-ids";
 import type { VarName, WorkflowVars } from "./lib/workflow/variables";
-
-// Re-export workflow types from their new locations
-export { StepId } from "./lib/workflow/step-ids";
-export { Var } from "./lib/workflow/variables";
-export type { StepIdValue, VarName, WorkflowVars };
 
 export interface StepLogEntry {
   timestamp: number;
@@ -17,31 +12,42 @@ export interface StepLogEntry {
   url?: string;
 }
 
-export enum LogLevel {
-  Info = "info",
-  Error = "error",
-  Debug = "debug"
-}
+export type LogLevel = "info" | "error" | "debug";
+export const LogLevel: Record<"Info" | "Error" | "Debug", LogLevel> = {
+  Info: "info",
+  Error: "error",
+  Debug: "debug",
+};
 
-export enum HttpMethod {
-  GET = "GET",
-  POST = "POST",
-  PUT = "PUT",
-  PATCH = "PATCH",
-  DELETE = "DELETE"
-}
+export type HttpMethod = "GET" | "POST" | "PUT" | "PATCH" | "DELETE";
+export const HttpMethod: Record<
+  "GET" | "POST" | "PUT" | "PATCH" | "DELETE",
+  HttpMethod
+> = { GET: "GET", POST: "POST", PUT: "PUT", PATCH: "PATCH", DELETE: "DELETE" };
 
-export enum HttpStatus {
-  OK = 200,
-  Created = 201,
-  NoContent = 204,
-  BadRequest = 400,
-  Unauthorized = 401,
-  Forbidden = 403,
-  NotFound = 404,
-  Conflict = 409,
-  PreconditionFailed = 412
-}
+export type HttpStatus = 200 | 201 | 204 | 400 | 401 | 403 | 404 | 409 | 412;
+export const HttpStatus: Record<
+  | "OK"
+  | "Created"
+  | "NoContent"
+  | "BadRequest"
+  | "Unauthorized"
+  | "Forbidden"
+  | "NotFound"
+  | "Conflict"
+  | "PreconditionFailed",
+  HttpStatus
+> = {
+  OK: 200,
+  Created: 201,
+  NoContent: 204,
+  BadRequest: 400,
+  Unauthorized: 401,
+  Forbidden: 403,
+  NotFound: 404,
+  Conflict: 409,
+  PreconditionFailed: 412,
+};
 
 export interface StepDefinition {
   id: StepIdValue;

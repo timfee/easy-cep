@@ -1,6 +1,8 @@
 import { isConflictError, isNotFoundError } from "@/lib/workflow/core/errors";
 
-import { LogLevel, StepId, Var } from "@/types";
+import { StepId } from "@/lib/workflow/step-ids";
+import { Var } from "@/lib/workflow/variables";
+import { LogLevel } from "@/types";
 import { defineStep } from "../step-builder";
 
 export default defineStep(StepId.CreateAutomationOU)
@@ -12,23 +14,6 @@ export default defineStep(StepId.CreateAutomationOU)
   )
   .provides()
 
-  /**
-   * GET https://admin.googleapis.com/admin/directory/v1/customer/my_customer/orgunits/Automation
-   * Headers: { Authorization: Bearer {googleAccessToken} }
-   *
-   * Success response (200)
-   * {
-   *   "orgUnitPath": "/Automation",
-   *   "name": "Automation",
-   *   "orgUnitId": "id:03ph8a2z1s3ovsg"
-   * }
-   *
-   * Error response (404)
-   * {
-   *   "error": { "code": 404, "message": "Org unit not found" }
-   * }
-   */
-
   .check(
     async ({
       vars,
@@ -36,13 +21,16 @@ export default defineStep(StepId.CreateAutomationOU)
       markComplete,
       markIncomplete,
       markCheckFailed,
-      log
+      log,
     }) => {
       try {
         const ouName = vars.require(Var.AutomationOuName);
         const ouPath = vars.require(Var.AutomationOuPath);
 
-        const ou = await google.orgUnits.get(ouPath).get();
+        const ou = (await google.orgUnits.get(ouPath).get()) as {
+          orgUnitPath: string;
+          name: string;
+        };
 
         if (ou.orgUnitPath === ouPath && ou.name === ouName) {
           log(LogLevel.Info, "Automation OU already exists");
@@ -66,29 +54,11 @@ export default defineStep(StepId.CreateAutomationOU)
   )
 
   .execute(async ({ vars, google, output, markFailed, log }) => {
-    /**
-     * POST https://admin.googleapis.com/admin/directory/v1/customer/my_customer/orgunits
-     * Headers: { Authorization: Bearer {googleAccessToken} }
-     * Body:
-     * {
-     *   "name": "Automation",
-     *   "parentOrgUnitPath": "/"
-     * }
-     *
-     * Success response (201)
-     * { "orgUnitPath": "/Automation" }
-     *
-     * Error response (409)
-     * { "error": { "code": 409, "message": "Invalid Ou Id" } }
-     */
     try {
-      await google.orgUnits
-        .create()
-        .post({
-          name: vars.require(Var.AutomationOuName),
-          parentOrgUnitPath: "/"
-        });
-      // isConflictError handles: 409
+      await google.orgUnits.create().post({
+        name: vars.require(Var.AutomationOuName),
+        parentOrgUnitPath: "/",
+      });
 
       log(LogLevel.Info, "Automation OU created or already exists");
       output({});
@@ -104,10 +74,6 @@ export default defineStep(StepId.CreateAutomationOU)
   .undo(async ({ vars, google, markReverted, markFailed, log }) => {
     try {
       const path = vars.require(Var.AutomationOuPath);
-      if (!path) {
-        markFailed("Missing Automation OU name");
-        return;
-      }
 
       try {
         await google.orgUnits.delete(path).delete();

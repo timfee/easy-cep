@@ -7,10 +7,10 @@ export function extractPath(url: string): string {
     return url.slice(GOOGLE_ADMIN.length);
   }
   if (url.startsWith(GOOGLE_CLOUD_IDENTITY)) {
-    return "/cloudidentity" + url.slice(GOOGLE_CLOUD_IDENTITY.length);
+    return `/cloudidentity${url.slice(GOOGLE_CLOUD_IDENTITY.length)}`;
   }
   if (url.startsWith(MS_GRAPH)) {
-    return "/graph" + url.slice(MS_GRAPH.length);
+    return `/graph${url.slice(MS_GRAPH.length)}`;
   }
   return url;
 }

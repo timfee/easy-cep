@@ -60,6 +60,6 @@ export function useMultiSelect<T extends { id: string }>(_items: T[]) {
     select,
     deselect,
     toggle,
-    reset
+    reset,
   };
 }

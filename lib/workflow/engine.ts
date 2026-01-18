@@ -1,32 +1,16 @@
 "use server";
-import "server-only";
 
-/**
- * @file engine.ts
- * @description Server-side execution engine for individual workflow steps.
- *
- * The engine abstracts the *lifecycle* of a step:
- *  1. **Check** – interrogate external systems to see if the step is already
- *     complete.
- *  2. **Execute** – if needed, perform the mutation.
- *  3. Stream log / status updates back to the UI.
- *
- * The public API is the `runStep` server action.  It is intentionally
- * side-effect free *until* it calls the chosen step’s own implementation.
- */
-
+import { inspect } from "node:util";
 import { PROVIDERS } from "@/constants";
 import { refreshTokenIfNeeded } from "@/lib/auth";
+import type { StepIdValue } from "@/lib/workflow/step-ids";
+import { Var, type WorkflowVars } from "@/lib/workflow/variables";
 import {
   LogLevel,
-  StepCheckContext,
-  StepIdValue,
-  StepLogEntry,
-  StepUIState,
-  Var,
-  WorkflowVars
+  type StepCheckContext,
+  type StepLogEntry,
+  type StepUIState,
 } from "@/types";
-import { inspect } from "node:util";
 import { createAuthenticatedFetch } from "./fetch-utils";
 import type { LROMetadata } from "./lro-detector";
 import { getStep } from "./step-registry";
@@ -37,9 +21,9 @@ function sanitizeVars(vars: Partial<WorkflowVars>): Record<string, unknown> {
     Object.entries(vars).map(([key, value]) => {
       const lower = key.toLowerCase();
       if (
-        lower.includes("token")
-        || lower.includes("password")
-        || lower.includes("certificate")
+        lower.includes("token") ||
+        lower.includes("password") ||
+        lower.includes("certificate")
       ) {
         return [key, "[REDACTED]"];
       }
@@ -57,7 +41,7 @@ function appendLog(
   if (entry.level === LogLevel.Error) {
     data = {
       error: data instanceof Error ? inspect(data, { depth: null }) : data,
-      vars: sanitizeVars(vars)
+      vars: sanitizeVars(vars),
     };
   } else if (data instanceof Error) {
     data = inspect(data, { depth: null });
@@ -89,8 +73,8 @@ async function processStep<T extends StepIdValue>(
           detected: true,
           startTime: Date.now(),
           estimatedDuration: lro.estimatedSeconds,
-          operationType: lro.type
-        }
+          operationType: lro.type,
+        },
       };
     }
   };
@@ -106,18 +90,16 @@ async function processStep<T extends StepIdValue>(
 
   const baseContext = {
     fetchGoogle: createAuthenticatedFetch(
-      googleTokenObj?.accessToken
-        ?? (vars[Var.GoogleAccessToken] as string | undefined),
+      googleTokenObj?.accessToken ?? vars[Var.GoogleAccessToken],
       { addLog, onLroDetected: recordLro }
     ),
     fetchMicrosoft: createAuthenticatedFetch(
-      microsoftTokenObj?.accessToken
-        ?? (vars[Var.MsGraphToken] as string | undefined),
+      microsoftTokenObj?.accessToken ?? vars[Var.MsGraphToken],
       { addLog, onLroDetected: recordLro }
     ),
     log: (level: LogLevel, message: string, data?: unknown) => {
       addLog({ timestamp: Date.now(), message, data, level });
-    }
+    },
   };
 
   // CHECK PHASE
@@ -125,9 +107,10 @@ async function processStep<T extends StepIdValue>(
 
   // Data carried from check() into execute() or propagated as newVars
   type CheckType =
-    Parameters<typeof step.check>[0] extends StepCheckContext<infer D> ? D
-    : never;
-  let checkData!: CheckType;
+    Parameters<typeof step.check>[0] extends StepCheckContext<infer D>
+      ? D
+      : never;
+  let checkData: CheckType | undefined;
   let checkFailed = false;
   let isComplete = false;
 
@@ -140,7 +123,7 @@ async function processStep<T extends StepIdValue>(
         isComplete = true;
         pushState({
           status: StepStatus.Complete,
-          summary: "Step already complete"
+          summary: "Step already complete",
         });
       },
       markIncomplete: (summary: string, data: CheckType) => {
@@ -149,7 +132,7 @@ async function processStep<T extends StepIdValue>(
         pushState({ status: StepStatus.Ready, summary });
       },
       markStale: (message: string) => {
-        checkData = {} as CheckType;
+        checkData = undefined;
         isComplete = false;
         pushState({ status: StepStatus.Stale, summary: message });
       },
@@ -157,16 +140,16 @@ async function processStep<T extends StepIdValue>(
         checkFailed = true;
         pushState({
           status: StepStatus.Blocked,
-          error: `Check failed: ${error}`
+          error: `Check failed: ${error}`,
         });
-      }
+      },
     });
   } catch (error) {
     pushState({
       status: StepStatus.Blocked,
       error:
-        "Check error: "
-        + (error instanceof Error ? error.message : "Unknown error")
+        "Check error: " +
+        (error instanceof Error ? error.message : "Unknown error"),
     });
     pushState({ isChecking: false, isExecuting: false });
     return { state: currentState, newVars: finalVars };
@@ -178,14 +161,21 @@ async function processStep<T extends StepIdValue>(
   }
 
   if (isComplete) {
-    // Propagate any variables gathered during check for completed steps
     pushState({ isChecking: false });
-    return { state: currentState, newVars: checkData };
+    return { state: currentState, newVars: checkData ?? {} };
   }
 
   if (execute) {
-    // EXECUTE PHASE
     pushState({ isExecuting: true });
+
+    if (!checkData) {
+      pushState({
+        status: StepStatus.Blocked,
+        error: "Check data missing for execution",
+      });
+      pushState({ isExecuting: false });
+      return { state: currentState, newVars: finalVars };
+    }
 
     try {
       await step.execute({
@@ -201,14 +191,14 @@ async function processStep<T extends StepIdValue>(
         },
         markPending: (notes: string) => {
           pushState({ status: StepStatus.Ready, notes });
-        }
+        },
       });
     } catch (error) {
       pushState({
         status: StepStatus.Blocked,
         error:
-          "Execute error: "
-          + (error instanceof Error ? error.message : "Unknown error")
+          "Execute error: " +
+          (error instanceof Error ? error.message : "Unknown error"),
       });
     }
   }
@@ -220,14 +210,14 @@ export async function runStep<T extends StepIdValue>(
   stepId: T,
   vars: Partial<WorkflowVars>
 ): Promise<{ state: StepUIState; newVars: Partial<WorkflowVars> }> {
-  return processStep(stepId, vars, true);
+  return await processStep(stepId, vars, true);
 }
 
 export async function checkStep<T extends StepIdValue>(
   stepId: T,
   vars: Partial<WorkflowVars>
 ): Promise<{ state: StepUIState; newVars: Partial<WorkflowVars> }> {
-  return processStep(stepId, vars, false);
+  return await processStep(stepId, vars, false);
 }
 
 async function processUndoStep<T extends StepIdValue>(
@@ -240,7 +230,7 @@ async function processUndoStep<T extends StepIdValue>(
   let currentState: StepUIState = {
     status: StepStatus.Ready,
     isUndoing: true,
-    logs
+    logs,
   };
 
   const pushState = (data: Partial<StepUIState>) => {
@@ -255,8 +245,8 @@ async function processUndoStep<T extends StepIdValue>(
           detected: true,
           startTime: Date.now(),
           estimatedDuration: lro.estimatedSeconds,
-          operationType: lro.type
-        }
+          operationType: lro.type,
+        },
       };
     }
   };
@@ -272,18 +262,16 @@ async function processUndoStep<T extends StepIdValue>(
 
   const baseContext = {
     fetchGoogle: createAuthenticatedFetch(
-      googleTokenObj?.accessToken
-        ?? (vars[Var.GoogleAccessToken] as string | undefined),
+      googleTokenObj?.accessToken ?? vars[Var.GoogleAccessToken],
       { addLog, onLroDetected: recordLro }
     ),
     fetchMicrosoft: createAuthenticatedFetch(
-      microsoftTokenObj?.accessToken
-        ?? (vars[Var.MsGraphToken] as string | undefined),
+      microsoftTokenObj?.accessToken ?? vars[Var.MsGraphToken],
       { addLog, onLroDetected: recordLro }
     ),
     log: (level: LogLevel, message: string, data?: unknown) => {
       addLog({ timestamp: Date.now(), message, data, level });
-    }
+    },
   };
 
   if (!step.undo) {
@@ -301,14 +289,14 @@ async function processUndoStep<T extends StepIdValue>(
       },
       markFailed: (error: string) => {
         pushState({ status: StepStatus.Blocked, error });
-      }
+      },
     });
   } catch (error) {
     pushState({
       status: StepStatus.Blocked,
       error:
-        "Undo error: "
-        + (error instanceof Error ? error.message : "Unknown error")
+        "Undo error: " +
+        (error instanceof Error ? error.message : "Unknown error"),
     });
   }
   pushState({ isUndoing: false });
@@ -319,5 +307,5 @@ export async function undoStep<T extends StepIdValue>(
   stepId: T,
   vars: Partial<WorkflowVars>
 ): Promise<{ state: StepUIState }> {
-  return processUndoStep(stepId, vars);
+  return await processUndoStep(stepId, vars);
 }

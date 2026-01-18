@@ -1,20 +1,19 @@
-import { Provider } from "@/constants";
+import { type NextRequest, NextResponse } from "next/server";
 import { clearChunkedCookie } from "@/lib/auth";
-import { NextRequest, NextResponse } from "next/server";
 
 /**
  * Allow GET requests for convenience (e.g. direct link clicks) to sign out.
  */
-export async function GET(
+export function GET(
   request: NextRequest,
-  context: { params: Promise<{ provider: Provider }> }
+  context: { params: Promise<{ provider: string }> }
 ) {
   return POST(request, context);
 }
 
 export async function POST(
   request: NextRequest,
-  { params }: { params: Promise<{ provider: Provider }> }
+  { params }: { params: Promise<{ provider: string }> }
 ) {
   const { provider } = await params;
   const cookieName = `${provider}_token`;

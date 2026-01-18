@@ -8,13 +8,13 @@ export const GoogleOperationSchema = z.object({
     .object({
       message: z.string(),
       code: z.number().optional(),
-      status: z.string().optional()
+      status: z.string().optional(),
     })
-    .optional()
+    .optional(),
 });
 
 export type GoogleOperation = z.infer<typeof GoogleOperationSchema>;
 
 export const ServicePrincipalIdSchema = z.object({
-  value: z.array(z.object({ id: z.string() }))
+  value: z.array(z.object({ id: z.string() })),
 });

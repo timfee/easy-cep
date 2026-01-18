@@ -1,5 +1,7 @@
 import { isConflictError, isNotFoundError } from "@/lib/workflow/core/errors";
-import { LogLevel, StepId, Var } from "@/types";
+import { StepId } from "@/lib/workflow/step-ids";
+import { Var } from "@/lib/workflow/variables";
+import { LogLevel } from "@/types";
 import { defineStep } from "../step-builder";
 
 export default defineStep(StepId.SetupMicrosoftClaimsPolicy)
@@ -10,20 +12,6 @@ export default defineStep(StepId.SetupMicrosoftClaimsPolicy)
   )
   .provides(Var.ClaimsPolicyId)
 
-  /**
-   * GET https://graph.microsoft.com/beta/servicePrincipals/{ssoServicePrincipalId}/claimsMappingPolicies
-   * Headers: { Authorization: Bearer {msGraphToken} }
-   *
-   * Success response (200)
-   * { "value": [ { "id": "policy123" } ] }
-   *
-   * Success response (200) – empty
-   * { "value": [] }
-   *
-   * Error response (401)
-   * { "error": { "code": "InvalidAuthenticationToken" } }
-   */
-
   .check(
     async ({
       vars,
@@ -31,16 +19,15 @@ export default defineStep(StepId.SetupMicrosoftClaimsPolicy)
       markComplete,
       markIncomplete,
       markCheckFailed,
-      log
+      log,
     }) => {
       try {
         const spId = vars.require(Var.SsoServicePrincipalId);
 
-        const { value } = await microsoft.servicePrincipals
+        const { value } = (await microsoft.servicePrincipals
           .claimsMappingPolicies(spId)
           .list()
-          .get();
-        // Extract: claimsPolicyId = value[0]?.id
+          .get()) as { value: Array<{ id: string }> };
 
         if (value.length > 0) {
           log(LogLevel.Info, "Claims policy already assigned");
@@ -58,64 +45,45 @@ export default defineStep(StepId.SetupMicrosoftClaimsPolicy)
     }
   )
   .execute(async ({ vars, microsoft, output, markFailed, log }) => {
-    /**
-     * POST https://graph.microsoft.com/beta/policies/claimsMappingPolicies
-     * Headers: { Authorization: Bearer {msGraphToken} }
-     * Body:
-     * {
-     *   "definition": ["{\"ClaimsMappingPolicy\":{\"Version\":1,\"IncludeBasicClaimSet\":true,\"ClaimsSchema\":[]}}"],
-     *   "displayName": "Google Workspace Basic Claims",
-     *   "isOrganizationDefault": false
-     * }
-     * Success response (201)
-     * { "id": "policy123" }
-     *
-     * POST https://graph.microsoft.com/v1.0/servicePrincipals/{ssoServicePrincipalId}/claimsMappingPolicies/$ref
-     * Headers: { Authorization: Bearer {msGraphToken} }
-     * Body: { "@odata.id": "https://graph.microsoft.com/v1.0/policies/claimsMappingPolicies/{policyId}" }
-     * Success response (204) {}
-     */
     try {
       const spId = vars.require(Var.SsoServicePrincipalId);
 
       let policyId: string | undefined;
       try {
-        const created = await microsoft.claimsPolicies
-          .create()
-          .post({
-            definition: [
-              '{"ClaimsMappingPolicy":{"Version":1,"IncludeBasicClaimSet":true,"ClaimsSchema":[]}}'
-            ],
-            displayName: vars.require(Var.ClaimsPolicyDisplayName),
-            isOrganizationDefault: false
-          });
+        const created = (await microsoft.claimsPolicies.create().post({
+          definition: [
+            '{"ClaimsMappingPolicy":{"Version":1,"IncludeBasicClaimSet":true,"ClaimsSchema":[]}}',
+          ],
+          displayName: vars.require(Var.ClaimsPolicyDisplayName),
+          isOrganizationDefault: false,
+        })) as { id?: string };
         policyId = created.id;
-        // Extract: claimsPolicyId = created.id
       } catch (error) {
-        // isConflictError handles: 409
         if (isConflictError(error)) {
-          const { value } = await microsoft.claimsPolicies.list().get();
+          const { value } = (await microsoft.claimsPolicies.list().get()) as {
+            value: Array<{ id: string }>;
+          };
           policyId = value[0]?.id;
         } else {
           throw error;
         }
       }
 
-      if (!policyId) throw new Error("Policy ID unavailable");
+      if (!policyId) {
+        throw new Error("Policy ID unavailable");
+      }
 
       try {
         await microsoft.servicePrincipals
           .claimsMappingPolicies(spId)
           .assign()
           .post({
-            "@odata.id": `https://graph.microsoft.com/v1.0/policies/claimsMappingPolicies/${policyId}`
+            "@odata.id": `https://graph.microsoft.com/v1.0/policies/claimsMappingPolicies/${policyId}`,
           });
       } catch (error) {
-        // isConflictError handles: 409
         if (!isConflictError(error)) {
           throw error;
         }
-        // Policy already assigned
       }
 
       output({ claimsPolicyId: policyId });
@@ -126,12 +94,8 @@ export default defineStep(StepId.SetupMicrosoftClaimsPolicy)
   })
   .undo(async ({ vars, microsoft, markReverted, markFailed, log }) => {
     try {
+      const policyId = vars.require(Var.ClaimsPolicyId);
       const spId = vars.get(Var.SsoServicePrincipalId);
-      const policyId = vars.get(Var.ClaimsPolicyId);
-      if (!policyId) {
-        markFailed("Missing claims policy id");
-        return;
-      }
 
       if (spId) {
         await microsoft.servicePrincipals
@@ -144,7 +108,6 @@ export default defineStep(StepId.SetupMicrosoftClaimsPolicy)
 
       markReverted();
     } catch (error) {
-      // isNotFoundError handles: 404
       if (isNotFoundError(error)) {
         markReverted();
       } else {

@@ -1,12 +1,15 @@
 import { ApiEndpoint, SyncTemplateTag } from "@/constants";
 import { isNotFoundError } from "@/lib/workflow/core/errors";
-import { LogLevel, StepId, Var } from "@/types";
+import { StepId } from "@/lib/workflow/step-ids";
+import { Var } from "@/lib/workflow/variables";
+import { LogLevel } from "@/types";
 import { defineStep } from "../step-builder";
 
 interface SyncJob {
   id?: string;
   templateId?: string;
   status?: { code?: string };
+  value?: Array<{ id: string }>;
 }
 
 export default defineStep(StepId.SetupMicrosoftProvisioning)
@@ -16,16 +19,6 @@ export default defineStep(StepId.SetupMicrosoftProvisioning)
     Var.GeneratedPassword
   )
   .provides()
-  /**
-   * GET https://graph.microsoft.com/v1.0/servicePrincipals/{provisioningServicePrincipalId}/synchronization/jobs
-   * Headers: { Authorization: Bearer {msGraphToken} }
-   *
-   * Success response (200)
-   * { "value": [ { "status": { "code": "Active" } } ] }
-   *
-   * Success response (200) - empty
-   * { "value": [] }
-   */
 
   .check(
     async ({
@@ -34,15 +27,17 @@ export default defineStep(StepId.SetupMicrosoftProvisioning)
       markComplete,
       markIncomplete,
       markCheckFailed,
-      log
+      log,
     }) => {
       try {
         const spId = vars.require(Var.ProvisioningServicePrincipalId);
 
-        const { value = [] } = await microsoft.synchronization
+        const { value = [] } = (await microsoft.synchronization
           .jobs(spId)
           .list()
-          .get();
+          .get()) as {
+          value?: Array<{ id: string; status?: { code?: string } }>;
+        };
 
         const active = value.some(
           (job: SyncJob) => job.status?.code !== "Paused"
@@ -63,62 +58,37 @@ export default defineStep(StepId.SetupMicrosoftProvisioning)
       }
     }
   )
-  /**
-   * GET https://graph.microsoft.com/v1.0/servicePrincipals/{provisioningServicePrincipalId}/synchronization/templates
-   * Headers: { Authorization: Bearer {msGraphToken} }
-   *
-   * Success response (200)
-   * { "value": [ { "id": "templateId", "factoryTag": "gsuite" } ] }
-   *
-   * POST https://graph.microsoft.com/v1.0/servicePrincipals/{provisioningServicePrincipalId}/synchronization/jobs
-   * Headers: { Authorization: Bearer {msGraphToken} }
-   * Body: { "templateId": "{templateId}" }
-   *
-   * PUT https://graph.microsoft.com/v1.0/servicePrincipals/{provisioningServicePrincipalId}/synchronization/secrets
-   * Headers: { Authorization: Bearer {msGraphToken} }
-   * Body:
-   * {
-   *   "value": [
-   *     { "key": "BaseAddress", "value": "https://admin.googleapis.com/admin/directory/v1" },
-   *     { "key": "SecretToken", "value": "{generatedPassword}" }
-   *   ]
-   * }
-   *
-   * POST https://graph.microsoft.com/v1.0/servicePrincipals/{provisioningServicePrincipalId}/synchronization/jobs/{jobId}/start
-   * Headers: { Authorization: Bearer {msGraphToken} }
-   * Success response (204) {}
-   */
   .execute(async ({ vars, microsoft, output, markFailed, log }) => {
     try {
       const spId = vars.require(Var.ProvisioningServicePrincipalId);
       const password = vars.require(Var.GeneratedPassword);
       const baseAddress = ApiEndpoint.Google.Users.replace("/users", "");
 
-      const { value: templates } = await microsoft.synchronization
+      const { value: templates } = (await microsoft.synchronization
         .templates(spId)
-        .get();
+        .get()) as { value?: Array<{ id: string; factoryTag: string }> };
 
       const templateId =
-        templates.find(
+        templates?.find(
           (template) => template.factoryTag === SyncTemplateTag.GoogleWorkspace
         )?.id ?? SyncTemplateTag.GoogleWorkspace;
 
-      const job = await microsoft.synchronization
+      const job = (await microsoft.synchronization
         .jobs(spId)
         .create()
-        .post({ templateId });
+        .post({ templateId })) as { id?: string };
 
       await microsoft.synchronization.secrets(spId).put({
         value: [
           { key: "BaseAddress", value: baseAddress },
-          { key: "SecretToken", value: password }
-        ]
+          { key: "SecretToken", value: password },
+        ],
       });
 
-      const jobId = job.id ?? job.value?.[0]?.id;
-      if (jobId) {
-        await microsoft.synchronization.jobs(spId).start(jobId).post();
+      if (!job.id) {
+        throw new Error("Synchronization job id missing");
       }
+      await microsoft.synchronization.jobs(spId).start(job.id).post();
 
       log(LogLevel.Info, "Microsoft provisioning setup completed");
       output({});
@@ -127,22 +97,14 @@ export default defineStep(StepId.SetupMicrosoftProvisioning)
       markFailed(error instanceof Error ? error.message : "Execute failed");
     }
   })
-  /**
-   * GET https://graph.microsoft.com/v1.0/servicePrincipals/{provisioningServicePrincipalId}/synchronization/jobs
-   * DELETE https://graph.microsoft.com/v1.0/servicePrincipals/{provisioningServicePrincipalId}/synchronization/jobs/{jobId}
-   */
   .undo(async ({ vars, microsoft, markReverted, markFailed, log }) => {
     try {
-      const spId = vars.get(Var.ProvisioningServicePrincipalId);
-      if (!spId) {
-        markFailed("Missing service principal id");
-        return;
-      }
+      const spId = vars.require(Var.ProvisioningServicePrincipalId);
 
-      const { value = [] } = await microsoft.synchronization
+      const { value = [] } = (await microsoft.synchronization
         .jobs(spId)
         .list()
-        .get();
+        .get()) as { value?: Array<{ id: string }> };
 
       for (const job of value) {
         await microsoft.synchronization.jobs(spId).delete(job.id).delete();

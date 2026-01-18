@@ -1,37 +1,28 @@
-/* eslint-disable workflow/no-hardcoded-config */
-import { WorkflowProvider } from "@/components/workflow-context";
-import { WorkflowHeader } from "@/components/workflow-header";
+import "./globals.css";
+import type { Metadata } from "next";
+import { Roboto_Flex } from "next/font/google";
+import { WorkflowProvider } from "@/components/workflow/context";
+import { WorkflowHeader } from "@/components/workflow/header";
 import { PROTECTED_RESOURCES } from "@/constants";
 import { env } from "@/env";
 import { generateSecurePassword } from "@/lib/utils";
 import { getAllSteps } from "@/lib/workflow/step-registry";
-import { Var } from "@/types";
-import type { Metadata } from "next";
-import localFont from "next/font/local";
+import { Var } from "@/lib/workflow/variables";
 
-const inter = localFont({
-  src: [
-    { path: "./InterVariable.woff2", style: "normal" },
-    { path: "./InterVariable-Italic.woff2", style: "italic" }
-  ]
-});
-
-import "./globals.css";
-
-// Initialize protected resources
 if (env.MICROSOFT_OAUTH_CLIENT_ID) {
   PROTECTED_RESOURCES.microsoftAppIds.add(env.MICROSOFT_OAUTH_CLIENT_ID);
 }
 
+const roboto = Roboto_Flex();
 export const metadata: Metadata = { title: "Easy CEP" };
 
 export default function RootLayout({
-  children
+  children,
 }: Readonly<{ children: React.ReactNode }>) {
   const allSteps = getAllSteps().map((step) => ({
     id: step.id,
     requires: step.requires,
-    provides: step.provides
+    provides: step.provides,
   }));
 
   const DEFAULT_CONFIG = {
@@ -43,16 +34,19 @@ export default function RootLayout({
     [Var.ProvisioningAppDisplayName]: "Google Workspace Provisioning",
     [Var.SsoAppDisplayName]: "Google Workspace SSO",
     [Var.ClaimsPolicyDisplayName]: "Google Workspace Basic Claims",
-    [Var.GeneratedPassword]: generateSecurePassword()
+    [Var.GeneratedPassword]: generateSecurePassword(),
   };
 
   return (
-    <html lang="en" className="antialiased scroll-smooth">
+    <html className="scroll-smooth antialiased" lang="en">
       <body
-        className={`antialiased transform-gpu scroll-smooth ${inter.className}`}>
-        <WorkflowProvider steps={allSteps} initialVars={DEFAULT_CONFIG}>
+        className={`flex h-screen transform-gpu flex-col overflow-hidden scroll-smooth antialiased ${roboto.className}`}
+      >
+        <WorkflowProvider initialVars={DEFAULT_CONFIG} steps={allSteps}>
           <WorkflowHeader />
-          <main className="flex h-[calc(100vh-64px)]">{children}</main>
+          <main className="flex h-[calc(100vh-64px)] overflow-hidden">
+            {children}
+          </main>
         </WorkflowProvider>
       </body>
     </html>

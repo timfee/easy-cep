@@ -1,36 +1,50 @@
-import { ApiEndpoint } from "@/constants";
 import { z } from "zod";
+import { ApiEndpoint } from "@/constants";
 import { ServicePrincipalIdSchema } from "../types/api-schemas";
 import type { HttpClient } from "../types/http-client";
-import { createCrudMethods, CrudSchemas, empty } from "./crud-factory";
+import { type CrudSchemas, createCrudMethods, empty } from "./crud-factory";
 import { ResourceBuilder } from "./fluent-builder";
 
 const appGetSchema = z.object({
   id: z.string(),
   appId: z.string(),
-  displayName: z.string()
+  displayName: z.string(),
 });
 const appListSchema = z.object({
   value: z.array(
     z.object({ id: z.string(), appId: z.string(), displayName: z.string() })
-  )
+  ),
 });
 const appCreateSchema = empty;
-const appResponseSchema = z.object({});
+const appResponseSchema = z.object({
+  id: z.string().optional(),
+  appId: z.string().optional(),
+  displayName: z.string().optional(),
+  identifierUris: z.array(z.string()).optional(),
+  web: z.object({ redirectUris: z.array(z.string()).optional() }).optional(),
+});
+const appUpdateSchema = z
+  .object({
+    identifierUris: z.array(z.string()).optional(),
+    web: z.object({ redirectUris: z.array(z.string()).optional() }).optional(),
+  })
+  .passthrough();
 
 const appSchemas = {
   get: appGetSchema,
   list: appListSchema,
   flatten: "value",
+  flattenResponse: appListSchema,
   create: appCreateSchema,
   response: appResponseSchema,
-  update: empty
+  update: appUpdateSchema,
 } satisfies CrudSchemas<
   z.infer<typeof appGetSchema>,
   z.infer<typeof appListSchema>,
   z.infer<typeof appCreateSchema>,
   z.infer<typeof appResponseSchema>,
-  z.infer<typeof empty>
+  z.infer<typeof appUpdateSchema>,
+  z.infer<typeof appListSchema>
 >;
 
 const spGetSchema = z.object({
@@ -40,37 +54,57 @@ const spGetSchema = z.object({
   preferredSingleSignOnMode: z.string().nullable(),
   samlSingleSignOnSettings: z
     .object({ relayState: z.string().nullable() })
-    .nullable()
+    .nullable(),
 });
 const spListSchema = ServicePrincipalIdSchema;
 const spCreateSchema = empty;
-const spResponseSchema = z.object({});
+const spResponseSchema = z.object({
+  id: z.string().optional(),
+  appId: z.string().optional(),
+  displayName: z.string().optional(),
+  preferredSingleSignOnMode: z.string().nullable().optional(),
+  samlSingleSignOnSettings: z
+    .object({ relayState: z.string().nullable() })
+    .nullable()
+    .optional(),
+});
+const spUpdateSchema = z
+  .object({
+    preferredSingleSignOnMode: z.string().nullable().optional(),
+    samlSingleSignOnSettings: z
+      .object({ relayState: z.string().nullable() })
+      .nullable()
+      .optional(),
+  })
+  .passthrough();
 
 const spSchemas = {
   get: spGetSchema,
   list: spListSchema,
   flatten: "value",
+  flattenResponse: spListSchema,
   create: spCreateSchema,
   response: spResponseSchema,
-  update: empty
+  update: spUpdateSchema,
 } satisfies CrudSchemas<
   z.infer<typeof spGetSchema>,
   z.infer<typeof spListSchema>,
   z.infer<typeof spCreateSchema>,
   z.infer<typeof spResponseSchema>,
-  z.infer<typeof empty>
+  z.infer<typeof spUpdateSchema>,
+  z.infer<typeof spListSchema>
 >;
 
 const claimsGetSchema = empty;
 const claimsListSchema = z.object({
   value: z.array(
     z.object({ id: z.string(), displayName: z.string().optional() })
-  )
+  ),
 });
 const claimsCreateSchema = z.object({
   definition: z.array(z.string()),
   displayName: z.string(),
-  isOrganizationDefault: z.boolean()
+  isOrganizationDefault: z.boolean(),
 });
 const claimsResponseSchema = z.object({ id: z.string() });
 
@@ -78,34 +112,40 @@ const claimsSchemas = {
   get: claimsGetSchema,
   list: claimsListSchema,
   flatten: "value",
+  flattenResponse: claimsListSchema,
   create: claimsCreateSchema,
   response: claimsResponseSchema,
-  update: empty
+  update: empty,
 } satisfies CrudSchemas<
   z.infer<typeof claimsGetSchema>,
   z.infer<typeof claimsListSchema>,
   z.infer<typeof claimsCreateSchema>,
   z.infer<typeof claimsResponseSchema>,
-  z.infer<typeof empty>
+  z.infer<typeof empty>,
+  z.infer<typeof claimsListSchema>
 >;
 
 const syncTemplateSchema = z.object({
-  value: z.array(z.object({ id: z.string(), factoryTag: z.string() }))
+  value: z.array(z.object({ id: z.string(), factoryTag: z.string() })),
 });
 const jobItemSchema = z.object({
   id: z.string(),
   templateId: z.string(),
-  status: z.object({ code: z.string() }).optional()
+  status: z.object({ code: z.string() }).optional(),
 });
 const syncJobSchema = z.object({
   id: z.string().optional(),
   templateId: z.string().optional(),
   status: z.object({ code: z.string() }).optional(),
-  value: z.array(jobItemSchema).optional()
+  value: z.array(jobItemSchema).optional(),
 });
 
 export class MicrosoftClient {
-  constructor(private client: HttpClient) {}
+  private readonly client: HttpClient;
+
+  constructor(client: HttpClient) {
+    this.client = client;
+  }
   private builder() {
     return new ResourceBuilder(this.client, {});
   }
@@ -124,9 +164,9 @@ export class MicrosoftClient {
           .accepts(
             z.object({
               servicePrincipal: z.object({ id: z.string() }),
-              application: z.object({ id: z.string(), appId: z.string() })
+              application: z.object({ id: z.string(), appId: z.string() }),
             })
-          )
+          ),
     };
   }
 
@@ -151,7 +191,7 @@ export class MicrosoftClient {
                 samlSingleSignOnSettings: z
                   .object({ relayState: z.string().nullable() })
                   .nullable()
-                  .optional()
+                  .optional(),
               })
               .passthrough()
           ),
@@ -164,7 +204,9 @@ export class MicrosoftClient {
               keyId: z.string(),
               type: z.string(),
               usage: z.string(),
-              key: z.string().nullable()
+              key: z.string().optional(),
+              startDateTime: z.string(),
+              endDateTime: z.string(),
             })
           ),
       tokenSigningCertificates: (spId: string) => ({
@@ -176,11 +218,11 @@ export class MicrosoftClient {
                 value: z.array(
                   z.object({
                     keyId: z.string(),
+                    key: z.string().nullable().optional(),
                     startDateTime: z.string(),
                     endDateTime: z.string(),
-                    key: z.string().nullable()
                   })
-                )
+                ),
               })
             ),
         delete: (certId: string) =>
@@ -188,14 +230,15 @@ export class MicrosoftClient {
             .path(
               `${ApiEndpoint.Microsoft.TokenSigningCertificates(spId)}/${certId}`
             )
-            .accepts(empty)
+            .accepts(empty),
       }),
       claimsMappingPolicies: (spId: string) => ({
         list: () =>
           this.builder()
             .path(ApiEndpoint.Microsoft.ReadClaimsPolicy(spId))
-            .accepts(ServicePrincipalIdSchema)
-            .flatten("value"),
+            .accepts(
+              z.object({ value: z.array(z.object({ id: z.string() })) })
+            ),
         assign: () =>
           this.builder()
             .path(ApiEndpoint.Microsoft.AssignClaimsPolicy(spId))
@@ -204,8 +247,8 @@ export class MicrosoftClient {
         unassign: (policyId: string) =>
           this.builder()
             .path(ApiEndpoint.Microsoft.UnassignClaimsPolicy(spId, policyId))
-            .accepts(empty)
-      })
+            .accepts(empty),
+      }),
     };
   }
 
@@ -242,17 +285,17 @@ export class MicrosoftClient {
         start: (jobId: string) =>
           this.builder()
             .path(ApiEndpoint.Microsoft.StartSync(spId, jobId))
-            .accepts(empty)
+            .accepts(empty),
       }),
       secrets: (spId: string) =>
         this.builder()
           .path(ApiEndpoint.Microsoft.SyncSecrets(spId))
           .sends(
             z.object({
-              value: z.array(z.object({ key: z.string(), value: z.string() }))
+              value: z.array(z.object({ key: z.string(), value: z.string() })),
             })
           )
-          .accepts(empty)
+          .accepts(empty),
     };
   }
 

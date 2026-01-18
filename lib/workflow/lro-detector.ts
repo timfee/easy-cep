@@ -5,18 +5,23 @@ export interface LROMetadata {
   pollUrl?: string;
 }
 
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === "object" && value !== null;
+}
+
+function getString(value: unknown): string | undefined {
+  return typeof value === "string" ? value : undefined;
+}
+
 export function detectLRO(
   response: unknown,
   status: number
 ): LROMetadata | null {
-  const body = response as Record<string, unknown> | undefined;
-  if (body && typeof body === "object" && "name" in body && "done" in body) {
-    const op = body as { name: string };
-    return {
-      type: "google-operation",
-      operationId: op.name,
-      estimatedSeconds: 30
-    };
+  if (isRecord(response) && "name" in response && "done" in response) {
+    const operationId = getString(response.name);
+    if (operationId) {
+      return { type: "google-operation", operationId, estimatedSeconds: 30 };
+    }
   }
 
   if (status === 202) {

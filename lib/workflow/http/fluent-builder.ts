@@ -15,12 +15,11 @@ export interface BuilderConfig {
 }
 
 export class ResourceBuilder<TContext = Record<string, never>> {
-  private config: BuilderConfig = {};
+  private readonly config: BuilderConfig = {};
+  private readonly client: HttpClient;
 
-  constructor(
-    private client: HttpClient,
-    initialConfig?: BuilderConfig
-  ) {
+  constructor(client: HttpClient, initialConfig?: BuilderConfig) {
+    this.client = client;
     if (initialConfig) {
       this.config = { ...initialConfig };
     }
@@ -28,97 +27,98 @@ export class ResourceBuilder<TContext = Record<string, never>> {
 
   path(template: string): ResourceBuilder<TContext & { path: string }> {
     this.config.basePath = template;
-    return this as unknown as ResourceBuilder<TContext & { path: string }>;
+    return new ResourceBuilder<TContext & { path: string }>(
+      this.client,
+      this.config
+    );
   }
 
-  params(params: Record<string, string>): this {
+  params(params: Record<string, string>): ResourceBuilder<TContext> {
     this.config.pathParams = { ...this.config.pathParams, ...params };
-    return this;
+    return new ResourceBuilder<TContext>(this.client, this.config);
   }
 
-  query(params: Record<string, string | number | boolean>): this {
+  query(
+    params: Record<string, string | number | boolean>
+  ): ResourceBuilder<TContext> {
     this.config.queryParams = {
       ...this.config.queryParams,
       ...Object.fromEntries(
         Object.entries(params).map(([k, v]) => [k, String(v)])
-      )
+      ),
     };
-    return this;
+    return new ResourceBuilder<TContext>(this.client, this.config);
   }
 
-  headers(headers: Record<string, string>): this {
+  headers(headers: Record<string, string>): ResourceBuilder<TContext> {
     this.config.headers = { ...this.config.headers, ...headers };
-    return this;
+    return new ResourceBuilder<TContext>(this.client, this.config);
   }
 
-  flatten(key?: boolean | string): this {
+  flatten(key?: boolean | string): ResourceBuilder<TContext> {
     this.config.flatten = key === undefined ? true : key;
-    return this;
+    return new ResourceBuilder<TContext>(this.client, this.config);
   }
 
-  retry(times: number): this {
+  retry(times: number): ResourceBuilder<TContext> {
     this.config.retries = times;
-    return this;
+    return new ResourceBuilder<TContext>(this.client, this.config);
   }
 
-  timeout(ms: number): this {
+  timeout(ms: number): ResourceBuilder<TContext> {
     this.config.timeout = ms;
-    return this;
+    return new ResourceBuilder<TContext>(this.client, this.config);
   }
 
   accepts<T>(
     schema: z.ZodSchema<T>
   ): ResourceBuilder<TContext & { response: T }> {
     this.config.responseSchema = schema;
-    return this as unknown as ResourceBuilder<TContext & { response: T }>;
+    return new ResourceBuilder<TContext & { response: T }>(
+      this.client,
+      this.config
+    );
   }
 
   sends<T>(schema: z.ZodSchema<T>): ResourceBuilder<TContext & { request: T }> {
     this.config.requestSchema = schema;
-    return this as unknown as ResourceBuilder<TContext & { request: T }>;
+    return new ResourceBuilder<TContext & { request: T }>(
+      this.client,
+      this.config
+    );
   }
 
   // Terminal methods
-  async get<
-    T = TContext extends { response: infer R } ? R : unknown
-  >(): Promise<T> {
-    return this.send<T>(HttpMethod.GET);
+  get() {
+    return this.send(HttpMethod.GET);
   }
 
-  async post<T = TContext extends { response: infer R } ? R : unknown>(
-    body?: TContext extends { request: infer B } ? B : unknown
-  ): Promise<T> {
+  post(body?: TContext extends { request: infer B } ? B : unknown) {
     const parsedBody =
-      body && this.config.requestSchema ?
-        this.config.requestSchema.parse(body)
-      : body;
-    return this.send<T>(HttpMethod.POST, parsedBody);
+      body && this.config.requestSchema
+        ? this.config.requestSchema.parse(body)
+        : body;
+    return this.send(HttpMethod.POST, parsedBody);
   }
 
-  async put<T = TContext extends { response: infer R } ? R : unknown>(
-    body?: TContext extends { request: infer B } ? B : unknown
-  ): Promise<T> {
+  put(body?: TContext extends { request: infer B } ? B : unknown) {
     const parsedBody =
-      body && this.config.requestSchema ?
-        this.config.requestSchema.parse(body)
-      : body;
-    return this.send<T>(HttpMethod.PUT, parsedBody);
+      body && this.config.requestSchema
+        ? this.config.requestSchema.parse(body)
+        : body;
+    return this.send(HttpMethod.PUT, parsedBody);
   }
 
-  async patch<T = TContext extends { response: infer R } ? R : unknown>(
-    body?: TContext extends { request: infer B } ? B : unknown
-  ): Promise<T> {
+  patch(body?: TContext extends { request: infer B } ? B : unknown) {
     const parsedBody =
-      body && this.config.requestSchema ?
-        this.config.requestSchema.parse(body)
-      : body;
-    return this.send<T>(HttpMethod.PATCH, parsedBody);
+      body && this.config.requestSchema
+        ? this.config.requestSchema.parse(body)
+        : body;
+    return this.send(HttpMethod.PATCH, parsedBody);
   }
 
-  async delete<
-    T = TContext extends { response: infer R } ? R : unknown
-  >(): Promise<T> {
-    return this.send<T>(HttpMethod.DELETE);
+  delete() {
+    return this.send(HttpMethod.DELETE);
   }
 
   private buildUrl(): string {
@@ -126,19 +126,19 @@ export class ResourceBuilder<TContext = Record<string, never>> {
 
     if (this.config.pathParams) {
       // ENCODING: Path parameters are encoded here and ONLY here
-      Object.entries(this.config.pathParams).forEach(([key, value]) => {
+      for (const [key, value] of Object.entries(this.config.pathParams)) {
         url = url.replace(`{${key}}`, encodeURIComponent(value));
-      });
+      }
     }
 
     if (
-      this.config.queryParams
-      && Object.keys(this.config.queryParams).length > 0
+      this.config.queryParams &&
+      Object.keys(this.config.queryParams).length > 0
     ) {
       const params = new URLSearchParams();
-      Object.entries(this.config.queryParams).forEach(([key, value]) => {
+      for (const [key, value] of Object.entries(this.config.queryParams)) {
         params.append(key, String(value));
-      });
+      }
       url += `?${params.toString()}`;
     }
 
@@ -166,9 +166,7 @@ export class ResourceBuilder<TContext = Record<string, never>> {
       } catch (error) {
         lastError = error;
         if (i < retries) {
-          await new Promise((resolve) =>
-            setTimeout(resolve, Math.pow(2, i) * 1000)
-          );
+          await new Promise((resolve) => setTimeout(resolve, 2 ** i * 1000));
         }
       }
     }
@@ -176,19 +174,20 @@ export class ResourceBuilder<TContext = Record<string, never>> {
     throw lastError;
   }
 
-  private send<T>(method: HttpMethod, body?: unknown): Promise<T> {
+  private send(method: HttpMethod, body?: unknown): Promise<unknown> {
     const url = this.buildUrl();
     const options = this.buildOptions();
-    return this.executeWithRetry(() =>
-      this.client.request(
-        url,
-        (this.config.responseSchema ?? z.unknown()) as z.ZodSchema<T>,
-        {
-          ...options,
-          method,
-          body: body !== undefined ? JSON.stringify(body) : undefined
-        }
-      )
-    );
+    return this.executeWithRetry(async () => {
+      const responseSchema = this.config.responseSchema ?? z.unknown();
+      const response = await this.client.request(url, responseSchema, {
+        ...options,
+        method,
+        body: body !== undefined ? JSON.stringify(body) : undefined,
+      });
+      if (!responseSchema.safeParse(response).success) {
+        throw new Error("Unexpected response schema");
+      }
+      return response;
+    });
   }
 }

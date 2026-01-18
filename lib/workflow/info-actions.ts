@@ -1,18 +1,16 @@
 "use server";
-import "server-only";
 
+import pLimit from "p-limit";
+import { z } from "zod";
 import {
   ApiEndpoint,
   PROTECTED_RESOURCES,
   PROVIDERS,
-  type Provider
+  type Provider,
 } from "@/constants";
 import { env } from "@/env";
 import { refreshTokenIfNeeded } from "@/lib/auth";
 import { extractResourceId, ResourceTypes } from "@/lib/workflow/core/http";
-import { z } from "zod";
-
-import pLimit from "p-limit";
 
 interface DeleteOptions {
   concurrency?: number;
@@ -41,21 +39,23 @@ function createDeleteAction(
     checkPurgeAllowed();
 
     const token = await refreshTokenIfNeeded(provider);
-    if (!token)
+    if (!token) {
       throw new Error(
         `No ${provider === PROVIDERS.GOOGLE ? "Google" : "Microsoft"} token available`
       );
+    }
 
     const limit = pLimit(options.concurrency ?? 3);
     const results: DeleteResult = { deleted: [], failed: [] };
 
-    const deletableIds =
-      isProtected ? ids.filter((id) => !isProtected(id)) : ids;
+    const deletableIds = isProtected
+      ? ids.filter((id) => !isProtected(id))
+      : ids;
     const protectedIds = isProtected ? ids.filter((id) => isProtected(id)) : [];
 
-    protectedIds.forEach((id) => {
+    for (const id of protectedIds) {
       results.failed.push({ id, error: `${resourceName} is protected` });
-    });
+    }
 
     await Promise.all(
       deletableIds.map((id, index) =>
@@ -63,7 +63,7 @@ function createDeleteAction(
           try {
             const res = await fetch(getEndpoint(id), {
               method: "DELETE",
-              headers: { Authorization: `Bearer ${token.accessToken}` }
+              headers: { Authorization: `Bearer ${token.accessToken}` },
             });
 
             if (!res.ok) {
@@ -75,7 +75,7 @@ function createDeleteAction(
           } catch (error) {
             results.failed.push({
               id,
-              error: error instanceof Error ? error.message : String(error)
+              error: error instanceof Error ? error.message : String(error),
             });
           }
 
@@ -124,7 +124,9 @@ export async function deleteOrgUnits(ids: string[]): Promise<DeleteResult> {
   checkPurgeAllowed();
 
   const token = await refreshTokenIfNeeded(PROVIDERS.GOOGLE);
-  if (!token) throw new Error("No Google token available");
+  if (!token) {
+    throw new Error("No Google token available");
+  }
 
   const results: DeleteResult = { deleted: [], failed: [] };
 
@@ -134,7 +136,7 @@ export async function deleteOrgUnits(ids: string[]): Promise<DeleteResult> {
         `${ApiEndpoint.Google.OrgUnits}/${encodeURIComponent(id)}`,
         {
           method: "DELETE",
-          headers: { Authorization: `Bearer ${token.accessToken}` }
+          headers: { Authorization: `Bearer ${token.accessToken}` },
         }
       );
 
@@ -147,7 +149,7 @@ export async function deleteOrgUnits(ids: string[]): Promise<DeleteResult> {
     } catch (error) {
       results.failed.push({
         id,
-        error: error instanceof Error ? error.message : String(error)
+        error: error instanceof Error ? error.message : String(error),
       });
     }
 
@@ -160,7 +162,7 @@ export async function deleteOrgUnits(ids: string[]): Promise<DeleteResult> {
 }
 
 export async function deleteSamlProfiles(ids: string[]): Promise<DeleteResult> {
-  return createGoogleDeleteAction(
+  return await createGoogleDeleteAction(
     (id) => ApiEndpoint.Google.SamlProfile(id),
     "SAML Profile",
     undefined,
@@ -171,7 +173,7 @@ export async function deleteSamlProfiles(ids: string[]): Promise<DeleteResult> {
 export async function deleteSsoAssignments(
   ids: string[]
 ): Promise<DeleteResult> {
-  return createGoogleDeleteAction(
+  return await createGoogleDeleteAction(
     (id) => {
       const normalized = extractResourceId(
         id,
@@ -186,7 +188,7 @@ export async function deleteSsoAssignments(
 }
 
 export async function deleteGoogleRoles(ids: string[]): Promise<DeleteResult> {
-  return createGoogleDeleteAction(
+  return await createGoogleDeleteAction(
     (id) => `${ApiEndpoint.Google.Roles}/${id}`,
     "Admin Role",
     (id) => id.startsWith("_"),
@@ -195,7 +197,7 @@ export async function deleteGoogleRoles(ids: string[]): Promise<DeleteResult> {
 }
 
 export async function deleteGoogleUsers(ids: string[]): Promise<DeleteResult> {
-  return createGoogleDeleteAction(
+  return await createGoogleDeleteAction(
     (id) => `${ApiEndpoint.Google.Users}/${id}`,
     "User",
     undefined,
@@ -206,7 +208,7 @@ export async function deleteGoogleUsers(ids: string[]): Promise<DeleteResult> {
 export async function deleteClaimsPolicies(
   ids: string[]
 ): Promise<DeleteResult> {
-  return createMicrosoftDeleteAction(
+  return await createMicrosoftDeleteAction(
     (id) => `${ApiEndpoint.Microsoft.ClaimsPolicies}/${id}`,
     "Claims Policy"
   )(ids);
@@ -215,7 +217,7 @@ export async function deleteClaimsPolicies(
 export async function deleteEnterpriseApps(
   ids: string[]
 ): Promise<DeleteResult> {
-  return createMicrosoftDeleteAction(
+  return await createMicrosoftDeleteAction(
     (id) => `${ApiEndpoint.Microsoft.Applications}/${id}`,
     "Enterprise Application",
     (id) => PROTECTED_RESOURCES.microsoftAppIds.has(id)
@@ -228,7 +230,9 @@ export async function deleteProvisioningJobs(
   checkPurgeAllowed();
 
   const token = await refreshTokenIfNeeded(PROVIDERS.MICROSOFT);
-  if (!token) throw new Error("No Microsoft token available");
+  if (!token) {
+    throw new Error("No Microsoft token available");
+  }
   const SpSchema = z.object({ value: z.array(z.object({ id: z.string() })) });
   const spFilter = encodeURIComponent(
     "displayName eq 'Google Workspace Provisioning'"
@@ -237,7 +241,9 @@ export async function deleteProvisioningJobs(
     `${ApiEndpoint.Microsoft.ServicePrincipals}?$filter=${spFilter}`,
     { headers: { Authorization: `Bearer ${token.accessToken}` } }
   );
-  if (!spRes.ok) throw new Error(`HTTP ${spRes.status}`);
+  if (!spRes.ok) {
+    throw new Error(`HTTP ${spRes.status}`);
+  }
   const spData = SpSchema.parse(await spRes.json());
   const spId = spData.value[0]?.id;
   if (!spId) {
@@ -245,8 +251,8 @@ export async function deleteProvisioningJobs(
       deleted: [],
       failed: ids.map((id) => ({
         id,
-        error: "Provisioning service principal not found"
-      }))
+        error: "Provisioning service principal not found",
+      })),
     };
   }
 

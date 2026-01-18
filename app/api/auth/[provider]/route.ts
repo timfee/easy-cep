@@ -1,17 +1,16 @@
-import { OAUTH_STATE_COOKIE_NAME, PROVIDERS, Provider } from "@/constants";
+import { type NextRequest, NextResponse } from "next/server";
+import { OAUTH_STATE_COOKIE_NAME, PROVIDERS } from "@/constants";
 import {
   clearChunkedCookie,
   encrypt,
   generateAuthUrl,
   generateState,
-  setChunkedCookie
+  setChunkedCookie,
 } from "@/lib/auth";
-
-import { NextRequest, NextResponse } from "next/server";
 
 export async function GET(
   request: NextRequest,
-  { params }: { params: Promise<{ provider: Provider }> }
+  { params }: { params: Promise<{ provider: string }> }
 ) {
   const { provider } = await params;
 

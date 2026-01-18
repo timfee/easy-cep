@@ -1,10 +1,9 @@
-import { Provider } from "@/constants";
+import { type NextRequest, NextResponse } from "next/server";
 import { exchangeCodeForToken, setToken, validateOAuthState } from "@/lib/auth";
-import { NextRequest, NextResponse } from "next/server";
 
 export async function GET(
   request: NextRequest,
-  { params }: { params: Promise<{ provider: Provider }> }
+  { params }: { params: Promise<{ provider: string }> }
 ) {
   const { provider } = await params;
   const searchParams = request.nextUrl.searchParams;
@@ -13,12 +12,16 @@ export async function GET(
   const error = searchParams.get("error");
   const baseUrl = request.nextUrl.origin;
 
+  if (provider !== "google" && provider !== "microsoft") {
+    return NextResponse.redirect(`${baseUrl}/?error=invalid_provider`);
+  }
+
   if (error) {
     console.error(error);
     return NextResponse.redirect(`${baseUrl}/?error=${error}`);
   }
 
-  if (!code || !state) {
+  if (!(code && state)) {
     return NextResponse.redirect(`${baseUrl}/?error=missing_params`);
   }
 

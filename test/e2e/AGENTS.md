@@ -2,7 +2,8 @@
 
 - Tests require `TEST_GOOGLE_BEARER_TOKEN`, `TEST_MS_BEARER_TOKEN` and
   `TEST_DOMAIN` environment variables.
-- Set `RUN_E2E=1` when invoking `pnpm test` to enable the live tests.
+- Set `RUN_E2E=1` when invoking `bun test` to enable the live tests.
+- For live runs, you can call `bun x tsx scripts/test-live.ts` after tokens are set.
 - Fixtures live under `test/e2e/fixtures/`.
 - Set `UPDATE_FIXTURES=1` to record new fixtures or `CHECK_FIXTURES=1` to
   verify existing ones. Without either variable the tests run without fixture

@@ -1,6 +1,6 @@
 import { useCallback, useMemo, useState } from "react";
 
-export function usePaginatedItems<T>(items: T[], itemsPerPage: number = 25) {
+export function usePaginatedItems<T>(items: T[], itemsPerPage = 25) {
   const [currentPage, setCurrentPage] = useState(1);
 
   const totalPages = Math.ceil(items.length / itemsPerPage);
@@ -47,6 +47,6 @@ export function usePaginatedItems<T>(items: T[], itemsPerPage: number = 25) {
     goToLastPage,
     goToNextPage,
     goToPrevPage,
-    reset
+    reset,
   };
 }

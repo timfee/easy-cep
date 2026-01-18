@@ -1,12 +1,4 @@
-/**
- * @file step-registry.ts
- * @description Central, static list of all workflow step modules.  Keeping a
- *              single import site helps with tree-shaking, ensures that each
- *              file is evaluated exactly once, and enables fully typed look-ups
- *              by `StepId`.
- */
-
-import { StepIdValue } from "@/types";
+import type { StepIdValue } from "@/lib/workflow/step-ids";
 import assignUsersToSso from "./steps/assign-users-to-sso";
 import completeGoogleSsoSetup from "./steps/complete-google-sso-setup";
 import configureGoogleSamlProfile from "./steps/configure-google-saml-profile";
@@ -30,8 +22,8 @@ const allSteps = [
   configureMicrosoftSso,
   setupMicrosoftClaimsPolicy,
   completeGoogleSsoSetup,
-  assignUsersToSso
-] as const;
+  assignUsersToSso,
+];
 
 export function getAllSteps() {
   return allSteps;
@@ -41,8 +33,11 @@ export function getStep<T extends StepIdValue>(
   id: T
 ): Extract<(typeof allSteps)[number], { id: T }> {
   const match = allSteps.find(
-    (s): s is Extract<(typeof allSteps)[number], { id: T }> => s.id === id
+    (step): step is Extract<(typeof allSteps)[number], { id: T }> =>
+      step.id === id
   );
-  if (!match) throw new Error(`Step "${id}" not found in registry`);
+  if (!match) {
+    throw new Error(`Step "${id}" not found in registry`);
+  }
   return match;
 }

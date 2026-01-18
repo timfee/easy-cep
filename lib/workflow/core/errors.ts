@@ -1,15 +1,18 @@
-import { WorkflowVars } from "@/types";
 import { inspect } from "node:util";
 import { HttpStatus } from "@/types";
+import type { WorkflowVars } from "../variables";
 
 export class HttpError extends Error {
-  constructor(
-    public statusCode: number,
-    public statusText: string,
-    public responseBody?: unknown
-  ) {
+  statusCode: number;
+  statusText: string;
+  responseBody?: unknown;
+
+  constructor(statusCode: number, statusText: string, responseBody?: unknown) {
     super(`HTTP ${statusCode}: ${statusText}`);
     this.name = "HttpError";
+    this.statusCode = statusCode;
+    this.statusText = statusText;
+    this.responseBody = responseBody;
   }
 }
 
@@ -45,7 +48,9 @@ export function isHttpError(
   error: unknown,
   statusCode?: number
 ): error is HttpError {
-  if (!(error instanceof HttpError)) return false;
+  if (!(error instanceof HttpError)) {
+    return false;
+  }
   return statusCode === undefined || error.statusCode === statusCode;
 }
 
@@ -65,15 +70,15 @@ export function isPreconditionFailedError(
   error: unknown
 ): error is PreconditionFailedError {
   return (
-    error instanceof PreconditionFailedError
-    || isHttpError(error, HttpStatus.PreconditionFailed)
+    error instanceof PreconditionFailedError ||
+    isHttpError(error, HttpStatus.PreconditionFailed)
   );
 }
 
 export function isBadRequestError(error: unknown): error is BadRequestError {
   return (
-    error instanceof BadRequestError
-    || isHttpError(error, HttpStatus.BadRequest)
+    error instanceof BadRequestError ||
+    isHttpError(error, HttpStatus.BadRequest)
   );
 }
 
@@ -85,21 +90,14 @@ export function logUncaughtError(
   console.error(`Step: ${context.stepId || "unknown"}`);
   console.error(`Operation: ${context.operation || "unknown"}`);
 
-  const sanitizedVars = Object.entries(context.vars).reduce(
-    (acc, [key, value]) => {
-      if (
-        key.toLowerCase().includes("token")
-        || key.toLowerCase().includes("certificate")
-        || key.toLowerCase().includes("password")
-      ) {
-        acc[key] = "[REDACTED]";
-      } else {
-        acc[key] = value;
-      }
-      return acc;
-    },
-    {} as Record<string, unknown>
-  );
+  const sanitizedVars: Record<string, unknown> = {};
+  for (const [key, value] of Object.entries(context.vars)) {
+    const redacted =
+      key.toLowerCase().includes("token") ||
+      key.toLowerCase().includes("certificate") ||
+      key.toLowerCase().includes("password");
+    sanitizedVars[key] = redacted ? "[REDACTED]" : value;
+  }
 
   console.error(
     "Variables:",

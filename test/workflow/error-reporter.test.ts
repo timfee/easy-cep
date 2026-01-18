@@ -1,9 +1,11 @@
+import { describe, expect, it, spyOn } from "bun:test";
 import { logUncaughtError } from "@/lib/workflow/core/errors";
-import { jest } from "@jest/globals";
 
 describe("logUncaughtError", () => {
   it("redacts sensitive variables", () => {
-    const spy = jest.spyOn(console, "error").mockImplementation(() => {});
+    const spy = spyOn(console, "error").mockImplementation(() => {
+      /* ignore error output in tests */
+    });
 
     logUncaughtError(new Error("fail"), {
       stepId: "test",
@@ -11,11 +13,13 @@ describe("logUncaughtError", () => {
       vars: {
         googleAccessToken: "secret",
         plainVar: "value",
-        somePassword: "pass"
-      } as any
+        somePassword: "pass",
+      },
     });
 
-    const output = spy.mock.calls.map((c) => c.join(" ")).join("\n");
+    const output = spy.mock.calls
+      .map((call: string[]) => call.join(" "))
+      .join("\n");
     expect(output).toContain("[REDACTED]");
     expect(output).toContain("plainVar");
 

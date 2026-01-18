@@ -1,20 +1,21 @@
 import {
-  ApiEndpoint,
-  OAUTH_STATE_COOKIE_NAME,
-  PROVIDERS,
-  Provider,
-  WORKFLOW_CONSTANTS
-} from "@/constants";
-import { env } from "@/env";
-import { TIME } from "@/lib/workflow/constants/workflow-limits";
-import {
   createCipheriv,
   createDecipheriv,
   createHash,
-  randomBytes
-} from "crypto";
+  randomBytes,
+} from "node:crypto";
 import { cookies } from "next/headers";
-import { NextResponse } from "next/server";
+import type { NextResponse } from "next/server";
+import {
+  ApiEndpoint,
+  OAUTH_STATE_COOKIE_NAME,
+  PROVIDERS,
+  type Provider,
+  WORKFLOW_CONSTANTS,
+} from "@/constants";
+import { env } from "@/env";
+import { TIME } from "@/lib/workflow/constants/workflow-limits";
+
 /** Cookie option type for NextResponse.cookies.set */
 // disable magic number for tuple index accessing the third parameter type
 
@@ -86,7 +87,7 @@ interface OAuthConfig {
 const googleOAuthConfig: OAuthConfig = {
   clientId: env.GOOGLE_OAUTH_CLIENT_ID,
   clientSecret: env.GOOGLE_OAUTH_CLIENT_SECRET,
-  redirectUri: `/api/auth/callback/google`,
+  redirectUri: "/api/auth/callback/google",
   authorizationUrl: ApiEndpoint.GoogleAuth.Authorize,
   tokenUrl: ApiEndpoint.GoogleAuth.Token,
   scopes: [
@@ -99,14 +100,14 @@ const googleOAuthConfig: OAuthConfig = {
     "https://www.googleapis.com/auth/admin.directory.rolemanagement",
     "https://www.googleapis.com/auth/cloud-identity.inboundsso",
     "https://www.googleapis.com/auth/siteverification",
-    "https://www.googleapis.com/auth/admin.directory.rolemanagement"
-  ]
+    "https://www.googleapis.com/auth/admin.directory.rolemanagement",
+  ],
 };
 
 const microsoftOAuthConfig: OAuthConfig = {
   clientId: env.MICROSOFT_OAUTH_CLIENT_ID,
   clientSecret: env.MICROSOFT_OAUTH_CLIENT_SECRET,
-  redirectUri: `/api/auth/callback/microsoft`,
+  redirectUri: "/api/auth/callback/microsoft",
   authorizationUrl: ApiEndpoint.MicrosoftAuth.Authorize,
   tokenUrl: ApiEndpoint.MicrosoftAuth.Token,
   scopes: [
@@ -119,13 +120,13 @@ const microsoftOAuthConfig: OAuthConfig = {
     "Application.ReadWrite.All",
     "AppRoleAssignment.ReadWrite.All",
     "Policy.ReadWrite.ApplicationConfiguration",
-    "offline_access"
-  ]
+    "offline_access",
+  ],
 };
 
 function getOAuthConfig(provider: Provider): OAuthConfig {
-  return provider === PROVIDERS.GOOGLE ?
-      googleOAuthConfig
+  return provider === PROVIDERS.GOOGLE
+    ? googleOAuthConfig
     : microsoftOAuthConfig;
 }
 
@@ -134,6 +135,34 @@ export interface Token {
   refreshToken: string;
   expiresAt: number;
   scope: string[];
+}
+
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === "object" && value !== null;
+}
+
+function isStringArray(value: unknown): value is string[] {
+  return (
+    Array.isArray(value) && value.every((item) => typeof item === "string")
+  );
+}
+
+function parseToken(value: unknown): Token | null {
+  if (!isRecord(value)) {
+    return null;
+  }
+
+  const { accessToken, refreshToken, expiresAt, scope } = value;
+  if (
+    typeof accessToken !== "string" ||
+    typeof refreshToken !== "string" ||
+    typeof expiresAt !== "number" ||
+    !isStringArray(scope)
+  ) {
+    return null;
+  }
+
+  return { accessToken, refreshToken, expiresAt, scope };
 }
 
 /**
@@ -174,13 +203,13 @@ export async function exchangeCodeForToken(
     client_secret: config.clientSecret,
     code,
     redirect_uri: redirectUri,
-    grant_type: "authorization_code"
+    grant_type: "authorization_code",
   });
 
   const res = await fetch(config.tokenUrl, {
     method: "POST",
     headers: { "Content-Type": "application/x-www-form-urlencoded" },
-    body: params.toString()
+    body: params.toString(),
   });
 
   if (!res.ok) {
@@ -193,7 +222,7 @@ export async function exchangeCodeForToken(
     accessToken: data.access_token,
     refreshToken: data.refresh_token,
     expiresAt: Date.now() + data.expires_in * TIME.MS_IN_SECOND,
-    scope: data.scope?.split(" ") || config.scopes
+    scope: data.scope?.split(" ") || config.scopes,
   };
 }
 
@@ -202,10 +231,12 @@ export async function exchangeCodeForToken(
 export async function getToken(provider: Provider): Promise<Token | null> {
   const cookieName = `${provider}_token`;
   const encrypted = await getChunkedCookie(cookieName);
-  if (!encrypted) return null;
+  if (!encrypted) {
+    return null;
+  }
   try {
     const data = decrypt(encrypted);
-    return JSON.parse(data) as Token;
+    return parseToken(JSON.parse(data));
   } catch {
     return null;
   }
@@ -216,7 +247,9 @@ export async function refreshTokenIfNeeded(
   response?: NextResponse
 ): Promise<Token | null> {
   const token = await getToken(provider);
-  if (!token) return null;
+  if (!token) {
+    return null;
+  }
 
   const expiresIn = token.expiresAt - Date.now();
   if (expiresIn > WORKFLOW_CONSTANTS.TOKEN_REFRESH_BUFFER_MS) {
@@ -233,13 +266,13 @@ export async function refreshTokenIfNeeded(
       client_id: config.clientId,
       client_secret: config.clientSecret,
       refresh_token: token.refreshToken,
-      grant_type: "refresh_token"
+      grant_type: "refresh_token",
     });
 
     const res = await fetch(config.tokenUrl, {
       method: "POST",
       headers: { "Content-Type": "application/x-www-form-urlencoded" },
-      body: params.toString()
+      body: params.toString(),
     });
 
     if (!res.ok) {
@@ -251,7 +284,7 @@ export async function refreshTokenIfNeeded(
       accessToken: data.access_token,
       refreshToken: data.refresh_token || token.refreshToken,
       expiresAt: Date.now() + data.expires_in * TIME.MS_IN_SECOND,
-      scope: data.scope?.split(" ") || token.scope
+      scope: data.scope?.split(" ") || token.scope,
     };
 
     if (response) {
@@ -278,7 +311,7 @@ export async function setToken(
     httpOnly: true,
     secure: env.NODE_ENV === "production",
     path: "/",
-    maxAge: WORKFLOW_CONSTANTS.TOKEN_COOKIE_MAX_AGE
+    maxAge: WORKFLOW_CONSTANTS.TOKEN_COOKIE_MAX_AGE,
   });
 }
 
@@ -291,13 +324,15 @@ export async function validateOAuthState(
   provider: Provider
 ): Promise<boolean> {
   const encrypted = await getChunkedCookie(OAUTH_STATE_COOKIE_NAME);
-  if (!encrypted) return false;
+  if (!encrypted) {
+    return false;
+  }
   try {
     const data = JSON.parse(decrypt(encrypted));
     return (
-      data.state === state
-      && data.provider === provider
-      && Date.now() - data.timestamp < WORKFLOW_CONSTANTS.OAUTH_STATE_TTL_MS
+      data.state === state &&
+      data.provider === provider &&
+      Date.now() - data.timestamp < WORKFLOW_CONSTANTS.OAUTH_STATE_TTL_MS
     );
   } catch {
     return false;
@@ -305,7 +340,7 @@ export async function validateOAuthState(
 }
 
 /** Set a cookie value split into multiple chunks. */
-export async function setChunkedCookie(
+export function setChunkedCookie(
   response: NextResponse,
   name: string,
   value: string,

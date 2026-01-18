@@ -1,15 +1,16 @@
 "use server";
-import "server-only";
 
+import { z } from "zod";
 import {
   ApiEndpoint,
   PROTECTED_RESOURCES,
   PROVIDERS,
-  TemplateId
+  TemplateId,
 } from "@/constants";
 import { refreshTokenIfNeeded } from "@/lib/auth";
 import { extractResourceId, ResourceTypes } from "@/lib/workflow/core/http";
-import { z } from "zod";
+
+const LEADING_SLASH_REGEX = /^\//;
 
 export interface InfoItem {
   id: string;
@@ -22,34 +23,40 @@ export interface InfoItem {
 
 export async function listDomains(): Promise<InfoItem[]> {
   const token = await refreshTokenIfNeeded(PROVIDERS.GOOGLE);
-  if (!token) return [];
+  if (!token) {
+    return [];
+  }
 
   const Schema = z.object({
     domains: z.array(
       z.object({
         domainName: z.string(),
         isPrimary: z.boolean().optional(),
-        verified: z.boolean().optional()
+        verified: z.boolean().optional(),
       })
-    )
+    ),
   });
 
   const res = await fetch(ApiEndpoint.Google.Domains, {
-    headers: { Authorization: `Bearer ${token.accessToken}` }
+    headers: { Authorization: `Bearer ${token.accessToken}` },
   });
-  if (!res.ok) throw new Error(`HTTP ${res.status}`);
+  if (!res.ok) {
+    throw new Error(`HTTP ${res.status}`);
+  }
   const data = Schema.parse(await res.json());
   return data.domains.map((domain) => ({
     id: domain.domainName,
     label: domain.domainName + (domain.isPrimary ? " (Primary)" : ""),
     subLabel: domain.verified ? "Verified" : "Unverified",
-    href: "https://admin.google.com/ac/domains"
+    href: "https://admin.google.com/ac/domains",
   }));
 }
 
 export async function listOrgUnits(): Promise<InfoItem[]> {
   const token = await refreshTokenIfNeeded(PROVIDERS.GOOGLE);
-  if (!token) return [];
+  if (!token) {
+    return [];
+  }
 
   const Schema = z.object({
     organizationUnits: z
@@ -57,44 +64,50 @@ export async function listOrgUnits(): Promise<InfoItem[]> {
         z.object({
           orgUnitId: z.string(),
           name: z.string(),
-          orgUnitPath: z.string()
+          orgUnitPath: z.string(),
         })
       )
-      .optional()
+      .optional(),
   });
 
   const res = await fetch(`${ApiEndpoint.Google.OrgUnits}?type=all`, {
-    headers: { Authorization: `Bearer ${token.accessToken}` }
+    headers: { Authorization: `Bearer ${token.accessToken}` },
   });
-  if (!res.ok) throw new Error(`HTTP ${res.status}`);
+  if (!res.ok) {
+    throw new Error(`HTTP ${res.status}`);
+  }
   const data = Schema.parse(await res.json());
   return (
     data.organizationUnits?.map((ou) => ({
       id: ou.orgUnitId,
       label: ou.orgUnitPath,
-      href: `https://admin.google.com/ac/orgunits`,
+      href: "https://admin.google.com/ac/orgunits",
       deletable: true,
       deleteEndpoint: `${ApiEndpoint.Google.OrgUnits}/${encodeURIComponent(
-        ou.orgUnitPath.replace(/^\//, "")
-      )}`
+        ou.orgUnitPath.replace(LEADING_SLASH_REGEX, "")
+      )}`,
     })) ?? []
   );
 }
 
 export async function listSamlProfiles(): Promise<InfoItem[]> {
   const token = await refreshTokenIfNeeded(PROVIDERS.GOOGLE);
-  if (!token) return [];
+  if (!token) {
+    return [];
+  }
 
   const Schema = z.object({
     inboundSamlSsoProfiles: z
       .array(z.object({ name: z.string(), displayName: z.string().optional() }))
-      .optional()
+      .optional(),
   });
 
   const res = await fetch(ApiEndpoint.Google.SsoProfiles, {
-    headers: { Authorization: `Bearer ${token.accessToken}` }
+    headers: { Authorization: `Bearer ${token.accessToken}` },
   });
-  if (!res.ok) throw new Error(`HTTP ${res.status}`);
+  if (!res.ok) {
+    throw new Error(`HTTP ${res.status}`);
+  }
   const data = Schema.parse(await res.json());
   return (
     data.inboundSamlSsoProfiles?.map((profile) => {
@@ -103,7 +116,7 @@ export async function listSamlProfiles(): Promise<InfoItem[]> {
         label: profile.displayName ?? profile.name,
         href: `https://admin.google.com/ac/security/sso/sso-profiles/${encodeURIComponent(profile.name)}`,
         deletable: true,
-        deleteEndpoint: ApiEndpoint.Google.SamlProfile(profile.name)
+        deleteEndpoint: ApiEndpoint.Google.SamlProfile(profile.name),
       };
     }) ?? []
   );
@@ -111,7 +124,9 @@ export async function listSamlProfiles(): Promise<InfoItem[]> {
 
 export async function listSsoAssignments(): Promise<InfoItem[]> {
   const token = await refreshTokenIfNeeded(PROVIDERS.GOOGLE);
-  if (!token) return [];
+  if (!token) {
+    return [];
+  }
 
   const Schema = z.object({
     inboundSsoAssignments: z
@@ -120,16 +135,18 @@ export async function listSsoAssignments(): Promise<InfoItem[]> {
           name: z.string(),
           targetGroup: z.string().optional(),
           targetOrgUnit: z.string().optional(),
-          ssoMode: z.string().optional()
+          ssoMode: z.string().optional(),
         })
       )
-      .optional()
+      .optional(),
   });
 
   const res = await fetch(ApiEndpoint.Google.SsoAssignments, {
-    headers: { Authorization: `Bearer ${token.accessToken}` }
+    headers: { Authorization: `Bearer ${token.accessToken}` },
   });
-  if (!res.ok) throw new Error(`HTTP ${res.status}`);
+  if (!res.ok) {
+    throw new Error(`HTTP ${res.status}`);
+  }
   const data = Schema.parse(await res.json());
   return (
     data.inboundSsoAssignments?.map((assignment) => {
@@ -142,11 +159,11 @@ export async function listSsoAssignments(): Promise<InfoItem[]> {
         label:
           assignment.targetGroup || assignment.targetOrgUnit || assignment.name,
         subLabel: assignment.ssoMode,
-        href: `https://admin.google.com/ac/security/sso`,
+        href: "https://admin.google.com/ac/security/sso",
         deletable: true,
         deleteEndpoint: `${ApiEndpoint.Google.SsoAssignments}/${encodeURIComponent(
           id
-        )}`
+        )}`,
       };
     }) ?? []
   );
@@ -154,10 +171,12 @@ export async function listSsoAssignments(): Promise<InfoItem[]> {
 
 export async function listProvisioningJobs(): Promise<InfoItem[]> {
   const token = await refreshTokenIfNeeded(PROVIDERS.MICROSOFT);
-  if (!token) return [];
+  if (!token) {
+    return [];
+  }
 
   const SpSchema = z.object({
-    value: z.array(z.object({ id: z.string(), appId: z.string() }))
+    value: z.array(z.object({ id: z.string(), appId: z.string() })),
   });
   const spFilter = encodeURIComponent(
     "displayName eq 'Google Workspace Provisioning'"
@@ -166,25 +185,31 @@ export async function listProvisioningJobs(): Promise<InfoItem[]> {
     `${ApiEndpoint.Microsoft.ServicePrincipals}?$filter=${spFilter}`,
     { headers: { Authorization: `Bearer ${token.accessToken}` } }
   );
-  if (!spRes.ok) throw new Error(`HTTP ${spRes.status}`);
+  if (!spRes.ok) {
+    throw new Error(`HTTP ${spRes.status}`);
+  }
   const spData = SpSchema.parse(await spRes.json());
   const sp = spData.value[0];
-  if (!sp) return [];
+  if (!sp) {
+    return [];
+  }
 
   const JobsSchema = z.object({
     value: z.array(
       z.object({
         id: z.string(),
         templateId: z.string().optional(),
-        status: z.object({ code: z.string().optional() }).optional()
+        status: z.object({ code: z.string().optional() }).optional(),
       })
-    )
+    ),
   });
 
   const res = await fetch(ApiEndpoint.Microsoft.SyncJobs(sp.id), {
-    headers: { Authorization: `Bearer ${token.accessToken}` }
+    headers: { Authorization: `Bearer ${token.accessToken}` },
   });
-  if (!res.ok) throw new Error(`HTTP ${res.status}`);
+  if (!res.ok) {
+    throw new Error(`HTTP ${res.status}`);
+  }
   const data = JobsSchema.parse(await res.json());
   return data.value.map((job) => ({
     id: job.id,
@@ -192,42 +217,48 @@ export async function listProvisioningJobs(): Promise<InfoItem[]> {
     subLabel: job.status?.code,
     href: `https://portal.azure.com/#view/Microsoft_AAD_Connect_Provisioning/ProvisioningMenuBlade/~/Overview/objectId/${sp.id}/appId/${sp.appId}`,
     deletable: true,
-    deleteEndpoint: `${ApiEndpoint.Microsoft.SyncJobs(sp.id)}/${job.id}`
+    deleteEndpoint: `${ApiEndpoint.Microsoft.SyncJobs(sp.id)}/${job.id}`,
   }));
 }
 
 export async function listClaimsPolicies(): Promise<InfoItem[]> {
   const token = await refreshTokenIfNeeded(PROVIDERS.MICROSOFT);
-  if (!token) return [];
+  if (!token) {
+    return [];
+  }
 
   const Schema = z.object({
     value: z.array(
       z.object({ id: z.string(), displayName: z.string().optional() })
-    )
+    ),
   });
 
   const res = await fetch(ApiEndpoint.Microsoft.ClaimsPolicies, {
-    headers: { Authorization: `Bearer ${token.accessToken}` }
+    headers: { Authorization: `Bearer ${token.accessToken}` },
   });
-  if (!res.ok) throw new Error(`HTTP ${res.status}`);
+  if (!res.ok) {
+    throw new Error(`HTTP ${res.status}`);
+  }
   const data = Schema.parse(await res.json());
   return data.value.map((policy) => ({
     id: policy.id,
     label: policy.displayName ?? policy.id,
-    href: `https://portal.azure.com/#view/Microsoft_AAD_IAM/ActiveDirectoryMenuBlade/~/Overview`,
+    href: "https://portal.azure.com/#view/Microsoft_AAD_IAM/ActiveDirectoryMenuBlade/~/Overview",
     deletable: true,
-    deleteEndpoint: `${ApiEndpoint.Microsoft.ClaimsPolicies}/${policy.id}`
+    deleteEndpoint: `${ApiEndpoint.Microsoft.ClaimsPolicies}/${policy.id}`,
   }));
 }
 
 export async function listEnterpriseApps(): Promise<InfoItem[]> {
   const token = await refreshTokenIfNeeded(PROVIDERS.MICROSOFT);
-  if (!token) return [];
+  if (!token) {
+    return [];
+  }
 
   const Schema = z.object({
     value: z.array(
       z.object({ id: z.string(), appId: z.string(), displayName: z.string() })
-    )
+    ),
   });
 
   const filter = encodeURIComponent(
@@ -237,7 +268,9 @@ export async function listEnterpriseApps(): Promise<InfoItem[]> {
     `${ApiEndpoint.Microsoft.Applications}?$filter=${filter}`,
     { headers: { Authorization: `Bearer ${token.accessToken}` } }
   );
-  if (!res.ok) throw new Error(`HTTP ${res.status}`);
+  if (!res.ok) {
+    throw new Error(`HTTP ${res.status}`);
+  }
   const data = Schema.parse(await res.json());
 
   const items: InfoItem[] = [];
@@ -256,12 +289,11 @@ export async function listEnterpriseApps(): Promise<InfoItem[]> {
       items.push({
         id: application.id,
         label: application.displayName,
-        href:
-          spId ?
-            `https://portal.azure.com/#view/Microsoft_AAD_IAM/ManagedAppMenuBlade/~/SignOn/objectId/${spId}/appId/${application.appId}/preferredSingleSignOnMode~/null/servicePrincipalType/Application/fromNav/`
-          : `https://portal.azure.com/#view/Microsoft_AAD_IAM/ActiveDirectoryMenuBlade/~/Overview`,
+        href: spId
+          ? `https://portal.azure.com/#view/Microsoft_AAD_IAM/ManagedAppMenuBlade/~/SignOn/objectId/${spId}/appId/${application.appId}/preferredSingleSignOnMode~/null/servicePrincipalType/Application/fromNav/`
+          : "https://portal.azure.com/#view/Microsoft_AAD_IAM/ActiveDirectoryMenuBlade/~/Overview",
         deletable: !PROTECTED_RESOURCES.microsoftAppIds.has(application.appId),
-        deleteEndpoint: `${ApiEndpoint.Microsoft.Applications}/${application.id}`
+        deleteEndpoint: `${ApiEndpoint.Microsoft.Applications}/${application.id}`,
       });
     }
   }
@@ -270,19 +302,23 @@ export async function listEnterpriseApps(): Promise<InfoItem[]> {
 
 export async function listUsers(): Promise<InfoItem[]> {
   const token = await refreshTokenIfNeeded(PROVIDERS.GOOGLE);
-  if (!token) return [];
+  if (!token) {
+    return [];
+  }
 
   const Schema = z.object({
     users: z
       .array(z.object({ id: z.string(), primaryEmail: z.string() }))
-      .optional()
+      .optional(),
   });
 
   const res = await fetch(
     `${ApiEndpoint.Google.Users}?customer=my_customer&maxResults=25`,
     { headers: { Authorization: `Bearer ${token.accessToken}` } }
   );
-  if (!res.ok) throw new Error(`HTTP ${res.status}`);
+  if (!res.ok) {
+    throw new Error(`HTTP ${res.status}`);
+  }
   const data = Schema.parse(await res.json());
   return (
     data.users?.map((user) => ({
@@ -290,25 +326,29 @@ export async function listUsers(): Promise<InfoItem[]> {
       label: user.primaryEmail,
       deletable: true,
       deleteEndpoint: `${ApiEndpoint.Google.Users}/${user.id}`,
-      href: "https://admin.google.com/ac/users"
+      href: "https://admin.google.com/ac/users",
     })) ?? []
   );
 }
 
 export async function listAdminRoles(): Promise<InfoItem[]> {
   const token = await refreshTokenIfNeeded(PROVIDERS.GOOGLE);
-  if (!token) return [];
+  if (!token) {
+    return [];
+  }
 
   const Schema = z.object({
     items: z
       .array(z.object({ roleId: z.string(), roleName: z.string() }))
-      .optional()
+      .optional(),
   });
 
   const res = await fetch(ApiEndpoint.Google.Roles, {
-    headers: { Authorization: `Bearer ${token.accessToken}` }
+    headers: { Authorization: `Bearer ${token.accessToken}` },
   });
-  if (!res.ok) throw new Error(`HTTP ${res.status}`);
+  if (!res.ok) {
+    throw new Error(`HTTP ${res.status}`);
+  }
   const data = Schema.parse(await res.json());
   return (
     data.items?.map((role) => ({
@@ -316,7 +356,7 @@ export async function listAdminRoles(): Promise<InfoItem[]> {
       label: role.roleName,
       deletable: !role.roleId.startsWith("_"),
       deleteEndpoint: `${ApiEndpoint.Google.Roles}/${role.roleId}`,
-      href: "https://admin.google.com/ac/roles"
+      href: "https://admin.google.com/ac/roles",
     })) ?? []
   );
 }

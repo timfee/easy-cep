@@ -1,20 +1,40 @@
 import {
   isBadRequestError,
   isConflictError,
-  isNotFoundError
+  isNotFoundError,
 } from "@/lib/workflow/core/errors";
 
 import { extractResourceId, ResourceTypes } from "@/lib/workflow/core/http";
 
-import { LogLevel, StepId, Var } from "@/types";
+import { StepId } from "@/lib/workflow/step-ids";
+import { Var } from "@/lib/workflow/variables";
+import { LogLevel } from "@/types";
+import type { GoogleClient } from "../http/google-client";
 import { defineStep } from "../step-builder";
-import type { GoogleClient } from "../types/http-client";
+
+interface OrgUnit {
+  orgUnitId: string;
+  parentOrgUnitId?: string;
+  orgUnitPath: string;
+}
+
+interface SsoAssignment {
+  name: string;
+  targetOrgUnit?: string;
+  ssoMode?: string;
+  samlSsoInfo?: { inboundSamlSsoProfile: string };
+}
+
+interface GoogleOperation {
+  done: boolean;
+  error?: { message: string };
+}
 
 async function getRootOrgUnitId(google: GoogleClient) {
-  const { organizationUnits = [] } = await google.orgUnits
+  const { organizationUnits = [] } = (await google.orgUnits
     .list()
     .query({ orgUnitPath: "/", type: "allIncludingParent" })
-    .get();
+    .get()) as { organizationUnits?: OrgUnit[] };
 
   if (organizationUnits.length === 0) {
     throw new Error("No organizational units found");
@@ -22,31 +42,31 @@ async function getRootOrgUnitId(google: GoogleClient) {
 
   const rootOU = organizationUnits.find(
     (ou) =>
-      !ou.parentOrgUnitId
-      || ou.orgUnitPath === "/"
-      || ou.orgUnitId === ou.parentOrgUnitId
+      !ou.parentOrgUnitId ||
+      ou.orgUnitPath === "/" ||
+      ou.orgUnitId === ou.parentOrgUnitId
   );
 
   if (rootOU) {
     return extractResourceId(rootOU.orgUnitId, ResourceTypes.OrgUnitId);
   }
 
-  // If no obvious root found, look for OUs without valid parents
   const orphanOU = organizationUnits.find((ou) => {
-    if (!ou.parentOrgUnitId) return true;
-    const parentExists = organizationUnits.some(
+    if (!ou.parentOrgUnitId) {
+      return true;
+    }
+    return !organizationUnits.some(
       (parent) => parent.orgUnitId === ou.parentOrgUnitId
     );
-    return !parentExists;
   });
 
-  if (orphanOU) {
-    return extractResourceId(orphanOU.orgUnitId, ResourceTypes.OrgUnitId);
+  if (!orphanOU) {
+    throw new Error(
+      "Cannot determine root organizational unit from available data"
+    );
   }
 
-  throw new Error(
-    "Cannot determine root organizational unit from available data"
-  );
+  return extractResourceId(orphanOU.orgUnitId, ResourceTypes.OrgUnitId);
 }
 
 export default defineStep(StepId.AssignUsersToSso)
@@ -58,22 +78,6 @@ export default defineStep(StepId.AssignUsersToSso)
   )
   .provides()
 
-  /**
-   * GET https://cloudidentity.googleapis.com/v1/inboundSsoAssignments
-   * Headers: { Authorization: Bearer {googleAccessToken} }
-   *
-   * Success response (200)
-   * {
-   *   "inboundSsoAssignments": [
-   *     { "name": "assignment/1", "ssoMode": "SAML_SSO" },
-   *     { "name": "assignment/2", "ssoMode": "OFF" }
-   *   ]
-   * }
-   *
-   * Success response (200) – empty
-   * { "inboundSsoAssignments": [] }
-   */
-
   .check(
     async ({
       vars,
@@ -81,29 +85,28 @@ export default defineStep(StepId.AssignUsersToSso)
       markComplete,
       markIncomplete,
       markCheckFailed,
-      log
+      log,
     }) => {
       try {
         const profileId = vars.require(Var.SamlProfileId);
         const automationOuPath = vars.require(Var.AutomationOuPath);
 
-        const { inboundSsoAssignments = [] } = await google.ssoAssignments
+        const { inboundSsoAssignments = [] } = (await google.ssoAssignments
           .list()
-          .get();
-        // Extract: assignmentExists = inboundSsoAssignments.some(...)
+          .get()) as { inboundSsoAssignments?: SsoAssignment[] };
 
         const rootId = await getRootOrgUnitId(google);
         const rootAssigned = inboundSsoAssignments.some(
           (assignment) =>
-            assignment.targetOrgUnit === `orgUnits/${rootId}`
-            && assignment.samlSsoInfo?.inboundSamlSsoProfile === profileId
-            && assignment.ssoMode === "SAML_SSO"
+            assignment.targetOrgUnit === `orgUnits/${rootId}` &&
+            assignment.samlSsoInfo?.inboundSamlSsoProfile === profileId &&
+            assignment.ssoMode === "SAML_SSO"
         );
 
         const automationExcluded = inboundSsoAssignments.some(
           (assignment) =>
-            assignment.targetOrgUnit === automationOuPath
-            && assignment.ssoMode === "SSO_OFF"
+            assignment.targetOrgUnit === automationOuPath &&
+            assignment.ssoMode === "SSO_OFF"
         );
 
         if (rootAssigned && automationExcluded) {
@@ -122,52 +125,16 @@ export default defineStep(StepId.AssignUsersToSso)
     }
   )
   .execute(async ({ vars, google, output, markFailed, markPending, log }) => {
-    /**
-     * POST https://cloudidentity.googleapis.com/v1/inboundSsoAssignments
-     * {
-     *   "targetGroup": "groups/allUsers",
-     *   "samlSsoInfo": { "inboundSamlSsoProfile": "{samlProfileId}" },
-     *   "ssoMode": "SAML_SSO"
-     * }
-     *
-     * Success response
-     *
-     * 200
-     * {}
-     *
-     * Error response
-     *
-     * 409
-     * { "error": { "message": "Assignment already exists" } }
-     */
     try {
       const profileId = vars.require(Var.SamlProfileId);
       const automationOuPath = vars.require(Var.AutomationOuPath);
 
-      /**
-       * POST https://cloudidentity.googleapis.com/v1/inboundSsoAssignments
-       * Headers: { Authorization: Bearer {googleAccessToken} }
-       * Body:
-       * {
-       *   "targetGroup": "groups/allUsers",
-       *   "samlSsoInfo": { "inboundSamlSsoProfile": "{profileId}" },
-       *   "ssoMode": "SAML_SSO"
-       * }
-       *
-       * Success response (200)
-       * { "done": true }
-       *
-       * Error response (409)
-       * { "error": { "code": 409, "message": "Assignment exists" } }
-       */
       const rootId = await getRootOrgUnitId(google);
-      const op = await google.ssoAssignments
-        .create()
-        .post({
-          targetOrgUnit: `orgUnits/${rootId}`,
-          samlSsoInfo: { inboundSamlSsoProfile: profileId },
-          ssoMode: "SAML_SSO"
-        });
+      const op = (await google.ssoAssignments.create().post({
+        targetOrgUnit: `orgUnits/${rootId}`,
+        samlSsoInfo: { inboundSamlSsoProfile: profileId },
+        ssoMode: "SAML_SSO",
+      })) as GoogleOperation;
       if (!op.done) {
         markPending("User assignment operation in progress");
         return;
@@ -179,14 +146,12 @@ export default defineStep(StepId.AssignUsersToSso)
         return;
       }
 
-      // Exclude automation OU from SSO
       await google.ssoAssignments
         .create()
         .post({ targetOrgUnit: automationOuPath, ssoMode: "SSO_OFF" });
 
       output({});
     } catch (error) {
-      // isConflictError handles: 409
       if (isConflictError(error)) {
         output({});
       } else if (isNotFoundError(error)) {
@@ -207,24 +172,19 @@ export default defineStep(StepId.AssignUsersToSso)
   })
   .undo(async ({ vars, google, markReverted, markFailed, log }) => {
     try {
-      const profileId = vars.get(Var.SamlProfileId);
-      if (!profileId) {
-        markFailed("Missing samlProfileId");
-        return;
-      }
-      const { inboundSsoAssignments = [] } = await google.ssoAssignments
+      const profileId = vars.require(Var.SamlProfileId);
+      const { inboundSsoAssignments = [] } = (await google.ssoAssignments
         .list()
-        .get();
-      // Extract: assignmentName = inboundSsoAssignments.find(...).name
+        .get()) as { inboundSsoAssignments?: SsoAssignment[] };
 
       const automationOuPath = vars.require(Var.AutomationOuPath);
 
       const rootId = await getRootOrgUnitId(google);
       const rootAssignment = inboundSsoAssignments.find(
         (item) =>
-          item.targetOrgUnit === `orgUnits/${rootId}`
-          && item.samlSsoInfo?.inboundSamlSsoProfile === profileId
-          && item.ssoMode === "SAML_SSO"
+          item.targetOrgUnit === `orgUnits/${rootId}` &&
+          item.samlSsoInfo?.inboundSamlSsoProfile === profileId &&
+          item.ssoMode === "SAML_SSO"
       );
 
       if (rootAssignment) {
@@ -235,14 +195,13 @@ export default defineStep(StepId.AssignUsersToSso)
         try {
           await google.ssoAssignments.delete(id).delete();
         } catch (error) {
-          if (isNotFoundError(error)) {
-            log(
-              LogLevel.Info,
-              "Inbound SSO Assignment already deleted or not found"
-            );
-          } else {
+          if (!isNotFoundError(error)) {
             throw error;
           }
+          log(
+            LogLevel.Info,
+            "Inbound SSO Assignment already deleted or not found"
+          );
         }
       }
 
@@ -259,14 +218,13 @@ export default defineStep(StepId.AssignUsersToSso)
         try {
           await google.ssoAssignments.delete(id).delete();
         } catch (error) {
-          if (isNotFoundError(error)) {
-            log(
-              LogLevel.Info,
-              "Inbound SSO Assignment already deleted or not found"
-            );
-          } else {
+          if (!isNotFoundError(error)) {
             throw error;
           }
+          log(
+            LogLevel.Info,
+            "Inbound SSO Assignment already deleted or not found"
+          );
         }
       }
 

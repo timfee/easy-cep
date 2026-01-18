@@ -2,23 +2,23 @@
 set -euo pipefail
 
 # Delete Microsoft Graph and Google Cloud apps/projects created in the last 10 days
-# Usage: ./scripts/cleanup-apps.sh [GOOGLE_TOKEN_FILE] [MICROSOFT_TOKEN_FILE]
-# Defaults to ./google_bearer.token and ./microsoft_bearer.token
+# Usage: ./scripts/cleanup-apps.sh
 
-GOOGLE_TOKEN_FILE="${1:-./google_bearer.token}"
-MS_TOKEN_FILE="${2:-./microsoft_bearer.token}"
-
-if [[ ! -f "$GOOGLE_TOKEN_FILE" ]]; then
-  echo "Google token file not found: $GOOGLE_TOKEN_FILE" >&2
-  exit 1
-fi
-if [[ ! -f "$MS_TOKEN_FILE" ]]; then
-  echo "Microsoft token file not found: $MS_TOKEN_FILE" >&2
-  exit 1
+if [[ -f ".env.test" ]]; then
+  export $(grep -v '^#' .env.test | xargs)
 fi
 
-GOOGLE_TOKEN=$(cat "$GOOGLE_TOKEN_FILE")
-MS_TOKEN=$(cat "$MS_TOKEN_FILE")
+GOOGLE_TOKEN="${TEST_GOOGLE_BEARER_TOKEN:-}"
+MS_TOKEN="${TEST_MS_BEARER_TOKEN:-}"
+
+if [[ -z "$GOOGLE_TOKEN" ]]; then
+  echo "Google token not found in environment or .env.test" >&2
+  exit 1
+fi
+if [[ -z "$MS_TOKEN" ]]; then
+  echo "Microsoft token not found in environment or .env.test" >&2
+  exit 1
+fi
 
 # ISO timestamp for 10 days ago
 THRESHOLD_DATE=$(date -u -v-10d +%Y-%m-%dT%H:%M:%SZ)

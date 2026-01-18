@@ -2,15 +2,8 @@
  * Creates specific test states for each step
  */
 
+import { z } from "zod";
 import { ApiEndpoint, SyncTemplateTag, TemplateId } from "@/constants";
-import { fetch, ProxyAgent, setGlobalDispatcher } from "undici";
-
-if (process.env.USE_UNDICI_PROXY !== "false") {
-  const proxy = process.env.https_proxy ?? process.env.http_proxy;
-  if (proxy) {
-    setGlobalDispatcher(new ProxyAgent({ uri: proxy }));
-  }
-}
 
 const GOOGLE_TOKEN = process.env.TEST_GOOGLE_BEARER_TOKEN;
 const MS_TOKEN = process.env.TEST_MS_BEARER_TOKEN;
@@ -22,9 +15,9 @@ export async function createGoogleUser(body: Record<string, unknown>) {
     method: "POST",
     headers: {
       Authorization: `Bearer ${GOOGLE_TOKEN}`,
-      "Content-Type": "application/json"
+      "Content-Type": "application/json",
     },
-    body: JSON.stringify(body)
+    body: JSON.stringify(body),
   });
 }
 
@@ -33,9 +26,9 @@ async function createMicrosoftApp(templateId: string) {
     method: "POST",
     headers: {
       Authorization: `Bearer ${MS_TOKEN}`,
-      "Content-Type": "application/json"
+      "Content-Type": "application/json",
     },
-    body: JSON.stringify({ displayName: "Temp" })
+    body: JSON.stringify({ displayName: "Temp" }),
   });
 }
 
@@ -44,9 +37,9 @@ async function createClaimsPolicy(body: Record<string, unknown>) {
     method: "POST",
     headers: {
       Authorization: `Bearer ${MS_TOKEN}`,
-      "Content-Type": "application/json"
+      "Content-Type": "application/json",
     },
-    body: JSON.stringify(body)
+    body: JSON.stringify(body),
   });
 }
 
@@ -57,7 +50,7 @@ export async function createPartiallyCompletedState(step: string) {
         primaryEmail: `azuread-provisioning@${TEST_DOMAIN}`,
         name: { givenName: "Test", familyName: "User" },
         password: TEST_USER_PASSWORD,
-        orgUnitPath: "/"
+        orgUnitPath: "/",
       });
       break;
     case "setup-microsoft-provisioning":
@@ -69,8 +62,10 @@ export async function createPartiallyCompletedState(step: string) {
       await createClaimsPolicy({
         displayName: "Google Workspace Basic Claims",
         definition: ['{"ClaimsMappingPolicy":{"Version":1}}'],
-        isOrganizationDefault: false
+        isOrganizationDefault: false,
       });
+      break;
+    default:
       break;
   }
 }
@@ -79,11 +74,14 @@ async function getProvisioningServicePrincipalId() {
   const filter = encodeURIComponent(
     `displayName eq 'Google Workspace Provisioning'`
   );
+  const ServicePrincipalSchema = z.object({
+    value: z.array(z.object({ id: z.string() })),
+  });
   const res = await fetch(
     `${ApiEndpoint.Microsoft.ServicePrincipals}?$filter=${filter}`,
     { headers: { Authorization: `Bearer ${MS_TOKEN}` } }
   );
-  const json = (await res.json()) as { value: Array<{ id: string }> };
+  const json = ServicePrincipalSchema.parse(await res.json());
   return json.value[0]?.id;
 }
 
@@ -92,19 +90,20 @@ async function createSyncJob(spId: string, templateId: string) {
     method: "POST",
     headers: {
       Authorization: `Bearer ${MS_TOKEN}`,
-      "Content-Type": "application/json"
+      "Content-Type": "application/json",
     },
-    body: JSON.stringify({ templateId })
+    body: JSON.stringify({ templateId }),
   });
 }
 
 async function getSyncTemplateId(spId: string, tag: string) {
-  const res = await fetch(ApiEndpoint.Microsoft.SyncTemplates(spId), {
-    headers: { Authorization: `Bearer ${MS_TOKEN}` }
+  const SyncTemplateSchema = z.object({
+    value: z.array(z.object({ id: z.string(), factoryTag: z.string() })),
   });
-  const json = (await res.json()) as {
-    value: Array<{ id: string; factoryTag: string }>;
-  };
+  const res = await fetch(ApiEndpoint.Microsoft.SyncTemplates(spId), {
+    headers: { Authorization: `Bearer ${MS_TOKEN}` },
+  });
+  const json = SyncTemplateSchema.parse(await res.json());
   return json.value.find((template) => template.factoryTag === tag)?.id ?? tag;
 }
 
@@ -113,9 +112,9 @@ async function setSyncJobToQuarantine(spId: string) {
     method: "PATCH",
     headers: {
       Authorization: `Bearer ${MS_TOKEN}`,
-      "Content-Type": "application/json"
+      "Content-Type": "application/json",
     },
-    body: JSON.stringify({ status: { code: "Quarantine" } })
+    body: JSON.stringify({ status: { code: "Quarantine" } }),
   });
 }
 
@@ -124,9 +123,9 @@ async function createSsoAssignment(body: Record<string, unknown>) {
     method: "POST",
     headers: {
       Authorization: `Bearer ${GOOGLE_TOKEN}`,
-      "Content-Type": "application/json"
+      "Content-Type": "application/json",
     },
-    body: JSON.stringify(body)
+    body: JSON.stringify(body),
   });
 }
 
@@ -148,8 +147,10 @@ export async function createErrorState(step: string) {
       await createSsoAssignment({
         targetOrgUnit: "/",
         samlSsoInfo: { inboundSamlSsoProfile: "different-profile" },
-        ssoMode: "SSO_OFF"
+        ssoMode: "SSO_OFF",
       });
+      break;
+    default:
       break;
   }
 }
