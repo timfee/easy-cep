@@ -69,6 +69,14 @@ const requireRefreshToken = (
   return token.refreshToken;
 };
 
+const loadAuthLib = async () => {
+  const auth = await import("@/lib/auth");
+  return {
+    exchangeCodeForToken: auth.exchangeCodeForToken as ExchangeCodeForToken,
+    generateAuthUrl: auth.generateAuthUrl as GenerateAuthUrl,
+  };
+};
+
 const server = createServer(async (req, res) => {
   try {
     // Basic URL parsing
@@ -190,6 +198,8 @@ async function main() {
   applyEnvFile(".env.test");
   applyEnvFile(".env.local");
   ensureOAuthEnv();
+
+  const { exchangeCodeForToken, generateAuthUrl } = await loadAuthLib();
 
   console.log("🚀 Starting Refresh Token Generator");
 

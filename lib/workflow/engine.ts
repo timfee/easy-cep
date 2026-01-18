@@ -17,6 +17,9 @@ import type { LROMetadata } from "./lro-detector";
 import { getStep } from "./step-registry";
 import { StepStatus } from "./step-status";
 
+/**
+ * Redact sensitive values before logging workflow vars.
+ */
 function sanitizeVars(vars: Partial<WorkflowVars>): Record<string, unknown> {
   return Object.fromEntries(
     Object.entries(vars).map(([key, value]) => {
@@ -33,6 +36,9 @@ function sanitizeVars(vars: Partial<WorkflowVars>): Record<string, unknown> {
   );
 }
 
+/**
+ * Append a log entry while sanitizing sensitive payloads.
+ */
 function appendLog(
   entry: StepLogEntry,
   vars: Partial<WorkflowVars>,

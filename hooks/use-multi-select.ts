@@ -1,5 +1,8 @@
 import { useCallback, useState } from "react";
 
+/**
+ * Manage multi-select state for a list of items.
+ */
 export function useMultiSelect<T extends { id: string }>(_items: T[]) {
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
 

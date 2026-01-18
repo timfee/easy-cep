@@ -1,5 +1,8 @@
 import { API_PREFIXES } from "@/constants";
 
+/**
+ * Strip a known API base URL into a display path.
+ */
 export function extractPath(url: string): string {
   const { GOOGLE_ADMIN, GOOGLE_CLOUD_IDENTITY, MS_GRAPH } = API_PREFIXES;
 

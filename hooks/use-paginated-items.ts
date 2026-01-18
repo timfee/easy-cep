@@ -1,5 +1,8 @@
 import { useCallback, useMemo, useState } from "react";
 
+/**
+ * Provide pagination helpers for a list.
+ */
 export function usePaginatedItems<T>(items: T[], itemsPerPage = 25) {
   const [currentPage, setCurrentPage] = useState(1);
 
