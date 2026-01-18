@@ -382,9 +382,8 @@ if (forceRefresh) {
   }
 
   const microsoftAccessToken = process.env.TEST_MS_BEARER_TOKEN ?? "";
-  console.log(`[Microsoft Debug] Using Access Token: ${microsoftAccessToken}`);
-
   const microsoftPayload = decodeJwtPayload(microsoftAccessToken);
+
   const microsoftUpn =
     typeof microsoftPayload?.preferred_username === "string"
       ? microsoftPayload.preferred_username
