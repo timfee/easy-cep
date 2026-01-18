@@ -1,5 +1,8 @@
 import { z } from "zod";
 
+/**
+ * Schema for Google long-running operations.
+ */
 export const GoogleOperationSchema = z.object({
   name: z.string(),
   done: z.boolean(),
@@ -13,6 +16,9 @@ export const GoogleOperationSchema = z.object({
     .optional(),
 });
 
+/**
+ * Typed Google operation payload.
+ */
 export type GoogleOperation = z.infer<typeof GoogleOperationSchema>;
 
 export const ServicePrincipalIdSchema = z.object({

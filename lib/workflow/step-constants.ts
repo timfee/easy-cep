@@ -1,5 +1,8 @@
 import type { StepStatus } from "./step-status";
 
+/**
+ * Badge variants supported by step state styles.
+ */
 type BadgeVariant = "outline" | "default" | "destructive";
 
 interface StepStateConfig {
@@ -48,4 +51,7 @@ const stepStateConfig: Record<StepStatus, StepStateConfig> = {
   },
 };
 
+/**
+ * Visual styles for each step status.
+ */
 export const STEP_STATE_CONFIG = stepStateConfig;

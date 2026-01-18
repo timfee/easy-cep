@@ -5,11 +5,17 @@ import { StepStatus } from "../step-status";
 import type { VarName, WorkflowVars } from "../variables";
 import { WORKFLOW_VARIABLES } from "../variables";
 
+/**
+ * Status details computed for a workflow step.
+ */
 export interface StatusInfo {
   status: StepStatusValue;
   blockReason?: string;
 }
 
+/**
+ * Compute step status based on requirements and state.
+ */
 export function computeEffectiveStatus(
   step: StepDefinition,
   currentState: StepUIState | undefined,

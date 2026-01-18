@@ -3,8 +3,14 @@ import { normalizePathSegment } from "../core/http";
 import type { HttpClient } from "../types/http-client";
 import { ResourceBuilder } from "./fluent-builder";
 
+/**
+ * Default empty response schema.
+ */
 export const empty = z.object({});
 
+/**
+ * Zod schemas for CRUD operations.
+ */
 export interface CrudSchemas<
   G = unknown,
   L = unknown,
@@ -22,6 +28,9 @@ export interface CrudSchemas<
   update: z.ZodSchema<U>;
 }
 
+/**
+ * Create CRUD builders for a base API path.
+ */
 export function createCrudMethods<G, L, C, R, U, F>(
   client: HttpClient,
   basePath: string,

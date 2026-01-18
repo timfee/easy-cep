@@ -1,3 +1,6 @@
+/**
+ * Titles and descriptions for workflow steps.
+ */
 export const STEP_DETAILS: Record<
   string,
   {

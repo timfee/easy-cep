@@ -12,11 +12,17 @@ import { env } from "@/env";
 import { refreshTokenIfNeeded } from "@/lib/auth";
 import { extractResourceId, ResourceTypes } from "@/lib/workflow/core/http";
 
+/**
+ * Options that control delete batching.
+ */
 interface DeleteOptions {
   concurrency?: number;
   delayMs?: number;
 }
 
+/**
+ * Summary of delete outcomes.
+ */
 export interface DeleteResult {
   deleted: string[];
   failed: Array<{ id: string; error: string }>;
@@ -120,6 +126,9 @@ const createMicrosoftDeleteAction = (
     options
   );
 
+/**
+ * Delete Google organizational units by ID.
+ */
 export async function deleteOrgUnits(ids: string[]): Promise<DeleteResult> {
   checkPurgeAllowed();
 
@@ -161,6 +170,9 @@ export async function deleteOrgUnits(ids: string[]): Promise<DeleteResult> {
   return results;
 }
 
+/**
+ * Delete Google SAML profiles by ID.
+ */
 export async function deleteSamlProfiles(ids: string[]): Promise<DeleteResult> {
   return await createGoogleDeleteAction(
     (id) => ApiEndpoint.Google.SamlProfile(id),
@@ -170,6 +182,9 @@ export async function deleteSamlProfiles(ids: string[]): Promise<DeleteResult> {
   )(ids);
 }
 
+/**
+ * Delete Google SSO assignments by ID.
+ */
 export async function deleteSsoAssignments(
   ids: string[]
 ): Promise<DeleteResult> {
@@ -187,6 +202,9 @@ export async function deleteSsoAssignments(
   )(ids);
 }
 
+/**
+ * Delete Google admin roles by ID.
+ */
 export async function deleteGoogleRoles(ids: string[]): Promise<DeleteResult> {
   return await createGoogleDeleteAction(
     (id) => `${ApiEndpoint.Google.Roles}/${id}`,
@@ -196,6 +214,9 @@ export async function deleteGoogleRoles(ids: string[]): Promise<DeleteResult> {
   )(ids);
 }
 
+/**
+ * Delete Google users by ID.
+ */
 export async function deleteGoogleUsers(ids: string[]): Promise<DeleteResult> {
   return await createGoogleDeleteAction(
     (id) => `${ApiEndpoint.Google.Users}/${id}`,
@@ -205,6 +226,9 @@ export async function deleteGoogleUsers(ids: string[]): Promise<DeleteResult> {
   )(ids);
 }
 
+/**
+ * Delete Microsoft claims policies by ID.
+ */
 export async function deleteClaimsPolicies(
   ids: string[]
 ): Promise<DeleteResult> {
@@ -214,6 +238,9 @@ export async function deleteClaimsPolicies(
   )(ids);
 }
 
+/**
+ * Delete Microsoft enterprise apps by ID.
+ */
 export async function deleteEnterpriseApps(
   ids: string[]
 ): Promise<DeleteResult> {
@@ -224,6 +251,9 @@ export async function deleteEnterpriseApps(
   )(ids);
 }
 
+/**
+ * Delete Microsoft provisioning jobs by ID.
+ */
 export async function deleteProvisioningJobs(
   ids: string[]
 ): Promise<DeleteResult> {

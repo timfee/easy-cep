@@ -1,3 +1,6 @@
+/**
+ * Extract the resource ID from a fully qualified name.
+ */
 export function extractResourceId(
   resourceName: string,
   resourceType: string
@@ -10,6 +13,9 @@ export function extractResourceId(
   return match?.[1] || resourceName;
 }
 
+/**
+ * Normalize and encode a path segment.
+ */
 export function normalizePathSegment(value: string): string {
   if (!value) {
     return value;
@@ -18,6 +24,9 @@ export function normalizePathSegment(value: string): string {
   return encodeURIComponent(trimmed);
 }
 
+/**
+ * Known resource path segments.
+ */
 export type ResourceTypeValue =
   | "inboundSsoAssignments"
   | "inboundSamlSsoProfiles"
@@ -31,6 +40,9 @@ export type ResourceTypeValue =
   | "synchronization/jobs"
   | "claimsMappingPolicies";
 
+/**
+ * PascalCase lookup for resource path segments.
+ */
 export const ResourceTypes: Record<
   | "InboundSsoAssignments"
   | "InboundSamlSsoProfiles"

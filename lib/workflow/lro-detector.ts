@@ -1,3 +1,6 @@
+/**
+ * Metadata describing detected long-running operations.
+ */
 export interface LROMetadata {
   type: "google-operation" | "ms-async" | "estimated";
   operationId?: string;
@@ -13,6 +16,9 @@ function getString(value: unknown): string | undefined {
   return typeof value === "string" ? value : undefined;
 }
 
+/**
+ * Detect long-running operations from API responses.
+ */
 export function detectLRO(
   response: unknown,
   status: number

@@ -77,92 +77,121 @@ const loadAuthLib = async () => {
   };
 };
 
-const server = createServer(async (req, res) => {
-  try {
-    // Basic URL parsing
-    const url = new URL(req.url || "/", HOST);
-    let pathname = url.pathname;
-    if (pathname.length > 1 && pathname.endsWith("/")) {
-      pathname = pathname.slice(0, -1);
-    }
+const getProviderFromPath = (pathname: string) => {
+  if (pathname === `/api/auth/callback/${PROVIDERS.GOOGLE}`) {
+    return PROVIDERS.GOOGLE;
+  }
+  if (pathname === `/api/auth/callback/${PROVIDERS.MICROSOFT}`) {
+    return PROVIDERS.MICROSOFT;
+  }
+  return null;
+};
 
-    if (pathname === "/favicon.ico") {
-      res.writeHead(404);
-      res.end();
-      return;
-    }
+const normalizePathname = (pathname: string) =>
+  pathname.length > 1 && pathname.endsWith("/")
+    ? pathname.slice(0, -1)
+    : pathname;
 
-    console.log(`[Server] ${req.method} ${pathname}`);
+const sendHtml = (
+  res: import("node:http").ServerResponse,
+  status: number,
+  body: string
+) => {
+  res.writeHead(status, { "Content-Type": "text/html" });
+  res.end(body);
+};
 
-    // Route handling
-    let provider: Provider | null = null;
-    if (pathname === `/api/auth/callback/${PROVIDERS.GOOGLE}`) {
-      provider = PROVIDERS.GOOGLE;
-    } else if (pathname === `/api/auth/callback/${PROVIDERS.MICROSOFT}`) {
-      provider = PROVIDERS.MICROSOFT;
-    }
+const sendNotFound = (
+  res: import("node:http").ServerResponse,
+  pathname: string
+) => {
+  res.writeHead(404, { "Content-Type": "text/plain" });
+  res.end(
+    `Not Found. Expected callback for google or microsoft. Got: ${pathname}`
+  );
+};
 
-    if (!provider) {
-      res.writeHead(404, { "Content-Type": "text/plain" });
-      res.end(
-        `Not Found. Expected callback for google or microsoft. Got: ${pathname}`
-      );
-      return;
-    }
-
-    // Process Callback
-    const code = url.searchParams.get("code");
-    const error = url.searchParams.get("error");
-
-    if (error) {
-      console.error(`[${provider}] Error from provider:`, error);
-      res.writeHead(400, { "Content-Type": "text/html" });
-      res.end(`<h1>Auth Error</h1><p>${error}</p>`);
-      return;
-    }
-
-    if (!code) {
-      res.writeHead(400, { "Content-Type": "text/html" });
-      res.end("<h1>Error</h1><p>Missing 'code' parameter.</p>");
-      return;
-    }
-
-    console.log(`[${provider}] Code received. Exchanging for token...`);
-
-    try {
-      const token = await exchangeCodeForToken(provider, code, HOST);
-
-      // Send success response to browser
-      res.writeHead(200, { "Content-Type": "text/html" });
-      res.end(
-        `<div style="font-family: system-ui, sans-serif; text-align: center; padding: 2rem;">
+const handleCallback = async (
+  helpers: { exchangeCodeForToken: ExchangeCodeForToken },
+  provider: Provider,
+  code: string,
+  res: import("node:http").ServerResponse
+) => {
+  const token = await helpers.exchangeCodeForToken(provider, code, HOST);
+  sendHtml(
+    res,
+    200,
+    `<div style="font-family: system-ui, sans-serif; text-align: center; padding: 2rem;">
           <h1 style="color: green;">Authentication Successful</h1>
           <p>Received token for <strong>${provider}</strong>.</p>
           <p>You can close this tab.</p>
         </div>`
-      );
+  );
 
-      const refreshToken = requireRefreshToken(token, provider);
-
-      // Resolve the corresponding promise
-      if (provider === PROVIDERS.GOOGLE) {
-        onGoogleToken(refreshToken);
-      } else {
-        onMicrosoftToken(refreshToken);
-      }
-    } catch (exchangeError) {
-      console.error(`[${provider}] Token exchange failed:`, exchangeError);
-      res.writeHead(500, { "Content-Type": "text/html" });
-      res.end(`<h1>Token Exchange Failed</h1><p>${String(exchangeError)}</p>`);
-    }
-  } catch (err) {
-    console.error("[Server] Critical Error:", err);
-    if (!res.headersSent) {
-      res.writeHead(500, { "Content-Type": "text/plain" });
-      res.end("Internal Server Error");
-    }
+  const refreshToken = requireRefreshToken(token, provider);
+  if (provider === PROVIDERS.GOOGLE) {
+    onGoogleToken(refreshToken);
+    return;
   }
-});
+  onMicrosoftToken(refreshToken);
+};
+
+const createAuthServer = (helpers: {
+  exchangeCodeForToken: ExchangeCodeForToken;
+}) =>
+  createServer(async (req, res) => {
+    try {
+      const url = new URL(req.url || "/", HOST);
+      const pathname = normalizePathname(url.pathname);
+
+      if (pathname === "/favicon.ico") {
+        res.writeHead(404);
+        res.end();
+        return;
+      }
+
+      console.log(`[Server] ${req.method} ${pathname}`);
+
+      const provider = getProviderFromPath(pathname);
+      if (!provider) {
+        sendNotFound(res, pathname);
+        return;
+      }
+
+      const code = url.searchParams.get("code");
+      const error = url.searchParams.get("error");
+
+      if (error) {
+        console.error(`[${provider}] Error from provider:`, error);
+        sendHtml(res, 400, `<h1>Auth Error</h1><p>${error}</p>`);
+        return;
+      }
+
+      if (!code) {
+        sendHtml(res, 400, "<h1>Error</h1><p>Missing 'code' parameter.</p>");
+        return;
+      }
+
+      console.log(`[${provider}] Code received. Exchanging for token...");
+
+      try {
+        await handleCallback(helpers, provider, code, res);
+      } catch (exchangeError) {
+        console.error(`[${provider}] Token exchange failed:`, exchangeError);
+        sendHtml(
+          res,
+          500,
+          `<h1>Token Exchange Failed</h1><p>${String(exchangeError)}</p>`
+        );
+      }
+    } catch (err) {
+      console.error("[Server] Critical Error:", err);
+if (!res.headersSent) {
+  res.writeHead(500, { "Content-Type": "text/plain" });
+  res.end("Internal Server Error");
+}
+}
+  })
 
 async function updateEnvFile(key: string, value: string) {
   const envPath = ".env.test";
@@ -200,6 +229,7 @@ async function main() {
   ensureOAuthEnv();
 
   const { exchangeCodeForToken, generateAuthUrl } = await loadAuthLib();
+  const server = createAuthServer({ exchangeCodeForToken });
 
   console.log("🚀 Starting Refresh Token Generator");
 

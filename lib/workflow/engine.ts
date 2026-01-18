@@ -57,6 +57,9 @@ function appendLog(
   return [...logs, { ...entry, data }];
 }
 
+/**
+ * Emit verbose logs in development mode.
+ */
 function logDev(entry: StepLogEntry, vars: Partial<WorkflowVars>) {
   if (env.NODE_ENV !== "development") {
     return;
@@ -71,10 +74,17 @@ function logDev(entry: StepLogEntry, vars: Partial<WorkflowVars>) {
   console.debug("[workflow]", payload);
 }
 
+/**
+ * Run a step through check and optional execute phases.
+ */
 async function processStep<T extends StepIdValue>(
   stepId: T,
   vars: Partial<WorkflowVars>,
-  execute: boolean
+  execute: boolean,
+  eventContext?: {
+    traceId: string;
+    onEvent: (event: StepStreamEvent) => void;
+  }
 ): Promise<{ state: StepUIState; newVars: Partial<WorkflowVars> }> {
   const step = getStep(stepId);
 
@@ -106,7 +116,6 @@ async function processStep<T extends StepIdValue>(
     pushState({});
   };
 
-  // Refresh tokens if needed
   const googleTokenObj = await refreshTokenIfNeeded(PROVIDERS.GOOGLE);
   const microsoftTokenObj = await refreshTokenIfNeeded(PROVIDERS.MICROSOFT);
 
@@ -124,10 +133,8 @@ async function processStep<T extends StepIdValue>(
     },
   };
 
-  // CHECK PHASE
   pushState({ isChecking: true });
 
-  // Data carried from check() into execute() or propagated as newVars
   type CheckType =
     Parameters<typeof step.check>[0] extends StepCheckContext<infer D>
       ? D
@@ -228,6 +235,9 @@ async function processStep<T extends StepIdValue>(
   return { state: currentState, newVars: finalVars };
 }
 
+/**
+ * Execute a workflow step end-to-end.
+ */
 export async function runStep<T extends StepIdValue>(
   stepId: T,
   vars: Partial<WorkflowVars>
@@ -235,6 +245,9 @@ export async function runStep<T extends StepIdValue>(
   return await processStep(stepId, vars, true);
 }
 
+/**
+ * Run a step check without executing mutations.
+ */
 export async function checkStep<T extends StepIdValue>(
   stepId: T,
   vars: Partial<WorkflowVars>
@@ -242,6 +255,9 @@ export async function checkStep<T extends StepIdValue>(
   return await processStep(stepId, vars, false);
 }
 
+/**
+ * Execute a step's undo handler with logging.
+ */
 async function processUndoStep<T extends StepIdValue>(
   stepId: T,
   vars: Partial<WorkflowVars>
@@ -279,7 +295,6 @@ async function processUndoStep<T extends StepIdValue>(
     pushState({});
   };
 
-  // Refresh tokens if needed
   const googleTokenObj = await refreshTokenIfNeeded(PROVIDERS.GOOGLE);
   const microsoftTokenObj = await refreshTokenIfNeeded(PROVIDERS.MICROSOFT);
 
@@ -326,6 +341,9 @@ async function processUndoStep<T extends StepIdValue>(
   return { state: currentState };
 }
 
+/**
+ * Undo the effects of a workflow step when supported.
+ */
 export async function undoStep<T extends StepIdValue>(
   stepId: T,
   vars: Partial<WorkflowVars>

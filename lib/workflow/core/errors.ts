@@ -2,6 +2,9 @@ import { inspect } from "node:util";
 import { HttpStatus } from "@/types";
 import type { WorkflowVars } from "../variables";
 
+/**
+ * Base HTTP error with status metadata.
+ */
 export class HttpError extends Error {
   statusCode: number;
   statusText: string;
@@ -16,6 +19,9 @@ export class HttpError extends Error {
   }
 }
 
+/**
+ * 404 not found error.
+ */
 export class NotFoundError extends HttpError {
   constructor(message = "Resource not found", responseBody?: unknown) {
     super(HttpStatus.NotFound, message, responseBody);
@@ -23,6 +29,9 @@ export class NotFoundError extends HttpError {
   }
 }
 
+/**
+ * 409 conflict error.
+ */
 export class ConflictError extends HttpError {
   constructor(message = "Resource conflict", responseBody?: unknown) {
     super(HttpStatus.Conflict, message, responseBody);
@@ -30,6 +39,9 @@ export class ConflictError extends HttpError {
   }
 }
 
+/**
+ * 412 precondition failed error.
+ */
 export class PreconditionFailedError extends HttpError {
   constructor(message = "Precondition failed", responseBody?: unknown) {
     super(HttpStatus.PreconditionFailed, message, responseBody);
@@ -37,6 +49,9 @@ export class PreconditionFailedError extends HttpError {
   }
 }
 
+/**
+ * 400 bad request error.
+ */
 export class BadRequestError extends HttpError {
   constructor(message = "Bad request", responseBody?: unknown) {
     super(HttpStatus.BadRequest, message, responseBody);
@@ -44,6 +59,9 @@ export class BadRequestError extends HttpError {
   }
 }
 
+/**
+ * Type guard for HttpError with optional status filter.
+ */
 export function isHttpError(
   error: unknown,
   statusCode?: number
@@ -54,18 +72,27 @@ export function isHttpError(
   return statusCode === undefined || error.statusCode === statusCode;
 }
 
+/**
+ * Type guard for NotFoundError.
+ */
 export function isNotFoundError(error: unknown): error is NotFoundError {
   return (
     error instanceof NotFoundError || isHttpError(error, HttpStatus.NotFound)
   );
 }
 
+/**
+ * Type guard for ConflictError.
+ */
 export function isConflictError(error: unknown): error is ConflictError {
   return (
     error instanceof ConflictError || isHttpError(error, HttpStatus.Conflict)
   );
 }
 
+/**
+ * Type guard for PreconditionFailedError.
+ */
 export function isPreconditionFailedError(
   error: unknown
 ): error is PreconditionFailedError {
@@ -75,6 +102,9 @@ export function isPreconditionFailedError(
   );
 }
 
+/**
+ * Type guard for BadRequestError.
+ */
 export function isBadRequestError(error: unknown): error is BadRequestError {
   return (
     error instanceof BadRequestError ||
@@ -82,6 +112,9 @@ export function isBadRequestError(error: unknown): error is BadRequestError {
   );
 }
 
+/**
+ * Log uncaught workflow errors with redacted variables.
+ */
 export function logUncaughtError(
   error: unknown,
   context: { stepId?: string; operation?: string; vars: Partial<WorkflowVars> }

@@ -278,6 +278,10 @@ const ssoSchemas = {
   z.infer<typeof empty>,
   z.infer<typeof ssoListSchema>
 >;
+
+/**
+ * Fluent client for Google Admin and Cloud Identity APIs.
+ */
 export class GoogleClient {
   private readonly client: HttpClient;
 

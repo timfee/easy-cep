@@ -1,5 +1,8 @@
 import type { VarName, WorkflowVars } from "./variables";
 
+/**
+ * Basic variable accessor used in workflow contexts.
+ */
 export interface BasicVarStore {
   get<K extends VarName>(key: K): WorkflowVars[K] | undefined;
   require<K extends VarName>(key: K): NonNullable<WorkflowVars[K]>;
@@ -13,6 +16,9 @@ function isVarName(
   return value in vars;
 }
 
+/**
+ * Require a variable to be present or throw.
+ */
 function requireVar<K extends VarName>(
   vars: Partial<WorkflowVars>,
   key: K
@@ -24,6 +30,9 @@ function requireVar<K extends VarName>(
   return value;
 }
 
+/**
+ * Create a variable store wrapper for workflow vars.
+ */
 export function createVarStore(vars: Partial<WorkflowVars>): BasicVarStore {
   return {
     get: <K extends VarName>(key: K) => vars[key],

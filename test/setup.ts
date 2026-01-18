@@ -2,6 +2,7 @@ import "tsconfig-paths/register";
 
 import { readFileSync } from "node:fs";
 import { resolve } from "node:path";
+
 import { ApiEndpoint } from "@/constants";
 
 const ENV_LINE_REGEX = /^([^=]+)=(.*)$/;
@@ -18,6 +19,29 @@ const parseEnvLine = (line: string) => {
   const unquotedValue = rawValue.replace(STRIP_QUOTES_REGEX, "");
   return { key, value: unquotedValue };
 };
+
+const applyEnvFile = () => {
+  try {
+    const envTest = readFileSync(resolve(process.cwd(), ".env.test"), "utf8");
+    for (const line of envTest.split("\n")) {
+      if (!line.trim() || line.trim().startsWith("#")) {
+        continue;
+      }
+      const parsed = parseEnvLine(line);
+      if (!parsed) {
+        continue;
+      }
+      if (!process.env[parsed.key]) {
+        process.env[parsed.key] = parsed.value;
+      }
+    }
+  } catch {
+    // ignore
+  }
+};
+
+applyEnvFile();
+const { testEnv } = await import("@/env.test");
 
 const fetchWithTimeout = async (url: string, options: RequestInit) => {
   const controller = new AbortController();
@@ -62,26 +86,20 @@ const parseRefreshResponse = (data: unknown, refreshToken: string) => {
 const refreshToken = async (provider: "google" | "microsoft") => {
   const refreshTokenEnv =
     provider === "google"
-      ? process.env.TEST_GOOGLE_REFRESH_TOKEN
-      : process.env.TEST_MS_REFRESH_TOKEN;
-  if (!refreshTokenEnv) {
-    return null;
-  }
+      ? testEnv.TEST_GOOGLE_REFRESH_TOKEN
+      : testEnv.TEST_MS_REFRESH_TOKEN;
   const tokenUrl =
     provider === "google"
       ? ApiEndpoint.GoogleAuth.Token
       : ApiEndpoint.MicrosoftAuth.Token;
   const clientId =
     provider === "google"
-      ? process.env.GOOGLE_OAUTH_CLIENT_ID
-      : process.env.MICROSOFT_OAUTH_CLIENT_ID;
+      ? testEnv.GOOGLE_OAUTH_CLIENT_ID
+      : testEnv.MICROSOFT_OAUTH_CLIENT_ID;
   const clientSecret =
     provider === "google"
-      ? process.env.GOOGLE_OAUTH_CLIENT_SECRET
-      : process.env.MICROSOFT_OAUTH_CLIENT_SECRET;
-  if (!(clientId && clientSecret)) {
-    return null;
-  }
+      ? testEnv.GOOGLE_OAUTH_CLIENT_SECRET
+      : testEnv.MICROSOFT_OAUTH_CLIENT_SECRET;
   const params = new URLSearchParams({
     client_id: clientId,
     client_secret: clientSecret,
@@ -118,34 +136,7 @@ const ensureBearerToken = async (
   }
 };
 
-try {
-  const envTest = readFileSync(resolve(process.cwd(), ".env.test"), "utf8");
-  for (const line of envTest.split("\n")) {
-    if (!line.trim() || line.trim().startsWith("#")) {
-      continue;
-    }
-    const parsed = parseEnvLine(line);
-    if (!parsed) {
-      continue;
-    }
-    if (!process.env[parsed.key]) {
-      process.env[parsed.key] = parsed.value;
-    }
-  }
-} catch {
-  // ignore
-}
-
-if (!process.env.TEST_DOMAIN) {
-  process.env.TEST_DOMAIN = "test.example.com";
-}
-
-// Provide defaults for required environment variables
-process.env.AUTH_SECRET ??= "test-secret";
-process.env.GOOGLE_OAUTH_CLIENT_ID ??= "test-google-client-id";
-process.env.GOOGLE_OAUTH_CLIENT_SECRET ??= "test-google-client-secret";
-process.env.MICROSOFT_OAUTH_CLIENT_ID ??= "test-microsoft-client-id";
-process.env.MICROSOFT_OAUTH_CLIENT_SECRET ??= "test-microsoft-client-secret";
+process.env.TEST_DOMAIN = testEnv.TEST_DOMAIN;
 
 await ensureBearerToken("google", "TEST_GOOGLE_BEARER_TOKEN");
 await ensureBearerToken("microsoft", "TEST_MS_BEARER_TOKEN");

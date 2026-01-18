@@ -132,3 +132,46 @@ export interface StepUIState {
   isUndoing?: boolean;
   blockReason?: string;
 }
+
+export type StepRunPhase = "check" | "execute" | "undo";
+export type StepRunPhaseStatus = "start" | "end";
+
+export type StepStreamEvent =
+  | {
+      type: "log";
+      stepId: StepIdValue;
+      traceId: string;
+      entry: StepLogEntry;
+    }
+  | {
+      type: "state";
+      stepId: StepIdValue;
+      traceId: string;
+      state: Partial<StepUIState>;
+    }
+  | {
+      type: "vars";
+      stepId: StepIdValue;
+      traceId: string;
+      vars: Partial<WorkflowVars>;
+    }
+  | {
+      type: "lro";
+      stepId: StepIdValue;
+      traceId: string;
+      lro: StepUIState["lro"];
+    }
+  | {
+      type: "phase";
+      stepId: StepIdValue;
+      traceId: string;
+      phase: StepRunPhase;
+      status: StepRunPhaseStatus;
+    }
+  | {
+      type: "complete";
+      stepId: StepIdValue;
+      traceId: string;
+      state: StepUIState;
+      newVars: Partial<WorkflowVars>;
+    };

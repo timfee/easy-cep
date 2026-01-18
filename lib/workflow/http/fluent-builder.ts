@@ -2,6 +2,9 @@ import { z } from "zod";
 import { HttpMethod } from "@/types";
 import type { HttpClient } from "../types/http-client";
 
+/**
+ * Configuration for building HTTP requests.
+ */
 export interface BuilderConfig {
   basePath?: string;
   pathParams?: Record<string, string>;
@@ -14,6 +17,9 @@ export interface BuilderConfig {
   timeout?: number;
 }
 
+/**
+ * Fluent request builder for workflow HTTP clients.
+ */
 export class ResourceBuilder<TContext = Record<string, never>> {
   private readonly config: BuilderConfig = {};
   private readonly client: HttpClient;
@@ -88,7 +94,6 @@ export class ResourceBuilder<TContext = Record<string, never>> {
     );
   }
 
-  // Terminal methods
   get() {
     return this.send(HttpMethod.GET);
   }
@@ -125,7 +130,6 @@ export class ResourceBuilder<TContext = Record<string, never>> {
     let url = this.config.basePath || "";
 
     if (this.config.pathParams) {
-      // ENCODING: Path parameters are encoded here and ONLY here
       for (const [key, value] of Object.entries(this.config.pathParams)) {
         url = url.replace(`{${key}}`, encodeURIComponent(value));
       }

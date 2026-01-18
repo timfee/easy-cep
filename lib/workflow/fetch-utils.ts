@@ -8,8 +8,14 @@ import {
 } from "./core/errors";
 import { detectLRO, type LROMetadata } from "./lro-detector";
 
+/**
+ * Extra request options for workflow fetchers.
+ */
 export type FetchOpts = RequestInit & { flatten?: boolean | string };
 
+/**
+ * Logging and LRO hooks for fetch operations.
+ */
 export interface FetchContext {
   addLog: (entry: StepLogEntry) => void;
   onLroDetected?: (lro: LROMetadata) => void;
@@ -26,6 +32,9 @@ function isErrorResponseBody(
   return "error" in value;
 }
 
+/**
+ * Convert HTTP responses into typed errors.
+ */
 async function handleResponseError(res: Response): Promise<never> {
   let detail = res.statusText;
   let errorBody: unknown;
@@ -44,7 +53,7 @@ async function handleResponseError(res: Response): Promise<never> {
     try {
       detail = await errorClone.text();
     } catch {
-      // ignore
+      detail = res.statusText;
     }
   }
 
@@ -60,6 +69,9 @@ async function handleResponseError(res: Response): Promise<never> {
   }
 }
 
+/**
+ * Execute a single request with logging and schema parsing.
+ */
 async function executeSingleFetch<T>(
   url: string,
   reqInit: RequestInit,
@@ -190,6 +202,9 @@ const toNextPageUrl = (
   return undefined;
 };
 
+/**
+ * Follow pagination links and merge responses.
+ */
 async function executePaginatedFetch<T>(
   url: string,
   flatten: boolean | string,
@@ -237,6 +252,9 @@ async function executePaginatedFetch<T>(
   return aggregated;
 }
 
+/**
+ * Create a fetcher that injects auth and logs requests.
+ */
 export function createAuthenticatedFetch(
   token: string | undefined,
   context: FetchContext & { suppressExpectedErrors?: boolean }

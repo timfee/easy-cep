@@ -11,6 +11,9 @@ export interface VariableMetadata {
   sensitive?: boolean;
 }
 
+/**
+ * Registry of workflow variables and their metadata.
+ */
 export const WORKFLOW_VARIABLES: Record<string, VariableMetadata> = {
   googleAccessToken: {
     type: "string",
@@ -229,7 +232,9 @@ export const WORKFLOW_VARIABLES: Record<string, VariableMetadata> = {
   },
 };
 
-// Auto-generate Var enum with PascalCase keys
+/**
+ * Convert workflow variable keys to PascalCase.
+ */
 function toPascalCase(value: string): string {
   return value.charAt(0).toUpperCase() + value.slice(1);
 }
@@ -238,6 +243,9 @@ function isVarKey(value: string): value is keyof typeof WORKFLOW_VARIABLES {
   return value in WORKFLOW_VARIABLES;
 }
 
+/**
+ * Build the PascalCase variable map for UI usage.
+ */
 function buildVarMap(): Record<string, keyof typeof WORKFLOW_VARIABLES> {
   const result: Record<string, keyof typeof WORKFLOW_VARIABLES> = {};
   for (const key of Object.keys(WORKFLOW_VARIABLES)) {
@@ -249,11 +257,19 @@ function buildVarMap(): Record<string, keyof typeof WORKFLOW_VARIABLES> {
   return result;
 }
 
+/**
+ * PascalCase aliases for workflow variables.
+ */
 export const Var = buildVarMap();
 
+/**
+ * Map workflow variables to their string values.
+ */
 export type WorkflowVars = {
   [K in keyof typeof WORKFLOW_VARIABLES]: string | undefined;
 };
 
-// Export useful types
+/**
+ * Valid workflow variable names.
+ */
 export type VarName = keyof typeof WORKFLOW_VARIABLES;

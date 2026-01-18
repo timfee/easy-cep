@@ -1,7 +1,13 @@
+/**
+ * Workflow thresholds for API usage.
+ */
 export const WORKFLOW_LIMITS: { SAML_PROFILES_WARNING_THRESHOLD: number } = {
   SAML_PROFILES_WARNING_THRESHOLD: 90,
 };
 
+/**
+ * Time constants used by workflow logic.
+ */
 export const TIME: {
   MS_IN_SECOND: number;
   SECOND: number;

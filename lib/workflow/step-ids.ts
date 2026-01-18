@@ -15,6 +15,9 @@ export type StepIdValue =
   | "complete-google-sso-setup"
   | "assign-users-to-sso";
 
+/**
+ * PascalCase lookup map for step identifiers.
+ */
 export const StepId: Record<
   | "VerifyPrimaryDomain"
   | "CreateAutomationOU"

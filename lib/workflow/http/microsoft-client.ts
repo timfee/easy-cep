@@ -140,6 +140,9 @@ const syncJobSchema = z.object({
   value: z.array(jobItemSchema).optional(),
 });
 
+/**
+ * Fluent client for Microsoft Graph workflow APIs.
+ */
 export class MicrosoftClient {
   private readonly client: HttpClient;
 

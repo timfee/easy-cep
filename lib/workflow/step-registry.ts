@@ -25,10 +25,16 @@ const allSteps = [
   assignUsersToSso,
 ];
 
+/**
+ * Return all registered workflow steps.
+ */
 export function getAllSteps() {
   return allSteps;
 }
 
+/**
+ * Lookup a step definition by ID.
+ */
 export function getStep<T extends StepIdValue>(
   id: T
 ): Extract<(typeof allSteps)[number], { id: T }> {

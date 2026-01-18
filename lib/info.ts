@@ -12,6 +12,9 @@ import { extractResourceId, ResourceTypes } from "@/lib/workflow/core/http";
 
 const LEADING_SLASH_REGEX = /^\//;
 
+/**
+ * Normalized shape used for info panels.
+ */
 export interface InfoItem {
   id: string;
   label: string;
@@ -21,6 +24,9 @@ export interface InfoItem {
   deleteEndpoint?: string;
 }
 
+/**
+ * List Google Workspace domains.
+ */
 export async function listDomains(): Promise<InfoItem[]> {
   const token = await refreshTokenIfNeeded(PROVIDERS.GOOGLE);
   if (!token) {
@@ -52,6 +58,9 @@ export async function listDomains(): Promise<InfoItem[]> {
   }));
 }
 
+/**
+ * List Google organizational units.
+ */
 export async function listOrgUnits(): Promise<InfoItem[]> {
   const token = await refreshTokenIfNeeded(PROVIDERS.GOOGLE);
   if (!token) {
@@ -90,6 +99,9 @@ export async function listOrgUnits(): Promise<InfoItem[]> {
   );
 }
 
+/**
+ * List Google inbound SAML profiles.
+ */
 export async function listSamlProfiles(): Promise<InfoItem[]> {
   const token = await refreshTokenIfNeeded(PROVIDERS.GOOGLE);
   if (!token) {
@@ -122,6 +134,9 @@ export async function listSamlProfiles(): Promise<InfoItem[]> {
   );
 }
 
+/**
+ * List Google inbound SSO assignments.
+ */
 export async function listSsoAssignments(): Promise<InfoItem[]> {
   const token = await refreshTokenIfNeeded(PROVIDERS.GOOGLE);
   if (!token) {
@@ -169,6 +184,9 @@ export async function listSsoAssignments(): Promise<InfoItem[]> {
   );
 }
 
+/**
+ * List Microsoft provisioning jobs.
+ */
 export async function listProvisioningJobs(): Promise<InfoItem[]> {
   const token = await refreshTokenIfNeeded(PROVIDERS.MICROSOFT);
   if (!token) {
@@ -221,6 +239,9 @@ export async function listProvisioningJobs(): Promise<InfoItem[]> {
   }));
 }
 
+/**
+ * List Microsoft claims mapping policies.
+ */
 export async function listClaimsPolicies(): Promise<InfoItem[]> {
   const token = await refreshTokenIfNeeded(PROVIDERS.MICROSOFT);
   if (!token) {
@@ -249,6 +270,9 @@ export async function listClaimsPolicies(): Promise<InfoItem[]> {
   }));
 }
 
+/**
+ * List Microsoft enterprise applications.
+ */
 export async function listEnterpriseApps(): Promise<InfoItem[]> {
   const token = await refreshTokenIfNeeded(PROVIDERS.MICROSOFT);
   if (!token) {
@@ -300,6 +324,9 @@ export async function listEnterpriseApps(): Promise<InfoItem[]> {
   return items;
 }
 
+/**
+ * List Google user accounts.
+ */
 export async function listUsers(): Promise<InfoItem[]> {
   const token = await refreshTokenIfNeeded(PROVIDERS.GOOGLE);
   if (!token) {
@@ -331,6 +358,9 @@ export async function listUsers(): Promise<InfoItem[]> {
   );
 }
 
+/**
+ * List Google admin roles.
+ */
 export async function listAdminRoles(): Promise<InfoItem[]> {
   const token = await refreshTokenIfNeeded(PROVIDERS.GOOGLE);
   if (!token) {
