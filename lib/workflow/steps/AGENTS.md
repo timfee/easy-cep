@@ -1,4 +1,12 @@
-# Step API contracts
+# Step API Contracts
+
+## Commands (Repo-wide)
+
+- `bun run build` / `bun run check` / `bun run lint` / `bun run format`
+- `bun test` (runs all tests)
+- `bun test path/to/file.test.ts` or `bun test --filter "name"` (single test)
+- `RUN_E2E=1 bun test` (live E2E), `UPDATE_FIXTURES=1` or `CHECK_FIXTURES=1` for fixtures, `SKIP_E2E=1` to skip
+- `bun run e2e:live` (live E2E runner)
 
 Below is a complete canvas of **12 steps**, each with:
 
@@ -7,11 +15,10 @@ Below is a complete canvas of **12 steps**, each with:
 - **Execution**: prerequisites, HTTP request(s), expected responses, and behavior
 - **Required Inputs** (variables or tokens)
 
-Before running or developing a step that performs live API calls, execute
-`./scripts/token-info.sh` to confirm the Google and Microsoft bearer tokens are
-valid (sourced from `.env.test`). The script queries Google's tokeninfo endpoint
-and Microsoft Graph so you can quickly verify access. These credentials point to
-test tenants, so API mutations are allowed during step development.
+Before running or developing a step that performs live API calls, confirm the
+Google and Microsoft bearer tokens are valid (sourced from `.env.test`). These
+credentials point to test tenants, so API mutations are allowed during step
+development.
 
 ## Step 1: `verifyPrimaryDomain`
 

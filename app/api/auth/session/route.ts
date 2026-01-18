@@ -2,6 +2,9 @@ import { NextResponse } from "next/server";
 import { PROVIDERS } from "@/constants";
 import { refreshTokenIfNeeded } from "@/lib/auth";
 
+/**
+ * Return the latest access tokens and expiry timestamps.
+ */
 export async function GET() {
   const googleToken = await refreshTokenIfNeeded(PROVIDERS.GOOGLE);
   const microsoftToken = await refreshTokenIfNeeded(PROVIDERS.MICROSOFT);

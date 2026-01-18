@@ -12,6 +12,9 @@ interface InfoItemListProps {
   showCheckboxes: boolean;
 }
 
+/**
+ * Render a list of info items with selection state.
+ */
 export function InfoItemList({
   items,
   selectedIds,

@@ -95,8 +95,6 @@ function VariableRow(props: VariableRowProps) {
     "group px-3 py-2 transition-colors duration-150 hover:bg-muted/50 block w-full text-left";
 
   if (isEditing) {
-    // When editing, we render a div to contain the input form.
-    // Interaction is handled by the input itself.
     return (
       <div className={commonClasses}>
         <VariableRowContent
@@ -109,7 +107,6 @@ function VariableRow(props: VariableRowProps) {
   }
 
   if (isConfigurable) {
-    // When configurable and not editing, render a clickable container.
     return (
       <button
         className={`${commonClasses} cursor-pointer`}
@@ -125,7 +122,6 @@ function VariableRow(props: VariableRowProps) {
     );
   }
 
-  // Not configurable (read-only)
   return (
     <div className={commonClasses}>
       <VariableRowContent
@@ -137,6 +133,9 @@ function VariableRow(props: VariableRowProps) {
   );
 }
 
+/**
+ * Display and edit workflow variables grouped by category.
+ */
 export function VarsInspector({ vars, onChange }: VarsInspectorProps) {
   const [editingVar, setEditingVar] = useState<{
     key: VarName;

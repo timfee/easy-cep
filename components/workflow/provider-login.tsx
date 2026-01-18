@@ -27,6 +27,9 @@ interface ProviderItemProps {
   iconColorClass: string;
 }
 
+/**
+ * Render a single provider connection row.
+ */
 function ProviderItem({
   Icon,
   name,
@@ -74,6 +77,9 @@ function ProviderItem({
   );
 }
 
+/**
+ * Manage OAuth connections for supported providers.
+ */
 export function ProviderLogin({ onUpdate }: Props) {
   const { setSessionLoaded } = useWorkflow();
   const [tokens, setTokens] = useState<SessionTokens>({});
@@ -167,6 +173,9 @@ export function ProviderLogin({ onUpdate }: Props) {
   );
 }
 
+/**
+ * Google provider icon.
+ */
 const Google = ({ className }: { className?: string }) => (
   <svg
     className={className}
@@ -182,6 +191,9 @@ const Google = ({ className }: { className?: string }) => (
   </svg>
 );
 
+/**
+ * Microsoft provider icon.
+ */
 const Microsoft = ({ className }: { className?: string }) => (
   <svg
     className={className}

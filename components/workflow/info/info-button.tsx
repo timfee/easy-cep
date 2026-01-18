@@ -44,6 +44,9 @@ interface InfoButtonProps {
   context?: ReactNode;
 }
 
+/**
+ * Modal button that fetches and manages info items.
+ */
 export function InfoButton({
   title,
   fetchItems,
@@ -137,8 +140,6 @@ export function InfoButton({
       resetSelection();
       setDeleteConfirmText("");
       resetPagination();
-    } catch {
-      // ignore errors
     } finally {
       setIsDeleting(false);
     }

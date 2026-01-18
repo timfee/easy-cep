@@ -42,6 +42,9 @@ interface WorkflowContextValue {
 
 const WorkflowContext = createContext<WorkflowContextValue | null>(null);
 
+/**
+ * Access workflow state and actions from the provider.
+ */
 export function useWorkflow() {
   const context = useContext(WorkflowContext);
   if (!context) {
@@ -56,6 +59,9 @@ interface WorkflowProviderProps {
   initialVars?: Partial<WorkflowVars>;
 }
 
+/**
+ * Provide workflow data, actions, and session state.
+ */
 export function WorkflowProvider({
   children,
   steps,
@@ -92,7 +98,6 @@ export function WorkflowProvider({
       setVarsState((prev) => {
         const updated = { ...prev, ...newVars };
 
-        // Notify listeners
         for (const key of keys) {
           const keyListeners = listeners.current.get(key);
           if (keyListeners) {
@@ -102,7 +107,6 @@ export function WorkflowProvider({
           }
         }
 
-        // Reset checked status for affected steps
         for (const step of steps) {
           const dependsOnChangedVar = step.requires.some((reqVar) =>
             keys.includes(reqVar)
@@ -121,7 +125,6 @@ export function WorkflowProvider({
     [steps]
   );
 
-  // Create VarStore implementation
   const varStore = useMemo<VarStore>(
     () => ({
       get<K extends VarName>(key: K): WorkflowVars[K] | undefined {
@@ -231,7 +234,6 @@ export function WorkflowProvider({
         updateStep(id, result.state);
 
         if (result.state.status === StepStatus.Complete) {
-          // Clear provided vars
           const clearedVarsEntries = Object.entries(vars).filter(([key]) =>
             step.provides.every((providedVar) => providedVar !== key)
           );
@@ -277,8 +279,6 @@ export function WorkflowProvider({
       }
     }
   }, [vars, steps, status, updateStep, updateVars]);
-
-  // Auto-check steps when vars change
 
   useEffect(() => {
     const timeoutId = setTimeout(() => {

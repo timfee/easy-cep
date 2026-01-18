@@ -8,6 +8,9 @@ import {
   setChunkedCookie,
 } from "@/lib/auth";
 
+/**
+ * Start the OAuth flow for a supported provider.
+ */
 export async function GET(
   request: NextRequest,
   { params }: { params: Promise<{ provider: string }> }

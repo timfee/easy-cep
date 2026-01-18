@@ -35,6 +35,9 @@ interface InfoButtonConfig {
   context?: React.ReactNode;
 }
 
+/**
+ * Create a configured info button component.
+ */
 export function createInfoButton(config: InfoButtonConfig): React.FC {
   return function GeneratedInfoButton() {
     return (
@@ -48,6 +51,9 @@ export function createInfoButton(config: InfoButtonConfig): React.FC {
   };
 }
 
+/**
+ * Inspect existing organizational units.
+ */
 export const OuInfoButton = createInfoButton({
   title: "Existing Organizational Units",
   fetchItems: listOrgUnits,
@@ -64,6 +70,9 @@ export const OuInfoButton = createInfoButton({
   ),
 });
 
+/**
+ * Inspect existing SAML profiles.
+ */
 export const SamlInfoButton = createInfoButton({
   title: "Existing SAML Profiles",
   fetchItems: listSamlProfiles,
@@ -80,6 +89,9 @@ export const SamlInfoButton = createInfoButton({
   ),
 });
 
+/**
+ * Inspect existing domains.
+ */
 export const DomainInfoButton = createInfoButton({
   title: "Existing Domains",
   fetchItems: listDomains,
@@ -95,6 +107,9 @@ export const DomainInfoButton = createInfoButton({
   ),
 });
 
+/**
+ * Inspect existing user accounts.
+ */
 export const UsersInfoButton = createInfoButton({
   title: "Existing Users",
   fetchItems: listUsers,
@@ -111,6 +126,9 @@ export const UsersInfoButton = createInfoButton({
   ),
 });
 
+/**
+ * Inspect existing admin roles.
+ */
 export const RolesInfoButton = createInfoButton({
   title: "Existing Admin Roles",
   fetchItems: listAdminRoles,
@@ -127,6 +145,9 @@ export const RolesInfoButton = createInfoButton({
   ),
 });
 
+/**
+ * Inspect existing SSO assignments.
+ */
 export const SsoInfoButton = createInfoButton({
   title: "Existing SSO Assignments",
   fetchItems: listSsoAssignments,
@@ -143,6 +164,9 @@ export const SsoInfoButton = createInfoButton({
   ),
 });
 
+/**
+ * Inspect existing Microsoft enterprise apps.
+ */
 export const AppsInfoButton = createInfoButton({
   title: "Existing Enterprise Apps",
   fetchItems: async () => {
@@ -165,6 +189,9 @@ export const AppsInfoButton = createInfoButton({
   ),
 });
 
+/**
+ * Inspect existing provisioning jobs.
+ */
 export const ProvisioningInfoButton = createInfoButton({
   title: "Existing Provisioning Jobs",
   fetchItems: listProvisioningJobs,
@@ -181,6 +208,9 @@ export const ProvisioningInfoButton = createInfoButton({
   ),
 });
 
+/**
+ * Inspect existing claims policies.
+ */
 export const ClaimsInfoButton = createInfoButton({
   title: "Existing Claims Policies",
   fetchItems: listClaimsPolicies,

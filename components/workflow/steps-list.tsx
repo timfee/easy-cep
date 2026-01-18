@@ -7,6 +7,9 @@ import { CompletionCard } from "@/components/workflow/steps/completion-card";
 import { StepCard } from "@/components/workflow/steps/step-card";
 import { Var, type VarName, type WorkflowVars } from "@/lib/workflow/variables";
 
+/**
+ * Render the workflow steps with login gating.
+ */
 export function StepsList() {
   const {
     steps,

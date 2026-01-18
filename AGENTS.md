@@ -1,130 +1,35 @@
-# Workflow Step Authoring for LLMs
+# Repository Agent Guide
 
-This document defines how to write a new federated identity workflow step.
+Use this document for repository-wide conventions. Check nested `AGENTS.md`
+files for scope-specific rules.
 
-Each step performs one logical operation (e.g. creating a user or assigning a role) and is fully self-contained.
+## Commands
 
-## ✅ File Placement
+- `bun install`
+- `bun run dev`
+- `bun run build` / `bun run check` / `bun run lint` / `bun run format`
+- `bun test` (runs all tests)
+- `bun test path/to/file.test.ts` or `bun test --filter "name"` (single test)
+- `RUN_E2E=1 bun test` (live E2E), `UPDATE_FIXTURES=1` or `CHECK_FIXTURES=1` for fixtures, `SKIP_E2E=1` to skip
+- `bun run e2e:live` (live E2E runner)
 
-Place your step definition in: `./lib/workflow/steps/{step-id}.ts`
+## Workflow Steps (lib/workflow/steps)
 
-Use `kebab-case` for filenames. The `step-id` must match one of the values in `StepId` (see `./lib/workflow/step-ids.ts`).
+- Place steps in `lib/workflow/steps/{step-id}.ts` using kebab-case and a `StepId` value.
+- Export only `defineStep(...).requires().provides().check().execute().build()` as default.
+- Use `Var`, `StepId`, and `LogLevel` enums; do not use string literals for them.
+- Use `ctx.log(...)`; no `console.log`.
+- Use `google`/`microsoft` fluent clients; avoid raw fetch calls.
+- Reuse shared types in `lib/workflow/types` and constants in `lib/workflow/constants`.
+- No `any`, no type assertions (`as`), no extra default exports.
+- Do not read `process.env` in steps; use `env` from `env.ts`.
 
-There is an `AGENTS.md` file in `./lib/workflow/steps` that will provide the API contracts you can expect.
+## Scope-Specific Rules
 
-## ✅ Required Format
-
-Each file must export the result of the step builder:
-
-```ts
-export default defineStep(StepId.X)
-  .requires(Var.X)
-  .provides(Var.Y)
-  .check(async ({ vars, google }) => {
-    // ...
-  })
-  .execute(async ({ vars, google }) => {
-    // ...
-  })
-  .build();
-```
-
-## ✅ Allowed Enums
-
-Use only values from these enums — no string literals allowed:
-
-- `Var` (e.g. `Var.GoogleAccessToken`)
-- `StepId` (e.g. `StepId.CreateServiceUser`)
-- `LogLevel` (e.g. `LogLevel.Info`)
-
-## ✅ Logging
-
-Use `ctx.log(...)`:
-
-```ts
-ctx.log(LogLevel.Info, "Created SSO assignment");
-```
-
-## ✅ Fetching
-
-Use the `google` and `microsoft` HTTP clients provided by the step builder. They
-expose a fluent API so each resource and method is strongly typed:
-
-```ts
-const { domains } = await google.domains.get();
-const app = await microsoft.applications
-  .instantiate("id")
-  .post({ displayName: "My App" });
-```
-
-### Shared Types & Constants
-
-Use the utilities under `lib/workflow/types/` for common schemas and HTTP
-client definitions. Workflow constants live under `lib/workflow/constants/`.
-Import these rather than redefining them within steps.
-
-## ✅ Type Contracts
-
-All return types must conform to these interfaces:
-
-```ts
-interface StepCheckResult {
-  isComplete: boolean;
-  summary: string;
-  data?: Record<string, unknown>;
-}
-
-interface StepExecuteResult<K extends Var> {
-  status: StepUIState["status"];
-  output?: Partial<Pick<WorkflowVars, K>>;
-  notes?: string;
-  error?: string;
-}
-```
-
-## 🛑 Prohibited
-
-- No `any`
-- No `as` or casting
-- No console.log
-- No default exports other than the result of `defineStep(...).build()`
-
-## ✅ Required Checks
-
-All PRs must pass the following commands before submission:
-
-```bash
-bun run lint
-bun run check
-bun run build
-```
-
-Note: `bun test` uses `bunfig.toml` to preload `./test/setup.ts`.
-These commands should run without any warnings or TypeScript errors.
-
-## ✅ Token Verification
-
-Bearer tokens for Google and Microsoft are stored in `.env.test` as
-`TEST_GOOGLE_BEARER_TOKEN` and `TEST_MS_BEARER_TOKEN`. Before running steps or
-E2E tests, verify they are valid:
-
-```bash
-./scripts/token-info.sh
-```
-
-The script prints token metadata so you know the credentials are active.
-Never commit refreshed tokens or other secrets to the repository.
-
-## ✅ Testing
-
-Unit and integration tests can be run with:
-
-```bash
-bun test
-```
-
-E2E tests require `TEST_GOOGLE_BEARER_TOKEN` and `TEST_MS_BEARER_TOKEN` in `.env.test`.
-They are included by default; run them. If you are having catastrophic errors, you can skip with `SKIP_E2E=1`
+- `lib/workflow/steps/AGENTS.md` for step contracts and HTTP details.
+- `components/AGENTS.md` for UI conventions.
+- `scripts/AGENTS.md` for script conventions.
+- `test/e2e/AGENTS.md` for E2E flags and fixtures.
 
 # Ultracite Code Standards
 

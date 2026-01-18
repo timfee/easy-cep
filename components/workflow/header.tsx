@@ -4,6 +4,9 @@ import Image from "next/image";
 import { useWorkflow } from "@/components/workflow/context";
 import { ProviderLogin } from "@/components/workflow/provider-login";
 
+/**
+ * Header with branding and provider login actions.
+ */
 export function WorkflowHeader() {
   const { updateVars } = useWorkflow();
 

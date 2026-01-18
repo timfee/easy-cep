@@ -2,6 +2,9 @@ import { NextResponse } from "next/server";
 import { ApiEndpoint, PROVIDERS } from "@/constants";
 import { getChunkedCookie } from "@/lib/auth";
 
+/**
+ * Verify provider tokens against their APIs.
+ */
 export async function GET() {
   const googleToken = await getChunkedCookie(`${PROVIDERS.GOOGLE}_token`);
   const msToken = await getChunkedCookie(`${PROVIDERS.MICROSOFT}_token`);

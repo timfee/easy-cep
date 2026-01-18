@@ -13,6 +13,9 @@ export function StepLogs({ logs }: StepLogsProps) {
   const scrollAreaRef = useRef<HTMLDivElement | null>(null);
 
   useEffect(() => {
+    if (!logs || logs.length === 0) {
+      return;
+    }
     const el = scrollAreaRef.current;
     if (!el) {
       return;
@@ -22,7 +25,7 @@ export function StepLogs({ logs }: StepLogsProps) {
     if (viewport instanceof HTMLDivElement) {
       viewport.scrollTop = viewport.scrollHeight;
     }
-  }, []);
+  });
 
   if (!logs || logs.length === 0) {
     return null;

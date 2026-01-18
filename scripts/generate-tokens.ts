@@ -19,6 +19,16 @@ const microsoftAuthPromise = new Promise<string>((resolve) => {
   onMicrosoftToken = resolve;
 });
 
+const requireRefreshToken = (
+  token: { refreshToken?: string },
+  provider: string
+) => {
+  if (!token.refreshToken) {
+    throw new Error(`Missing refresh token for ${provider}`);
+  }
+  return token.refreshToken;
+};
+
 const server = createServer(async (req, res) => {
   try {
     // Basic URL parsing
@@ -84,11 +94,13 @@ const server = createServer(async (req, res) => {
         </div>`
       );
 
+      const refreshToken = requireRefreshToken(token, provider);
+
       // Resolve the corresponding promise
       if (provider === PROVIDERS.GOOGLE) {
-        onGoogleToken(token.accessToken);
+        onGoogleToken(refreshToken);
       } else {
-        onMicrosoftToken(token.accessToken);
+        onMicrosoftToken(refreshToken);
       }
     } catch (exchangeError) {
       console.error(`[${provider}] Token exchange failed:`, exchangeError);
@@ -151,8 +163,8 @@ async function main() {
     console.log(`\nClick here:\n${googleUrl}\n`);
     console.log("Waiting for Google callback...");
 
-    const googleToken = await googleAuthPromise;
-    await updateEnvFile("TEST_GOOGLE_BEARER_TOKEN", googleToken);
+    const googleRefreshToken = await googleAuthPromise;
+    await updateEnvFile("TEST_GOOGLE_REFRESH_TOKEN", googleRefreshToken);
 
     // 2. Microsoft Flow
     const msState = Math.random().toString(36).substring(7);

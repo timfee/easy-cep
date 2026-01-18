@@ -10,6 +10,14 @@ export function extractResourceId(
   return match?.[1] || resourceName;
 }
 
+export function normalizePathSegment(value: string): string {
+  if (!value) {
+    return value;
+  }
+  const trimmed = value.startsWith("/") ? value.slice(1) : value;
+  return encodeURIComponent(trimmed);
+}
+
 export type ResourceTypeValue =
   | "inboundSsoAssignments"
   | "inboundSamlSsoProfiles"

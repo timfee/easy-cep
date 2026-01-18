@@ -2,6 +2,7 @@
 
 import { inspect } from "node:util";
 import { PROVIDERS } from "@/constants";
+import { env } from "@/env";
 import { refreshTokenIfNeeded } from "@/lib/auth";
 import type { StepIdValue } from "@/lib/workflow/step-ids";
 import { Var, type WorkflowVars } from "@/lib/workflow/variables";
@@ -50,6 +51,20 @@ function appendLog(
   return [...logs, { ...entry, data }];
 }
 
+function logDev(entry: StepLogEntry, vars: Partial<WorkflowVars>) {
+  if (env.NODE_ENV !== "development") {
+    return;
+  }
+  const payload = {
+    ...entry,
+    data:
+      entry.level === LogLevel.Error
+        ? { error: entry.data, vars: sanitizeVars(vars) }
+        : entry.data,
+  };
+  console.debug("[workflow]", payload);
+}
+
 async function processStep<T extends StepIdValue>(
   stepId: T,
   vars: Partial<WorkflowVars>,
@@ -81,6 +96,7 @@ async function processStep<T extends StepIdValue>(
 
   const addLog = (entry: StepLogEntry) => {
     logs = appendLog(entry, vars, logs);
+    logDev(entry, vars);
     pushState({});
   };
 
@@ -253,6 +269,7 @@ async function processUndoStep<T extends StepIdValue>(
 
   const addLog = (entry: StepLogEntry) => {
     logs = appendLog(entry, vars, logs);
+    logDev(entry, vars);
     pushState({});
   };
 

@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { normalizePathSegment } from "../core/http";
 import type { HttpClient } from "../types/http-client";
 import { ResourceBuilder } from "./fluent-builder";
 
@@ -26,11 +27,11 @@ export function createCrudMethods<G, L, C, R, U, F>(
   basePath: string,
   schemas: CrudSchemas<G, L, C, R, U, F>
 ) {
+  const buildPath = (id: string) => `${basePath}/${normalizePathSegment(id)}`;
+
   return {
     get: (id: string) =>
-      new ResourceBuilder(client, {})
-        .path(`${basePath}/${id}`)
-        .accepts(schemas.get),
+      new ResourceBuilder(client, {}).path(buildPath(id)).accepts(schemas.get),
     list: () => {
       let builder = new ResourceBuilder(client, {})
         .path(basePath)
@@ -49,10 +50,10 @@ export function createCrudMethods<G, L, C, R, U, F>(
         .sends(schemas.create)
         .accepts(schemas.response),
     delete: (id: string) =>
-      new ResourceBuilder(client, {}).path(`${basePath}/${id}`).accepts(empty),
+      new ResourceBuilder(client, {}).path(buildPath(id)).accepts(empty),
     update: (id: string) =>
       new ResourceBuilder(client, {})
-        .path(`${basePath}/${id}`)
+        .path(buildPath(id))
         .sends(schemas.update)
         .accepts(schemas.response),
   };

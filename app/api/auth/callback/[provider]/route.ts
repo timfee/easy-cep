@@ -1,6 +1,9 @@
 import { type NextRequest, NextResponse } from "next/server";
 import { exchangeCodeForToken, setToken, validateOAuthState } from "@/lib/auth";
 
+/**
+ * Handle the OAuth callback and store provider tokens.
+ */
 export async function GET(
   request: NextRequest,
   { params }: { params: Promise<{ provider: string }> }

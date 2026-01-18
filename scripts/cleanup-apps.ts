@@ -1,0 +1,137 @@
+/**
+ * Deletes Microsoft Graph and Google Cloud apps/projects created recently.
+ *
+ * Run with: bun x tsx scripts/cleanup-apps.ts
+ */
+
+import { readFileSync } from "node:fs";
+import { ApiEndpoint } from "@/constants";
+
+const ENV_LINE_REGEX = /^([^=]+)=(.*)$/;
+const ISO_FRACTION_REGEX = /\.\d{3}Z$/;
+
+function applyEnvFile(path: string) {
+  try {
+    const envTest = readFileSync(path, "utf8");
+    for (const line of envTest.split("\n")) {
+      const match = line.match(ENV_LINE_REGEX);
+      if (match) {
+        const key = match[1]?.trim();
+        const value = match[2]?.trim();
+        if (key && !process.env[key]) {
+          process.env[key] = value ?? "";
+        }
+      }
+    }
+  } catch {
+    // ignore missing env files
+  }
+}
+
+function requireEnv(name: string) {
+  const value = process.env[name];
+  if (!value) {
+    throw new Error(`${name} not found in environment or .env.test`);
+  }
+  return value;
+}
+
+function formatDateUtc(date: Date) {
+  return date.toISOString().replace(ISO_FRACTION_REGEX, "Z");
+}
+
+async function deleteMicrosoftApps(token: string, threshold: string) {
+  console.log(`# Deleting Microsoft apps created since ${threshold}`);
+
+  const filter = encodeURIComponent(`createdDateTime ge ${threshold}`);
+  const res = await fetch(
+    `${ApiEndpoint.Microsoft.Applications}?$filter=${filter}`,
+    {
+      headers: { Authorization: `Bearer ${token}` },
+    }
+  );
+  if (!res.ok) {
+    throw new Error(
+      `Failed to list Microsoft apps: ${res.status} ${res.statusText}`
+    );
+  }
+  const data: { value?: Array<{ id: string }> } = await res.json();
+
+  for (const app of data.value ?? []) {
+    console.log(`Deleting Microsoft app ${app.id}`);
+    const deleteRes = await fetch(
+      `${ApiEndpoint.Microsoft.Applications}/${app.id}`,
+      {
+        method: "DELETE",
+        headers: { Authorization: `Bearer ${token}` },
+      }
+    );
+    if (!deleteRes.ok) {
+      throw new Error(
+        `Failed to delete Microsoft app ${app.id}: ${deleteRes.status} ${deleteRes.statusText}`
+      );
+    }
+  }
+}
+
+async function deleteGoogleProjects(token: string, threshold: string) {
+  console.log(`# Deleting Google projects created since ${threshold}`);
+
+  const res = await fetch(
+    "https://cloudresourcemanager.googleapis.com/v1/projects:list",
+    {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${token}`,
+        "Content-Type": "application/json",
+      },
+    }
+  );
+  if (!res.ok) {
+    throw new Error(
+      `Failed to list Google projects: ${res.status} ${res.statusText}`
+    );
+  }
+
+  const data: { projects?: Array<{ projectId: string; createTime: string }> } =
+    await res.json();
+  for (const project of data.projects ?? []) {
+    if (project.createTime >= threshold) {
+      console.log(`Deleting Google project ${project.projectId}`);
+      const deleteRes = await fetch(
+        `https://cloudresourcemanager.googleapis.com/v1/projects/${project.projectId}`,
+        {
+          method: "DELETE",
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
+          },
+        }
+      );
+      if (!deleteRes.ok) {
+        throw new Error(
+          `Failed to delete Google project ${project.projectId}: ${deleteRes.status} ${deleteRes.statusText}`
+        );
+      }
+    }
+  }
+}
+
+async function main() {
+  applyEnvFile(".env.test");
+
+  const googleToken = requireEnv("TEST_GOOGLE_BEARER_TOKEN");
+  const microsoftToken = requireEnv("TEST_MS_BEARER_TOKEN");
+
+  const thresholdDate = new Date();
+  thresholdDate.setUTCDate(thresholdDate.getUTCDate() - 10);
+  const threshold = formatDateUtc(thresholdDate);
+
+  await deleteMicrosoftApps(microsoftToken, threshold);
+  await deleteGoogleProjects(googleToken, threshold);
+}
+
+main().catch((error) => {
+  console.error(error);
+  process.exitCode = 1;
+});

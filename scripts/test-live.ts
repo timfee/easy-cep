@@ -15,7 +15,6 @@ function run(command: string, args: string[], env?: NodeJS.ProcessEnv) {
 }
 
 async function main() {
-  await run("./scripts/token-info.sh", []);
   await run("bun", ["x", "tsx", "scripts/e2e-setup.ts"]);
   await run("bun", ["test", "test/e2e/workflow.test.ts"], {
     ...process.env,

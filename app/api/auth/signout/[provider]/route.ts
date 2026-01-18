@@ -11,6 +11,9 @@ export function GET(
   return POST(request, context);
 }
 
+/**
+ * Clear stored provider tokens and redirect home.
+ */
 export async function POST(
   request: NextRequest,
   { params }: { params: Promise<{ provider: string }> }

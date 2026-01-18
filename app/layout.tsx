@@ -14,8 +14,15 @@ if (env.MICROSOFT_OAUTH_CLIENT_ID) {
 }
 
 const roboto = Roboto_Flex();
+
+/**
+ * Metadata for the application shell.
+ */
 export const metadata: Metadata = { title: "Easy CEP" };
 
+/**
+ * Root layout that wires workflow state and chrome.
+ */
 export default function RootLayout({
   children,
 }: Readonly<{ children: React.ReactNode }>) {

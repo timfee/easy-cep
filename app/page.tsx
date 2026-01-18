@@ -1,6 +1,9 @@
 import { StepsList } from "@/components/workflow/steps-list";
 import { VarsPanel } from "@/components/workflow/vars-panel";
 
+/**
+ * Main workflow page showing steps and variables.
+ */
 export default function HomePage() {
   return (
     <>

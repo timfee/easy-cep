@@ -49,12 +49,13 @@ bun run dev
 9. **Setup Microsoft Claims Policy** - Creates claims mapping policy
 10. **Complete Google SSO Setup** - Updates SAML profile with Azure AD metadata
 11. **Assign Users to SSO** - Enables SSO for all users
+12. **Test SSO Configuration** - Manual end-to-end verification in browser
 
 ## Architecture
 
 ### Frontend
 
-- Next.js 15 with React Server Components
+- Next.js 16 with React Server Components
 - Real-time workflow status updates
 - Variable inspector for configuration values
 - Expandable step cards with execution logs
@@ -116,14 +117,22 @@ const created = await microsoft.applications
 # Run tests
 bun test
 
-# Clean test environment
-bun x tsx scripts/full-cleanup.ts
-
-# Verify tokens
-./scripts/token-info.sh
-
 # Run live E2E tests
-bun x tsx scripts/test-live.ts
+RUN_E2E=1 bun test
+
+# Required for live E2E
+# TEST_GOOGLE_BEARER_TOKEN=<token>
+# TEST_MS_BEARER_TOKEN=<token>
+# TEST_DOMAIN=<domain>
+
+# Clean test environment
+bun run e2e:cleanup
+
+# Run live E2E tests (scripted)
+bun run e2e:live
+
+# Delete recent test apps/projects
+bun run cleanup:apps
 ```
 
 ## API Endpoints
