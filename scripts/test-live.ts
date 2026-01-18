@@ -1,5 +1,8 @@
 import { spawn } from "node:child_process";
 
+/**
+ * Spawn a child process and stream output.
+ */
 function run(command: string, args: string[], env?: NodeJS.ProcessEnv) {
   return new Promise<void>((resolve, reject) => {
     const child = spawn(command, args, { stdio: "inherit", env });
@@ -14,6 +17,9 @@ function run(command: string, args: string[], env?: NodeJS.ProcessEnv) {
   });
 }
 
+/**
+ * Run live E2E setup and tests.
+ */
 async function main() {
   await run("bun", ["x", "tsx", "scripts/e2e-setup.ts"]);
   await run("bun", ["test", "test/e2e/workflow.test.ts"], {

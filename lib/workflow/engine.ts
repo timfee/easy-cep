@@ -78,6 +78,7 @@ function logDev(entry: StepLogEntry, vars: Partial<WorkflowVars>) {
 /**
  * Run a step through check and optional execute phases.
  */
+// biome-ignore lint: workflow state machine orchestration
 async function processStep<T extends StepIdValue>(
   stepId: T,
   vars: Partial<WorkflowVars>,
@@ -107,27 +108,41 @@ async function processStep<T extends StepIdValue>(
 
   const recordLro = (lro: LROMetadata) => {
     if (!currentState.lro) {
+      const nextLro = {
+        detected: true,
+        startTime: Date.now(),
+        estimatedDuration: lro.estimatedSeconds,
+        operationType: lro.type,
+      };
       currentState = {
         ...currentState,
-        lro: {
-          detected: true,
-          startTime: Date.now(),
-          estimatedDuration: lro.estimatedSeconds,
-          operationType: lro.type,
-        },
+        lro: nextLro,
       };
+      if (eventContext) {
+        eventContext.onEvent({
+          type: "lro",
+          stepId,
+          traceId: eventContext.traceId,
+          lro: nextLro,
+        });
+      }
     }
   };
 
   const addLog = (entry: StepLogEntry) => {
-    logs = appendLog(entry, vars, logs);
-    logDev(entry, vars);
+    const nextLogs = appendLog(entry, vars, logs);
+    const sanitizedEntry = nextLogs.at(-1);
+    if (!sanitizedEntry) {
+      return;
+    }
+    logs = nextLogs;
+    logDev(sanitizedEntry, vars);
     if (eventContext) {
       eventContext.onEvent({
         type: "log",
         stepId,
         traceId: eventContext.traceId,
-        entry,
+        entry: sanitizedEntry,
       });
     }
     pushState({});
@@ -150,6 +165,15 @@ async function processStep<T extends StepIdValue>(
     },
   };
 
+  if (eventContext) {
+    eventContext.onEvent({
+      type: "phase",
+      stepId,
+      traceId: eventContext.traceId,
+      phase: "check",
+      status: "start",
+    });
+  }
   pushState({ isChecking: true });
 
   type CheckType =
@@ -201,14 +225,29 @@ async function processStep<T extends StepIdValue>(
     return { state: currentState, newVars: finalVars };
   }
 
+  const completeCheckPhase = () => {
+    if (eventContext) {
+      eventContext.onEvent({
+        type: "phase",
+        stepId,
+        traceId: eventContext.traceId,
+        phase: "check",
+        status: "end",
+      });
+    }
+  };
+
   if (checkFailed) {
     pushState({ isChecking: false });
+    completeCheckPhase();
     return { state: currentState, newVars: finalVars };
   }
 
   if (isComplete) {
+    const newVars = checkData ?? {};
     pushState({ isChecking: false });
-    return { state: currentState, newVars: checkData ?? {} };
+    completeCheckPhase();
+    return { state: currentState, newVars };
   }
 
   if (execute) {
@@ -309,14 +348,6 @@ async function processUndoStep<T extends StepIdValue>(
   const addLog = (entry: StepLogEntry) => {
     logs = appendLog(entry, vars, logs);
     logDev(entry, vars);
-    if (eventContext) {
-      eventContext.onEvent({
-        type: "log",
-        stepId,
-        traceId: eventContext.traceId,
-        entry,
-      });
-    }
     pushState({});
   };
 

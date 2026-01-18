@@ -3,13 +3,13 @@ import { z } from "zod";
 
 export const testEnv = createEnv({
   server: {
-    AUTH_SECRET: z.string(),
-    GOOGLE_OAUTH_CLIENT_ID: z.string(),
-    GOOGLE_OAUTH_CLIENT_SECRET: z.string(),
-    MICROSOFT_OAUTH_CLIENT_ID: z.string(),
-    MICROSOFT_OAUTH_CLIENT_SECRET: z.string(),
-    TEST_GOOGLE_REFRESH_TOKEN: z.string(),
-    TEST_MS_REFRESH_TOKEN: z.string(),
+    AUTH_SECRET: z.string().optional(),
+    GOOGLE_OAUTH_CLIENT_ID: z.string().optional(),
+    GOOGLE_OAUTH_CLIENT_SECRET: z.string().optional(),
+    MICROSOFT_OAUTH_CLIENT_ID: z.string().optional(),
+    MICROSOFT_OAUTH_CLIENT_SECRET: z.string().optional(),
+    TEST_GOOGLE_REFRESH_TOKEN: z.string().optional(),
+    TEST_MS_REFRESH_TOKEN: z.string().optional(),
     TEST_DOMAIN: z.string().default("test.example.com"),
   },
   runtimeEnv: {

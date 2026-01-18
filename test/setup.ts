@@ -40,7 +40,16 @@ const applyEnvFile = () => {
   }
 };
 
+const applyEnvDefaults = () => {
+  process.env.AUTH_SECRET ??= "test-secret";
+  process.env.GOOGLE_OAUTH_CLIENT_ID ??= "test-google-client-id";
+  process.env.GOOGLE_OAUTH_CLIENT_SECRET ??= "test-google-client-secret";
+  process.env.MICROSOFT_OAUTH_CLIENT_ID ??= "test-microsoft-client-id";
+  process.env.MICROSOFT_OAUTH_CLIENT_SECRET ??= "test-microsoft-client-secret";
+};
+
 applyEnvFile();
+applyEnvDefaults();
 const { testEnv } = await import("@/env.test");
 
 const fetchWithTimeout = async (url: string, options: RequestInit) => {
@@ -88,6 +97,9 @@ const refreshToken = async (provider: "google" | "microsoft") => {
     provider === "google"
       ? testEnv.TEST_GOOGLE_REFRESH_TOKEN
       : testEnv.TEST_MS_REFRESH_TOKEN;
+  if (!refreshTokenEnv) {
+    return null;
+  }
   const tokenUrl =
     provider === "google"
       ? ApiEndpoint.GoogleAuth.Token
@@ -100,6 +112,9 @@ const refreshToken = async (provider: "google" | "microsoft") => {
     provider === "google"
       ? testEnv.GOOGLE_OAUTH_CLIENT_SECRET
       : testEnv.MICROSOFT_OAUTH_CLIENT_SECRET;
+  if (!(clientId && clientSecret)) {
+    return null;
+  }
   const params = new URLSearchParams({
     client_id: clientId,
     client_secret: clientSecret,

@@ -7,7 +7,9 @@ import { readFileSync } from "node:fs";
 import { z } from "zod";
 import { ApiEndpoint } from "@/constants";
 
-// Set tokens from .env.test if not already set
+/**
+ * Load bearer tokens from .env.test if unset.
+ */
 if (
   !(process.env.TEST_GOOGLE_BEARER_TOKEN && process.env.TEST_MS_BEARER_TOKEN)
 ) {
@@ -24,7 +26,7 @@ if (
       }
     }
   } catch {
-    // ignore
+    // ignore missing env file
   }
 }
 
@@ -64,7 +66,6 @@ export async function cleanupGoogleEnvironment() {
       .optional(),
   });
 
-  // 1. Delete any test service users
   try {
     const res = await fetch(
       `${ApiEndpoint.Google.Users}?domain=${TEST_DOMAIN}&query=email:${TEST_PREFIX}azuread-provisioning-*`,
@@ -81,10 +82,9 @@ export async function cleanupGoogleEnvironment() {
       );
     }
   } catch {
-    // ignore
+    // ignore cleanup errors
   }
 
-  // 2. Delete test Automation OUs
   try {
     const res = await fetch(`${ApiEndpoint.Google.OrgUnits}?type=all`, {
       headers: { Authorization: `Bearer ${GOOGLE_TOKEN}` },
@@ -102,10 +102,9 @@ export async function cleanupGoogleEnvironment() {
       }
     }
   } catch {
-    // ignore
+    // ignore cleanup errors
   }
 
-  // 3. Remove custom admin roles
   const rolesRes = await fetch(ApiEndpoint.Google.Roles, {
     headers: { Authorization: `Bearer ${GOOGLE_TOKEN}` },
   });
@@ -119,7 +118,6 @@ export async function cleanupGoogleEnvironment() {
     }
   }
 
-  // 4. Delete ALL test SAML profiles
   const samlRes = await fetch(ApiEndpoint.Google.SsoProfiles, {
     headers: { Authorization: `Bearer ${GOOGLE_TOKEN}` },
   });
@@ -144,17 +142,16 @@ export async function cleanupGoogleEnvironment() {
   console.log("\u2705 Google environment cleaned");
 }
 const PROTECTED_APP_IDS = [
-  "28f2e988-0021-4521-b215-202dc300de38", // From .env.local
-  "da8790bf-7b6d-457d-9f8d-a3c073b97070", // From .env.test
+  "28f2e988-0021-4521-b215-202dc300de38",
+  "da8790bf-7b6d-457d-9f8d-a3c073b97070",
 ];
 
 /**
  * Remove Microsoft Entra resources created by E2E runs.
  */
 export async function cleanupMicrosoftEnvironment() {
-  console.log("\uD83E\uDDF9 Cleaning up Microsoft environment...");
+  console.log("🧹 Cleaning up Microsoft environment...");
 
-  // 1. Find and delete test apps (but protect our auth apps)
   const AppsSchema = z.object({
     value: z
       .array(
@@ -184,7 +181,6 @@ export async function cleanupMicrosoftEnvironment() {
     if (!app.displayName?.startsWith("Test ")) {
       continue;
     }
-    // Skip protected apps
     if (PROTECTED_APP_IDS.includes(app.appId)) {
       console.log(
         `🔒 Skipping protected app: ${app.displayName} (${app.appId})`
@@ -192,7 +188,6 @@ export async function cleanupMicrosoftEnvironment() {
       continue;
     }
 
-    // Find and delete associated service principals
     const spRes = await fetch(
       `${ApiEndpoint.Microsoft.ServicePrincipals}?$filter=appId eq '${app.appId}'`,
       { headers: { Authorization: `Bearer ${MS_TOKEN}` } }
@@ -205,7 +200,6 @@ export async function cleanupMicrosoftEnvironment() {
       });
     }
 
-    // Delete the application
     await fetch(`${ApiEndpoint.Microsoft.Applications}/${app.id}`, {
       method: "DELETE",
       headers: { Authorization: `Bearer ${MS_TOKEN}` },
@@ -214,7 +208,6 @@ export async function cleanupMicrosoftEnvironment() {
     console.log(`🗑️  Deleted test app: ${app.displayName}`);
   }
 
-  // 2. Delete test claims policies
   const policiesRes = await fetch(ApiEndpoint.Microsoft.ClaimsPolicies, {
     headers: { Authorization: `Bearer ${MS_TOKEN}` },
   });

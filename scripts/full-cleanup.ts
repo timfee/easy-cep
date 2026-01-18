@@ -216,7 +216,6 @@ async function cleanupMicrosoftApps() {
     );
     const sps = ServicePrincipalSchema.parse(await spRes.json());
     for (const sp of sps.value ?? []) {
-      // Remove any claims mapping assignments
       const policiesRes = await fetch(
         ApiEndpoint.Microsoft.ReadClaimsPolicy(sp.id),
         { headers: { Authorization: `Bearer ${MS_TOKEN}` } }
@@ -271,6 +270,9 @@ async function cleanupClaimsPolicies() {
   console.log("\u2705 Claims policies removed");
 }
 
+/**
+ * Run full cleanup across Google and Microsoft tenants.
+ */
 export async function fullCleanup() {
   await cleanupGoogleAssignments();
   await cleanupGoogleRoles();

@@ -27,7 +27,7 @@ function applyEnvFile(path: string) {
       }
     }
   } catch {
-    // ignore missing env files
+    return;
   }
 }
 
@@ -132,6 +132,9 @@ async function deleteGoogleProjects(token: string, threshold: string) {
   }
 }
 
+/**
+ * Load env and delete recent apps/projects.
+ */
 async function main() {
   applyEnvFile(".env.test");
 
