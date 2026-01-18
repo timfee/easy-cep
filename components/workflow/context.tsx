@@ -10,14 +10,19 @@ import {
   useState,
 } from "react";
 import { computeEffectiveStatus } from "@/lib/workflow/core/status";
-import { checkStep, runStep, undoStep } from "@/lib/workflow/engine";
+import {
+  checkStep,
+  runStep,
+  runStepWithEvents,
+  undoStep,
+} from "@/lib/workflow/engine";
 import { STEP_DETAILS } from "@/lib/workflow/step-details";
 import type { StepIdValue } from "@/lib/workflow/step-ids";
 import { StepStatus } from "@/lib/workflow/step-status";
 import { type BasicVarStore, createVarStore } from "@/lib/workflow/var-store";
 import type { VarName, WorkflowVars } from "@/lib/workflow/variables";
 import { WORKFLOW_VARIABLES } from "@/lib/workflow/variables";
-import type { StepDefinition, StepUIState } from "@/types";
+import type { StepDefinition, StepStreamEvent, StepUIState } from "@/types";
 
 interface VarStore extends BasicVarStore {
   set(updates: Partial<WorkflowVars>): void;
@@ -33,6 +38,7 @@ interface WorkflowContextValue {
   steps: StepDefinition[];
   updateVars: (updates: Partial<WorkflowVars>) => void;
   updateStep: (stepId: StepIdValue, state: StepUIState) => void;
+  applyStepEvent: (event: StepStreamEvent) => void;
   executeStep: (stepId: StepIdValue) => Promise<void>;
   undoStep: (stepId: StepIdValue) => Promise<void>;
   checkSteps: () => Promise<void>;
@@ -42,9 +48,6 @@ interface WorkflowContextValue {
 
 const WorkflowContext = createContext<WorkflowContextValue | null>(null);
 
-/**
- * Access workflow state and actions from the provider.
- */
 export function useWorkflow() {
   const context = useContext(WorkflowContext);
   if (!context) {
@@ -59,9 +62,6 @@ interface WorkflowProviderProps {
   initialVars?: Partial<WorkflowVars>;
 }
 
-/**
- * Provide workflow data, actions, and session state.
- */
 export function WorkflowProvider({
   children,
   steps,
@@ -78,9 +78,11 @@ export function WorkflowProvider({
   const [executing, setExecuting] = useState<StepIdValue | null>(null);
   const [sessionLoaded, setSessionLoaded] = useState(false);
   const checkedSteps = useRef(new Set<StepIdValue>());
+  const inflightChecks = useRef(new Set<StepIdValue>());
   const listeners = useRef<Map<VarName, Set<(value: unknown) => void>>>(
     new Map()
   );
+  const debouncedCheckTimeout = useRef<number | null>(null);
 
   useEffect(() => {
     setSessionLoaded(true);
@@ -169,6 +171,69 @@ export function WorkflowProvider({
     []
   );
 
+  const applyStepEvent = useCallback(
+    (event: StepStreamEvent) => {
+      const stepId = event.stepId;
+      if (event.type === "vars") {
+        updateVars(event.vars);
+        return;
+      }
+
+      if (event.type === "complete") {
+        updateStep(stepId, event.state);
+        updateVars(event.newVars);
+        return;
+      }
+
+      if (event.type === "phase") {
+        setStatus((prev) => {
+          const current = prev[stepId] ?? { status: StepStatus.Ready };
+          const phaseUpdates =
+            event.phase === "check"
+              ? { isChecking: event.status === "start" }
+              : { isExecuting: event.status === "start" };
+          const next = { ...current, ...phaseUpdates };
+          statusRef.current = { ...statusRef.current, [stepId]: next };
+          return { ...prev, [stepId]: next };
+        });
+        return;
+      }
+
+      if (event.type === "log") {
+        setStatus((prev) => {
+          const current = prev[stepId] ?? { status: StepStatus.Ready };
+          const logs = current.logs
+            ? [...current.logs, event.entry]
+            : [event.entry];
+          const next = { ...current, logs };
+          statusRef.current = { ...statusRef.current, [stepId]: next };
+          return { ...prev, [stepId]: next };
+        });
+        return;
+      }
+
+      if (event.type === "lro") {
+        setStatus((prev) => {
+          const current = prev[stepId] ?? { status: StepStatus.Ready };
+          const next = { ...current, lro: event.lro };
+          statusRef.current = { ...statusRef.current, [stepId]: next };
+          return { ...prev, [stepId]: next };
+        });
+        return;
+      }
+
+      if (event.type === "state") {
+        setStatus((prev) => {
+          const current = prev[stepId] ?? { status: StepStatus.Ready };
+          const next = { ...current, ...event.state };
+          statusRef.current = { ...statusRef.current, [stepId]: next };
+          return { ...prev, [stepId]: next };
+        });
+      }
+    },
+    [updateStep, updateVars]
+  );
+
   const executeStep = useCallback(
     async (id: StepIdValue) => {
       const step = steps.find((workflowStep) => workflowStep.id === id);
@@ -200,21 +265,27 @@ export function WorkflowProvider({
       });
 
       try {
-        const result = await runStep(id, vars);
-        updateStep(id, result.state);
-        updateVars(result.newVars);
-      } catch (error) {
-        console.error("Failed to run step:", error);
-        updateStep(id, {
-          status: StepStatus.Blocked,
-          error:
-            error instanceof Error ? error.message : "Unknown error occurred",
-        });
+        await runStepWithEvents(id, vars, applyStepEvent);
+      } catch (_error) {
+        try {
+          const fallback = await runStep(id, vars);
+          updateStep(id, fallback.state);
+          updateVars(fallback.newVars);
+        } catch (fallbackError) {
+          console.error("Failed to run step:", fallbackError);
+          updateStep(id, {
+            status: StepStatus.Blocked,
+            error:
+              fallbackError instanceof Error
+                ? fallbackError.message
+                : "Unknown error occurred",
+          });
+        }
       } finally {
         setExecuting(null);
       }
     },
-    [steps, vars, updateStep, updateVars]
+    [steps, vars, updateStep, updateVars, applyStepEvent]
   );
 
   const undoStepAction = useCallback(
@@ -257,6 +328,7 @@ export function WorkflowProvider({
       const current = status[step.id];
       if (
         checkedSteps.current.has(step.id) ||
+        inflightChecks.current.has(step.id) ||
         (current?.status === StepStatus.Complete && current.logs?.length)
       ) {
         continue;
@@ -266,26 +338,39 @@ export function WorkflowProvider({
       }
 
       checkedSteps.current.add(step.id);
+      inflightChecks.current.add(step.id);
       updateStep(step.id, {
         status: statusRef.current[step.id]?.status ?? StepStatus.Ready,
         isChecking: true,
       });
 
-      const result = await checkStep(step.id, vars);
-      updateStep(step.id, result.state);
+      try {
+        const result = await checkStep(step.id, vars);
+        updateStep(step.id, result.state);
 
-      if (Object.keys(result.newVars).length > 0) {
-        updateVars(result.newVars);
+        if (Object.keys(result.newVars).length > 0) {
+          updateVars(result.newVars);
+        }
+      } finally {
+        inflightChecks.current.delete(step.id);
       }
     }
   }, [vars, steps, status, updateStep, updateVars]);
 
   useEffect(() => {
-    const timeoutId = setTimeout(() => {
-      checkSteps();
-    }, 100);
+    if (debouncedCheckTimeout.current) {
+      clearTimeout(debouncedCheckTimeout.current);
+    }
 
-    return () => clearTimeout(timeoutId);
+    debouncedCheckTimeout.current = window.setTimeout(() => {
+      checkSteps();
+    }, 200);
+
+    return () => {
+      if (debouncedCheckTimeout.current) {
+        clearTimeout(debouncedCheckTimeout.current);
+      }
+    };
   }, [checkSteps]);
 
   const effectiveStatus = useMemo(() => {
@@ -315,6 +400,7 @@ export function WorkflowProvider({
     steps,
     updateVars,
     updateStep,
+    applyStepEvent,
     executeStep,
     undoStep: undoStepAction,
     checkSteps,

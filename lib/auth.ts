@@ -122,8 +122,12 @@ const microsoftOAuthConfig: OAuthConfig = {
   clientId: env.MICROSOFT_OAUTH_CLIENT_ID,
   clientSecret: env.MICROSOFT_OAUTH_CLIENT_SECRET,
   redirectUri: "/api/auth/callback/microsoft",
-  authorizationUrl: ApiEndpoint.MicrosoftAuth.Authorize,
-  tokenUrl: ApiEndpoint.MicrosoftAuth.Token,
+  authorizationUrl: ApiEndpoint.MicrosoftAuth.Authorize(
+    env.MICROSOFT_TENANT ?? "organizations"
+  ),
+  tokenUrl: ApiEndpoint.MicrosoftAuth.Token(
+    env.MICROSOFT_TENANT ?? "organizations"
+  ),
   scopes: [
     "openid",
     "profile",
@@ -204,6 +208,16 @@ export function generateAuthUrl(
   if (provider === PROVIDERS.GOOGLE) {
     params.set("access_type", "offline");
     params.set("prompt", "consent");
+    if (env.GOOGLE_HD_DOMAIN) {
+      params.set("hd", env.GOOGLE_HD_DOMAIN);
+    }
+  }
+  if (
+    provider === PROVIDERS.MICROSOFT &&
+    env.MICROSOFT_TENANT &&
+    env.MICROSOFT_TENANT.includes(".")
+  ) {
+    params.set("domain_hint", env.MICROSOFT_TENANT);
   }
   return `${config.authorizationUrl}?${params.toString()}`;
 }

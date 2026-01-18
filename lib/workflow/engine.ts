@@ -75,10 +75,82 @@ function logDev(entry: StepLogEntry, vars: Partial<WorkflowVars>) {
   console.debug("[workflow]", payload);
 }
 
+type StepEventContext =
+  | {
+      stepId: StepIdValue;
+      traceId: string;
+      onEvent: (event: StepStreamEvent) => void;
+    }
+  | undefined;
+
+function emitPhaseEvent(
+  context: StepEventContext,
+  phase: "check" | "execute",
+  status: "start" | "end"
+) {
+  if (!context) {
+    return;
+  }
+  context.onEvent({
+    type: "phase",
+    stepId: context.stepId,
+    traceId: context.traceId,
+    phase,
+    status,
+  });
+}
+
+function emitVarsEvent(context: StepEventContext, data: Partial<WorkflowVars>) {
+  if (!context || Object.keys(data).length === 0) {
+    return;
+  }
+  context.onEvent({
+    type: "vars",
+    stepId: context.stepId,
+    traceId: context.traceId,
+    vars: data,
+  });
+}
+
+function emitStateEvent(context: StepEventContext, data: Partial<StepUIState>) {
+  if (!context) {
+    return;
+  }
+  context.onEvent({
+    type: "state",
+    stepId: context.stepId,
+    traceId: context.traceId,
+    state: data,
+  });
+}
+
+function emitLogEvent(context: StepEventContext, entry: StepLogEntry) {
+  if (!context) {
+    return;
+  }
+  context.onEvent({
+    type: "log",
+    stepId: context.stepId,
+    traceId: context.traceId,
+    entry,
+  });
+}
+
+function emitLroEvent(context: StepEventContext, lro: StepUIState["lro"]) {
+  if (!(context && lro)) {
+    return;
+  }
+  context.onEvent({
+    type: "lro",
+    stepId: context.stepId,
+    traceId: context.traceId,
+    lro,
+  });
+}
+
 /**
  * Run a step through check and optional execute phases.
  */
-// biome-ignore lint: workflow state machine orchestration
 async function processStep<T extends StepIdValue>(
   stepId: T,
   vars: Partial<WorkflowVars>,
@@ -94,16 +166,13 @@ async function processStep<T extends StepIdValue>(
   let currentState: StepUIState = { status: StepStatus.Ready, logs };
   let finalVars: Partial<WorkflowVars> = {};
 
+  const eventMeta = eventContext
+    ? { stepId, traceId: eventContext.traceId, onEvent: eventContext.onEvent }
+    : undefined;
+
   const pushState = (data: Partial<StepUIState>) => {
     currentState = { ...currentState, ...data, logs };
-    if (eventContext) {
-      eventContext.onEvent({
-        type: "state",
-        stepId,
-        traceId: eventContext.traceId,
-        state: data,
-      });
-    }
+    emitStateEvent(eventMeta, data);
   };
 
   const recordLro = (lro: LROMetadata) => {
@@ -118,14 +187,7 @@ async function processStep<T extends StepIdValue>(
         ...currentState,
         lro: nextLro,
       };
-      if (eventContext) {
-        eventContext.onEvent({
-          type: "lro",
-          stepId,
-          traceId: eventContext.traceId,
-          lro: nextLro,
-        });
-      }
+      emitLroEvent(eventMeta, nextLro);
     }
   };
 
@@ -137,14 +199,7 @@ async function processStep<T extends StepIdValue>(
     }
     logs = nextLogs;
     logDev(sanitizedEntry, vars);
-    if (eventContext) {
-      eventContext.onEvent({
-        type: "log",
-        stepId,
-        traceId: eventContext.traceId,
-        entry: sanitizedEntry,
-      });
-    }
+    emitLogEvent(eventMeta, sanitizedEntry);
     pushState({});
   };
 
@@ -165,15 +220,7 @@ async function processStep<T extends StepIdValue>(
     },
   };
 
-  if (eventContext) {
-    eventContext.onEvent({
-      type: "phase",
-      stepId,
-      traceId: eventContext.traceId,
-      phase: "check",
-      status: "start",
-    });
-  }
+  emitPhaseEvent(eventMeta, "check", "start");
   pushState({ isChecking: true });
 
   type CheckType =
@@ -191,6 +238,7 @@ async function processStep<T extends StepIdValue>(
       markComplete: (data: CheckType) => {
         checkData = data;
         isComplete = true;
+        emitVarsEvent(eventMeta, data);
         pushState({
           status: StepStatus.Complete,
           summary: "Step already complete",
@@ -226,15 +274,7 @@ async function processStep<T extends StepIdValue>(
   }
 
   const completeCheckPhase = () => {
-    if (eventContext) {
-      eventContext.onEvent({
-        type: "phase",
-        stepId,
-        traceId: eventContext.traceId,
-        phase: "check",
-        status: "end",
-      });
-    }
+    emitPhaseEvent(eventMeta, "check", "end");
   };
 
   if (checkFailed) {
@@ -250,17 +290,19 @@ async function processStep<T extends StepIdValue>(
     return { state: currentState, newVars };
   }
 
-  if (execute) {
-    pushState({ isExecuting: true });
+  if (!checkData) {
+    pushState({ status: StepStatus.Blocked, error: "Check data missing" });
+    pushState({ isChecking: false });
+    completeCheckPhase();
+    return { state: currentState, newVars: finalVars };
+  }
 
-    if (!checkData) {
-      pushState({
-        status: StepStatus.Blocked,
-        error: "Check data missing for execution",
-      });
-      pushState({ isExecuting: false });
-      return { state: currentState, newVars: finalVars };
-    }
+  emitVarsEvent(eventMeta, checkData);
+  completeCheckPhase();
+
+  if (execute) {
+    emitPhaseEvent(eventMeta, "execute", "start");
+    pushState({ isExecuting: true });
 
     try {
       await step.execute({
@@ -269,6 +311,7 @@ async function processStep<T extends StepIdValue>(
         checkData,
         markSucceeded: (newVars: Partial<WorkflowVars>) => {
           finalVars = newVars;
+          emitVarsEvent(eventMeta, newVars);
           pushState({ status: StepStatus.Complete, summary: "Succeeded" });
         },
         markFailed: (error: string) => {
@@ -286,7 +329,10 @@ async function processStep<T extends StepIdValue>(
           (error instanceof Error ? error.message : "Unknown error"),
       });
     }
+    emitPhaseEvent(eventMeta, "execute", "end");
   }
+
+  emitVarsEvent(eventMeta, finalVars);
   pushState({ isChecking: false, isExecuting: false });
   return { state: currentState, newVars: finalVars };
 }
@@ -299,6 +345,23 @@ export async function runStep<T extends StepIdValue>(
   vars: Partial<WorkflowVars>
 ): Promise<{ state: StepUIState; newVars: Partial<WorkflowVars> }> {
   return await processStep(stepId, vars, true);
+}
+
+export async function runStepWithEvents<T extends StepIdValue>(
+  stepId: T,
+  vars: Partial<WorkflowVars>,
+  onEvent: (event: StepStreamEvent) => void
+): Promise<{ state: StepUIState; newVars: Partial<WorkflowVars> }> {
+  const traceId = crypto.randomUUID();
+  const result = await processStep(stepId, vars, true, { traceId, onEvent });
+  onEvent({
+    type: "complete",
+    stepId,
+    traceId,
+    state: result.state,
+    newVars: result.newVars,
+  });
+  return result;
 }
 
 /**

@@ -10,7 +10,7 @@
     "lint": "bun x ultracite check",
     "start": "bun x next start",
     "test": "bun test",
-    "tokens:generate": "bun x tsx scripts/generate-refresh-tokens.ts",
+    "tokens:generate": "bun run scripts/generate-refresh-tokens.ts",
     "cleanup:apps": "bun x tsx scripts/cleanup-apps.ts",
     "e2e:setup": "bun x tsx scripts/e2e-setup.ts",
     "e2e:cleanup": "bun x tsx scripts/full-cleanup.ts",

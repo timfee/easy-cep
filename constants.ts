@@ -76,9 +76,10 @@ export const ApiEndpoint = {
     Me: "https://graph.microsoft.com/v1.0/me",
   },
   MicrosoftAuth: {
-    Authorize:
-      "https://login.microsoftonline.com/organizations/oauth2/v2.0/authorize",
-    Token: "https://login.microsoftonline.com/organizations/oauth2/v2.0/token",
+    Authorize: (tenant: string) =>
+      `https://login.microsoftonline.com/${tenant}/oauth2/v2.0/authorize`,
+    Token: (tenant: string) =>
+      `https://login.microsoftonline.com/${tenant}/oauth2/v2.0/token`,
   },
 };
 

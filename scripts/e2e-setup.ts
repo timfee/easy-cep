@@ -3,41 +3,20 @@
  * Run with: bun x tsx scripts/e2e-setup.ts
  */
 
-import { readFileSync } from "node:fs";
 import { z } from "zod";
 import { ApiEndpoint } from "@/constants";
 
-/**
- * Load bearer tokens from .env.test if unset.
- */
-if (
-  !(process.env.TEST_GOOGLE_BEARER_TOKEN && process.env.TEST_MS_BEARER_TOKEN)
-) {
-  try {
-    const envTest = readFileSync(".env.test", "utf8");
-    for (const line of envTest.split("\n")) {
-      const match = line.match(/^([^=]+)=(.*)$/);
-      if (match) {
-        const key = match[1].trim();
-        const value = match[2].trim();
-        if (!process.env[key]) {
-          process.env[key] = value;
-        }
-      }
-    }
-  } catch {
-    // ignore missing env file
+const getBearerTokens = () => {
+  const googleToken = process.env.TEST_GOOGLE_BEARER_TOKEN;
+  const msToken = process.env.TEST_MS_BEARER_TOKEN;
+  if (!(googleToken && msToken)) {
+    throw new Error(
+      "Missing TEST_GOOGLE_BEARER_TOKEN or TEST_MS_BEARER_TOKEN; run bun run tokens:generate and then bun test with RUN_E2E=1."
+    );
   }
-}
+  return { googleToken, msToken };
+};
 
-const GOOGLE_TOKEN = process.env.TEST_GOOGLE_BEARER_TOKEN;
-const MS_TOKEN = process.env.TEST_MS_BEARER_TOKEN;
-
-if (!(GOOGLE_TOKEN && MS_TOKEN)) {
-  throw new Error(
-    "Missing TEST_GOOGLE_BEARER_TOKEN or TEST_MS_BEARER_TOKEN in environment."
-  );
-}
 const TEST_DOMAIN = process.env.TEST_DOMAIN || "test.example.com";
 const TEST_PREFIX = "test-";
 
@@ -45,7 +24,8 @@ const TEST_PREFIX = "test-";
  * Remove Google Workspace resources created by E2E runs.
  */
 export async function cleanupGoogleEnvironment() {
-  console.log("\uD83E\uDDF9 Cleaning up Google environment...");
+  console.log("🧹 Cleaning up Google environment...");
+  const { googleToken } = getBearerTokens();
 
   const UsersSchema = z.object({
     users: z.array(z.object({ primaryEmail: z.string() })).optional(),
@@ -69,7 +49,7 @@ export async function cleanupGoogleEnvironment() {
   try {
     const res = await fetch(
       `${ApiEndpoint.Google.Users}?domain=${TEST_DOMAIN}&query=email:${TEST_PREFIX}azuread-provisioning-*`,
-      { headers: { Authorization: `Bearer ${GOOGLE_TOKEN}` } }
+      { headers: { Authorization: `Bearer ${googleToken}` } }
     );
     const data = UsersSchema.parse(await res.json());
     for (const user of data.users ?? []) {
@@ -77,7 +57,7 @@ export async function cleanupGoogleEnvironment() {
         `${ApiEndpoint.Google.Users}/${encodeURIComponent(user.primaryEmail)}`,
         {
           method: "DELETE",
-          headers: { Authorization: `Bearer ${GOOGLE_TOKEN}` },
+          headers: { Authorization: `Bearer ${googleToken}` },
         }
       );
     }
@@ -87,7 +67,7 @@ export async function cleanupGoogleEnvironment() {
 
   try {
     const res = await fetch(`${ApiEndpoint.Google.OrgUnits}?type=all`, {
-      headers: { Authorization: `Bearer ${GOOGLE_TOKEN}` },
+      headers: { Authorization: `Bearer ${googleToken}` },
     });
     const data = OrgUnitsSchema.parse(await res.json());
     for (const ou of data.organizationUnits ?? []) {
@@ -96,7 +76,7 @@ export async function cleanupGoogleEnvironment() {
           `${ApiEndpoint.Google.OrgUnits}/${encodeURIComponent(ou.orgUnitPath)}`,
           {
             method: "DELETE",
-            headers: { Authorization: `Bearer ${GOOGLE_TOKEN}` },
+            headers: { Authorization: `Bearer ${googleToken}` },
           }
         );
       }
@@ -106,20 +86,20 @@ export async function cleanupGoogleEnvironment() {
   }
 
   const rolesRes = await fetch(ApiEndpoint.Google.Roles, {
-    headers: { Authorization: `Bearer ${GOOGLE_TOKEN}` },
+    headers: { Authorization: `Bearer ${googleToken}` },
   });
   const roles = RolesSchema.parse(await rolesRes.json());
   for (const role of roles.items ?? []) {
     if (role.roleName?.startsWith("Test Microsoft Entra Provisioning")) {
       await fetch(`${ApiEndpoint.Google.Roles}/${role.roleId}`, {
         method: "DELETE",
-        headers: { Authorization: `Bearer ${GOOGLE_TOKEN}` },
+        headers: { Authorization: `Bearer ${googleToken}` },
       });
     }
   }
 
   const samlRes = await fetch(ApiEndpoint.Google.SsoProfiles, {
-    headers: { Authorization: `Bearer ${GOOGLE_TOKEN}` },
+    headers: { Authorization: `Bearer ${googleToken}` },
   });
   const samlData = SamlSchema.parse(await samlRes.json());
   for (const profile of samlData.inboundSamlSsoProfiles ?? []) {
@@ -127,7 +107,7 @@ export async function cleanupGoogleEnvironment() {
       try {
         await fetch(ApiEndpoint.Google.SamlProfile(profile.name), {
           method: "DELETE",
-          headers: { Authorization: `Bearer ${GOOGLE_TOKEN}` },
+          headers: { Authorization: `Bearer ${googleToken}` },
         });
         console.log(`🗑️ Deleted SAML profile: ${profile.displayName}`);
       } catch (error) {
@@ -151,6 +131,7 @@ const PROTECTED_APP_IDS = [
  */
 export async function cleanupMicrosoftEnvironment() {
   console.log("🧹 Cleaning up Microsoft environment...");
+  const { msToken } = getBearerTokens();
 
   const AppsSchema = z.object({
     value: z
@@ -173,7 +154,7 @@ export async function cleanupMicrosoftEnvironment() {
   });
 
   const appsRes = await fetch(ApiEndpoint.Microsoft.Applications, {
-    headers: { Authorization: `Bearer ${MS_TOKEN}` },
+    headers: { Authorization: `Bearer ${msToken}` },
   });
   const apps = AppsSchema.parse(await appsRes.json());
 
@@ -190,26 +171,26 @@ export async function cleanupMicrosoftEnvironment() {
 
     const spRes = await fetch(
       `${ApiEndpoint.Microsoft.ServicePrincipals}?$filter=appId eq '${app.appId}'`,
-      { headers: { Authorization: `Bearer ${MS_TOKEN}` } }
+      { headers: { Authorization: `Bearer ${msToken}` } }
     );
     const sps = ServicePrincipalSchema.parse(await spRes.json());
     for (const sp of sps.value ?? []) {
       await fetch(`${ApiEndpoint.Microsoft.ServicePrincipals}/${sp.id}`, {
         method: "DELETE",
-        headers: { Authorization: `Bearer ${MS_TOKEN}` },
+        headers: { Authorization: `Bearer ${msToken}` },
       });
     }
 
     await fetch(`${ApiEndpoint.Microsoft.Applications}/${app.id}`, {
       method: "DELETE",
-      headers: { Authorization: `Bearer ${MS_TOKEN}` },
+      headers: { Authorization: `Bearer ${msToken}` },
     });
 
     console.log(`🗑️  Deleted test app: ${app.displayName}`);
   }
 
   const policiesRes = await fetch(ApiEndpoint.Microsoft.ClaimsPolicies, {
-    headers: { Authorization: `Bearer ${MS_TOKEN}` },
+    headers: { Authorization: `Bearer ${msToken}` },
   });
   const policies = PoliciesSchema.parse(await policiesRes.json());
   for (const policy of policies.value ?? []) {
@@ -218,7 +199,7 @@ export async function cleanupMicrosoftEnvironment() {
     }
     await fetch(`${ApiEndpoint.Microsoft.ClaimsPolicies}/${policy.id}`, {
       method: "DELETE",
-      headers: { Authorization: `Bearer ${MS_TOKEN}` },
+      headers: { Authorization: `Bearer ${msToken}` },
     });
     console.log(`🗑️  Deleted claims policy: ${policy.displayName}`);
   }
