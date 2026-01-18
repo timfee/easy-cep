@@ -24,6 +24,9 @@ interface StepApiCallsProps {
   stepId: string;
 }
 
+/**
+ * Display the API calls associated with a workflow step.
+ */
 export function StepApiCalls({ stepId }: StepApiCallsProps) {
   const apiTemplates = stepApiMetadata[stepId] || [];
 
@@ -108,6 +111,9 @@ export function StepApiCalls({ stepId }: StepApiCallsProps) {
   );
 }
 
+/**
+ * Known API calls mapped to each workflow step.
+ */
 export const stepApiMetadata: Record<StepIdValue, ApiCallMetadata[]> = {
   "verify-primary-domain": [
     {
@@ -240,7 +246,7 @@ export const stepApiMetadata: Record<StepIdValue, ApiCallMetadata[]> = {
       endpoint:
         "/graph/v1.0/servicePrincipals/{provisioningServicePrincipalId}/synchronization/jobs",
       description: "Create sync job",
-      body: { templateId: "gsuite" }, // via SyncTemplates lookup
+      body: { templateId: "gsuite" },
     },
     {
       method: "PUT",

@@ -51,6 +51,9 @@ interface Props {
   executing: boolean;
 }
 
+/**
+ * Main body of a step card with actions and logs.
+ */
 export function StepCardContent({ definition, state, vars, executing }: Props) {
   const actions = useStepCardActions();
   const [logsOpen, setLogsOpen] = useState(false);

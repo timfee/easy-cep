@@ -10,5 +10,7 @@
 
 - Node scripts are written in TypeScript and run with `bun x tsx`.
 - Scripts expect bearer tokens via environment variables or token files.
+  Refresh tokens may be stored in `.env.test` and exchanged for access tokens
+  during test runs.
 - Do not embed real credentials or tenant IDs directly in scripts.
 - Use the constants in `constants.ts` for API endpoints.

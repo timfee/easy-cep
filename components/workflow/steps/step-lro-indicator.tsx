@@ -8,6 +8,9 @@ interface StepLROIndicatorProps {
   operationType?: string;
 }
 
+/**
+ * Display progress for long-running workflow operations.
+ */
 export function StepLROIndicator({
   startTime,
   estimatedDuration,

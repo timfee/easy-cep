@@ -28,6 +28,9 @@ interface StepCardProps {
   };
 }
 
+/**
+ * Expandable card that renders a workflow step.
+ */
 export const StepCard = memo(function StepCard({
   index,
   definition,

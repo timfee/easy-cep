@@ -15,8 +15,7 @@ interface StepVariablesProps {
   vars: Partial<WorkflowVars>;
   onChange: (key: VarName, value: unknown) => void;
   /**
-   * List of variables that are currently missing and should be highlighted
-   * in the UI.
+   * Variable names that are missing required values.
    */
   missing?: VarName[];
 }
@@ -85,6 +84,9 @@ function VariableItem({
   );
 }
 
+/**
+ * Show required and provided variables for a step.
+ */
 export function StepVariables({
   stepId,
   vars,
@@ -128,7 +130,6 @@ export function StepVariables({
 
   return (
     <div className="grid w-full gap-3 text-left md:grid-cols-2">
-      {/* Requires Column */}
       <div className="flex-1 space-y-3 rounded-lg border border-border/60 bg-muted/30 p-4">
         <h4 className="mb-3 font-semibold text-foreground text-sm">Requires</h4>
         {requiredVars.length > 0 ? (
@@ -151,7 +152,6 @@ export function StepVariables({
         )}
       </div>
 
-      {/* Provides Column */}
       <div className="flex-1 space-y-3 rounded-lg border border-border/60 bg-muted/30 p-4">
         <h4 className="mb-3 font-semibold text-foreground text-sm">Provides</h4>
         {providedVars.length > 0 ? (

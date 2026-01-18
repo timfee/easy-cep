@@ -9,6 +9,9 @@ interface StepLogsProps {
   logs: StepLogEntry[] | undefined;
 }
 
+/**
+ * Render a scrollable list of step logs.
+ */
 export function StepLogs({ logs }: StepLogsProps) {
   const scrollAreaRef = useRef<HTMLDivElement | null>(null);
 

@@ -13,8 +13,14 @@ interface StepCardActions {
 
 const StepCardContext = createContext<StepCardActions | null>(null);
 
+/**
+ * Provider that supplies step card actions.
+ */
 export const StepCardProvider = StepCardContext.Provider;
 
+/**
+ * Access step card action handlers.
+ */
 export function useStepCardActions() {
   const context = useContext(StepCardContext);
   if (!context) {

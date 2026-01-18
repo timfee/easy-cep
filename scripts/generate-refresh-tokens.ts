@@ -1,11 +1,51 @@
 #!/usr/bin/env bun
+import { readFileSync } from "node:fs";
 import { readFile, writeFile } from "node:fs/promises";
 import { createServer } from "node:http";
 import { PROVIDERS, type Provider } from "@/constants";
-import { exchangeCodeForToken, generateAuthUrl } from "@/lib/auth";
+
+type ExchangeCodeForToken = typeof import("@/lib/auth").exchangeCodeForToken;
+type GenerateAuthUrl = typeof import("@/lib/auth").generateAuthUrl;
 
 const PORT = 3000;
 const HOST = "http://localhost:3000";
+
+const ENV_LINE_REGEX = /^([^=]+)=(.*)$/;
+
+const applyEnvFile = (path: string) => {
+  try {
+    const envFile = readFileSync(path, "utf8");
+    for (const line of envFile.split("\n")) {
+      const match = line.match(ENV_LINE_REGEX);
+      if (!match) {
+        continue;
+      }
+      const key = match[1]?.trim();
+      const value = match[2]?.trim() ?? "";
+      if (key && !process.env[key]) {
+        process.env[key] = value;
+      }
+    }
+  } catch {
+    // ignore missing env files
+  }
+};
+
+const ensureOAuthEnv = () => {
+  const requiredKeys = [
+    "AUTH_SECRET",
+    "GOOGLE_OAUTH_CLIENT_ID",
+    "GOOGLE_OAUTH_CLIENT_SECRET",
+    "MICROSOFT_OAUTH_CLIENT_ID",
+    "MICROSOFT_OAUTH_CLIENT_SECRET",
+  ];
+  const missing = requiredKeys.filter((key) => !process.env[key]);
+  if (missing.length > 0) {
+    throw new Error(
+      `Missing OAuth env vars required for token generation: ${missing.join(", ")}`
+    );
+  }
+};
 
 // These will be resolved when the respective callback is hit
 let onGoogleToken: (token: string) => void;
@@ -147,7 +187,11 @@ async function updateEnvFile(key: string, value: string) {
 }
 
 async function main() {
-  console.log("🚀 Starting Token Generator");
+  applyEnvFile(".env.test");
+  applyEnvFile(".env.local");
+  ensureOAuthEnv();
+
+  console.log("🚀 Starting Refresh Token Generator");
 
   await new Promise<void>((resolve) => server.listen(PORT, resolve));
   console.log(`📡 Listening on ${HOST}`);
@@ -176,8 +220,8 @@ async function main() {
     console.log(`\nClick here:\n${msUrl}\n`);
     console.log("Waiting for Microsoft callback...");
 
-    const msToken = await microsoftAuthPromise;
-    await updateEnvFile("TEST_MS_BEARER_TOKEN", msToken);
+    const msRefreshToken = await microsoftAuthPromise;
+    await updateEnvFile("TEST_MS_REFRESH_TOKEN", msRefreshToken);
 
     console.log("\n✨ All done. Exiting.");
     process.exit(0);

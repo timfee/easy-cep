@@ -18,10 +18,9 @@ import { cn } from "@/lib/utils";
 import { extractPath } from "@/lib/utils/url";
 import type { StepLogEntry } from "@/types";
 
-interface StepLogItemProps {
-  log: StepLogEntry;
-}
-
+/**
+ * Select the icon for a log level.
+ */
 function getLevelIcon(level?: string) {
   switch (level) {
     case "warn":
@@ -35,6 +34,9 @@ function getLevelIcon(level?: string) {
   }
 }
 
+/**
+ * Select the color classes for a log level.
+ */
 function getLevelClasses(level?: string) {
   switch (level) {
     case "warn":
@@ -48,12 +50,22 @@ function getLevelClasses(level?: string) {
   }
 }
 
+/**
+ * Select the color classes for request status.
+ */
 function getMethodClasses(success: boolean) {
   return success
     ? "border-secondary/20 text-secondary"
     : "border-destructive/20 text-destructive";
 }
 
+interface StepLogItemProps {
+  log: StepLogEntry;
+}
+
+/**
+ * Render a single log entry row with expandable details.
+ */
 export function StepLogItem({ log }: StepLogItemProps) {
   const [open, setOpen] = useState(false);
   const time = new Date(log.timestamp).toLocaleTimeString();

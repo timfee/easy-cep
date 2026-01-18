@@ -15,15 +15,9 @@ import type { StepIdValue } from "@/lib/workflow/step-ids";
 import { StepStatus } from "@/lib/workflow/step-status";
 import type { StepUIState } from "@/types";
 
-interface StepCardHeaderProps {
-  index: number;
-  stepId: StepIdValue;
-  state?: StepUIState;
-  executing: boolean;
-  isExpanded: boolean;
-  onToggle: () => void;
-}
-
+/**
+ * Summarize the current execution status for display.
+ */
 function getStatusDescriptor(executing: boolean, state?: StepUIState) {
   if (executing) {
     return "Executing...";
@@ -43,6 +37,9 @@ function getStatusDescriptor(executing: boolean, state?: StepUIState) {
   return state?.summary || "Initializing";
 }
 
+/**
+ * Convert a status value into badge text.
+ */
 function getBadgeText(executing: boolean, status?: string) {
   if (executing) {
     return "Executing";
@@ -59,6 +56,18 @@ function getBadgeText(executing: boolean, status?: string) {
   return "Idle";
 }
 
+interface StepCardHeaderProps {
+  index: number;
+  stepId: StepIdValue;
+  state?: StepUIState;
+  executing: boolean;
+  isExpanded: boolean;
+  onToggle: () => void;
+}
+
+/**
+ * Header row for a step card with status visuals.
+ */
 export function StepCardHeader({
   index,
   stepId,

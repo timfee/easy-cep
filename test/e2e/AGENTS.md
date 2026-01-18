@@ -9,7 +9,9 @@
 - `bun run e2e:live` (live E2E runner)
 
 - Tests require `TEST_GOOGLE_BEARER_TOKEN`, `TEST_MS_BEARER_TOKEN` and
-  `TEST_DOMAIN` environment variables.
+  `TEST_DOMAIN` environment variables. Refresh tokens can be stored as
+  `TEST_GOOGLE_REFRESH_TOKEN` and `TEST_MS_REFRESH_TOKEN` (they are exchanged
+  for bearer tokens during `bun test`).
 - Set `RUN_E2E=1` when invoking `bun test` to enable the live tests.
 - For live runs, you can call `bun run e2e:live` after tokens are set.
 - Fixtures live under `test/e2e/fixtures/`.
