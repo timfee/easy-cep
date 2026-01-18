@@ -1,22 +1,41 @@
 #!/usr/bin/env bun
 import { readFileSync } from "node:fs";
 import { readFile, writeFile } from "node:fs/promises";
-import { createServer } from "node:http";
+import {
+  createServer,
+  type IncomingMessage,
+  type ServerResponse,
+} from "node:http";
 import { PROVIDERS, type Provider } from "@/constants";
 
 type ExchangeCodeForToken = typeof import("@/lib/auth").exchangeCodeForToken;
 type GenerateAuthUrl = typeof import("@/lib/auth").generateAuthUrl;
 
+type ParsedRequest =
+  | { type: "ignore"; pathname: string }
+  | { type: "not-found"; pathname: string }
+  | {
+      type: "error";
+      pathname: string;
+      provider: Provider;
+      error: string;
+    }
+  | { type: "missing-code"; pathname: string; provider: Provider }
+  | { type: "code"; pathname: string; provider: Provider; code: string };
+
 const PORT = 3000;
 const HOST = "http://localhost:3000";
-
 const ENV_LINE_REGEX = /^([^=]+)=(.*)$/;
 
 const applyEnvFile = (path: string) => {
   try {
     const envFile = readFileSync(path, "utf8");
     for (const line of envFile.split("\n")) {
-      const match = line.match(ENV_LINE_REGEX);
+      const trimmed = line.trim();
+      if (!trimmed || trimmed.startsWith("#")) {
+        continue;
+      }
+      const match = trimmed.match(ENV_LINE_REGEX);
       if (!match) {
         continue;
       }
@@ -47,28 +66,6 @@ const ensureOAuthEnv = () => {
   }
 };
 
-// These will be resolved when the respective callback is hit
-let onGoogleToken: (token: string) => void;
-let onMicrosoftToken: (token: string) => void;
-
-const googleAuthPromise = new Promise<string>((resolve) => {
-  onGoogleToken = resolve;
-});
-
-const microsoftAuthPromise = new Promise<string>((resolve) => {
-  onMicrosoftToken = resolve;
-});
-
-const requireRefreshToken = (
-  token: { refreshToken?: string },
-  provider: string
-) => {
-  if (!token.refreshToken) {
-    throw new Error(`Missing refresh token for ${provider}`);
-  }
-  return token.refreshToken;
-};
-
 const loadAuthLib = async () => {
   const auth = await import("@/lib/auth");
   return {
@@ -76,6 +73,11 @@ const loadAuthLib = async () => {
     generateAuthUrl: auth.generateAuthUrl as GenerateAuthUrl,
   };
 };
+
+const normalizePathname = (pathname: string) =>
+  pathname.length > 1 && pathname.endsWith("/")
+    ? pathname.slice(0, -1)
+    : pathname;
 
 const getProviderFromPath = (pathname: string) => {
   if (pathname === `/api/auth/callback/${PROVIDERS.GOOGLE}`) {
@@ -87,53 +89,67 @@ const getProviderFromPath = (pathname: string) => {
   return null;
 };
 
-const normalizePathname = (pathname: string) =>
-  pathname.length > 1 && pathname.endsWith("/")
-    ? pathname.slice(0, -1)
-    : pathname;
+const parseRequest = (req: IncomingMessage): ParsedRequest => {
+  const url = new URL(req.url ?? "/", HOST);
+  const pathname = normalizePathname(url.pathname);
+  if (pathname === "/favicon.ico") {
+    return { type: "ignore", pathname };
+  }
+  const provider = getProviderFromPath(pathname);
+  if (!provider) {
+    return { type: "not-found", pathname };
+  }
+  const error = url.searchParams.get("error");
+  if (error) {
+    return { type: "error", pathname, provider, error };
+  }
+  const code = url.searchParams.get("code");
+  if (!code) {
+    return { type: "missing-code", pathname, provider };
+  }
+  return { type: "code", pathname, provider, code };
+};
 
-const sendHtml = (
-  res: import("node:http").ServerResponse,
-  status: number,
-  body: string
-) => {
+const sendHtml = (res: ServerResponse, status: number, body: string) => {
   res.writeHead(status, { "Content-Type": "text/html" });
   res.end(body);
 };
 
-const sendNotFound = (
-  res: import("node:http").ServerResponse,
-  pathname: string
-) => {
+const sendNotFound = (res: ServerResponse, pathname: string) => {
   res.writeHead(404, { "Content-Type": "text/plain" });
   res.end(
     `Not Found. Expected callback for google or microsoft. Got: ${pathname}`
   );
 };
 
+const requireRefreshToken = (
+  token: { refreshToken?: string },
+  provider: string
+) => {
+  if (!token.refreshToken) {
+    throw new Error(`Missing refresh token for ${provider}`);
+  }
+  return token.refreshToken;
+};
+
 const handleCallback = async (
   helpers: { exchangeCodeForToken: ExchangeCodeForToken },
   provider: Provider,
   code: string,
-  res: import("node:http").ServerResponse
+  res: ServerResponse,
+  onToken: (token: string) => void
 ) => {
   const token = await helpers.exchangeCodeForToken(provider, code, HOST);
   sendHtml(
     res,
     200,
     `<div style="font-family: system-ui, sans-serif; text-align: center; padding: 2rem;">
-          <h1 style="color: green;">Authentication Successful</h1>
-          <p>Received token for <strong>${provider}</strong>.</p>
-          <p>You can close this tab.</p>
-        </div>`
+      <h1 style="color: green;">Authentication Successful</h1>
+      <p>Received token for <strong>${provider}</strong>.</p>
+      <p>You can close this tab.</p>
+    </div>`
   );
-
-  const refreshToken = requireRefreshToken(token, provider);
-  if (provider === PROVIDERS.GOOGLE) {
-    onGoogleToken(refreshToken);
-    return;
-  }
-  onMicrosoftToken(refreshToken);
+  onToken(requireRefreshToken(token, provider));
 };
 
 const createAuthServer = (helpers: {
@@ -141,43 +157,62 @@ const createAuthServer = (helpers: {
 }) =>
   createServer(async (req, res) => {
     try {
-      const url = new URL(req.url || "/", HOST);
-      const pathname = normalizePathname(url.pathname);
+      const parsed = parseRequest(req);
+      if (parsed.type !== "ignore") {
+        console.log(`[Server] ${req.method ?? "GET"} ${parsed.pathname}`);
+      }
 
-      if (pathname === "/favicon.ico") {
+      if (parsed.type === "ignore") {
         res.writeHead(404);
         res.end();
         return;
       }
 
-      console.log(`[Server] ${req.method} ${pathname}`);
-
-      const provider = getProviderFromPath(pathname);
-      if (!provider) {
-        sendNotFound(res, pathname);
+      if (parsed.type === "not-found") {
+        sendNotFound(res, parsed.pathname);
         return;
       }
 
-      const code = url.searchParams.get("code");
-      const error = url.searchParams.get("error");
-
-      if (error) {
-        console.error(`[${provider}] Error from provider:`, error);
-        sendHtml(res, 400, `<h1>Auth Error</h1><p>${error}</p>`);
+      if (parsed.type === "error") {
+        console.error(
+          `[${parsed.provider}] Error from provider:`,
+          parsed.error
+        );
+        sendHtml(res, 400, `<h1>Auth Error</h1><p>${parsed.error}</p>`);
         return;
       }
 
-      if (!code) {
+      if (parsed.type === "missing-code") {
         sendHtml(res, 400, "<h1>Error</h1><p>Missing 'code' parameter.</p>");
         return;
       }
 
-      console.log(`[${provider}] Code received. Exchanging for token...");
+      if (parsed.type !== "code") {
+        res.writeHead(400, { "Content-Type": "text/plain" });
+        res.end("Unsupported request");
+        return;
+      }
 
+      console.log(
+        `[${parsed.provider}] Code received. Exchanging for token...`
+      );
       try {
-        await handleCallback(helpers, provider, code, res);
+        const onToken =
+          parsed.provider === PROVIDERS.GOOGLE
+            ? onGoogleToken
+            : onMicrosoftToken;
+        await handleCallback(
+          helpers,
+          parsed.provider,
+          parsed.code,
+          res,
+          onToken
+        );
       } catch (exchangeError) {
-        console.error(`[${provider}] Token exchange failed:`, exchangeError);
+        console.error(
+          `[${parsed.provider}] Token exchange failed:`,
+          exchangeError
+        );
         sendHtml(
           res,
           500,
@@ -186,12 +221,24 @@ const createAuthServer = (helpers: {
       }
     } catch (err) {
       console.error("[Server] Critical Error:", err);
-if (!res.headersSent) {
-  res.writeHead(500, { "Content-Type": "text/plain" });
-  res.end("Internal Server Error");
-}
-}
-  })
+      if (!res.headersSent) {
+        res.writeHead(500, { "Content-Type": "text/plain" });
+        res.end("Internal Server Error");
+      }
+    }
+  });
+
+// These will be resolved when the respective callback is hit
+let onGoogleToken: (token: string) => void;
+let onMicrosoftToken: (token: string) => void;
+
+const googleAuthPromise = new Promise<string>((resolve) => {
+  onGoogleToken = resolve;
+});
+
+const microsoftAuthPromise = new Promise<string>((resolve) => {
+  onMicrosoftToken = resolve;
+});
 
 async function updateEnvFile(key: string, value: string) {
   const envPath = ".env.test";
@@ -213,7 +260,8 @@ async function updateEnvFile(key: string, value: string) {
   });
 
   if (!found) {
-    if (newLines.length > 0 && newLines.at(-1) !== "") {
+    const lastLine = newLines.at(-1);
+    if (newLines.length > 0 && lastLine !== "") {
       newLines.push("");
     }
     newLines.push(`${key}=${value}`);
@@ -224,8 +272,8 @@ async function updateEnvFile(key: string, value: string) {
 }
 
 async function main() {
-  applyEnvFile(".env.test");
   applyEnvFile(".env.local");
+  applyEnvFile(".env.test");
   ensureOAuthEnv();
 
   const { exchangeCodeForToken, generateAuthUrl } = await loadAuthLib();
@@ -237,7 +285,6 @@ async function main() {
   console.log(`📡 Listening on ${HOST}`);
 
   try {
-    // 1. Google Flow
     const googleState = Math.random().toString(36).substring(7);
     const googleUrl = generateAuthUrl(PROVIDERS.GOOGLE, googleState, HOST);
 
@@ -250,7 +297,6 @@ async function main() {
     const googleRefreshToken = await googleAuthPromise;
     await updateEnvFile("TEST_GOOGLE_REFRESH_TOKEN", googleRefreshToken);
 
-    // 2. Microsoft Flow
     const msState = Math.random().toString(36).substring(7);
     const msUrl = generateAuthUrl(PROVIDERS.MICROSOFT, msState, HOST);
 

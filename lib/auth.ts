@@ -188,9 +188,6 @@ function parseToken(value: unknown): Token | null {
 /**
  * Generate the provider authorization URL.
  */
-/**
- * Generate the provider authorization URL.
- */
 export function generateAuthUrl(
   provider: Provider,
   state: string,
@@ -211,9 +208,6 @@ export function generateAuthUrl(
   return `${config.authorizationUrl}?${params.toString()}`;
 }
 
-/**
- * Exchange an authorization code for an access token.
- */
 /**
  * Exchange an authorization code for an access token.
  */
@@ -255,9 +249,6 @@ export async function exchangeCodeForToken(
 /**
  * Retrieve an encrypted provider token from chunked cookies.
  */
-/**
- * Retrieve an encrypted provider token from chunked cookies.
- */
 export async function getToken(provider: Provider): Promise<Token | null> {
   const cookieName = `${provider}_token`;
   const encrypted = await getChunkedCookie(cookieName);
@@ -272,9 +263,6 @@ export async function getToken(provider: Provider): Promise<Token | null> {
   }
 }
 
-/**
- * Refresh the provider token when nearing expiration.
- */
 /**
  * Refresh the provider token when nearing expiration.
  */
@@ -336,9 +324,6 @@ export async function refreshTokenIfNeeded(
 /**
  * Store an encrypted provider token in chunked cookies.
  */
-/**
- * Store an encrypted provider token in chunked cookies.
- */
 export async function setToken(
   response: NextResponse,
   provider: Provider,
@@ -355,9 +340,6 @@ export async function setToken(
   });
 }
 
-/**
- * Validate the OAuth state stored in chunked cookies.
- */
 /**
  * Validate the OAuth state stored in chunked cookies.
  */
@@ -381,7 +363,6 @@ export async function validateOAuthState(
   }
 }
 
-/** Set a cookie value split into multiple chunks. */
 /**
  * Set a cookie value split into multiple chunks.
  */
@@ -400,7 +381,6 @@ export function setChunkedCookie(
   }
 }
 
-/** Retrieve a value stored via {@link setChunkedCookie}. */
 /**
  * Retrieve a value stored via {@link setChunkedCookie}.
  */
@@ -427,7 +407,6 @@ export async function getChunkedCookie(
   }
 }
 
-/** Clear cookies created via {@link setChunkedCookie}. */
 /**
  * Clear cookies created via {@link setChunkedCookie}.
  */

@@ -1,6 +1,9 @@
 import type { StepIdValue } from "./step-ids";
 import { StepId } from "./step-ids";
 
+/**
+ * Metadata describing a workflow variable.
+ */
 export interface VariableMetadata {
   type: "string" | "boolean";
   category: "auth" | "domain" | "config" | "state";

@@ -32,6 +32,9 @@ const KEEP_MS_APP_IDS = Array.from(
 );
 const SSO_ASSIGNMENT_ID_PATTERN = /^(?:.*\/)?inboundSsoAssignments\//;
 
+/**
+ * Delete inbound SSO assignments from Google.
+ */
 async function cleanupGoogleAssignments() {
   console.log("🧹 Cleaning up Google SSO assignments...");
 
@@ -58,6 +61,9 @@ async function cleanupGoogleAssignments() {
   console.log("✅ Google assignments removed");
 }
 
+/**
+ * Fetch Google admin roles with pagination.
+ */
 async function fetchGoogleRoles(pageToken?: string) {
   const url = new URL(ApiEndpoint.Google.Roles);
   if (pageToken) {
@@ -75,6 +81,9 @@ async function fetchGoogleRoles(pageToken?: string) {
   return RolesSchema.parse(await res.json());
 }
 
+/**
+ * Fetch role assignments for a specific role.
+ */
 async function fetchRoleAssignments(roleId: string, pageToken?: string) {
   const assignUrl = new URL(ApiEndpoint.Google.RoleAssignments);
   assignUrl.searchParams.set("roleId", roleId);
@@ -93,6 +102,9 @@ async function fetchRoleAssignments(roleId: string, pageToken?: string) {
   return AssignSchema.parse(await aRes.json());
 }
 
+/**
+ * Remove role assignments by ID.
+ */
 async function removeRoleAssignments(
   assignments: Array<{ roleAssignmentId: string }>
 ) {
@@ -107,6 +119,9 @@ async function removeRoleAssignments(
   }
 }
 
+/**
+ * Remove role assignments for the provisioning account.
+ */
 async function removeUserRoleAssignments(roleId: string) {
   const userRes = await fetch(
     `${ApiEndpoint.Google.RoleAssignments}?userKey=${encodeURIComponent(PROVISIONING_EMAIL)}`,
@@ -133,6 +148,9 @@ async function removeUserRoleAssignments(roleId: string) {
   }
 }
 
+/**
+ * Remove custom Google admin roles created in tests.
+ */
 async function cleanupGoogleRoles() {
   console.log("🧹 Cleaning up Google admin roles...");
 
@@ -165,6 +183,9 @@ async function cleanupGoogleRoles() {
   console.log("✅ Google roles removed");
 }
 
+/**
+ * Delete Microsoft apps and related service principals.
+ */
 async function cleanupMicrosoftApps() {
   console.log("\uD83E\uDDF9 Cleaning up Microsoft applications...");
 
@@ -226,6 +247,9 @@ async function cleanupMicrosoftApps() {
   console.log("\u2705 Microsoft applications removed");
 }
 
+/**
+ * Remove Microsoft claims policies.
+ */
 async function cleanupClaimsPolicies() {
   console.log("\uD83E\uDDF9 Removing Microsoft claims policies...");
 

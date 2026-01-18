@@ -10,6 +10,9 @@ import { ApiEndpoint } from "@/constants";
 const ENV_LINE_REGEX = /^([^=]+)=(.*)$/;
 const ISO_FRACTION_REGEX = /\.\d{3}Z$/;
 
+/**
+ * Merge env values from a file if unset.
+ */
 function applyEnvFile(path: string) {
   try {
     const envTest = readFileSync(path, "utf8");
@@ -28,6 +31,9 @@ function applyEnvFile(path: string) {
   }
 }
 
+/**
+ * Require a named environment variable.
+ */
 function requireEnv(name: string) {
   const value = process.env[name];
   if (!value) {
@@ -36,10 +42,16 @@ function requireEnv(name: string) {
   return value;
 }
 
+/**
+ * Format a date as UTC without fractional seconds.
+ */
 function formatDateUtc(date: Date) {
   return date.toISOString().replace(ISO_FRACTION_REGEX, "Z");
 }
 
+/**
+ * Delete Microsoft applications created after a threshold.
+ */
 async function deleteMicrosoftApps(token: string, threshold: string) {
   console.log(`# Deleting Microsoft apps created since ${threshold}`);
 
@@ -74,6 +86,9 @@ async function deleteMicrosoftApps(token: string, threshold: string) {
   }
 }
 
+/**
+ * Delete Google projects created after a threshold.
+ */
 async function deleteGoogleProjects(token: string, threshold: string) {
   console.log(`# Deleting Google projects created since ${threshold}`);
 

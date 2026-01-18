@@ -39,6 +39,9 @@ if (!(GOOGLE_TOKEN && MS_TOKEN)) {
 const TEST_DOMAIN = process.env.TEST_DOMAIN || "test.example.com";
 const TEST_PREFIX = "test-";
 
+/**
+ * Remove Google Workspace resources created by E2E runs.
+ */
 export async function cleanupGoogleEnvironment() {
   console.log("\uD83E\uDDF9 Cleaning up Google environment...");
 
@@ -145,6 +148,9 @@ const PROTECTED_APP_IDS = [
   "da8790bf-7b6d-457d-9f8d-a3c073b97070", // From .env.test
 ];
 
+/**
+ * Remove Microsoft Entra resources created by E2E runs.
+ */
 export async function cleanupMicrosoftEnvironment() {
   console.log("\uD83E\uDDF9 Cleaning up Microsoft environment...");
 
@@ -227,6 +233,9 @@ export async function cleanupMicrosoftEnvironment() {
   console.log("\u2705 Microsoft environment cleaned");
 }
 
+/**
+ * Clean Google and Microsoft test resources.
+ */
 export async function setupEnvironment() {
   await cleanupGoogleEnvironment();
   await cleanupMicrosoftEnvironment();

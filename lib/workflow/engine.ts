@@ -10,6 +10,7 @@ import {
   LogLevel,
   type StepCheckContext,
   type StepLogEntry,
+  type StepStreamEvent,
   type StepUIState,
 } from "@/types";
 import { createAuthenticatedFetch } from "./fetch-utils";
@@ -94,6 +95,14 @@ async function processStep<T extends StepIdValue>(
 
   const pushState = (data: Partial<StepUIState>) => {
     currentState = { ...currentState, ...data, logs };
+    if (eventContext) {
+      eventContext.onEvent({
+        type: "state",
+        stepId,
+        traceId: eventContext.traceId,
+        state: data,
+      });
+    }
   };
 
   const recordLro = (lro: LROMetadata) => {
@@ -113,6 +122,14 @@ async function processStep<T extends StepIdValue>(
   const addLog = (entry: StepLogEntry) => {
     logs = appendLog(entry, vars, logs);
     logDev(entry, vars);
+    if (eventContext) {
+      eventContext.onEvent({
+        type: "log",
+        stepId,
+        traceId: eventContext.traceId,
+        entry,
+      });
+    }
     pushState({});
   };
 
@@ -292,6 +309,14 @@ async function processUndoStep<T extends StepIdValue>(
   const addLog = (entry: StepLogEntry) => {
     logs = appendLog(entry, vars, logs);
     logDev(entry, vars);
+    if (eventContext) {
+      eventContext.onEvent({
+        type: "log",
+        stepId,
+        traceId: eventContext.traceId,
+        entry,
+      });
+    }
     pushState({});
   };
 
