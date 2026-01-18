@@ -1,0 +1,2902 @@
+{
+  "statistics": {
+    "detectionDate": "2026-01-18T21:36:11.079Z",
+    "formats": {
+      "typescript": {
+        "sources": {
+          "/Users/feel/Developer/easy-cep/app/api/workflow/steps/[stepId]/stream/route.ts": {
+            "lines": 59,
+            "tokens": 552,
+            "sources": 1,
+            "clones": 0,
+            "duplicatedLines": 0,
+            "duplicatedTokens": 0,
+            "percentage": 0,
+            "percentageTokens": 0,
+            "newDuplicatedLines": 0,
+            "newClones": 0
+          },
+          "/Users/feel/Developer/easy-cep/app/api/auth/signout/[provider]/route.ts": {
+            "lines": 26,
+            "tokens": 220,
+            "sources": 1,
+            "clones": 0,
+            "duplicatedLines": 0,
+            "duplicatedTokens": 0,
+            "percentage": 0,
+            "percentageTokens": 0,
+            "newDuplicatedLines": 0,
+            "newClones": 0
+          },
+          "/Users/feel/Developer/easy-cep/app/api/auth/callback/[provider]/route.ts": {
+            "lines": 44,
+            "tokens": 444,
+            "sources": 1,
+            "clones": 0,
+            "duplicatedLines": 0,
+            "duplicatedTokens": 0,
+            "percentage": 0,
+            "percentageTokens": 0,
+            "newDuplicatedLines": 0,
+            "newClones": 0
+          },
+          "/Users/feel/Developer/easy-cep/app/api/auth/status/route.ts": {
+            "lines": 37,
+            "tokens": 364,
+            "sources": 1,
+            "clones": 0,
+            "duplicatedLines": 0,
+            "duplicatedTokens": 0,
+            "percentage": 0,
+            "percentageTokens": 0,
+            "newDuplicatedLines": 0,
+            "newClones": 0
+          },
+          "/Users/feel/Developer/easy-cep/app/api/auth/session/route.ts": {
+            "lines": 16,
+            "tokens": 142,
+            "sources": 1,
+            "clones": 0,
+            "duplicatedLines": 0,
+            "duplicatedTokens": 0,
+            "percentage": 0,
+            "percentageTokens": 0,
+            "newDuplicatedLines": 0,
+            "newClones": 0
+          },
+          "/Users/feel/Developer/easy-cep/app/api/auth/[provider]/route.ts": {
+            "lines": 33,
+            "tokens": 328,
+            "sources": 1,
+            "clones": 0,
+            "duplicatedLines": 0,
+            "duplicatedTokens": 0,
+            "percentage": 0,
+            "percentageTokens": 0,
+            "newDuplicatedLines": 0,
+            "newClones": 0
+          },
+          "/Users/feel/Developer/easy-cep/lib/workflow/types/http-client.ts": {
+            "lines": 8,
+            "tokens": 83,
+            "sources": 1,
+            "clones": 0,
+            "duplicatedLines": 0,
+            "duplicatedTokens": 0,
+            "percentage": 0,
+            "percentageTokens": 0,
+            "newDuplicatedLines": 0,
+            "newClones": 0
+          },
+          "/Users/feel/Developer/easy-cep/lib/workflow/types/api-schemas.ts": {
+            "lines": 25,
+            "tokens": 201,
+            "sources": 1,
+            "clones": 0,
+            "duplicatedLines": 0,
+            "duplicatedTokens": 0,
+            "percentage": 0,
+            "percentageTokens": 0,
+            "newDuplicatedLines": 0,
+            "newClones": 0
+          },
+          "/Users/feel/Developer/easy-cep/lib/workflow/steps/verify-primary-domain.ts": {
+            "lines": 110,
+            "tokens": 909,
+            "sources": 1,
+            "clones": 0,
+            "duplicatedLines": 0,
+            "duplicatedTokens": 0,
+            "percentage": 0,
+            "percentageTokens": 0,
+            "newDuplicatedLines": 0,
+            "newClones": 0
+          },
+          "/Users/feel/Developer/easy-cep/lib/workflow/steps/setup-microsoft-provisioning.ts": {
+            "lines": 122,
+            "tokens": 1210,
+            "sources": 1,
+            "clones": 3,
+            "duplicatedLines": 23,
+            "duplicatedTokens": 272,
+            "percentage": 18.85,
+            "percentageTokens": 22.48,
+            "newDuplicatedLines": 0,
+            "newClones": 0
+          },
+          "/Users/feel/Developer/easy-cep/lib/workflow/steps/setup-microsoft-claims-policy.ts": {
+            "lines": 118,
+            "tokens": 1057,
+            "sources": 1,
+            "clones": 1,
+            "duplicatedLines": 9,
+            "duplicatedTokens": 92,
+            "percentage": 7.63,
+            "percentageTokens": 8.7,
+            "newDuplicatedLines": 0,
+            "newClones": 0
+          },
+          "/Users/feel/Developer/easy-cep/lib/workflow/steps/create-service-user.ts": {
+            "lines": 151,
+            "tokens": 1276,
+            "sources": 1,
+            "clones": 0,
+            "duplicatedLines": 0,
+            "duplicatedTokens": 0,
+            "percentage": 0,
+            "percentageTokens": 0,
+            "newDuplicatedLines": 0,
+            "newClones": 0
+          },
+          "/Users/feel/Developer/easy-cep/lib/workflow/steps/create-microsoft-apps.ts": {
+            "lines": 302,
+            "tokens": 2588,
+            "sources": 1,
+            "clones": 0,
+            "duplicatedLines": 0,
+            "duplicatedTokens": 0,
+            "percentage": 0,
+            "percentageTokens": 0,
+            "newDuplicatedLines": 0,
+            "newClones": 0
+          },
+          "/Users/feel/Developer/easy-cep/lib/workflow/steps/create-automation-ou.ts": {
+            "lines": 95,
+            "tokens": 825,
+            "sources": 1,
+            "clones": 0,
+            "duplicatedLines": 0,
+            "duplicatedTokens": 0,
+            "percentage": 0,
+            "percentageTokens": 0,
+            "newDuplicatedLines": 0,
+            "newClones": 0
+          },
+          "/Users/feel/Developer/easy-cep/lib/workflow/steps/create-admin-role-and-assign-user.ts": {
+            "lines": 243,
+            "tokens": 2223,
+            "sources": 1,
+            "clones": 0,
+            "duplicatedLines": 0,
+            "duplicatedTokens": 0,
+            "percentage": 0,
+            "percentageTokens": 0,
+            "newDuplicatedLines": 0,
+            "newClones": 0
+          },
+          "/Users/feel/Developer/easy-cep/lib/workflow/steps/configure-microsoft-sso.ts": {
+            "lines": 279,
+            "tokens": 2440,
+            "sources": 1,
+            "clones": 0,
+            "duplicatedLines": 0,
+            "duplicatedTokens": 0,
+            "percentage": 0,
+            "percentageTokens": 0,
+            "newDuplicatedLines": 0,
+            "newClones": 0
+          },
+          "/Users/feel/Developer/easy-cep/lib/workflow/steps/configure-google-saml-profile.ts": {
+            "lines": 115,
+            "tokens": 1078,
+            "sources": 1,
+            "clones": 0,
+            "duplicatedLines": 0,
+            "duplicatedTokens": 0,
+            "percentage": 0,
+            "percentageTokens": 0,
+            "newDuplicatedLines": 0,
+            "newClones": 0
+          },
+          "/Users/feel/Developer/easy-cep/lib/workflow/steps/complete-google-sso-setup.ts": {
+            "lines": 174,
+            "tokens": 1480,
+            "sources": 1,
+            "clones": 0,
+            "duplicatedLines": 0,
+            "duplicatedTokens": 0,
+            "percentage": 0,
+            "percentageTokens": 0,
+            "newDuplicatedLines": 0,
+            "newClones": 0
+          },
+          "/Users/feel/Developer/easy-cep/lib/workflow/steps/assign-users-to-sso.ts": {
+            "lines": 236,
+            "tokens": 1969,
+            "sources": 1,
+            "clones": 2,
+            "duplicatedLines": 32,
+            "duplicatedTokens": 186,
+            "percentage": 13.56,
+            "percentageTokens": 9.45,
+            "newDuplicatedLines": 0,
+            "newClones": 0
+          },
+          "/Users/feel/Developer/easy-cep/lib/workflow/http/microsoft-client.ts": {
+            "lines": 309,
+            "tokens": 3016,
+            "sources": 1,
+            "clones": 4,
+            "duplicatedLines": 36,
+            "duplicatedTokens": 376,
+            "percentage": 11.65,
+            "percentageTokens": 12.47,
+            "newDuplicatedLines": 0,
+            "newClones": 0
+          },
+          "/Users/feel/Developer/easy-cep/lib/workflow/http/google-client.ts": {
+            "lines": 439,
+            "tokens": 3860,
+            "sources": 1,
+            "clones": 5,
+            "duplicatedLines": 40,
+            "duplicatedTokens": 389,
+            "percentage": 9.11,
+            "percentageTokens": 10.08,
+            "newDuplicatedLines": 0,
+            "newClones": 0
+          },
+          "/Users/feel/Developer/easy-cep/lib/workflow/http/fluent-builder.ts": {
+            "lines": 196,
+            "tokens": 2038,
+            "sources": 1,
+            "clones": 0,
+            "duplicatedLines": 0,
+            "duplicatedTokens": 0,
+            "percentage": 0,
+            "percentageTokens": 0,
+            "newDuplicatedLines": 0,
+            "newClones": 0
+          },
+          "/Users/feel/Developer/easy-cep/lib/workflow/http/crud-factory.ts": {
+            "lines": 68,
+            "tokens": 632,
+            "sources": 1,
+            "clones": 0,
+            "duplicatedLines": 0,
+            "duplicatedTokens": 0,
+            "percentage": 0,
+            "percentageTokens": 0,
+            "newDuplicatedLines": 0,
+            "newClones": 0
+          },
+          "/Users/feel/Developer/easy-cep/lib/workflow/core/status.ts": {
+            "lines": 55,
+            "tokens": 512,
+            "sources": 1,
+            "clones": 0,
+            "duplicatedLines": 0,
+            "duplicatedTokens": 0,
+            "percentage": 0,
+            "percentageTokens": 0,
+            "newDuplicatedLines": 0,
+            "newClones": 0
+          },
+          "/Users/feel/Developer/easy-cep/lib/workflow/core/http.ts": {
+            "lines": 70,
+            "tokens": 405,
+            "sources": 1,
+            "clones": 0,
+            "duplicatedLines": 0,
+            "duplicatedTokens": 0,
+            "percentage": 0,
+            "percentageTokens": 0,
+            "newDuplicatedLines": 0,
+            "newClones": 0
+          },
+          "/Users/feel/Developer/easy-cep/lib/workflow/core/errors.ts": {
+            "lines": 140,
+            "tokens": 1013,
+            "sources": 1,
+            "clones": 0,
+            "duplicatedLines": 0,
+            "duplicatedTokens": 0,
+            "percentage": 0,
+            "percentageTokens": 0,
+            "newDuplicatedLines": 0,
+            "newClones": 0
+          },
+          "/Users/feel/Developer/easy-cep/lib/workflow/constants/workflow-limits.ts": {
+            "lines": 24,
+            "tokens": 175,
+            "sources": 1,
+            "clones": 0,
+            "duplicatedLines": 0,
+            "duplicatedTokens": 0,
+            "percentage": 0,
+            "percentageTokens": 0,
+            "newDuplicatedLines": 0,
+            "newClones": 0
+          },
+          "/Users/feel/Developer/easy-cep/lib/workflow/constants/google-admin.ts": {
+            "lines": 20,
+            "tokens": 92,
+            "sources": 1,
+            "clones": 0,
+            "duplicatedLines": 0,
+            "duplicatedTokens": 0,
+            "percentage": 0,
+            "percentageTokens": 0,
+            "newDuplicatedLines": 0,
+            "newClones": 0
+          },
+          "/Users/feel/Developer/easy-cep/test/workflow/microsoft-client.test.ts": {
+            "lines": 21,
+            "tokens": 217,
+            "sources": 1,
+            "clones": 0,
+            "duplicatedLines": 0,
+            "duplicatedTokens": 0,
+            "percentage": 0,
+            "percentageTokens": 0,
+            "newDuplicatedLines": 0,
+            "newClones": 0
+          },
+          "/Users/feel/Developer/easy-cep/test/workflow/error-reporter.test.ts": {
+            "lines": 27,
+            "tokens": 242,
+            "sources": 1,
+            "clones": 0,
+            "duplicatedLines": 0,
+            "duplicatedTokens": 0,
+            "percentage": 0,
+            "percentageTokens": 0,
+            "newDuplicatedLines": 0,
+            "newClones": 0
+          },
+          "/Users/feel/Developer/easy-cep/test/utils/resource-ids.test.ts": {
+            "lines": 38,
+            "tokens": 254,
+            "sources": 1,
+            "clones": 0,
+            "duplicatedLines": 0,
+            "duplicatedTokens": 0,
+            "percentage": 0,
+            "percentageTokens": 0,
+            "newDuplicatedLines": 0,
+            "newClones": 0
+          },
+          "/Users/feel/Developer/easy-cep/test/info/info.test.ts": {
+            "lines": 219,
+            "tokens": 1812,
+            "sources": 1,
+            "clones": 0,
+            "duplicatedLines": 0,
+            "duplicatedTokens": 0,
+            "percentage": 0,
+            "percentageTokens": 0,
+            "newDuplicatedLines": 0,
+            "newClones": 0
+          },
+          "/Users/feel/Developer/easy-cep/test/hooks/use-paginated-items.test.ts": {
+            "lines": 5,
+            "tokens": 58,
+            "sources": 1,
+            "clones": 0,
+            "duplicatedLines": 0,
+            "duplicatedTokens": 0,
+            "percentage": 0,
+            "percentageTokens": 0,
+            "newDuplicatedLines": 0,
+            "newClones": 0
+          },
+          "/Users/feel/Developer/easy-cep/test/hooks/use-multi-select.test.ts": {
+            "lines": 5,
+            "tokens": 58,
+            "sources": 1,
+            "clones": 0,
+            "duplicatedLines": 0,
+            "duplicatedTokens": 0,
+            "percentage": 0,
+            "percentageTokens": 0,
+            "newDuplicatedLines": 0,
+            "newClones": 0
+          },
+          "/Users/feel/Developer/easy-cep/test/hooks/use-info-items.test.ts": {
+            "lines": 5,
+            "tokens": 58,
+            "sources": 1,
+            "clones": 0,
+            "duplicatedLines": 0,
+            "duplicatedTokens": 0,
+            "percentage": 0,
+            "percentageTokens": 0,
+            "newDuplicatedLines": 0,
+            "newClones": 0
+          },
+          "/Users/feel/Developer/easy-cep/test/e2e/workflow.test.ts": {
+            "lines": 138,
+            "tokens": 1369,
+            "sources": 1,
+            "clones": 0,
+            "duplicatedLines": 0,
+            "duplicatedTokens": 0,
+            "percentage": 0,
+            "percentageTokens": 0,
+            "newDuplicatedLines": 0,
+            "newClones": 0
+          },
+          "/Users/feel/Developer/easy-cep/lib/workflow/variables.ts": {
+            "lines": 277,
+            "tokens": 1881,
+            "sources": 1,
+            "clones": 0,
+            "duplicatedLines": 0,
+            "duplicatedTokens": 0,
+            "percentage": 0,
+            "percentageTokens": 0,
+            "newDuplicatedLines": 0,
+            "newClones": 0
+          },
+          "/Users/feel/Developer/easy-cep/lib/workflow/var-store.ts": {
+            "lines": 49,
+            "tokens": 437,
+            "sources": 1,
+            "clones": 0,
+            "duplicatedLines": 0,
+            "duplicatedTokens": 0,
+            "percentage": 0,
+            "percentageTokens": 0,
+            "newDuplicatedLines": 0,
+            "newClones": 0
+          },
+          "/Users/feel/Developer/easy-cep/lib/workflow/step-status.ts": {
+            "lines": 21,
+            "tokens": 106,
+            "sources": 1,
+            "clones": 0,
+            "duplicatedLines": 0,
+            "duplicatedTokens": 0,
+            "percentage": 0,
+            "percentageTokens": 0,
+            "newDuplicatedLines": 0,
+            "newClones": 0
+          },
+          "/Users/feel/Developer/easy-cep/lib/workflow/step-registry.ts": {
+            "lines": 48,
+            "tokens": 334,
+            "sources": 1,
+            "clones": 0,
+            "duplicatedLines": 0,
+            "duplicatedTokens": 0,
+            "percentage": 0,
+            "percentageTokens": 0,
+            "newDuplicatedLines": 0,
+            "newClones": 0
+          },
+          "/Users/feel/Developer/easy-cep/lib/workflow/step-ids.ts": {
+            "lines": 45,
+            "tokens": 222,
+            "sources": 1,
+            "clones": 0,
+            "duplicatedLines": 0,
+            "duplicatedTokens": 0,
+            "percentage": 0,
+            "percentageTokens": 0,
+            "newDuplicatedLines": 0,
+            "newClones": 0
+          },
+          "/Users/feel/Developer/easy-cep/lib/workflow/step-details.ts": {
+            "lines": 67,
+            "tokens": 359,
+            "sources": 1,
+            "clones": 0,
+            "duplicatedLines": 0,
+            "duplicatedTokens": 0,
+            "percentage": 0,
+            "percentageTokens": 0,
+            "newDuplicatedLines": 0,
+            "newClones": 0
+          },
+          "/Users/feel/Developer/easy-cep/lib/workflow/step-constants.ts": {
+            "lines": 56,
+            "tokens": 346,
+            "sources": 1,
+            "clones": 0,
+            "duplicatedLines": 0,
+            "duplicatedTokens": 0,
+            "percentage": 0,
+            "percentageTokens": 0,
+            "newDuplicatedLines": 0,
+            "newClones": 0
+          },
+          "/Users/feel/Developer/easy-cep/lib/workflow/step-builder.ts": {
+            "lines": 193,
+            "tokens": 1689,
+            "sources": 1,
+            "clones": 0,
+            "duplicatedLines": 0,
+            "duplicatedTokens": 0,
+            "percentage": 0,
+            "percentageTokens": 0,
+            "newDuplicatedLines": 0,
+            "newClones": 0
+          },
+          "/Users/feel/Developer/easy-cep/lib/workflow/lro-detector.ts": {
+            "lines": 37,
+            "tokens": 298,
+            "sources": 1,
+            "clones": 0,
+            "duplicatedLines": 0,
+            "duplicatedTokens": 0,
+            "percentage": 0,
+            "percentageTokens": 0,
+            "newDuplicatedLines": 0,
+            "newClones": 0
+          },
+          "/Users/feel/Developer/easy-cep/lib/workflow/info-actions.ts": {
+            "lines": 292,
+            "tokens": 2315,
+            "sources": 1,
+            "clones": 3,
+            "duplicatedLines": 52,
+            "duplicatedTokens": 462,
+            "percentage": 17.81,
+            "percentageTokens": 19.96,
+            "newDuplicatedLines": 0,
+            "newClones": 0
+          },
+          "/Users/feel/Developer/easy-cep/lib/workflow/fetch-utils.ts": {
+            "lines": 288,
+            "tokens": 2387,
+            "sources": 1,
+            "clones": 0,
+            "duplicatedLines": 0,
+            "duplicatedTokens": 0,
+            "percentage": 0,
+            "percentageTokens": 0,
+            "newDuplicatedLines": 0,
+            "newClones": 0
+          },
+          "/Users/feel/Developer/easy-cep/lib/workflow/engine.ts": {
+            "lines": 470,
+            "tokens": 4057,
+            "sources": 1,
+            "clones": 2,
+            "duplicatedLines": 42,
+            "duplicatedTokens": 414,
+            "percentage": 8.94,
+            "percentageTokens": 10.2,
+            "newDuplicatedLines": 0,
+            "newClones": 0
+          },
+          "/Users/feel/Developer/easy-cep/lib/utils/url.ts": {
+            "lines": 18,
+            "tokens": 158,
+            "sources": 1,
+            "clones": 0,
+            "duplicatedLines": 0,
+            "duplicatedTokens": 0,
+            "percentage": 0,
+            "percentageTokens": 0,
+            "newDuplicatedLines": 0,
+            "newClones": 0
+          },
+          "/Users/feel/Developer/easy-cep/test/setup.ts": {
+            "lines": 316,
+            "tokens": 2937,
+            "sources": 1,
+            "clones": 0,
+            "duplicatedLines": 0,
+            "duplicatedTokens": 0,
+            "percentage": 0,
+            "percentageTokens": 0,
+            "newDuplicatedLines": 0,
+            "newClones": 0
+          },
+          "/Users/feel/Developer/easy-cep/scripts/test-live.ts": {
+            "lines": 33,
+            "tokens": 298,
+            "sources": 1,
+            "clones": 0,
+            "duplicatedLines": 0,
+            "duplicatedTokens": 0,
+            "percentage": 0,
+            "percentageTokens": 0,
+            "newDuplicatedLines": 0,
+            "newClones": 0
+          },
+          "/Users/feel/Developer/easy-cep/scripts/generate-refresh-tokens.ts": {
+            "lines": 233,
+            "tokens": 1967,
+            "sources": 1,
+            "clones": 0,
+            "duplicatedLines": 0,
+            "duplicatedTokens": 0,
+            "percentage": 0,
+            "percentageTokens": 0,
+            "newDuplicatedLines": 0,
+            "newClones": 0
+          },
+          "/Users/feel/Developer/easy-cep/scripts/full-cleanup.ts": {
+            "lines": 288,
+            "tokens": 2566,
+            "sources": 1,
+            "clones": 1,
+            "duplicatedLines": 6,
+            "duplicatedTokens": 90,
+            "percentage": 2.08,
+            "percentageTokens": 3.51,
+            "newDuplicatedLines": 0,
+            "newClones": 0
+          },
+          "/Users/feel/Developer/easy-cep/scripts/e2e-setup.ts": {
+            "lines": 223,
+            "tokens": 2170,
+            "sources": 1,
+            "clones": 1,
+            "duplicatedLines": 6,
+            "duplicatedTokens": 90,
+            "percentage": 2.69,
+            "percentageTokens": 4.15,
+            "newDuplicatedLines": 0,
+            "newClones": 0
+          },
+          "/Users/feel/Developer/easy-cep/scripts/cleanup-apps.ts": {
+            "lines": 154,
+            "tokens": 1189,
+            "sources": 1,
+            "clones": 0,
+            "duplicatedLines": 0,
+            "duplicatedTokens": 0,
+            "percentage": 0,
+            "percentageTokens": 0,
+            "newDuplicatedLines": 0,
+            "newClones": 0
+          },
+          "/Users/feel/Developer/easy-cep/lib/utils.ts": {
+            "lines": 19,
+            "tokens": 152,
+            "sources": 1,
+            "clones": 0,
+            "duplicatedLines": 0,
+            "duplicatedTokens": 0,
+            "percentage": 0,
+            "percentageTokens": 0,
+            "newDuplicatedLines": 0,
+            "newClones": 0
+          },
+          "/Users/feel/Developer/easy-cep/lib/info.ts": {
+            "lines": 391,
+            "tokens": 3684,
+            "sources": 1,
+            "clones": 16,
+            "duplicatedLines": 126,
+            "duplicatedTokens": 1445,
+            "percentage": 32.23,
+            "percentageTokens": 39.22,
+            "newDuplicatedLines": 0,
+            "newClones": 0
+          },
+          "/Users/feel/Developer/easy-cep/lib/auth.ts": {
+            "lines": 442,
+            "tokens": 3359,
+            "sources": 1,
+            "clones": 0,
+            "duplicatedLines": 0,
+            "duplicatedTokens": 0,
+            "percentage": 0,
+            "percentageTokens": 0,
+            "newDuplicatedLines": 0,
+            "newClones": 0
+          },
+          "/Users/feel/Developer/easy-cep/hooks/use-paginated-items.ts": {
+            "lines": 54,
+            "tokens": 470,
+            "sources": 1,
+            "clones": 0,
+            "duplicatedLines": 0,
+            "duplicatedTokens": 0,
+            "percentage": 0,
+            "percentageTokens": 0,
+            "newDuplicatedLines": 0,
+            "newClones": 0
+          },
+          "/Users/feel/Developer/easy-cep/hooks/use-multi-select.ts": {
+            "lines": 67,
+            "tokens": 601,
+            "sources": 1,
+            "clones": 0,
+            "duplicatedLines": 0,
+            "duplicatedTokens": 0,
+            "percentage": 0,
+            "percentageTokens": 0,
+            "newDuplicatedLines": 0,
+            "newClones": 0
+          },
+          "/Users/feel/Developer/easy-cep/hooks/use-info-items.ts": {
+            "lines": 48,
+            "tokens": 424,
+            "sources": 1,
+            "clones": 0,
+            "duplicatedLines": 0,
+            "duplicatedTokens": 0,
+            "percentage": 0,
+            "percentageTokens": 0,
+            "newDuplicatedLines": 0,
+            "newClones": 0
+          },
+          "/Users/feel/Developer/easy-cep/types.ts": {
+            "lines": 176,
+            "tokens": 1590,
+            "sources": 1,
+            "clones": 4,
+            "duplicatedLines": 52,
+            "duplicatedTokens": 636,
+            "percentage": 29.55,
+            "percentageTokens": 40,
+            "newDuplicatedLines": 0,
+            "newClones": 0
+          },
+          "/Users/feel/Developer/easy-cep/next.config.ts": {
+            "lines": 6,
+            "tokens": 39,
+            "sources": 1,
+            "clones": 0,
+            "duplicatedLines": 0,
+            "duplicatedTokens": 0,
+            "percentage": 0,
+            "percentageTokens": 0,
+            "newDuplicatedLines": 0,
+            "newClones": 0
+          },
+          "/Users/feel/Developer/easy-cep/next-env.d.ts": {
+            "lines": 5,
+            "tokens": 12,
+            "sources": 1,
+            "clones": 0,
+            "duplicatedLines": 0,
+            "duplicatedTokens": 0,
+            "percentage": 0,
+            "percentageTokens": 0,
+            "newDuplicatedLines": 0,
+            "newClones": 0
+          },
+          "/Users/feel/Developer/easy-cep/env.ts": {
+            "lines": 45,
+            "tokens": 423,
+            "sources": 1,
+            "clones": 0,
+            "duplicatedLines": 0,
+            "duplicatedTokens": 0,
+            "percentage": 0,
+            "percentageTokens": 0,
+            "newDuplicatedLines": 0,
+            "newClones": 0
+          },
+          "/Users/feel/Developer/easy-cep/env.test.ts": {
+            "lines": 28,
+            "tokens": 322,
+            "sources": 1,
+            "clones": 0,
+            "duplicatedLines": 0,
+            "duplicatedTokens": 0,
+            "percentage": 0,
+            "percentageTokens": 0,
+            "newDuplicatedLines": 0,
+            "newClones": 0
+          },
+          "/Users/feel/Developer/easy-cep/constants.ts": {
+            "lines": 156,
+            "tokens": 1090,
+            "sources": 1,
+            "clones": 0,
+            "duplicatedLines": 0,
+            "duplicatedTokens": 0,
+            "percentage": 0,
+            "percentageTokens": 0,
+            "newDuplicatedLines": 0,
+            "newClones": 0
+          }
+        },
+        "total": {
+          "lines": 8517,
+          "tokens": 73082,
+          "sources": 67,
+          "clones": 21,
+          "duplicatedLines": 212,
+          "duplicatedTokens": 2226,
+          "percentage": 2.49,
+          "percentageTokens": 3.05,
+          "newDuplicatedLines": 0,
+          "newClones": 0
+        }
+      },
+      "markdown": {
+        "sources": {
+          "/Users/feel/Developer/easy-cep/app/api/auth/signout/[provider]/AGENTS.md": {
+            "lines": 1,
+            "tokens": 40,
+            "sources": 1,
+            "clones": 0,
+            "duplicatedLines": 0,
+            "duplicatedTokens": 0,
+            "percentage": 0,
+            "percentageTokens": 0,
+            "newDuplicatedLines": 0,
+            "newClones": 0
+          },
+          "/Users/feel/Developer/easy-cep/app/api/auth/callback/[provider]/AGENTS.md": {
+            "lines": 1,
+            "tokens": 36,
+            "sources": 1,
+            "clones": 0,
+            "duplicatedLines": 0,
+            "duplicatedTokens": 0,
+            "percentage": 0,
+            "percentageTokens": 0,
+            "newDuplicatedLines": 0,
+            "newClones": 0
+          },
+          "/Users/feel/Developer/easy-cep/app/api/auth/status/AGENTS.md": {
+            "lines": 1,
+            "tokens": 38,
+            "sources": 1,
+            "clones": 0,
+            "duplicatedLines": 0,
+            "duplicatedTokens": 0,
+            "percentage": 0,
+            "percentageTokens": 0,
+            "newDuplicatedLines": 0,
+            "newClones": 0
+          },
+          "/Users/feel/Developer/easy-cep/app/api/auth/session/AGENTS.md": {
+            "lines": 1,
+            "tokens": 28,
+            "sources": 1,
+            "clones": 0,
+            "duplicatedLines": 0,
+            "duplicatedTokens": 0,
+            "percentage": 0,
+            "percentageTokens": 0,
+            "newDuplicatedLines": 0,
+            "newClones": 0
+          },
+          "/Users/feel/Developer/easy-cep/app/api/auth/[provider]/AGENTS.md": {
+            "lines": 1,
+            "tokens": 36,
+            "sources": 1,
+            "clones": 0,
+            "duplicatedLines": 0,
+            "duplicatedTokens": 0,
+            "percentage": 0,
+            "percentageTokens": 0,
+            "newDuplicatedLines": 0,
+            "newClones": 0
+          },
+          "/Users/feel/Developer/easy-cep/lib/workflow/types/AGENTS.md": {
+            "lines": 1,
+            "tokens": 26,
+            "sources": 1,
+            "clones": 0,
+            "duplicatedLines": 0,
+            "duplicatedTokens": 0,
+            "percentage": 0,
+            "percentageTokens": 0,
+            "newDuplicatedLines": 0,
+            "newClones": 0
+          },
+          "/Users/feel/Developer/easy-cep/lib/workflow/steps/AGENTS.md": {
+            "lines": 870,
+            "tokens": 3449,
+            "sources": 1,
+            "clones": 0,
+            "duplicatedLines": 0,
+            "duplicatedTokens": 0,
+            "percentage": 0,
+            "percentageTokens": 0,
+            "newDuplicatedLines": 0,
+            "newClones": 0
+          },
+          "/Users/feel/Developer/easy-cep/lib/workflow/http/AGENTS.md": {
+            "lines": 1,
+            "tokens": 30,
+            "sources": 1,
+            "clones": 0,
+            "duplicatedLines": 0,
+            "duplicatedTokens": 0,
+            "percentage": 0,
+            "percentageTokens": 0,
+            "newDuplicatedLines": 0,
+            "newClones": 0
+          },
+          "/Users/feel/Developer/easy-cep/lib/workflow/core/AGENTS.md": {
+            "lines": 1,
+            "tokens": 24,
+            "sources": 1,
+            "clones": 0,
+            "duplicatedLines": 0,
+            "duplicatedTokens": 0,
+            "percentage": 0,
+            "percentageTokens": 0,
+            "newDuplicatedLines": 0,
+            "newClones": 0
+          },
+          "/Users/feel/Developer/easy-cep/lib/workflow/constants/AGENTS.md": {
+            "lines": 1,
+            "tokens": 22,
+            "sources": 1,
+            "clones": 0,
+            "duplicatedLines": 0,
+            "duplicatedTokens": 0,
+            "percentage": 0,
+            "percentageTokens": 0,
+            "newDuplicatedLines": 0,
+            "newClones": 0
+          },
+          "/Users/feel/Developer/easy-cep/components/workflow/steps/AGENTS.md": {
+            "lines": 1,
+            "tokens": 36,
+            "sources": 1,
+            "clones": 0,
+            "duplicatedLines": 0,
+            "duplicatedTokens": 0,
+            "percentage": 0,
+            "percentageTokens": 0,
+            "newDuplicatedLines": 0,
+            "newClones": 0
+          },
+          "/Users/feel/Developer/easy-cep/components/workflow/info/AGENTS.md": {
+            "lines": 1,
+            "tokens": 28,
+            "sources": 1,
+            "clones": 0,
+            "duplicatedLines": 0,
+            "duplicatedTokens": 0,
+            "percentage": 0,
+            "percentageTokens": 0,
+            "newDuplicatedLines": 0,
+            "newClones": 0
+          },
+          "/Users/feel/Developer/easy-cep/test/e2e/AGENTS.md": {
+            "lines": 20,
+            "tokens": 318,
+            "sources": 1,
+            "clones": 0,
+            "duplicatedLines": 0,
+            "duplicatedTokens": 0,
+            "percentage": 0,
+            "percentageTokens": 0,
+            "newDuplicatedLines": 0,
+            "newClones": 0
+          },
+          "/Users/feel/Developer/easy-cep/lib/workflow/undo-guidelines.md": {
+            "lines": 24,
+            "tokens": 164,
+            "sources": 1,
+            "clones": 0,
+            "duplicatedLines": 0,
+            "duplicatedTokens": 0,
+            "percentage": 0,
+            "percentageTokens": 0,
+            "newDuplicatedLines": 0,
+            "newClones": 0
+          },
+          "/Users/feel/Developer/easy-cep/lib/workflow/AGENTS.md": {
+            "lines": 1,
+            "tokens": 30,
+            "sources": 1,
+            "clones": 0,
+            "duplicatedLines": 0,
+            "duplicatedTokens": 0,
+            "percentage": 0,
+            "percentageTokens": 0,
+            "newDuplicatedLines": 0,
+            "newClones": 0
+          },
+          "/Users/feel/Developer/easy-cep/lib/utils/AGENTS.md": {
+            "lines": 1,
+            "tokens": 30,
+            "sources": 1,
+            "clones": 0,
+            "duplicatedLines": 0,
+            "duplicatedTokens": 0,
+            "percentage": 0,
+            "percentageTokens": 0,
+            "newDuplicatedLines": 0,
+            "newClones": 0
+          },
+          "/Users/feel/Developer/easy-cep/components/workflow/AGENTS.md": {
+            "lines": 1,
+            "tokens": 34,
+            "sources": 1,
+            "clones": 0,
+            "duplicatedLines": 0,
+            "duplicatedTokens": 0,
+            "percentage": 0,
+            "percentageTokens": 0,
+            "newDuplicatedLines": 0,
+            "newClones": 0
+          },
+          "/Users/feel/Developer/easy-cep/scripts/AGENTS.md": {
+            "lines": 11,
+            "tokens": 190,
+            "sources": 1,
+            "clones": 0,
+            "duplicatedLines": 0,
+            "duplicatedTokens": 0,
+            "percentage": 0,
+            "percentageTokens": 0,
+            "newDuplicatedLines": 0,
+            "newClones": 0
+          },
+          "/Users/feel/Developer/easy-cep/lib/AGENTS.md": {
+            "lines": 1,
+            "tokens": 30,
+            "sources": 1,
+            "clones": 0,
+            "duplicatedLines": 0,
+            "duplicatedTokens": 0,
+            "percentage": 0,
+            "percentageTokens": 0,
+            "newDuplicatedLines": 0,
+            "newClones": 0
+          },
+          "/Users/feel/Developer/easy-cep/hooks/AGENTS.md": {
+            "lines": 1,
+            "tokens": 30,
+            "sources": 1,
+            "clones": 0,
+            "duplicatedLines": 0,
+            "duplicatedTokens": 0,
+            "percentage": 0,
+            "percentageTokens": 0,
+            "newDuplicatedLines": 0,
+            "newClones": 0
+          },
+          "/Users/feel/Developer/easy-cep/components/AGENTS.md": {
+            "lines": 12,
+            "tokens": 244,
+            "sources": 1,
+            "clones": 0,
+            "duplicatedLines": 0,
+            "duplicatedTokens": 0,
+            "percentage": 0,
+            "percentageTokens": 0,
+            "newDuplicatedLines": 0,
+            "newClones": 0
+          },
+          "/Users/feel/Developer/easy-cep/app/AGENTS.md": {
+            "lines": 1,
+            "tokens": 34,
+            "sources": 1,
+            "clones": 0,
+            "duplicatedLines": 0,
+            "duplicatedTokens": 0,
+            "percentage": 0,
+            "percentageTokens": 0,
+            "newDuplicatedLines": 0,
+            "newClones": 0
+          },
+          "/Users/feel/Developer/easy-cep/README.md": {
+            "lines": 154,
+            "tokens": 1034,
+            "sources": 1,
+            "clones": 0,
+            "duplicatedLines": 0,
+            "duplicatedTokens": 0,
+            "percentage": 0,
+            "percentageTokens": 0,
+            "newDuplicatedLines": 0,
+            "newClones": 0
+          },
+          "/Users/feel/Developer/easy-cep/AGENTS.md": {
+            "lines": 156,
+            "tokens": 1768,
+            "sources": 1,
+            "clones": 0,
+            "duplicatedLines": 0,
+            "duplicatedTokens": 0,
+            "percentage": 0,
+            "percentageTokens": 0,
+            "newDuplicatedLines": 0,
+            "newClones": 0
+          }
+        },
+        "total": {
+          "lines": 1264,
+          "tokens": 7699,
+          "sources": 24,
+          "clones": 0,
+          "duplicatedLines": 0,
+          "duplicatedTokens": 0,
+          "percentage": 0,
+          "percentageTokens": 0,
+          "newDuplicatedLines": 0,
+          "newClones": 0
+        }
+      },
+      "json": {
+        "sources": {
+          "/Users/feel/Developer/easy-cep/test/info/fixtures/ms-sync-jobs.json": {
+            "lines": 4,
+            "tokens": 40,
+            "sources": 1,
+            "clones": 0,
+            "duplicatedLines": 0,
+            "duplicatedTokens": 0,
+            "percentage": 0,
+            "percentageTokens": 0,
+            "newDuplicatedLines": 0,
+            "newClones": 0
+          },
+          "/Users/feel/Developer/easy-cep/test/info/fixtures/ms-applications.json": {
+            "lines": 8,
+            "tokens": 37,
+            "sources": 1,
+            "clones": 0,
+            "duplicatedLines": 0,
+            "duplicatedTokens": 0,
+            "percentage": 0,
+            "percentageTokens": 0,
+            "newDuplicatedLines": 0,
+            "newClones": 0
+          },
+          "/Users/feel/Developer/easy-cep/test/info/fixtures/google-sso-assignments.json": {
+            "lines": 13,
+            "tokens": 64,
+            "sources": 1,
+            "clones": 0,
+            "duplicatedLines": 0,
+            "duplicatedTokens": 0,
+            "percentage": 0,
+            "percentageTokens": 0,
+            "newDuplicatedLines": 0,
+            "newClones": 0
+          },
+          "/Users/feel/Developer/easy-cep/test/info/fixtures/google-sso-assignments-prefixed.json": {
+            "lines": 8,
+            "tokens": 37,
+            "sources": 1,
+            "clones": 0,
+            "duplicatedLines": 0,
+            "duplicatedTokens": 0,
+            "percentage": 0,
+            "percentageTokens": 0,
+            "newDuplicatedLines": 0,
+            "newClones": 0
+          },
+          "/Users/feel/Developer/easy-cep/test/info/fixtures/google-saml-profiles.json": {
+            "lines": 4,
+            "tokens": 27,
+            "sources": 1,
+            "clones": 0,
+            "duplicatedLines": 0,
+            "duplicatedTokens": 0,
+            "percentage": 0,
+            "percentageTokens": 0,
+            "newDuplicatedLines": 0,
+            "newClones": 0
+          },
+          "/Users/feel/Developer/easy-cep/test/info/fixtures/google-org-units.json": {
+            "lines": 8,
+            "tokens": 37,
+            "sources": 1,
+            "clones": 0,
+            "duplicatedLines": 0,
+            "duplicatedTokens": 0,
+            "percentage": 0,
+            "percentageTokens": 0,
+            "newDuplicatedLines": 0,
+            "newClones": 0
+          },
+          "/Users/feel/Developer/easy-cep/test/e2e/fixtures/ms-token-certs.json": {
+            "lines": 10,
+            "tokens": 54,
+            "sources": 1,
+            "clones": 0,
+            "duplicatedLines": 0,
+            "duplicatedTokens": 0,
+            "percentage": 0,
+            "percentageTokens": 0,
+            "newDuplicatedLines": 0,
+            "newClones": 0
+          },
+          "/Users/feel/Developer/easy-cep/test/e2e/fixtures/ms-organization.json": {
+            "lines": 18,
+            "tokens": 99,
+            "sources": 1,
+            "clones": 0,
+            "duplicatedLines": 0,
+            "duplicatedTokens": 0,
+            "percentage": 0,
+            "percentageTokens": 0,
+            "newDuplicatedLines": 0,
+            "newClones": 0
+          },
+          "/Users/feel/Developer/easy-cep/.vscode/settings.json": {
+            "lines": 51,
+            "tokens": 276,
+            "sources": 1,
+            "clones": 0,
+            "duplicatedLines": 0,
+            "duplicatedTokens": 0,
+            "percentage": 0,
+            "percentageTokens": 0,
+            "newDuplicatedLines": 0,
+            "newClones": 0
+          },
+          "/Users/feel/Developer/easy-cep/tsconfig.json": {
+            "lines": 28,
+            "tokens": 195,
+            "sources": 1,
+            "clones": 0,
+            "duplicatedLines": 0,
+            "duplicatedTokens": 0,
+            "percentage": 0,
+            "percentageTokens": 0,
+            "newDuplicatedLines": 0,
+            "newClones": 0
+          },
+          "/Users/feel/Developer/easy-cep/package.json": {
+            "lines": 58,
+            "tokens": 385,
+            "sources": 1,
+            "clones": 0,
+            "duplicatedLines": 0,
+            "duplicatedTokens": 0,
+            "percentage": 0,
+            "percentageTokens": 0,
+            "newDuplicatedLines": 0,
+            "newClones": 0
+          },
+          "/Users/feel/Developer/easy-cep/opencode.json": {
+            "lines": 25,
+            "tokens": 152,
+            "sources": 1,
+            "clones": 0,
+            "duplicatedLines": 0,
+            "duplicatedTokens": 0,
+            "percentage": 0,
+            "percentageTokens": 0,
+            "newDuplicatedLines": 0,
+            "newClones": 0
+          },
+          "/Users/feel/Developer/easy-cep/components.json": {
+            "lines": 20,
+            "tokens": 124,
+            "sources": 1,
+            "clones": 0,
+            "duplicatedLines": 0,
+            "duplicatedTokens": 0,
+            "percentage": 0,
+            "percentageTokens": 0,
+            "newDuplicatedLines": 0,
+            "newClones": 0
+          },
+          "/Users/feel/Developer/easy-cep/.jscpd.json": {
+            "lines": 5,
+            "tokens": 41,
+            "sources": 1,
+            "clones": 0,
+            "duplicatedLines": 0,
+            "duplicatedTokens": 0,
+            "percentage": 0,
+            "percentageTokens": 0,
+            "newDuplicatedLines": 0,
+            "newClones": 0
+          }
+        },
+        "total": {
+          "lines": 260,
+          "tokens": 1568,
+          "sources": 14,
+          "clones": 0,
+          "duplicatedLines": 0,
+          "duplicatedTokens": 0,
+          "percentage": 0,
+          "percentageTokens": 0,
+          "newDuplicatedLines": 0,
+          "newClones": 0
+        }
+      },
+      "javascript": {
+        "sources": {
+          "/Users/feel/Developer/easy-cep/components/workflow/steps/step-variables.tsx": {
+            "lines": 122,
+            "tokens": 939,
+            "sources": 1,
+            "clones": 0,
+            "duplicatedLines": 0,
+            "duplicatedTokens": 0,
+            "percentage": 0,
+            "percentageTokens": 0,
+            "newDuplicatedLines": 0,
+            "newClones": 0
+          },
+          "/Users/feel/Developer/easy-cep/components/workflow/steps/step-logs.tsx": {
+            "lines": 5,
+            "tokens": 74,
+            "sources": 1,
+            "clones": 0,
+            "duplicatedLines": 0,
+            "duplicatedTokens": 0,
+            "percentage": 0,
+            "percentageTokens": 0,
+            "newDuplicatedLines": 0,
+            "newClones": 0
+          },
+          "/Users/feel/Developer/easy-cep/components/workflow/steps/step-log-item.tsx": {
+            "lines": 31,
+            "tokens": 255,
+            "sources": 1,
+            "clones": 0,
+            "duplicatedLines": 0,
+            "duplicatedTokens": 0,
+            "percentage": 0,
+            "percentageTokens": 0,
+            "newDuplicatedLines": 0,
+            "newClones": 0
+          },
+          "/Users/feel/Developer/easy-cep/components/workflow/steps/step-card.tsx": {
+            "lines": 36,
+            "tokens": 257,
+            "sources": 1,
+            "clones": 0,
+            "duplicatedLines": 0,
+            "duplicatedTokens": 0,
+            "percentage": 0,
+            "percentageTokens": 0,
+            "newDuplicatedLines": 0,
+            "newClones": 0
+          },
+          "/Users/feel/Developer/easy-cep/components/workflow/steps/step-card-header.tsx": {
+            "lines": 27,
+            "tokens": 207,
+            "sources": 1,
+            "clones": 0,
+            "duplicatedLines": 0,
+            "duplicatedTokens": 0,
+            "percentage": 0,
+            "percentageTokens": 0,
+            "newDuplicatedLines": 0,
+            "newClones": 0
+          },
+          "/Users/feel/Developer/easy-cep/components/workflow/steps/step-card-content.tsx": {
+            "lines": 76,
+            "tokens": 591,
+            "sources": 1,
+            "clones": 0,
+            "duplicatedLines": 0,
+            "duplicatedTokens": 0,
+            "percentage": 0,
+            "percentageTokens": 0,
+            "newDuplicatedLines": 0,
+            "newClones": 0
+          },
+          "/Users/feel/Developer/easy-cep/components/workflow/steps/step-api-calls.tsx": {
+            "lines": 7,
+            "tokens": 61,
+            "sources": 1,
+            "clones": 0,
+            "duplicatedLines": 0,
+            "duplicatedTokens": 0,
+            "percentage": 0,
+            "percentageTokens": 0,
+            "newDuplicatedLines": 0,
+            "newClones": 0
+          },
+          "/Users/feel/Developer/easy-cep/components/workflow/steps/completion-card.tsx": {
+            "lines": 0,
+            "tokens": 15,
+            "sources": 1,
+            "clones": 0,
+            "duplicatedLines": 0,
+            "duplicatedTokens": 0,
+            "percentage": 0,
+            "percentageTokens": 0,
+            "newDuplicatedLines": 0,
+            "newClones": 0
+          },
+          "/Users/feel/Developer/easy-cep/components/workflow/info/info-item-list.tsx": {
+            "lines": 21,
+            "tokens": 181,
+            "sources": 1,
+            "clones": 0,
+            "duplicatedLines": 0,
+            "duplicatedTokens": 0,
+            "percentage": 0,
+            "percentageTokens": 0,
+            "newDuplicatedLines": 0,
+            "newClones": 0
+          },
+          "/Users/feel/Developer/easy-cep/components/workflow/info/info-buttons.tsx": {
+            "lines": 3,
+            "tokens": 29,
+            "sources": 1,
+            "clones": 0,
+            "duplicatedLines": 0,
+            "duplicatedTokens": 0,
+            "percentage": 0,
+            "percentageTokens": 0,
+            "newDuplicatedLines": 0,
+            "newClones": 0
+          },
+          "/Users/feel/Developer/easy-cep/components/workflow/info/info-button.tsx": {
+            "lines": 160,
+            "tokens": 1158,
+            "sources": 1,
+            "clones": 0,
+            "duplicatedLines": 0,
+            "duplicatedTokens": 0,
+            "percentage": 0,
+            "percentageTokens": 0,
+            "newDuplicatedLines": 0,
+            "newClones": 0
+          },
+          "/Users/feel/Developer/easy-cep/components/workflow/vars-panel.tsx": {
+            "lines": 0,
+            "tokens": 9,
+            "sources": 1,
+            "clones": 0,
+            "duplicatedLines": 0,
+            "duplicatedTokens": 0,
+            "percentage": 0,
+            "percentageTokens": 0,
+            "newDuplicatedLines": 0,
+            "newClones": 0
+          },
+          "/Users/feel/Developer/easy-cep/components/workflow/vars-inspector.tsx": {
+            "lines": 125,
+            "tokens": 939,
+            "sources": 1,
+            "clones": 0,
+            "duplicatedLines": 0,
+            "duplicatedTokens": 0,
+            "percentage": 0,
+            "percentageTokens": 0,
+            "newDuplicatedLines": 0,
+            "newClones": 0
+          },
+          "/Users/feel/Developer/easy-cep/components/workflow/steps-list.tsx": {
+            "lines": 6,
+            "tokens": 45,
+            "sources": 1,
+            "clones": 0,
+            "duplicatedLines": 0,
+            "duplicatedTokens": 0,
+            "percentage": 0,
+            "percentageTokens": 0,
+            "newDuplicatedLines": 0,
+            "newClones": 0
+          },
+          "/Users/feel/Developer/easy-cep/components/workflow/provider-login.tsx": {
+            "lines": 154,
+            "tokens": 1146,
+            "sources": 1,
+            "clones": 0,
+            "duplicatedLines": 0,
+            "duplicatedTokens": 0,
+            "percentage": 0,
+            "percentageTokens": 0,
+            "newDuplicatedLines": 0,
+            "newClones": 0
+          },
+          "/Users/feel/Developer/easy-cep/components/workflow/header.tsx": {
+            "lines": 0,
+            "tokens": 3,
+            "sources": 1,
+            "clones": 0,
+            "duplicatedLines": 0,
+            "duplicatedTokens": 0,
+            "percentage": 0,
+            "percentageTokens": 0,
+            "newDuplicatedLines": 0,
+            "newClones": 0
+          },
+          "/Users/feel/Developer/easy-cep/components/workflow/context.tsx": {
+            "lines": 0,
+            "tokens": 3,
+            "sources": 1,
+            "clones": 0,
+            "duplicatedLines": 0,
+            "duplicatedTokens": 0,
+            "percentage": 0,
+            "percentageTokens": 0,
+            "newDuplicatedLines": 0,
+            "newClones": 0
+          },
+          "/Users/feel/Developer/easy-cep/components/ui/tooltip.tsx": {
+            "lines": 34,
+            "tokens": 201,
+            "sources": 1,
+            "clones": 0,
+            "duplicatedLines": 0,
+            "duplicatedTokens": 0,
+            "percentage": 0,
+            "percentageTokens": 0,
+            "newDuplicatedLines": 0,
+            "newClones": 0
+          },
+          "/Users/feel/Developer/easy-cep/components/ui/scroll-area.tsx": {
+            "lines": 32,
+            "tokens": 159,
+            "sources": 1,
+            "clones": 0,
+            "duplicatedLines": 0,
+            "duplicatedTokens": 0,
+            "percentage": 0,
+            "percentageTokens": 0,
+            "newDuplicatedLines": 0,
+            "newClones": 0
+          },
+          "/Users/feel/Developer/easy-cep/components/ui/pagination.tsx": {
+            "lines": 91,
+            "tokens": 549,
+            "sources": 1,
+            "clones": 0,
+            "duplicatedLines": 0,
+            "duplicatedTokens": 0,
+            "percentage": 0,
+            "percentageTokens": 0,
+            "newDuplicatedLines": 0,
+            "newClones": 0
+          },
+          "/Users/feel/Developer/easy-cep/components/ui/input.tsx": {
+            "lines": 7,
+            "tokens": 27,
+            "sources": 1,
+            "clones": 0,
+            "duplicatedLines": 0,
+            "duplicatedTokens": 0,
+            "percentage": 0,
+            "percentageTokens": 0,
+            "newDuplicatedLines": 0,
+            "newClones": 0
+          },
+          "/Users/feel/Developer/easy-cep/components/ui/dialog.tsx": {
+            "lines": 86,
+            "tokens": 456,
+            "sources": 1,
+            "clones": 0,
+            "duplicatedLines": 0,
+            "duplicatedTokens": 0,
+            "percentage": 0,
+            "percentageTokens": 0,
+            "newDuplicatedLines": 0,
+            "newClones": 0
+          },
+          "/Users/feel/Developer/easy-cep/components/ui/checkbox.tsx": {
+            "lines": 3,
+            "tokens": 9,
+            "sources": 1,
+            "clones": 0,
+            "duplicatedLines": 0,
+            "duplicatedTokens": 0,
+            "percentage": 0,
+            "percentageTokens": 0,
+            "newDuplicatedLines": 0,
+            "newClones": 0
+          },
+          "/Users/feel/Developer/easy-cep/components/ui/card.tsx": {
+            "lines": 69,
+            "tokens": 401,
+            "sources": 1,
+            "clones": 0,
+            "duplicatedLines": 0,
+            "duplicatedTokens": 0,
+            "percentage": 0,
+            "percentageTokens": 0,
+            "newDuplicatedLines": 0,
+            "newClones": 0
+          },
+          "/Users/feel/Developer/easy-cep/components/ui/button.tsx": {
+            "lines": 3,
+            "tokens": 33,
+            "sources": 1,
+            "clones": 0,
+            "duplicatedLines": 0,
+            "duplicatedTokens": 0,
+            "percentage": 0,
+            "percentageTokens": 0,
+            "newDuplicatedLines": 0,
+            "newClones": 0
+          },
+          "/Users/feel/Developer/easy-cep/components/ui/badge.tsx": {
+            "lines": 0,
+            "tokens": 13,
+            "sources": 1,
+            "clones": 0,
+            "duplicatedLines": 0,
+            "duplicatedTokens": 0,
+            "percentage": 0,
+            "percentageTokens": 0,
+            "newDuplicatedLines": 0,
+            "newClones": 0
+          },
+          "/Users/feel/Developer/easy-cep/components/ui/alert-dialog.tsx": {
+            "lines": 96,
+            "tokens": 493,
+            "sources": 1,
+            "clones": 0,
+            "duplicatedLines": 0,
+            "duplicatedTokens": 0,
+            "percentage": 0,
+            "percentageTokens": 0,
+            "newDuplicatedLines": 0,
+            "newClones": 0
+          },
+          "/Users/feel/Developer/easy-cep/app/layout.tsx": {
+            "lines": 2,
+            "tokens": 27,
+            "sources": 1,
+            "clones": 0,
+            "duplicatedLines": 0,
+            "duplicatedTokens": 0,
+            "percentage": 0,
+            "percentageTokens": 0,
+            "newDuplicatedLines": 0,
+            "newClones": 0
+          }
+        },
+        "total": {
+          "lines": 1196,
+          "tokens": 8280,
+          "sources": 28,
+          "clones": 0,
+          "duplicatedLines": 0,
+          "duplicatedTokens": 0,
+          "percentage": 0,
+          "percentageTokens": 0,
+          "newDuplicatedLines": 0,
+          "newClones": 0
+        }
+      },
+      "tsx": {
+        "sources": {
+          "/Users/feel/Developer/easy-cep/components/workflow/steps/step-variables.tsx": {
+            "lines": 177,
+            "tokens": 1308,
+            "sources": 1,
+            "clones": 0,
+            "duplicatedLines": 0,
+            "duplicatedTokens": 0,
+            "percentage": 0,
+            "percentageTokens": 0,
+            "newDuplicatedLines": 0,
+            "newClones": 0
+          },
+          "/Users/feel/Developer/easy-cep/components/workflow/steps/step-lro-indicator.tsx": {
+            "lines": 72,
+            "tokens": 654,
+            "sources": 1,
+            "clones": 0,
+            "duplicatedLines": 0,
+            "duplicatedTokens": 0,
+            "percentage": 0,
+            "percentageTokens": 0,
+            "newDuplicatedLines": 0,
+            "newClones": 0
+          },
+          "/Users/feel/Developer/easy-cep/components/workflow/steps/step-logs.tsx": {
+            "lines": 49,
+            "tokens": 384,
+            "sources": 1,
+            "clones": 0,
+            "duplicatedLines": 0,
+            "duplicatedTokens": 0,
+            "percentage": 0,
+            "percentageTokens": 0,
+            "newDuplicatedLines": 0,
+            "newClones": 0
+          },
+          "/Users/feel/Developer/easy-cep/components/workflow/steps/step-log-item.tsx": {
+            "lines": 126,
+            "tokens": 853,
+            "sources": 1,
+            "clones": 0,
+            "duplicatedLines": 0,
+            "duplicatedTokens": 0,
+            "percentage": 0,
+            "percentageTokens": 0,
+            "newDuplicatedLines": 0,
+            "newClones": 0
+          },
+          "/Users/feel/Developer/easy-cep/components/workflow/steps/step-card.tsx": {
+            "lines": 94,
+            "tokens": 753,
+            "sources": 1,
+            "clones": 0,
+            "duplicatedLines": 0,
+            "duplicatedTokens": 0,
+            "percentage": 0,
+            "percentageTokens": 0,
+            "newDuplicatedLines": 0,
+            "newClones": 0
+          },
+          "/Users/feel/Developer/easy-cep/components/workflow/steps/step-card-header.tsx": {
+            "lines": 158,
+            "tokens": 1228,
+            "sources": 1,
+            "clones": 0,
+            "duplicatedLines": 0,
+            "duplicatedTokens": 0,
+            "percentage": 0,
+            "percentageTokens": 0,
+            "newDuplicatedLines": 0,
+            "newClones": 0
+          },
+          "/Users/feel/Developer/easy-cep/components/workflow/steps/step-card-context.tsx": {
+            "lines": 29,
+            "tokens": 221,
+            "sources": 1,
+            "clones": 0,
+            "duplicatedLines": 0,
+            "duplicatedTokens": 0,
+            "percentage": 0,
+            "percentageTokens": 0,
+            "newDuplicatedLines": 0,
+            "newClones": 0
+          },
+          "/Users/feel/Developer/easy-cep/components/workflow/steps/step-card-content.tsx": {
+            "lines": 158,
+            "tokens": 1336,
+            "sources": 1,
+            "clones": 0,
+            "duplicatedLines": 0,
+            "duplicatedTokens": 0,
+            "percentage": 0,
+            "percentageTokens": 0,
+            "newDuplicatedLines": 0,
+            "newClones": 0
+          },
+          "/Users/feel/Developer/easy-cep/components/workflow/steps/step-api-calls.tsx": {
+            "lines": 359,
+            "tokens": 2364,
+            "sources": 1,
+            "clones": 0,
+            "duplicatedLines": 0,
+            "duplicatedTokens": 0,
+            "percentage": 0,
+            "percentageTokens": 0,
+            "newDuplicatedLines": 0,
+            "newClones": 0
+          },
+          "/Users/feel/Developer/easy-cep/components/workflow/steps/completion-card.tsx": {
+            "lines": 29,
+            "tokens": 223,
+            "sources": 1,
+            "clones": 0,
+            "duplicatedLines": 0,
+            "duplicatedTokens": 0,
+            "percentage": 0,
+            "percentageTokens": 0,
+            "newDuplicatedLines": 0,
+            "newClones": 0
+          },
+          "/Users/feel/Developer/easy-cep/components/workflow/info/info-item-list.tsx": {
+            "lines": 84,
+            "tokens": 612,
+            "sources": 1,
+            "clones": 0,
+            "duplicatedLines": 0,
+            "duplicatedTokens": 0,
+            "percentage": 0,
+            "percentageTokens": 0,
+            "newDuplicatedLines": 0,
+            "newClones": 0
+          },
+          "/Users/feel/Developer/easy-cep/components/workflow/info/info-buttons.tsx": {
+            "lines": 227,
+            "tokens": 1292,
+            "sources": 1,
+            "clones": 0,
+            "duplicatedLines": 0,
+            "duplicatedTokens": 0,
+            "percentage": 0,
+            "percentageTokens": 0,
+            "newDuplicatedLines": 0,
+            "newClones": 0
+          },
+          "/Users/feel/Developer/easy-cep/components/workflow/info/info-button.tsx": {
+            "lines": 321,
+            "tokens": 2352,
+            "sources": 1,
+            "clones": 2,
+            "duplicatedLines": 22,
+            "duplicatedTokens": 188,
+            "percentage": 6.85,
+            "percentageTokens": 7.99,
+            "newDuplicatedLines": 0,
+            "newClones": 0
+          },
+          "/Users/feel/Developer/easy-cep/components/workflow/vars-panel.tsx": {
+            "lines": 11,
+            "tokens": 83,
+            "sources": 1,
+            "clones": 0,
+            "duplicatedLines": 0,
+            "duplicatedTokens": 0,
+            "percentage": 0,
+            "percentageTokens": 0,
+            "newDuplicatedLines": 0,
+            "newClones": 0
+          },
+          "/Users/feel/Developer/easy-cep/components/workflow/vars-inspector.tsx": {
+            "lines": 234,
+            "tokens": 1759,
+            "sources": 1,
+            "clones": 0,
+            "duplicatedLines": 0,
+            "duplicatedTokens": 0,
+            "percentage": 0,
+            "percentageTokens": 0,
+            "newDuplicatedLines": 0,
+            "newClones": 0
+          },
+          "/Users/feel/Developer/easy-cep/components/workflow/steps-list.tsx": {
+            "lines": 94,
+            "tokens": 696,
+            "sources": 1,
+            "clones": 0,
+            "duplicatedLines": 0,
+            "duplicatedTokens": 0,
+            "percentage": 0,
+            "percentageTokens": 0,
+            "newDuplicatedLines": 0,
+            "newClones": 0
+          },
+          "/Users/feel/Developer/easy-cep/components/workflow/provider-login.tsx": {
+            "lines": 206,
+            "tokens": 1502,
+            "sources": 1,
+            "clones": 0,
+            "duplicatedLines": 0,
+            "duplicatedTokens": 0,
+            "percentage": 0,
+            "percentageTokens": 0,
+            "newDuplicatedLines": 0,
+            "newClones": 0
+          },
+          "/Users/feel/Developer/easy-cep/components/workflow/header.tsx": {
+            "lines": 31,
+            "tokens": 201,
+            "sources": 1,
+            "clones": 0,
+            "duplicatedLines": 0,
+            "duplicatedTokens": 0,
+            "percentage": 0,
+            "percentageTokens": 0,
+            "newDuplicatedLines": 0,
+            "newClones": 0
+          },
+          "/Users/feel/Developer/easy-cep/components/workflow/context.tsx": {
+            "lines": 415,
+            "tokens": 3988,
+            "sources": 1,
+            "clones": 0,
+            "duplicatedLines": 0,
+            "duplicatedTokens": 0,
+            "percentage": 0,
+            "percentageTokens": 0,
+            "newDuplicatedLines": 0,
+            "newClones": 0
+          },
+          "/Users/feel/Developer/easy-cep/components/ui/tooltip.tsx": {
+            "lines": 64,
+            "tokens": 399,
+            "sources": 1,
+            "clones": 0,
+            "duplicatedLines": 0,
+            "duplicatedTokens": 0,
+            "percentage": 0,
+            "percentageTokens": 0,
+            "newDuplicatedLines": 0,
+            "newClones": 0
+          },
+          "/Users/feel/Developer/easy-cep/components/ui/scroll-area.tsx": {
+            "lines": 62,
+            "tokens": 333,
+            "sources": 1,
+            "clones": 0,
+            "duplicatedLines": 0,
+            "duplicatedTokens": 0,
+            "percentage": 0,
+            "percentageTokens": 0,
+            "newDuplicatedLines": 0,
+            "newClones": 0
+          },
+          "/Users/feel/Developer/easy-cep/components/ui/pagination.tsx": {
+            "lines": 122,
+            "tokens": 749,
+            "sources": 1,
+            "clones": 0,
+            "duplicatedLines": 0,
+            "duplicatedTokens": 0,
+            "percentage": 0,
+            "percentageTokens": 0,
+            "newDuplicatedLines": 0,
+            "newClones": 0
+          },
+          "/Users/feel/Developer/easy-cep/components/ui/input.tsx": {
+            "lines": 20,
+            "tokens": 118,
+            "sources": 1,
+            "clones": 0,
+            "duplicatedLines": 0,
+            "duplicatedTokens": 0,
+            "percentage": 0,
+            "percentageTokens": 0,
+            "newDuplicatedLines": 0,
+            "newClones": 0
+          },
+          "/Users/feel/Developer/easy-cep/components/ui/dialog.tsx": {
+            "lines": 148,
+            "tokens": 864,
+            "sources": 1,
+            "clones": 0,
+            "duplicatedLines": 0,
+            "duplicatedTokens": 0,
+            "percentage": 0,
+            "percentageTokens": 0,
+            "newDuplicatedLines": 0,
+            "newClones": 0
+          },
+          "/Users/feel/Developer/easy-cep/components/ui/collapsible.tsx": {
+            "lines": 29,
+            "tokens": 217,
+            "sources": 1,
+            "clones": 0,
+            "duplicatedLines": 0,
+            "duplicatedTokens": 0,
+            "percentage": 0,
+            "percentageTokens": 0,
+            "newDuplicatedLines": 0,
+            "newClones": 0
+          },
+          "/Users/feel/Developer/easy-cep/components/ui/checkbox.tsx": {
+            "lines": 33,
+            "tokens": 188,
+            "sources": 1,
+            "clones": 0,
+            "duplicatedLines": 0,
+            "duplicatedTokens": 0,
+            "percentage": 0,
+            "percentageTokens": 0,
+            "newDuplicatedLines": 0,
+            "newClones": 0
+          },
+          "/Users/feel/Developer/easy-cep/components/ui/card.tsx": {
+            "lines": 91,
+            "tokens": 521,
+            "sources": 1,
+            "clones": 0,
+            "duplicatedLines": 0,
+            "duplicatedTokens": 0,
+            "percentage": 0,
+            "percentageTokens": 0,
+            "newDuplicatedLines": 0,
+            "newClones": 0
+          },
+          "/Users/feel/Developer/easy-cep/components/ui/button.tsx": {
+            "lines": 61,
+            "tokens": 390,
+            "sources": 1,
+            "clones": 0,
+            "duplicatedLines": 0,
+            "duplicatedTokens": 0,
+            "percentage": 0,
+            "percentageTokens": 0,
+            "newDuplicatedLines": 0,
+            "newClones": 0
+          },
+          "/Users/feel/Developer/easy-cep/components/ui/badge.tsx": {
+            "lines": 45,
+            "tokens": 288,
+            "sources": 1,
+            "clones": 0,
+            "duplicatedLines": 0,
+            "duplicatedTokens": 0,
+            "percentage": 0,
+            "percentageTokens": 0,
+            "newDuplicatedLines": 0,
+            "newClones": 0
+          },
+          "/Users/feel/Developer/easy-cep/components/ui/alert-dialog.tsx": {
+            "lines": 157,
+            "tokens": 873,
+            "sources": 1,
+            "clones": 0,
+            "duplicatedLines": 0,
+            "duplicatedTokens": 0,
+            "percentage": 0,
+            "percentageTokens": 0,
+            "newDuplicatedLines": 0,
+            "newClones": 0
+          },
+          "/Users/feel/Developer/easy-cep/app/page.tsx": {
+            "lines": 17,
+            "tokens": 103,
+            "sources": 1,
+            "clones": 0,
+            "duplicatedLines": 0,
+            "duplicatedTokens": 0,
+            "percentage": 0,
+            "percentageTokens": 0,
+            "newDuplicatedLines": 0,
+            "newClones": 0
+          },
+          "/Users/feel/Developer/easy-cep/app/layout.tsx": {
+            "lines": 60,
+            "tokens": 497,
+            "sources": 1,
+            "clones": 0,
+            "duplicatedLines": 0,
+            "duplicatedTokens": 0,
+            "percentage": 0,
+            "percentageTokens": 0,
+            "newDuplicatedLines": 0,
+            "newClones": 0
+          }
+        },
+        "total": {
+          "lines": 3783,
+          "tokens": 27349,
+          "sources": 32,
+          "clones": 1,
+          "duplicatedLines": 11,
+          "duplicatedTokens": 94,
+          "percentage": 0.29,
+          "percentageTokens": 0.34,
+          "newDuplicatedLines": 0,
+          "newClones": 0
+        }
+      },
+      "css": {
+        "sources": {
+          "/Users/feel/Developer/easy-cep/app/globals.css": {
+            "lines": 201,
+            "tokens": 1764,
+            "sources": 1,
+            "clones": 0,
+            "duplicatedLines": 0,
+            "duplicatedTokens": 0,
+            "percentage": 0,
+            "percentageTokens": 0,
+            "newDuplicatedLines": 0,
+            "newClones": 0
+          }
+        },
+        "total": {
+          "lines": 201,
+          "tokens": 1764,
+          "sources": 1,
+          "clones": 0,
+          "duplicatedLines": 0,
+          "duplicatedTokens": 0,
+          "percentage": 0,
+          "percentageTokens": 0,
+          "newDuplicatedLines": 0,
+          "newClones": 0
+        }
+      }
+    },
+    "total": {
+      "lines": 15221,
+      "tokens": 119742,
+      "sources": 166,
+      "clones": 22,
+      "duplicatedLines": 223,
+      "duplicatedTokens": 2320,
+      "percentage": 1.47,
+      "percentageTokens": 1.94,
+      "newDuplicatedLines": 0,
+      "newClones": 0
+    }
+  },
+  "duplicates": [
+    {
+      "format": "typescript",
+      "lines": 8,
+      "fragment": "}) => {\n    try {\n      const spId = vars.require(Var.ProvisioningServicePrincipalId);\n\n      const { value = [] } = (await microsoft.synchronization\n        .jobs(spId)\n        .list()\n        .get()) as { value?: Array<{ id: string }",
+      "tokens": 0,
+      "firstFile": {
+        "name": "/Users/feel/Developer/easy-cep/lib/workflow/steps/setup-microsoft-provisioning.ts",
+        "start": 100,
+        "end": 107,
+        "startLoc": {
+          "line": 100,
+          "column": 2,
+          "position": 973
+        },
+        "endLoc": {
+          "line": 107,
+          "column": 2,
+          "position": 1063
+        }
+      },
+      "secondFile": {
+        "name": "/Users/feel/Developer/easy-cep/lib/workflow/steps/setup-microsoft-provisioning.ts",
+        "start": 31,
+        "end": 39,
+        "startLoc": {
+          "line": 31,
+          "column": 5,
+          "position": 220
+        },
+        "endLoc": {
+          "line": 39,
+          "column": 2,
+          "position": 310
+        }
+      }
+    },
+    {
+      "format": "typescript",
+      "lines": 10,
+      "fragment": ", { error });\n        markCheckFailed(\n          error instanceof Error ? error.message : \"Check failed\"\n        );\n      }\n    }\n  )\n  .execute(async ({ vars, microsoft, output, markFailed, log }) => {\n    try {\n      const spId = vars.require(Var.SsoServicePrincipalId",
+      "tokens": 0,
+      "firstFile": {
+        "name": "/Users/feel/Developer/easy-cep/lib/workflow/steps/setup-microsoft-claims-policy.ts",
+        "start": 40,
+        "end": 49,
+        "startLoc": {
+          "line": 40,
+          "column": 32,
+          "position": 341
+        },
+        "endLoc": {
+          "line": 49,
+          "column": 22,
+          "position": 433
+        }
+      },
+      "secondFile": {
+        "name": "/Users/feel/Developer/easy-cep/lib/workflow/steps/setup-microsoft-provisioning.ts",
+        "start": 54,
+        "end": 63,
+        "startLoc": {
+          "line": 54,
+          "column": 28,
+          "position": 455
+        },
+        "endLoc": {
+          "line": 63,
+          "column": 31,
+          "position": 547
+        }
+      }
+    },
+    {
+      "format": "typescript",
+      "lines": 17,
+      "fragment": ".name,\n          ResourceTypes.InboundSsoAssignments\n        );\n        try {\n          await google.ssoAssignments.delete(id).delete();\n        } catch (error) {\n          if (!isNotFoundError(error)) {\n            throw error;\n          }\n          log(\n            LogLevel.Info,\n            \"Inbound SSO Assignment already deleted or not found\"\n          );\n        }\n      }\n\n      markReverted",
+      "tokens": 0,
+      "firstFile": {
+        "name": "/Users/feel/Developer/easy-cep/lib/workflow/steps/assign-users-to-sso.ts",
+        "start": 215,
+        "end": 231,
+        "startLoc": {
+          "line": 215,
+          "column": 21,
+          "position": 1808
+        },
+        "endLoc": {
+          "line": 231,
+          "column": 13,
+          "position": 1901
+        }
+      },
+      "secondFile": {
+        "name": "/Users/feel/Developer/easy-cep/lib/workflow/steps/assign-users-to-sso.ts",
+        "start": 192,
+        "end": 208,
+        "startLoc": {
+          "line": 192,
+          "column": 15,
+          "position": 1652
+        },
+        "endLoc": {
+          "line": 208,
+          "column": 6,
+          "position": 1745
+        }
+      }
+    },
+    {
+      "format": "typescript",
+      "lines": 12,
+      "fragment": "z\n              .object({\n                id: z.string().optional(),\n                appId: z.string().optional(),\n                displayName: z.string().optional(),\n                preferredSingleSignOnMode: z.string().nullable().optional(),\n                samlSingleSignOnSettings: z\n                  .object({ relayState: z.string().nullable() })\n                  .nullable()\n                  .optional(),\n              })\n              .",
+      "tokens": 0,
+      "firstFile": {
+        "name": "/Users/feel/Developer/easy-cep/lib/workflow/http/microsoft-client.ts",
+        "start": 188,
+        "end": 199,
+        "startLoc": {
+          "line": 188,
+          "column": 13,
+          "position": 1849
+        },
+        "endLoc": {
+          "line": 199,
+          "column": 2,
+          "position": 1967
+        }
+      },
+      "secondFile": {
+        "name": "/Users/feel/Developer/easy-cep/lib/workflow/http/microsoft-client.ts",
+        "start": 61,
+        "end": 70,
+        "startLoc": {
+          "line": 61,
+          "column": 2,
+          "position": 670
+        },
+        "endLoc": {
+          "line": 70,
+          "column": 2,
+          "position": 783
+        }
+      }
+    },
+    {
+      "format": "typescript",
+      "lines": 8,
+      "fragment": "preferredSingleSignOnMode: z.string().nullable().optional(),\n                samlSingleSignOnSettings: z\n                  .object({ relayState: z.string().nullable() })\n                  .nullable()\n                  .optional(),\n              })\n              .passthrough()\n          )",
+      "tokens": 0,
+      "firstFile": {
+        "name": "/Users/feel/Developer/easy-cep/lib/workflow/http/microsoft-client.ts",
+        "start": 193,
+        "end": 200,
+        "startLoc": {
+          "line": 193,
+          "column": 17,
+          "position": 1903
+        },
+        "endLoc": {
+          "line": 200,
+          "column": 2,
+          "position": 1973
+        }
+      },
+      "secondFile": {
+        "name": "/Users/feel/Developer/easy-cep/lib/workflow/http/microsoft-client.ts",
+        "start": 73,
+        "end": 79,
+        "startLoc": {
+          "line": 73,
+          "column": 5,
+          "position": 800
+        },
+        "endLoc": {
+          "line": 79,
+          "column": 2,
+          "position": 868
+        }
+      }
+    },
+    {
+      "format": "typescript",
+      "lines": 8,
+      "fragment": "z.object({\n        roleId: z.string(),\n        roleName: z.string(),\n        rolePrivileges: z.array(\n          z.object({ serviceId: z.string(), privilegeName: z.string() })\n        ),\n      })\n    )",
+      "tokens": 0,
+      "firstFile": {
+        "name": "/Users/feel/Developer/easy-cep/lib/workflow/http/google-client.ts",
+        "start": 104,
+        "end": 111,
+        "startLoc": {
+          "line": 104,
+          "column": 7,
+          "position": 1017
+        },
+        "endLoc": {
+          "line": 111,
+          "column": 2,
+          "position": 1092
+        }
+      },
+      "secondFile": {
+        "name": "/Users/feel/Developer/easy-cep/lib/workflow/http/google-client.ts",
+        "start": 94,
+        "end": 100,
+        "startLoc": {
+          "line": 94,
+          "column": 2,
+          "position": 919
+        },
+        "endLoc": {
+          "line": 100,
+          "column": 2,
+          "position": 991
+        }
+      }
+    },
+    {
+      "format": "typescript",
+      "lines": 10,
+      "fragment": ")\n          .sends(\n            z.object({\n              site: z.object({ type: z.string(), identifier: z.string() }),\n              verificationMethod: z.string(),\n            })\n          )\n          .accepts(\n            z.object({\n              id",
+      "tokens": 0,
+      "firstFile": {
+        "name": "/Users/feel/Developer/easy-cep/lib/workflow/http/google-client.ts",
+        "start": 425,
+        "end": 434,
+        "startLoc": {
+          "line": 425,
+          "column": 14,
+          "position": 3724
+        },
+        "endLoc": {
+          "line": 434,
+          "column": 3,
+          "position": 3802
+        }
+      },
+      "secondFile": {
+        "name": "/Users/feel/Developer/easy-cep/lib/workflow/http/google-client.ts",
+        "start": 408,
+        "end": 417,
+        "startLoc": {
+          "line": 408,
+          "column": 8,
+          "position": 3544
+        },
+        "endLoc": {
+          "line": 417,
+          "column": 7,
+          "position": 3622
+        }
+      }
+    },
+    {
+      "format": "tsx",
+      "lines": 12,
+      "fragment": ");\n\n      await refetch(new AbortController().signal);\n\n      const failures = new Map<string, string>();\n      for (const { id, error } of result.failed) {\n        failures.set(id, error);\n      }\n      setFailedDeletes(failures);\n\n      resetSelection();\n      setDeleteConfirmText",
+      "tokens": 0,
+      "firstFile": {
+        "name": "/Users/feel/Developer/easy-cep/components/workflow/info/info-button.tsx",
+        "start": 130,
+        "end": 141,
+        "startLoc": {
+          "line": 130,
+          "column": 16,
+          "position": 992
+        },
+        "endLoc": {
+          "line": 141,
+          "column": 21,
+          "position": 1086
+        }
+      },
+      "secondFile": {
+        "name": "/Users/feel/Developer/easy-cep/components/workflow/info/info-button.tsx",
+        "start": 105,
+        "end": 117,
+        "startLoc": {
+          "line": 105,
+          "column": 2,
+          "position": 785
+        },
+        "endLoc": {
+          "line": 117,
+          "column": 14,
+          "position": 880
+        }
+      }
+    },
+    {
+      "format": "typescript",
+      "lines": 21,
+      "fragment": ",\n        {\n          method: \"DELETE\",\n          headers: { Authorization: `Bearer ${token.accessToken}` },\n        }\n      );\n\n      if (!res.ok) {\n        const text = await res.text();\n        throw new Error(`HTTP ${res.status}: ${text}`);\n      }\n\n      results.deleted.push(id);\n    } catch (error) {\n      results.failed.push({\n        id,\n        error: error instanceof Error ? error.message : String(error),\n      });\n    }\n\n    if (index",
+      "tokens": 0,
+      "firstFile": {
+        "name": "/Users/feel/Developer/easy-cep/lib/workflow/info-actions.ts",
+        "start": 145,
+        "end": 165,
+        "startLoc": {
+          "line": 145,
+          "column": 2,
+          "position": 1162
+        },
+        "endLoc": {
+          "line": 165,
+          "column": 6,
+          "position": 1327
+        }
+      },
+      "secondFile": {
+        "name": "/Users/feel/Developer/easy-cep/lib/workflow/info-actions.ts",
+        "start": 70,
+        "end": 88,
+        "startLoc": {
+          "line": 70,
+          "column": 2,
+          "position": 583
+        },
+        "endLoc": {
+          "line": 88,
+          "column": 8,
+          "position": 745
+        }
+      }
+    },
+    {
+      "format": "typescript",
+      "lines": 22,
+      "fragment": ");\n    pushState({});\n  };\n\n  const googleTokenObj = await refreshTokenIfNeeded(PROVIDERS.GOOGLE);\n  const microsoftTokenObj = await refreshTokenIfNeeded(PROVIDERS.MICROSOFT);\n\n  const baseContext = {\n    fetchGoogle: createAuthenticatedFetch(\n      googleTokenObj?.accessToken ?? vars[Var.GoogleAccessToken],\n      { addLog, onLroDetected: recordLro }\n    ),\n    fetchMicrosoft: createAuthenticatedFetch(\n      microsoftTokenObj?.accessToken ?? vars[Var.MsGraphToken],\n      { addLog, onLroDetected: recordLro }\n    ),\n    log: (level: LogLevel, message: string, data?: unknown) => {\n      addLog({ timestamp: Date.now(), message, data, level });\n    },\n  };\n\n  if",
+      "tokens": 0,
+      "firstFile": {
+        "name": "/Users/feel/Developer/easy-cep/lib/workflow/engine.ts",
+        "start": 413,
+        "end": 434,
+        "startLoc": {
+          "line": 413,
+          "column": 5,
+          "position": 3526
+        },
+        "endLoc": {
+          "line": 434,
+          "column": 3,
+          "position": 3733
+        }
+      },
+      "secondFile": {
+        "name": "/Users/feel/Developer/easy-cep/lib/workflow/engine.ts",
+        "start": 202,
+        "end": 223,
+        "startLoc": {
+          "line": 202,
+          "column": 15,
+          "position": 1629
+        },
+        "endLoc": {
+          "line": 223,
+          "column": 15,
+          "position": 1836
+        }
+      }
+    },
+    {
+      "format": "typescript",
+      "lines": 7,
+      "fragment": ");\n  const ServicePrincipalSchema = z.object({\n    value: z.array(z.object({ id: z.string() })).optional(),\n  });\n  const PoliciesSchema = z.object({\n    value: z\n      .array(z.object({ id: z.string(),",
+      "tokens": 0,
+      "firstFile": {
+        "name": "/Users/feel/Developer/easy-cep/scripts/e2e-setup.ts",
+        "start": 146,
+        "end": 152,
+        "startLoc": {
+          "line": 146,
+          "column": 2,
+          "position": 1353
+        },
+        "endLoc": {
+          "line": 152,
+          "column": 2,
+          "position": 1443
+        }
+      },
+      "secondFile": {
+        "name": "/Users/feel/Developer/easy-cep/scripts/full-cleanup.ts",
+        "start": 199,
+        "end": 205,
+        "startLoc": {
+          "line": 199,
+          "column": 2,
+          "position": 1700
+        },
+        "endLoc": {
+          "line": 205,
+          "column": 2,
+          "position": 1790
+        }
+      }
+    },
+    {
+      "format": "typescript",
+      "lines": 8,
+      "fragment": ", {\n    headers: { Authorization: `Bearer ${token.accessToken}` },\n  });\n  if (!res.ok) {\n    throw new Error(`HTTP ${res.status}`);\n  }\n  const data = Schema.parse(await res.json());\n  return (",
+      "tokens": 0,
+      "firstFile": {
+        "name": "/Users/feel/Developer/easy-cep/lib/info.ts",
+        "start": 82,
+        "end": 89,
+        "startLoc": {
+          "line": 82,
+          "column": 11,
+          "position": 634
+        },
+        "endLoc": {
+          "line": 89,
+          "column": 2,
+          "position": 719
+        }
+      },
+      "secondFile": {
+        "name": "/Users/feel/Developer/easy-cep/lib/info.ts",
+        "start": 46,
+        "end": 53,
+        "startLoc": {
+          "line": 46,
+          "column": 8,
+          "position": 303
+        },
+        "endLoc": {
+          "line": 53,
+          "column": 5,
+          "position": 388
+        }
+      }
+    },
+    {
+      "format": "typescript",
+      "lines": 9,
+      "fragment": ", {\n    headers: { Authorization: `Bearer ${token.accessToken}` },\n  });\n  if (!res.ok) {\n    throw new Error(`HTTP ${res.status}`);\n  }\n  const data = Schema.parse(await res.json());\n  return (\n    data.inboundSamlSsoProfiles",
+      "tokens": 0,
+      "firstFile": {
+        "name": "/Users/feel/Developer/easy-cep/lib/info.ts",
+        "start": 117,
+        "end": 125,
+        "startLoc": {
+          "line": 117,
+          "column": 12,
+          "position": 966
+        },
+        "endLoc": {
+          "line": 125,
+          "column": 23,
+          "position": 1056
+        }
+      },
+      "secondFile": {
+        "name": "/Users/feel/Developer/easy-cep/lib/info.ts",
+        "start": 46,
+        "end": 90,
+        "startLoc": {
+          "line": 46,
+          "column": 8,
+          "position": 303
+        },
+        "endLoc": {
+          "line": 90,
+          "column": 18,
+          "position": 724
+        }
+      }
+    },
+    {
+      "format": "typescript",
+      "lines": 9,
+      "fragment": "= z.object({\n    inboundSsoAssignments: z\n      .array(\n        z.object({\n          name: z.string(),\n          targetGroup: z.string().optional(),\n          targetOrgUnit: z.string().optional(),\n          ssoMode: z.string().optional(),\n        }",
+      "tokens": 0,
+      "firstFile": {
+        "name": "/Users/feel/Developer/easy-cep/lib/info.ts",
+        "start": 146,
+        "end": 154,
+        "startLoc": {
+          "line": 146,
+          "column": 2,
+          "position": 1224
+        },
+        "endLoc": {
+          "line": 154,
+          "column": 2,
+          "position": 1307
+        }
+      },
+      "secondFile": {
+        "name": "/Users/feel/Developer/easy-cep/lib/workflow/http/google-client.ts",
+        "start": 245,
+        "end": 253,
+        "startLoc": {
+          "line": 245,
+          "column": 2,
+          "position": 2271
+        },
+        "endLoc": {
+          "line": 253,
+          "column": 12,
+          "position": 2354
+        }
+      }
+    },
+    {
+      "format": "typescript",
+      "lines": 9,
+      "fragment": ", {\n    headers: { Authorization: `Bearer ${token.accessToken}` },\n  });\n  if (!res.ok) {\n    throw new Error(`HTTP ${res.status}`);\n  }\n  const data = Schema.parse(await res.json());\n  return (\n    data.inboundSsoAssignments",
+      "tokens": 0,
+      "firstFile": {
+        "name": "/Users/feel/Developer/easy-cep/lib/info.ts",
+        "start": 159,
+        "end": 167,
+        "startLoc": {
+          "line": 159,
+          "column": 15,
+          "position": 1342
+        },
+        "endLoc": {
+          "line": 167,
+          "column": 22,
+          "position": 1432
+        }
+      },
+      "secondFile": {
+        "name": "/Users/feel/Developer/easy-cep/lib/info.ts",
+        "start": 46,
+        "end": 90,
+        "startLoc": {
+          "line": 46,
+          "column": 8,
+          "position": 303
+        },
+        "endLoc": {
+          "line": 90,
+          "column": 18,
+          "position": 724
+        }
+      }
+    },
+    {
+      "format": "typescript",
+      "lines": 13,
+      "fragment": "});\n  const spFilter = encodeURIComponent(\n    \"displayName eq 'Google Workspace Provisioning'\"\n  );\n  const spRes = await fetch(\n    `${ApiEndpoint.Microsoft.ServicePrincipals}?$filter=${spFilter}`,\n    { headers: { Authorization: `Bearer ${token.accessToken}` } }\n  );\n  if (!spRes.ok) {\n    throw new Error(`HTTP ${spRes.status}`);\n  }\n  const spData = SpSchema.parse(await spRes.json());\n  const sp",
+      "tokens": 0,
+      "firstFile": {
+        "name": "/Users/feel/Developer/easy-cep/lib/info.ts",
+        "start": 198,
+        "end": 210,
+        "startLoc": {
+          "line": 198,
+          "column": 3,
+          "position": 1679
+        },
+        "endLoc": {
+          "line": 210,
+          "column": 3,
+          "position": 1811
+        }
+      },
+      "secondFile": {
+        "name": "/Users/feel/Developer/easy-cep/lib/workflow/info-actions.ts",
+        "start": 266,
+        "end": 278,
+        "startLoc": {
+          "line": 266,
+          "column": 2,
+          "position": 2062
+        },
+        "endLoc": {
+          "line": 278,
+          "column": 5,
+          "position": 2194
+        }
+      }
+    },
+    {
+      "format": "typescript",
+      "lines": 8,
+      "fragment": ", {\n    headers: { Authorization: `Bearer ${token.accessToken}` },\n  });\n  if (!res.ok) {\n    throw new Error(`HTTP ${res.status}`);\n  }\n  const data = Schema.parse(await res.json());\n  return data.value",
+      "tokens": 0,
+      "firstFile": {
+        "name": "/Users/feel/Developer/easy-cep/lib/info.ts",
+        "start": 257,
+        "end": 264,
+        "startLoc": {
+          "line": 257,
+          "column": 15,
+          "position": 2304
+        },
+        "endLoc": {
+          "line": 264,
+          "column": 6,
+          "position": 2391
+        }
+      },
+      "secondFile": {
+        "name": "/Users/feel/Developer/easy-cep/lib/info.ts",
+        "start": 46,
+        "end": 53,
+        "startLoc": {
+          "line": 46,
+          "column": 8,
+          "position": 303
+        },
+        "endLoc": {
+          "line": 53,
+          "column": 8,
+          "position": 390
+        }
+      }
+    },
+    {
+      "format": "typescript",
+      "lines": 9,
+      "fragment": "(): Promise<InfoItem[]> {\n  const token = await refreshTokenIfNeeded(PROVIDERS.MICROSOFT);\n  if (!token) {\n    return [];\n  }\n\n  const Schema = z.object({\n    value: z.array(\n      z.object({ id: z.string(), appId",
+      "tokens": 0,
+      "firstFile": {
+        "name": "/Users/feel/Developer/easy-cep/lib/info.ts",
+        "start": 276,
+        "end": 284,
+        "startLoc": {
+          "line": 276,
+          "column": 19,
+          "position": 2482
+        },
+        "endLoc": {
+          "line": 284,
+          "column": 6,
+          "position": 2572
+        }
+      },
+      "secondFile": {
+        "name": "/Users/feel/Developer/easy-cep/lib/info.ts",
+        "start": 245,
+        "end": 253,
+        "startLoc": {
+          "line": 245,
+          "column": 19,
+          "position": 2172
+        },
+        "endLoc": {
+          "line": 253,
+          "column": 12,
+          "position": 2262
+        }
+      }
+    },
+    {
+      "format": "typescript",
+      "lines": 8,
+      "fragment": ",\n    { headers: { Authorization: `Bearer ${token.accessToken}` } }\n  );\n  if (!res.ok) {\n    throw new Error(`HTTP ${res.status}`);\n  }\n  const data = Schema.parse(await res.json());\n  return",
+      "tokens": 0,
+      "firstFile": {
+        "name": "/Users/feel/Developer/easy-cep/lib/info.ts",
+        "start": 343,
+        "end": 350,
+        "startLoc": {
+          "line": 343,
+          "column": 37,
+          "position": 3188
+        },
+        "endLoc": {
+          "line": 350,
+          "column": 7,
+          "position": 3271
+        }
+      },
+      "secondFile": {
+        "name": "/Users/feel/Developer/easy-cep/lib/info.ts",
+        "start": 292,
+        "end": 300,
+        "startLoc": {
+          "line": 292,
+          "column": 2,
+          "position": 2653
+        },
+        "endLoc": {
+          "line": 300,
+          "column": 6,
+          "position": 2737
+        }
+      }
+    },
+    {
+      "format": "typescript",
+      "lines": 9,
+      "fragment": ", {\n    headers: { Authorization: `Bearer ${token.accessToken}` },\n  });\n  if (!res.ok) {\n    throw new Error(`HTTP ${res.status}`);\n  }\n  const data = Schema.parse(await res.json());\n  return (\n    data.items",
+      "tokens": 0,
+      "firstFile": {
+        "name": "/Users/feel/Developer/easy-cep/lib/info.ts",
+        "start": 376,
+        "end": 384,
+        "startLoc": {
+          "line": 376,
+          "column": 6,
+          "position": 3504
+        },
+        "endLoc": {
+          "line": 384,
+          "column": 6,
+          "position": 3594
+        }
+      },
+      "secondFile": {
+        "name": "/Users/feel/Developer/easy-cep/lib/info.ts",
+        "start": 46,
+        "end": 90,
+        "startLoc": {
+          "line": 46,
+          "column": 8,
+          "position": 303
+        },
+        "endLoc": {
+          "line": 90,
+          "column": 18,
+          "position": 724
+        }
+      }
+    },
+    {
+      "format": "typescript",
+      "lines": 14,
+      "fragment": "<T> {\n  fetchGoogle<R>(\n    url: string,\n    schema: z.ZodSchema<R>,\n    init?: RequestInit & { flatten?: boolean | string }\n  ): Promise<R>;\n  fetchMicrosoft<R>(\n    url: string,\n    schema: z.ZodSchema<R>,\n    init?: RequestInit & { flatten?: boolean | string }\n  ): Promise<R>;\n  log(level: LogLevel, message: string, data?: unknown): void;\n  vars: Partial<WorkflowVars>;\n  checkData",
+      "tokens": 0,
+      "firstFile": {
+        "name": "/Users/feel/Developer/easy-cep/types.ts",
+        "start": 80,
+        "end": 93,
+        "startLoc": {
+          "line": 80,
+          "column": 19,
+          "position": 766
+        },
+        "endLoc": {
+          "line": 93,
+          "column": 10,
+          "position": 927
+        }
+      },
+      "secondFile": {
+        "name": "/Users/feel/Developer/easy-cep/types.ts",
+        "start": 61,
+        "end": 74,
+        "startLoc": {
+          "line": 61,
+          "column": 17,
+          "position": 540
+        },
+        "endLoc": {
+          "line": 74,
+          "column": 13,
+          "position": 701
+        }
+      }
+    },
+    {
+      "format": "typescript",
+      "lines": 14,
+      "fragment": "{\n  fetchGoogle<R>(\n    url: string,\n    schema: z.ZodSchema<R>,\n    init?: RequestInit & { flatten?: boolean | string }\n  ): Promise<R>;\n  fetchMicrosoft<R>(\n    url: string,\n    schema: z.ZodSchema<R>,\n    init?: RequestInit & { flatten?: boolean | string }\n  ): Promise<R>;\n  log(level: LogLevel, message: string, data?: unknown): void;\n  vars: Partial<WorkflowVars>;\n  markReverted",
+      "tokens": 0,
+      "firstFile": {
+        "name": "/Users/feel/Developer/easy-cep/types.ts",
+        "start": 99,
+        "end": 112,
+        "startLoc": {
+          "line": 99,
+          "column": 2,
+          "position": 984
+        },
+        "endLoc": {
+          "line": 112,
+          "column": 13,
+          "position": 1141
+        }
+      },
+      "secondFile": {
+        "name": "/Users/feel/Developer/easy-cep/types.ts",
+        "start": 61,
+        "end": 74,
+        "startLoc": {
+          "line": 61,
+          "column": 2,
+          "position": 544
+        },
+        "endLoc": {
+          "line": 74,
+          "column": 13,
+          "position": 701
+        }
+      }
+    }
+  ],
+  "filename": "/Users/feel/.cache/.bun/install/global/node_modules/@jscpd/html-reporter/dist/templates/main.pug"
+}

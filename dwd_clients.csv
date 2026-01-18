@@ -1,0 +1,2 @@
+Name,Client Id,Scopes
+cep-idp,111043969496659791058,"openid,https://www.googleapis.com/auth/userinfo.email,https://www.googleapis.com/auth/userinfo.profile,https://www.googleapis.com/auth/admin.directory.user,https://www.googleapis.com/auth/admin.directory.orgunit,https://www.googleapis.com/auth/admin.directory.domain,https://www.googleapis.com/auth/admin.directory.rolemanagement,https://www.googleapis.com/auth/cloud-identity.inboundsso,https://www.googleapis.com/auth/siteverification"

@@ -98,9 +98,24 @@ async function executeSingleFetch<T>(
     message: "Request",
     method,
     url,
-    data: { url, method, headers: reqInit.headers, body: parsedBody },
+    data: {
+      url,
+      method,
+      headers: {
+        ...reqInit.headers,
+        Authorization: `Bearer ${token.substring(0, 10)}...`,
+      },
+      body: parsedBody,
+    },
     level: LogLevel.Debug,
   });
+
+  // CRITICAL DEBUG: Log exact token length and first few chars to detect quoting/whitespace
+  if (url.includes("graph.microsoft.com")) {
+    console.log(
+      `[Fetch Debug] MS Graph Token: length=${token.length}, start='${token.substring(0, 5)}', end='${token.slice(-5)}'`
+    );
+  }
 
   let res: Response;
   try {
