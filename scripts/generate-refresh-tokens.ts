@@ -1,6 +1,7 @@
 #!/usr/bin/env bun
 import { readFile, writeFile } from "node:fs/promises";
 import { createServer } from "node:http";
+import { env } from "@/env";
 import { PROVIDERS, type Provider } from "@/constants";
 import { exchangeCodeForToken, generateAuthUrl } from "@/lib/auth";
 
@@ -10,16 +11,18 @@ const ENV_PATH = ".env.local";
 
 const ensureOAuthEnv = () => {
   const requiredKeys = [
-    "AUTH_SECRET",
-    "GOOGLE_OAUTH_CLIENT_ID",
-    "GOOGLE_OAUTH_CLIENT_SECRET",
-    "MICROSOFT_OAUTH_CLIENT_ID",
-    "MICROSOFT_OAUTH_CLIENT_SECRET",
-  ];
-  const missing = requiredKeys.filter((key) => !process.env[key]);
+    ["AUTH_SECRET", env.AUTH_SECRET],
+    ["GOOGLE_OAUTH_CLIENT_ID", env.GOOGLE_OAUTH_CLIENT_ID],
+    ["GOOGLE_OAUTH_CLIENT_SECRET", env.GOOGLE_OAUTH_CLIENT_SECRET],
+    ["MICROSOFT_OAUTH_CLIENT_ID", env.MICROSOFT_OAUTH_CLIENT_ID],
+    ["MICROSOFT_OAUTH_CLIENT_SECRET", env.MICROSOFT_OAUTH_CLIENT_SECRET],
+  ] as const;
+  const missing = requiredKeys.filter(([, value]) => !value);
   if (missing.length > 0) {
     throw new Error(
-      `Missing OAuth env vars required for token generation. Ensure .env.local contains: ${missing.join(", ")}`
+      `Missing OAuth env vars required for token generation. Ensure .env.local contains: ${missing
+        .map(([key]) => key)
+        .join(", ")}`
     );
   }
 };

@@ -115,10 +115,10 @@ const created = await microsoft.applications
 
 ```bash
 # Run tests
-bun test
+bun --env-file=.env.local test
 
 # Run live E2E tests
-RUN_E2E=1 bun test
+RUN_E2E=1 bun --env-file=.env.local test
 
 # Required for live E2E (.env.local)
 # TEST_GOOGLE_REFRESH_TOKEN=<refresh-token>

@@ -3,9 +3,9 @@
 ## Commands (Repo-wide)
 
 - `bun run build` / `bun run check` / `bun run lint` / `bun run format`
-- `bun test` (runs all tests)
-- `bun test path/to/file.test.ts` or `bun test --filter "name"` (single test)
-- `RUN_E2E=1 bun test` (live E2E), `UPDATE_FIXTURES=1` or `CHECK_FIXTURES=1` for fixtures, `SKIP_E2E=1` to skip
+- `bun --env-file=.env.local test` (runs all tests)
+- `bun --env-file=.env.local test path/to/file.test.ts` or `bun --env-file=.env.local test --filter "name"` (single test)
+- `RUN_E2E=1 bun --env-file=.env.local test` (live E2E), `UPDATE_FIXTURES=1` or `CHECK_FIXTURES=1` for fixtures, `SKIP_E2E=1` to skip
 - `bun run e2e:live` (live E2E runner)
 
 - Tests require refresh tokens or service account credentials in `.env.local`.

@@ -6,25 +6,15 @@ import type { WorkflowVars } from "@/lib/workflow/variables";
 import { Var } from "@/lib/workflow/variables";
 
 import { env } from "@/env";
+import { getBearerTokens } from "@/lib/testing/tokens";
 import {
   cleanupGoogleEnvironment,
   cleanupMicrosoftEnvironment,
 } from "../../scripts/e2e-setup";
-import {
-  googleBearerToken,
-  microsoftBearerToken,
-} from "./tokens";
 
-if (
-  env.SKIP_E2E === "1" ||
-  env.RUN_E2E !== "1" ||
-  !googleBearerToken ||
-  !microsoftBearerToken
-) {
+if (env.SKIP_E2E === "1" || env.RUN_E2E !== "1") {
   test("e2e", () => {
-    console.warn(
-      "E2E tests require refresh tokens or service account credentials; skipping."
-    );
+    console.warn("E2E tests skipped (RUN_E2E=1 required).");
   });
 } else {
   describe("Workflow Live E2E", () => {
@@ -50,13 +40,24 @@ if (
           await new Promise((resolve) => setTimeout(resolve, 2000));
         }
       }
+
+      const { googleToken, microsoftToken } = await getBearerTokens(true);
+
+      if (!(googleToken && microsoftToken)) {
+        throw new Error(
+          "Missing E2E bearer tokens; ensure refresh tokens or service account credentials are set in .env.local."
+        );
+      }
+
+      vars = {
+        ...vars,
+        [Var.GoogleAccessToken]: googleToken.accessToken,
+        [Var.MsGraphToken]: microsoftToken.accessToken,
+      };
     });
 
     const testRunId = Date.now().toString(36);
-
-    const baseVars: Partial<WorkflowVars> = {
-      [Var.GoogleAccessToken]: googleBearerToken?.accessToken,
-      [Var.MsGraphToken]: microsoftBearerToken?.accessToken,
+    let vars: Partial<WorkflowVars> = {
       [Var.PrimaryDomain]: env.TEST_DOMAIN ?? "test.example.com",
       [Var.IsDomainVerified]: "true",
       [Var.AutomationOuName]: `test-automation-${testRunId}`,
@@ -84,8 +85,6 @@ if (
       StepId.CompleteGoogleSsoSetup,
       StepId.AssignUsersToSso,
     ];
-
-    let vars: Partial<WorkflowVars> = { ...baseVars };
 
     for (const step of steps) {
       it(`Execute: ${step}`, async () => {
