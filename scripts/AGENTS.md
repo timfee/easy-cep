@@ -9,8 +9,8 @@
 - `bun run e2e:live` (live E2E runner)
 
 - Node scripts are written in TypeScript and run with `bun x tsx`.
-- Scripts expect bearer tokens via environment variables or token files.
-  Refresh tokens may be stored in `.env.test` and exchanged for access tokens
-  during test runs.
+- Scripts expect bearer tokens via environment variables or refresh tokens.
+  Refresh tokens live in `.env.local` and are exchanged for access tokens during
+  test runs or scripts.
 - Do not embed real credentials or tenant IDs directly in scripts.
 - Use the constants in `constants.ts` for API endpoints.

@@ -8,10 +8,11 @@
 - `RUN_E2E=1 bun test` (live E2E), `UPDATE_FIXTURES=1` or `CHECK_FIXTURES=1` for fixtures, `SKIP_E2E=1` to skip
 - `bun run e2e:live` (live E2E runner)
 
-- Tests require `TEST_GOOGLE_BEARER_TOKEN`, `TEST_MS_BEARER_TOKEN` and
-  `TEST_DOMAIN` environment variables. Refresh tokens can be stored as
-  `TEST_GOOGLE_REFRESH_TOKEN` and `TEST_MS_REFRESH_TOKEN` (they are exchanged
-  for bearer tokens during `bun test`).
+- Tests require refresh tokens or service account credentials in `.env.local`.
+  Set `TEST_GOOGLE_REFRESH_TOKEN`/`TEST_MS_REFRESH_TOKEN` (exchanged for bearer
+  tokens during `bun test`) and `TEST_DOMAIN` as needed. Service account auth
+  can use `GOOGLE_SERVICE_ACCOUNT_JSON` or `GOOGLE_SERVICE_ACCOUNT_FILE` with
+  `GOOGLE_IMPERSONATED_ADMIN_EMAIL`.
 - Set `RUN_E2E=1` when invoking `bun test` to enable the live tests.
 - For live runs, you can call `bun run e2e:live` after tokens are set.
 - Fixtures live under `test/e2e/fixtures/`.

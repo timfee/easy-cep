@@ -6,7 +6,7 @@ import { exchangeCodeForToken, generateAuthUrl } from "@/lib/auth";
 
 const PORT = 3000;
 const HOST = "http://localhost:3000";
-const ENV_PATH = ".env.test";
+const ENV_PATH = ".env.local";
 
 const ensureOAuthEnv = () => {
   const requiredKeys = [
@@ -19,7 +19,7 @@ const ensureOAuthEnv = () => {
   const missing = requiredKeys.filter((key) => !process.env[key]);
   if (missing.length > 0) {
     throw new Error(
-      `Missing OAuth env vars required for token generation. Ensure .env.test (or .env.local) contains: ${missing.join(", ")}`
+      `Missing OAuth env vars required for token generation. Ensure .env.local contains: ${missing.join(", ")}`
     );
   }
 };

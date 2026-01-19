@@ -1,7 +1,9 @@
 import { NextResponse } from "next/server";
+import { PROVIDERS } from "@/constants";
+import { getToken } from "@/lib/auth";
 import { runStepWithEvents } from "@/lib/workflow/engine";
 import type { StepIdValue } from "@/lib/workflow/step-ids";
-import type { WorkflowVars } from "@/lib/workflow/variables";
+import { Var, type WorkflowVars } from "@/lib/workflow/variables";
 import type { StepStreamEvent } from "@/types";
 
 const STREAM_HEADERS = {
@@ -39,6 +41,28 @@ export async function GET(
       vars = {};
     }
   }
+
+  const googleToken = await getToken(PROVIDERS.GOOGLE);
+  const microsoftToken = await getToken(PROVIDERS.MICROSOFT);
+  if (!(googleToken || microsoftToken)) {
+    await writeEvent({
+      type: "state",
+      stepId,
+      traceId: "error",
+      state: {
+        status: "blocked",
+        error: "Missing provider tokens",
+      },
+    });
+    await writer.close();
+    return new NextResponse(stream.readable, { headers: STREAM_HEADERS });
+  }
+
+  vars = {
+    ...vars,
+    [Var.GoogleAccessToken]: googleToken?.accessToken,
+    [Var.MsGraphToken]: microsoftToken?.accessToken,
+  };
 
   try {
     await runStepWithEvents(stepId, vars, writeEvent);

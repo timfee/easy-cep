@@ -14,6 +14,16 @@ export const env = createEnv({
     MICROSOFT_OAUTH_CLIENT_SECRET: z.string(),
     MICROSOFT_TENANT: z.string().optional(),
     GOOGLE_HD_DOMAIN: z.string().optional(),
+    GOOGLE_IMPERSONATED_ADMIN_EMAIL: z.string().optional(),
+    GOOGLE_SERVICE_ACCOUNT_FILE: z.string().optional(),
+    GOOGLE_SERVICE_ACCOUNT_JSON: z.string().optional(),
+    RUN_E2E: z.string().optional(),
+    SKIP_E2E: z.string().optional(),
+    TEST_DOMAIN: z.string().optional(),
+    TEST_GOOGLE_BEARER_TOKEN: z.string().optional(),
+    TEST_GOOGLE_REFRESH_TOKEN: z.string().optional(),
+    TEST_MS_BEARER_TOKEN: z.string().optional(),
+    TEST_MS_REFRESH_TOKEN: z.string().optional(),
   },
   client: {},
   shared: {
@@ -32,15 +42,5 @@ export const env = createEnv({
       }, z.boolean())
       .default(true),
   },
-  runtimeEnv: {
-    NODE_ENV: process.env.NODE_ENV,
-    AUTH_SECRET: process.env.AUTH_SECRET,
-    GOOGLE_OAUTH_CLIENT_ID: process.env.GOOGLE_OAUTH_CLIENT_ID,
-    GOOGLE_OAUTH_CLIENT_SECRET: process.env.GOOGLE_OAUTH_CLIENT_SECRET,
-    MICROSOFT_OAUTH_CLIENT_ID: process.env.MICROSOFT_OAUTH_CLIENT_ID,
-    MICROSOFT_OAUTH_CLIENT_SECRET: process.env.MICROSOFT_OAUTH_CLIENT_SECRET,
-    MICROSOFT_TENANT: process.env.MICROSOFT_TENANT,
-    GOOGLE_HD_DOMAIN: process.env.GOOGLE_HD_DOMAIN,
-    ALLOW_INFO_PURGE: process.env.ALLOW_INFO_PURGE,
-  },
+  runtimeEnv: process.env,
 });

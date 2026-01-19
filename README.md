@@ -120,10 +120,19 @@ bun test
 # Run live E2E tests
 RUN_E2E=1 bun test
 
-# Required for live E2E
-# TEST_GOOGLE_BEARER_TOKEN=<token>
-# TEST_MS_BEARER_TOKEN=<token>
+# Required for live E2E (.env.local)
+# TEST_GOOGLE_REFRESH_TOKEN=<refresh-token>
+# TEST_MS_REFRESH_TOKEN=<refresh-token>
+# GOOGLE_OAUTH_CLIENT_ID=<your-client-id>
+# GOOGLE_OAUTH_CLIENT_SECRET=<your-client-secret>
+# MICROSOFT_OAUTH_CLIENT_ID=<your-client-id>
+# MICROSOFT_OAUTH_CLIENT_SECRET=<your-client-secret>
+# MICROSOFT_TENANT=<your-tenant-id>
+# GOOGLE_HD_DOMAIN=<your-domain>
 # TEST_DOMAIN=<domain>
+# GOOGLE_SERVICE_ACCOUNT_JSON=<json> (optional)
+# GOOGLE_SERVICE_ACCOUNT_FILE=<path> (optional)
+# GOOGLE_IMPERSONATED_ADMIN_EMAIL=<email> (optional)
 
 # Clean test environment
 bun run e2e:cleanup

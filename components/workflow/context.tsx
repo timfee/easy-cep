@@ -10,12 +10,7 @@ import {
   useState,
 } from "react";
 import { computeEffectiveStatus } from "@/lib/workflow/core/status";
-import {
-  checkStep,
-  runStep,
-  runStepWithEvents,
-  undoStep,
-} from "@/lib/workflow/engine";
+import { checkStep, runStep, undoStep } from "@/lib/workflow/engine";
 import { STEP_DETAILS } from "@/lib/workflow/step-details";
 import type { StepIdValue } from "@/lib/workflow/step-ids";
 import { StepStatus } from "@/lib/workflow/step-status";
@@ -87,6 +82,22 @@ export function WorkflowProvider({
   useEffect(() => {
     setSessionLoaded(true);
   }, []);
+
+  const filterSensitiveVars = useCallback(
+    (updates: Partial<WorkflowVars>): Partial<WorkflowVars> => {
+      const sanitized: Partial<WorkflowVars> = {};
+      for (const [key, value] of Object.entries(updates)) {
+        if (WORKFLOW_VARIABLES[key]?.sensitive) {
+          continue;
+        }
+        if (key in updates) {
+          sanitized[key as VarName] = value as WorkflowVars[VarName];
+        }
+      }
+      return sanitized;
+    },
+    []
+  );
 
   const updateVars = useCallback(
     (newVars: Partial<WorkflowVars>) => {
@@ -175,13 +186,14 @@ export function WorkflowProvider({
     (event: StepStreamEvent) => {
       const stepId = event.stepId;
       if (event.type === "vars") {
-        updateVars(event.vars);
+        const updates = filterSensitiveVars(event.vars);
+        updateVars(updates);
         return;
       }
 
       if (event.type === "complete") {
         updateStep(stepId, event.state);
-        updateVars(event.newVars);
+        updateVars(filterSensitiveVars(event.newVars));
         return;
       }
 
@@ -231,7 +243,7 @@ export function WorkflowProvider({
         });
       }
     },
-    [updateStep, updateVars]
+    [filterSensitiveVars, updateStep, updateVars]
   );
 
   const executeStep = useCallback(
@@ -265,7 +277,36 @@ export function WorkflowProvider({
       });
 
       try {
-        await runStepWithEvents(id, vars, applyStepEvent);
+        const stream = new EventSource(
+          `/api/workflow/steps/${id}/stream?vars=${encodeURIComponent(
+            JSON.stringify(filterSensitiveVars(vars))
+          )}`
+        );
+
+        try {
+          await new Promise<void>((resolve, reject) => {
+            stream.onmessage = (message) => {
+              if (!message.data) {
+                return;
+              }
+              try {
+                const event: StepStreamEvent = JSON.parse(message.data);
+                applyStepEvent(event);
+                if (event.type === "complete") {
+                  resolve();
+                }
+              } catch (parseError) {
+                reject(parseError);
+              }
+            };
+
+            stream.onerror = (err) => {
+              reject(err);
+            };
+          });
+        } finally {
+          stream.close();
+        }
       } catch (_error) {
         try {
           const fallback = await runStep(id, vars);
@@ -285,7 +326,7 @@ export function WorkflowProvider({
         setExecuting(null);
       }
     },
-    [steps, vars, updateStep, updateVars, applyStepEvent]
+    [steps, vars, updateStep, updateVars, applyStepEvent, filterSensitiveVars]
   );
 
   const undoStepAction = useCallback(

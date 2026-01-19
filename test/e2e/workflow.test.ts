@@ -5,42 +5,47 @@ import { StepId } from "@/lib/workflow/step-ids";
 import type { WorkflowVars } from "@/lib/workflow/variables";
 import { Var } from "@/lib/workflow/variables";
 
+import { env } from "@/env";
 import {
   cleanupGoogleEnvironment,
   cleanupMicrosoftEnvironment,
 } from "../../scripts/e2e-setup";
+import {
+  googleBearerToken,
+  microsoftBearerToken,
+} from "./tokens";
 
 if (
-  process.env.SKIP_E2E === "1" ||
-  process.env.RUN_E2E !== "1" ||
-  !process.env.TEST_GOOGLE_BEARER_TOKEN ||
-  !process.env.TEST_MS_BEARER_TOKEN
+  env.SKIP_E2E === "1" ||
+  env.RUN_E2E !== "1" ||
+  !googleBearerToken ||
+  !microsoftBearerToken
 ) {
   test("e2e", () => {
     console.warn(
-      "E2E tests require TEST_GOOGLE_BEARER_TOKEN and TEST_MS_BEARER_TOKEN; skipping."
+      "E2E tests require refresh tokens or service account credentials; skipping."
     );
   });
 } else {
   describe("Workflow Live E2E", () => {
     beforeAll(async () => {
-      console.log("🧹 Cleaning test environment before tests...");
+      console.log("9f9f Cleaning test environment before tests...");
 
       let retries = 3;
       while (retries > 0) {
         try {
           await cleanupGoogleEnvironment();
           await cleanupMicrosoftEnvironment();
-          console.log("✅ Environment cleaned");
+          console.log("9f9f Environment cleaned");
           break;
         } catch (error) {
           retries -= 1;
           if (retries === 0) {
-            console.error("❌ Cleanup failed after 3 attempts:", error);
+            console.error("9f9f Cleanup failed after 3 attempts:", error);
             throw error;
           }
           console.warn(
-            `⚠️ Cleanup attempt failed, retrying... (${retries} attempts left)`
+            `9f9f Cleanup attempt failed, retrying... (${retries} attempts left)`
           );
           await new Promise((resolve) => setTimeout(resolve, 2000));
         }
@@ -50,9 +55,9 @@ if (
     const testRunId = Date.now().toString(36);
 
     const baseVars: Partial<WorkflowVars> = {
-      [Var.GoogleAccessToken]: process.env.TEST_GOOGLE_BEARER_TOKEN,
-      [Var.MsGraphToken]: process.env.TEST_MS_BEARER_TOKEN,
-      [Var.PrimaryDomain]: process.env.TEST_DOMAIN || "test.example.com",
+      [Var.GoogleAccessToken]: googleBearerToken?.accessToken,
+      [Var.MsGraphToken]: microsoftBearerToken?.accessToken,
+      [Var.PrimaryDomain]: env.TEST_DOMAIN ?? "test.example.com",
       [Var.IsDomainVerified]: "true",
       [Var.AutomationOuName]: `test-automation-${testRunId}`,
       [Var.AutomationOuPath]: `/test-automation-${testRunId}`,
@@ -64,6 +69,7 @@ if (
       [Var.ClaimsPolicyDisplayName]: `Test Google Workspace Basic Claims ${testRunId}`,
       [Var.GeneratedPassword]: generateSecurePassword(),
     };
+
 
     const steps = [
       StepId.VerifyPrimaryDomain,

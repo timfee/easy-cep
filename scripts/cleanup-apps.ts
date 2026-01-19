@@ -4,40 +4,18 @@
  * Run with: bun x tsx scripts/cleanup-apps.ts
  */
 
-import { readFileSync } from "node:fs";
 import { ApiEndpoint } from "@/constants";
+import { env } from "@/env";
 
-const ENV_LINE_REGEX = /^([^=]+)=(.*)$/;
 const ISO_FRACTION_REGEX = /\.\d{3}Z$/;
-
-/**
- * Merge env values from a file if unset.
- */
-function applyEnvFile(path: string) {
-  try {
-    const envTest = readFileSync(path, "utf8");
-    for (const line of envTest.split("\n")) {
-      const match = line.match(ENV_LINE_REGEX);
-      if (match) {
-        const key = match[1]?.trim();
-        const value = match[2]?.trim();
-        if (key && !process.env[key]) {
-          process.env[key] = value ?? "";
-        }
-      }
-    }
-  } catch {
-    return;
-  }
-}
 
 /**
  * Require a named environment variable.
  */
-function requireEnv(name: string) {
-  const value = process.env[name];
+function requireEnv(name: "TEST_GOOGLE_BEARER_TOKEN" | "TEST_MS_BEARER_TOKEN") {
+  const value = env[name];
   if (!value) {
-    throw new Error(`${name} not found in environment or .env.test`);
+    throw new Error(`${name} not found in environment or .env.local`);
   }
   return value;
 }
@@ -136,8 +114,6 @@ async function deleteGoogleProjects(token: string, threshold: string) {
  * Load env and delete recent apps/projects.
  */
 async function main() {
-  applyEnvFile(".env.test");
-
   const googleToken = requireEnv("TEST_GOOGLE_BEARER_TOKEN");
   const microsoftToken = requireEnv("TEST_MS_BEARER_TOKEN");
 

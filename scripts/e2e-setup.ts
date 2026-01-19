@@ -5,19 +5,23 @@
 
 import { z } from "zod";
 import { ApiEndpoint } from "@/constants";
+import { env } from "@/env";
+import { getBearerTokens, normalizeEnvValue } from "@/lib/testing/tokens";
 
-const getBearerTokens = () => {
-  const googleToken = process.env.TEST_GOOGLE_BEARER_TOKEN;
-  const msToken = process.env.TEST_MS_BEARER_TOKEN;
-  if (!(googleToken && msToken)) {
+const getRequiredBearerTokens = async () => {
+  const { googleToken, microsoftToken } = await getBearerTokens(true);
+  if (!(googleToken && microsoftToken)) {
     throw new Error(
-      "Missing TEST_GOOGLE_BEARER_TOKEN or TEST_MS_BEARER_TOKEN; run bun run tokens:generate and then bun test with RUN_E2E=1."
+      "Missing E2E bearer tokens; ensure refresh tokens or service account credentials are set in .env.local."
     );
   }
-  return { googleToken, msToken };
+  return {
+    googleToken: googleToken.accessToken,
+    msToken: microsoftToken.accessToken,
+  };
 };
 
-const TEST_DOMAIN = process.env.TEST_DOMAIN || "test.example.com";
+const TEST_DOMAIN = normalizeEnvValue(env.TEST_DOMAIN) || "test.example.com";
 const TEST_PREFIX = "test-";
 
 /**
@@ -25,7 +29,7 @@ const TEST_PREFIX = "test-";
  */
 export async function cleanupGoogleEnvironment() {
   console.log("🧹 Cleaning up Google environment...");
-  const { googleToken } = getBearerTokens();
+  const { googleToken } = await getRequiredBearerTokens();
 
   const UsersSchema = z.object({
     users: z.array(z.object({ primaryEmail: z.string() })).optional(),
@@ -131,7 +135,7 @@ const PROTECTED_APP_IDS = [
  */
 export async function cleanupMicrosoftEnvironment() {
   console.log("🧹 Cleaning up Microsoft environment...");
-  const { msToken } = getBearerTokens();
+  const { msToken } = await getRequiredBearerTokens();
 
   const AppsSchema = z.object({
     value: z

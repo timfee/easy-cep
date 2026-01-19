@@ -16,9 +16,9 @@ Below is a complete canvas of **12 steps**, each with:
 - **Required Inputs** (variables or tokens)
 
 Before running or developing a step that performs live API calls, confirm the
-Google and Microsoft bearer tokens are valid (sourced from `.env.test`). These
-credentials point to test tenants, so API mutations are allowed during step
-development.
+Google and Microsoft bearer tokens are valid (sourced from `.env.local` via the
+refresh token or service account flow). These credentials point to test tenants,
+so API mutations are allowed during step development.
 
 ## Step 1: `verifyPrimaryDomain`
 
