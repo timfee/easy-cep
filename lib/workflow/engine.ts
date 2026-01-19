@@ -203,8 +203,13 @@ async function processStep<T extends StepIdValue>(
     pushState({});
   };
 
-  const googleTokenObj = await refreshTokenIfNeeded(PROVIDERS.GOOGLE);
-  const microsoftTokenObj = await refreshTokenIfNeeded(PROVIDERS.MICROSOFT);
+  const shouldUseCookieTokens = env.NODE_ENV !== "test";
+  const googleTokenObj = shouldUseCookieTokens
+    ? await refreshTokenIfNeeded(PROVIDERS.GOOGLE)
+    : null;
+  const microsoftTokenObj = shouldUseCookieTokens
+    ? await refreshTokenIfNeeded(PROVIDERS.MICROSOFT)
+    : null;
 
   const baseContext = {
     fetchGoogle: createAuthenticatedFetch(
