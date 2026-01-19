@@ -1,11 +1,21 @@
-import { afterAll, beforeAll, describe, expect, it, test } from "bun:test";
+import {
+  afterAll,
+  beforeAll,
+  describe,
+  expect,
+  it,
+  setDefaultTimeout,
+  test,
+} from "bun:test";
+import { env } from "@/env";
 import { generateSecurePassword } from "@/lib/utils";
 import { runStep, undoStep } from "@/lib/workflow/engine";
 import { StepId } from "@/lib/workflow/step-ids";
 import type { WorkflowVars } from "@/lib/workflow/variables";
 import { Var } from "@/lib/workflow/variables";
 
-import { env } from "@/env";
+setDefaultTimeout(120_000);
+
 import { getBearerTokens } from "@/lib/testing/tokens";
 import {
   cleanupGoogleEnvironment,
@@ -70,7 +80,6 @@ if (env.SKIP_E2E === "1" || env.RUN_E2E !== "1") {
       [Var.ClaimsPolicyDisplayName]: `Test Google Workspace Basic Claims ${testRunId}`,
       [Var.GeneratedPassword]: generateSecurePassword(),
     };
-
 
     const steps = [
       StepId.VerifyPrimaryDomain,

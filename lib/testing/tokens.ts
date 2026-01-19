@@ -267,12 +267,10 @@ const ensureBearerToken = async (
   return token;
 };
 
-let cachedTokens:
-  | {
-      googleToken: BearerToken | null;
-      microsoftToken: BearerToken | null;
-    }
-  | null = null;
+let cachedTokens: {
+  googleToken: BearerToken | null;
+  microsoftToken: BearerToken | null;
+} | null = null;
 
 export const getBearerTokens = async (requireToken: boolean) => {
   if (cachedTokens && !requireToken) {

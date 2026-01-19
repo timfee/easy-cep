@@ -73,6 +73,17 @@ export default defineStep(StepId.SetupMicrosoftProvisioning)
           (template) => template.factoryTag === SyncTemplateTag.GoogleWorkspace
         )?.id ?? SyncTemplateTag.GoogleWorkspace;
 
+      const { value: jobs = [] } = (await microsoft.synchronization
+        .jobs(spId)
+        .list()
+        .get()) as { value?: Array<{ id: string; templateId?: string }> };
+
+      for (const job of jobs) {
+        if (job.id) {
+          await microsoft.synchronization.jobs(spId).delete(job.id).delete();
+        }
+      }
+
       const job = (await microsoft.synchronization
         .jobs(spId)
         .create()

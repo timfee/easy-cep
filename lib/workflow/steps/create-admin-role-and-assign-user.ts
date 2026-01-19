@@ -56,9 +56,9 @@ export default defineStep(StepId.CreateAdminRoleAndAssignUser)
       log,
     }) => {
       try {
-        const { items = [] } = (await google.roles
-          .list()
-          .get()) as { items?: RoleItem[] };
+        const { items = [] } = (await google.roles.list().get()) as {
+          items?: RoleItem[];
+        };
         const roleName = vars.require(Var.AdminRoleName);
         const role = items.find((roleItem) => roleItem.roleName === roleName);
         if (role) {

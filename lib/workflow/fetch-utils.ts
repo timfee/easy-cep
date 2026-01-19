@@ -142,10 +142,15 @@ async function executeSingleFetch<T>(
 
   const clone = res.clone();
   let logData: unknown;
-  try {
-    logData = await clone.json();
-  } catch {
-    logData = await clone.text();
+  const rawText = await clone.text();
+  if (rawText) {
+    try {
+      logData = JSON.parse(rawText);
+    } catch {
+      logData = rawText;
+    }
+  } else {
+    logData = rawText;
   }
 
   const is404 = res.status === HttpStatus.NotFound;

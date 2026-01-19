@@ -1,8 +1,8 @@
 #!/usr/bin/env bun
 import { readFile, writeFile } from "node:fs/promises";
 import { createServer } from "node:http";
-import { env } from "@/env";
 import { PROVIDERS, type Provider } from "@/constants";
+import { env } from "@/env";
 import { exchangeCodeForToken, generateAuthUrl } from "@/lib/auth";
 
 const PORT = 3000;

@@ -2,10 +2,10 @@ import "tsconfig-paths/register";
 import { ApiEndpoint } from "@/constants";
 import { env } from "@/env";
 import {
-  REQUIRED_GOOGLE_SCOPES,
-  REQUIRED_MICROSOFT_SCOPES,
   getBearerTokens,
   normalizeEnvValue,
+  REQUIRED_GOOGLE_SCOPES,
+  REQUIRED_MICROSOFT_SCOPES,
 } from "@/lib/testing/tokens";
 
 const TEST_ENV_FETCH_TIMEOUT_MS = 5000;

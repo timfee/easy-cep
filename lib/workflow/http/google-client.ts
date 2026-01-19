@@ -124,7 +124,7 @@ const roleSchemas = {
   get: roleGetSchema,
   list: roleListSchema,
   flatten: true,
-  flattenResponse: roleGetSchema,
+  flattenResponse: roleListSchema,
   create: roleCreateSchema,
   response: roleResponseSchema,
   update: empty,
