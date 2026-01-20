@@ -37,7 +37,7 @@ export default defineStep(StepId.ConfigureGoogleSamlProfile)
         }
 
         if (inboundSamlSsoProfiles.length > 0) {
-          const profile = inboundSamlSsoProfiles[0];
+          const [profile] = inboundSamlSsoProfiles;
           log(LogLevel.Info, "SAML profile already exists");
           markComplete({
             acsUrl: profile.spConfig.assertionConsumerServiceUri,

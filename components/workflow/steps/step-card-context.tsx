@@ -9,7 +9,7 @@ interface StepCardActions {
   onExecute: (id: StepIdValue) => void;
   onUndo: (id: StepIdValue) => void;
   onForce: (id: StepIdValue) => void;
-  onVarChange: (key: VarName, value: unknown) => void;
+  handleVarChange: (key: VarName, value: unknown) => void;
 }
 
 const StepCardContext = createContext<StepCardActions | null>(null);

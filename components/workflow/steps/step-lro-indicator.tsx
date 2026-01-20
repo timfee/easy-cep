@@ -8,6 +8,12 @@ interface StepLROIndicatorProps {
   operationType?: string;
 }
 
+const formatTime = (seconds: number) => {
+  const mins = Math.floor(seconds / 60);
+  const secs = seconds % 60;
+  return mins > 0 ? `${mins}m ${secs}s` : `${secs}s`;
+};
+
 /**
  * Display progress for long-running workflow operations.
  */
@@ -24,12 +30,6 @@ export function StepLROIndicator({
     }, 1000);
     return () => clearInterval(interval);
   }, [startTime]);
-
-  const formatTime = (seconds: number) => {
-    const mins = Math.floor(seconds / 60);
-    const secs = seconds % 60;
-    return mins > 0 ? `${mins}m ${secs}s` : `${secs}s`;
-  };
 
   const progress = estimatedDuration
     ? Math.min((elapsed / estimatedDuration) * 100, 90)

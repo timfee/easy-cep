@@ -30,7 +30,7 @@ export function StepsList() {
       onExecute: executeStep,
       onForce: executeStep,
       onUndo: undoStep,
-      onVarChange: (key: VarName, value: unknown) => {
+      handleVarChange: (key: VarName, value: unknown) => {
         const updates: Partial<WorkflowVars> = {};
         if (typeof value === "string") {
           updates[key] = value;

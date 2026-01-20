@@ -1,8 +1,9 @@
-import { Lock } from "lucide-react";
 import { useCallback } from "react";
 
 import type { InfoItem } from "@/lib/info";
 
+import Link from "next/link";
+import { Lock } from "lucide-react";
 import { Checkbox } from "@/components/ui/checkbox";
 import { cn } from "@/lib/utils";
 
@@ -60,14 +61,14 @@ function InfoItemRow({
       )}
       <div className="min-w-0 flex-1">
         {item.href ? (
-          <a
+          <Link
             className="block truncate text-primary text-xs hover:underline"
             href={item.href}
             rel="noopener noreferrer"
             target="_blank"
           >
             {item.label}
-          </a>
+          </Link>
         ) : (
           <span className="block truncate text-foreground text-xs">
             {item.label}

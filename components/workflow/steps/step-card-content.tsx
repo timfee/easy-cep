@@ -151,7 +151,7 @@ export function StepCardContent({ definition, state, vars, executing }: Props) {
         <div className="w-full overflow-x-auto rounded-lg border border-border/70 bg-muted/30 px-4 py-3 text-left">
           <StepVariables
             missing={missingAll}
-            onChange={actions.onVarChange}
+            onChange={actions.handleVarChange}
             stepId={definition.id}
             vars={vars}
           />
