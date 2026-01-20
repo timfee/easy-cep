@@ -61,7 +61,7 @@ export default defineStep(StepId.CreateAdminRoleAndAssignUser)
           items?: RoleItem[];
         };
         const roleName = vars.require(Var.AdminRoleName);
-        const role = items.find((roleItem) => roleItem.roleName === roleName);
+        const [role] = items.filter((roleItem) => roleItem.roleName === roleName);
         if (role) {
           const privilegeNames = new Set(
             role.rolePrivileges.map((privilege) => privilege.privilegeName)
@@ -95,16 +95,20 @@ export default defineStep(StepId.CreateAdminRoleAndAssignUser)
               directoryServiceId: role.rolePrivileges[0]?.serviceId,
             });
           } else {
-            log(LogLevel.Info, "Role exists without assignment");
+            log(LogLevel.Info, "Role exists without assignment", {
+              adminRoleId: role.roleId,
+              directoryServiceId: role.rolePrivileges[0]?.serviceId,
+            });
             markIncomplete("Role assignment missing", {
               adminRoleId: role.roleId,
               directoryServiceId: role.rolePrivileges[0]?.serviceId,
             });
           }
         } else {
-          log(LogLevel.Info, "Custom admin role missing");
-          markIncomplete("Custom admin role missing", {});
+          log(LogLevel.Info, "Custom admin role missing", { roleName });
+          markIncomplete("Custom admin role missing", { adminRoleId: undefined });
         }
+
       } catch (error) {
         log(LogLevel.Error, "Failed to check custom role", { error });
         markCheckFailed(

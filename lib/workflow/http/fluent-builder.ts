@@ -2,7 +2,7 @@ import { z } from "zod";
 
 import { HttpMethod } from "@/types";
 
-import  { type HttpClient } from "../types/http-client";
+import type { HttpClient } from "../types/http-client";
 
 /**
  * Configuration for building HTTP requests.
@@ -166,18 +166,23 @@ export class ResourceBuilder<TContext = Record<string, never>> {
     const retries = this.config.retries || 0;
     let lastError: unknown;
 
-    for (let i = 0; i <= retries; i++) {
+    for (let attempt = 0; attempt <= retries; attempt += 1) {
       try {
         return await fn();
       } catch (error) {
         lastError = error;
-        if (i < retries) {
-          await new Promise((resolve) => setTimeout(resolve, 2 ** i * 1000));
+        if (attempt < retries) {
+          await new Promise<void>((resolve) => {
+            setTimeout(resolve, 2 ** attempt * 1000);
+          });
         }
       }
     }
 
-    throw lastError;
+    if (lastError instanceof Error) {
+      throw lastError;
+    }
+    throw new Error("Request failed after retries");
   }
 
   private send(method: HttpMethod, body?: unknown): Promise<unknown> {
@@ -188,7 +193,7 @@ export class ResourceBuilder<TContext = Record<string, never>> {
       const response = await this.client.request(url, responseSchema, {
         ...options,
         method,
-        body: body !== undefined ? JSON.stringify(body) : undefined,
+        body: body === undefined ? undefined : JSON.stringify(body),
       });
       if (!responseSchema.safeParse(response).success) {
         throw new Error("Unexpected response schema");
