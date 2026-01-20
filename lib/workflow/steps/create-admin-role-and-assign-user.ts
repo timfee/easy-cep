@@ -59,9 +59,7 @@ export default defineStep(StepId.CreateAdminRoleAndAssignUser)
           items?: RoleItem[];
         };
         const roleName = vars.require(Var.AdminRoleName);
-        const [role] = items.filter(
-          (roleItem) => roleItem.roleName === roleName
-        );
+        const role = items.find((roleItem) => roleItem.roleName === roleName);
         if (role) {
           const privilegeNames = new Set(
             role.rolePrivileges.map((privilege) => privilege.privilegeName)

@@ -1,13 +1,13 @@
 import { NextResponse } from "next/server";
 
-import type { WorkflowVars } from "@/lib/workflow/variables";
-import type { StepStreamEvent } from "@/types";
-
 import { PROVIDERS } from "@/constants";
 import { getToken } from "@/lib/auth";
 import { runStepWithEvents } from "@/lib/workflow/engine";
 import { isStepIdValue } from "@/lib/workflow/step-ids";
+import { StepStatus } from "@/lib/workflow/step-status";
 import { Var } from "@/lib/workflow/variables";
+import type { WorkflowVars } from "@/lib/workflow/variables";
+import type { StepStreamEvent, StepUIState } from "@/types";
 
 const STREAM_HEADERS = {
   "Cache-Control": "no-cache, no-transform",
@@ -31,8 +31,55 @@ export async function GET(
   const writer = stream.writable.getWriter();
   const encoder = new TextEncoder();
 
+  let completed = false;
+  let latestState: StepUIState | undefined;
+  let latestVars: Partial<WorkflowVars> = {};
+  let lastTraceId: string | undefined;
+
   const writeEvent = async (event: StepStreamEvent) => {
-    await writer.write(encoder.encode(toSsePayload(event)));
+    lastTraceId = event.traceId;
+    if (event.type === "state") {
+      latestState = { ...latestState, ...event.state };
+    } else if (event.type === "vars") {
+      latestVars = { ...latestVars, ...event.vars };
+    } else if (event.type === "complete") {
+      completed = true;
+      latestState = event.state;
+      latestVars = { ...latestVars, ...event.newVars };
+    }
+
+    try {
+      await writer.write(encoder.encode(toSsePayload(event)));
+    } catch {
+      // Ignore write errors after stream closes.
+    }
+  };
+
+  const finalizeStream = async () => {
+    if (completed) {
+      return;
+    }
+    const fallbackState: StepUIState = {
+      status: latestState?.status ?? StepStatus.Blocked,
+      logs: latestState?.logs ?? [],
+      error:
+        latestState?.error ??
+        (latestState?.status ? undefined : "Step did not complete"),
+      notes: latestState?.notes,
+      summary: latestState?.summary,
+      blockReason: latestState?.blockReason,
+      lro: latestState?.lro,
+      isChecking: false,
+      isExecuting: false,
+      isUndoing: latestState?.isUndoing,
+    };
+    await writeEvent({
+      newVars: latestVars,
+      state: fallbackState,
+      stepId,
+      traceId: lastTraceId ?? "final",
+      type: "complete",
+    });
   };
 
   await writer.write(encoder.encode(":ok\n\n"));
@@ -54,12 +101,13 @@ export async function GET(
     await writeEvent({
       state: {
         error: "Missing provider tokens",
-        status: "blocked",
+        status: StepStatus.Blocked,
       },
       stepId,
       traceId: "error",
       type: "state",
     });
+    await finalizeStream();
     await writer.close();
     return new NextResponse(stream.readable, { headers: STREAM_HEADERS });
   }

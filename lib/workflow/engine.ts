@@ -285,7 +285,9 @@ async function processStep<T extends StepIdValue>(
     });
   } catch (error) {
     pushState({
-      error: `Check error: ${error instanceof Error ? error.message : "Unknown error"}`,
+      error: `Check error: ${
+        error instanceof Error ? error.message : "Unknown error"
+      }`,
       status: StepStatus.Blocked,
     });
     pushState({ isChecking: false, isExecuting: false });
