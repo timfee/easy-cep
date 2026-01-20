@@ -114,10 +114,8 @@ export interface StepUndoContext {
   markFailed(error: string): void;
 }
 
-import type { StepStatusValue } from "./lib/workflow/step-status";
-
 export interface StepUIState {
-  status: StepStatusValue;
+  status: "blocked" | "ready" | "complete" | "stale" | "pending";
   summary?: string;
   error?: string;
   notes?: string;
