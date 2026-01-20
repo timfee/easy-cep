@@ -1,6 +1,7 @@
-import type { NextResponse } from "next/server";
+import type {NextResponse} from "next/server";
 
-import { cookies } from "next/headers";
+import {cookies} from "next/headers";
+import type {NextResponse} from "next/server";
 import {
   createCipheriv,
   createDecipheriv,
@@ -15,8 +16,10 @@ import {
   PROVIDERS,
   WORKFLOW_CONSTANTS,
 } from "@/constants";
-import { env } from "@/env";
-import { TIME } from "@/lib/workflow/constants/workflow-limits";
+import {ApiEndpoint, OAUTH_STATE_COOKIE_NAME, PROVIDERS, WORKFLOW_CONSTANTS} from '@/constants';
+import type {Provider} from '@/constants';
+import {env} from "@/env";
+import {TIME} from "@/lib/workflow/constants/workflow-limits";
 
 /**
  * Cookie option type for NextResponse.cookies.set.
@@ -178,7 +181,7 @@ function parseToken(value: unknown): Token | null {
     return null;
   }
 
-  const { accessToken, refreshToken, expiresAt, scope } = value;
+  const {accessToken, refreshToken, expiresAt, scope} = value;
   if (
     typeof accessToken !== "string" ||
     typeof refreshToken !== "string" ||
@@ -188,7 +191,7 @@ function parseToken(value: unknown): Token | null {
     return null;
   }
 
-  return { accessToken, expiresAt, refreshToken, scope };
+  return {accessToken, expiresAt, refreshToken, scope};
 }
 
 /**
@@ -244,7 +247,7 @@ export async function exchangeCodeForToken(
 
   const res = await fetch(config.tokenUrl, {
     body: params.toString(),
-    headers: { "Content-Type": "application/x-www-form-urlencoded" },
+    headers: {"Content-Type": "application/x-www-form-urlencoded"},
     method: "POST",
   });
 
@@ -311,7 +314,7 @@ export async function refreshTokenIfNeeded(
 
     const res = await fetch(config.tokenUrl, {
       body: params.toString(),
-      headers: { "Content-Type": "application/x-www-form-urlencoded" },
+      headers: {"Content-Type": "application/x-www-form-urlencoded"},
       method: "POST",
     });
 
@@ -389,11 +392,11 @@ export function setChunkedCookie(
   options?: CookieOptions
 ) {
   const chunkCount = Math.ceil(value.length / CHUNK_SIZE);
-  const defaults: CookieOptions = { httpOnly: true, path: "/" };
-  for (const i of Array.from({ length: chunkCount }).keys()) {
+  const defaults: CookieOptions = {httpOnly: true, path: "/"};
+  for (const i of Array.from({length: chunkCount}).keys()) {
     const chunk = value.slice(i * CHUNK_SIZE, (i + 1) * CHUNK_SIZE);
     const cookieName = i === 0 ? name : `${name}-${i}`;
-    response.cookies.set(cookieName, chunk, { ...defaults, ...options });
+    response.cookies.set(cookieName, chunk, {...defaults, ...options});
   }
 }
 
@@ -427,7 +430,7 @@ export async function getChunkedCookie(
     if (!first) {
       return undefined;
     }
-    let { value } = first;
+    let {value} = first;
     for (const part of iterateCookieChunks(store, name)) {
       value += part.value;
     }

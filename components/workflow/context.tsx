@@ -13,15 +13,16 @@ import {
 import { computeEffectiveStatus } from "@/lib/workflow/core/status";
 import { checkStep, runStep, undoStep } from "@/lib/workflow/engine";
 import { STEP_DETAILS } from "@/lib/workflow/step-details";
-import  { type StepIdValue } from "@/lib/workflow/step-ids";
+import type  { StepIdValue } from "@/lib/workflow/step-ids";
 import { StepStatus } from "@/lib/workflow/step-status";
-import { type BasicVarStore, createVarStore } from "@/lib/workflow/var-store";
-import  { type VarName, type WorkflowVars } from "@/lib/workflow/variables";
+import { createVarStore } from '@/lib/workflow/var-store';
+import type { BasicVarStore } from '@/lib/workflow/var-store';
+import type  { VarName, WorkflowVars } from "@/lib/workflow/variables";
 import { WORKFLOW_VARIABLES } from "@/lib/workflow/variables";
-import  {
-  type StepDefinition,
-  type StepStreamEvent,
-  type StepUIState,
+import type  {
+  StepDefinition,
+  StepStreamEvent,
+  StepUIState,
 } from "@/types";
 
 interface VarStore extends BasicVarStore {

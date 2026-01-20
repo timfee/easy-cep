@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useState } from "react";
 
-import  { type InfoItem } from "@/lib/info";
+import type  { InfoItem } from "@/lib/info";
 
 /**
  * Fetch and refresh info items when a dialog is open.

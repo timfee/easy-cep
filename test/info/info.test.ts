@@ -3,7 +3,7 @@ import fs from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 
-import  { type Token } from "@/lib/auth";
+import type  { Token } from "@/lib/auth";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 

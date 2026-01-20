@@ -4,7 +4,7 @@ import {
   Root as CheckboxRoot,
 } from "@radix-ui/react-checkbox";
 import { CheckIcon } from "lucide-react";
-import  { type ComponentProps } from "react";
+import type  { ComponentProps } from "react";
 
 import { cn } from "@/lib/utils";
 

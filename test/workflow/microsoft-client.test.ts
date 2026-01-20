@@ -1,7 +1,7 @@
 import { describe, expect, it } from "bun:test";
 
 import { MicrosoftClient } from "@/lib/workflow/http/microsoft-client";
-import  { type HttpClient } from "@/lib/workflow/types/http-client";
+import type  { HttpClient } from "@/lib/workflow/types/http-client";
 
 const sampleResponse = {
   preferredSingleSignOnMode: "saml",

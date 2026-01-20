@@ -1,18 +1,19 @@
-import  { type z } from "zod";
+import type  { z } from "zod";
 
-import  { type StepIdValue } from "@/lib/workflow/step-ids";
-import  { type VarName, type WorkflowVars } from "@/lib/workflow/variables";
-import  {
-  type StepCheckContext,
-  type StepDefinition,
-  type StepExecuteContext,
-  type StepUndoContext,
+import type  { StepIdValue } from "@/lib/workflow/step-ids";
+import type  { VarName, WorkflowVars } from "@/lib/workflow/variables";
+import type  {
+  StepCheckContext,
+  StepDefinition,
+  StepExecuteContext,
+  StepUndoContext,
 } from "@/types";
 
 import { GoogleClient } from "./http/google-client";
 import { MicrosoftClient } from "./http/microsoft-client";
-import  { type HttpClient } from "./types/http-client";
-import { type BasicVarStore, createVarStore } from "./var-store";
+import type  { HttpClient } from "./types/http-client";
+import { createVarStore } from './var-store';
+import type { BasicVarStore } from './var-store';
 
 interface StepBuilder<
   TData extends Partial<WorkflowVars> = Partial<WorkflowVars>,

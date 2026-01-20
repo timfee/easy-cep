@@ -4,12 +4,8 @@ import { useState } from "react";
 
 import { Input } from "@/components/ui/input";
 import { categoryTitles } from "@/constants";
-import {
-  type VariableMetadata,
-  type VarName,
-  WORKFLOW_VARIABLES,
-  type WorkflowVars,
-} from "@/lib/workflow/variables";
+import { WORKFLOW_VARIABLES } from '@/lib/workflow/variables';
+import type { VariableMetadata, VarName, WorkflowVars } from '@/lib/workflow/variables';
 
 interface VarsInspectorProps {
   vars: Partial<WorkflowVars>;

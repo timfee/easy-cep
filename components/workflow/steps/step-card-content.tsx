@@ -24,9 +24,10 @@ import {
 import { useStepCardActions } from "@/components/workflow/steps/step-card-context";
 import { cn } from "@/lib/utils";
 import { STEP_DETAILS } from "@/lib/workflow/step-details";
-import { StepId, type StepIdValue } from "@/lib/workflow/step-ids";
-import  { type WorkflowVars } from "@/lib/workflow/variables";
-import  { type StepDefinition, type StepUIState } from "@/types";
+import { StepId } from '@/lib/workflow/step-ids';
+import type { StepIdValue } from '@/lib/workflow/step-ids';
+import type  { WorkflowVars } from "@/lib/workflow/variables";
+import type  { StepDefinition, StepUIState } from "@/types";
 
 import { StepApiCalls } from "./step-api-calls";
 import { StepLogs } from "./step-logs";

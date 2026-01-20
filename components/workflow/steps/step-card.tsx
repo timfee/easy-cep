@@ -10,10 +10,10 @@ import { StepCardHeader } from "@/components/workflow/steps/step-card-header";
 import { StepLROIndicator } from "@/components/workflow/steps/step-lro-indicator";
 import { cn } from "@/lib/utils";
 import { STEP_STATE_CONFIG } from "@/lib/workflow/step-constants";
-import  { type StepIdValue } from "@/lib/workflow/step-ids";
+import type  { StepIdValue } from "@/lib/workflow/step-ids";
 import { StepStatus } from "@/lib/workflow/step-status";
-import  { type VarName, type WorkflowVars } from "@/lib/workflow/variables";
-import  { type StepDefinition, type StepUIState } from "@/types";
+import type  { VarName, WorkflowVars } from "@/lib/workflow/variables";
+import type  { StepDefinition, StepUIState } from "@/types";
 
 interface StepCardProps {
   index: number;

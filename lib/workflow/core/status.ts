@@ -1,9 +1,9 @@
-import  { type StepDefinition, type StepUIState } from "@/types";
+import type  { StepDefinition, StepUIState } from "@/types";
 
 import { STEP_DETAILS } from "../step-details";
-import  { type StepStatusValue } from "../step-status";
+import type  { StepStatusValue } from "../step-status";
 import { StepStatus } from "../step-status";
-import  { type VarName, type WorkflowVars } from "../variables";
+import type  { VarName, WorkflowVars } from "../variables";
 import { WORKFLOW_VARIABLES } from "../variables";
 
 /**

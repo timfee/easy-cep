@@ -4,8 +4,9 @@ import { useCallback, useEffect, useState } from "react";
 
 import { Button } from "@/components/ui/button";
 import { useWorkflow } from "@/components/workflow/context";
-import  { type Provider } from "@/constants";
-import { Var, type WorkflowVars } from "@/lib/workflow/variables";
+import type  { Provider } from "@/constants";
+import { Var } from '@/lib/workflow/variables';
+import type { WorkflowVars } from '@/lib/workflow/variables';
 
 interface Props {
   onUpdate(vars: Partial<WorkflowVars>): void;

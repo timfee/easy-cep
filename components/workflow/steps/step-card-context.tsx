@@ -2,8 +2,8 @@
 
 import { createContext, useContext } from "react";
 
-import  { type StepIdValue } from "@/lib/workflow/step-ids";
-import  { type VarName } from "@/lib/workflow/variables";
+import type  { StepIdValue } from "@/lib/workflow/step-ids";
+import type  { VarName } from "@/lib/workflow/variables";
 
 interface StepCardActions {
   onExecute: (id: StepIdValue) => void;

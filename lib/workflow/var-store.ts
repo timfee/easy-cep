@@ -1,4 +1,4 @@
-import  { type VarName, type WorkflowVars } from "./variables";
+import type  { VarName, WorkflowVars } from "./variables";
 
 /**
  * Basic variable accessor used in workflow contexts.

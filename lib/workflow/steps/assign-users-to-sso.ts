@@ -6,11 +6,11 @@ import {
 } from "@/lib/workflow/core/errors";
 import { extractResourceId, ResourceTypes } from "@/lib/workflow/core/http";
 import { StepId } from "@/lib/workflow/step-ids";
-import  { type WorkflowVars } from "@/lib/workflow/variables";
+import type  { WorkflowVars } from "@/lib/workflow/variables";
 import { Var } from "@/lib/workflow/variables";
 import { LogLevel } from "@/types";
 
-import  { type GoogleClient } from "../http/google-client";
+import type  { GoogleClient } from "../http/google-client";
 import { defineStep } from "../step-builder";
 
 interface OrgUnit {

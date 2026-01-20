@@ -4,8 +4,9 @@ import { PROVIDERS } from "@/constants";
 import { getToken } from "@/lib/auth";
 import { runStepWithEvents } from "@/lib/workflow/engine";
 import { isStepIdValue } from "@/lib/workflow/step-ids";
-import { Var, type WorkflowVars } from "@/lib/workflow/variables";
-import  { type StepStreamEvent } from "@/types";
+import { Var } from '@/lib/workflow/variables';
+import type { WorkflowVars } from '@/lib/workflow/variables';
+import type  { StepStreamEvent } from "@/types";
 
 const STREAM_HEADERS = {
   "Cache-Control": "no-cache, no-transform",

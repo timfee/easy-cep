@@ -3,10 +3,8 @@ import { StepId } from "@/lib/workflow/step-ids";
 import { Var } from "@/lib/workflow/variables";
 import { LogLevel } from "@/types";
 
-import {
-  type AdminPrivilege,
-  GOOGLE_ADMIN_PRIVILEGES,
-} from "../constants/google-admin";
+import { GOOGLE_ADMIN_PRIVILEGES } from '../constants/google-admin';
+import type { AdminPrivilege } from '../constants/google-admin';
 import { defineStep } from "../step-builder";
 
 interface RoleItem {

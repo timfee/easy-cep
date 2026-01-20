@@ -1,7 +1,8 @@
 "use client";
 
 import { Info, Loader2, Trash2 } from "lucide-react";
-import { type ReactNode, useEffect, useState } from "react";
+import { useEffect, useState } from 'react';
+import type { ReactNode } from 'react';
 
 import {
   AlertDialog,
@@ -34,8 +35,8 @@ import {
 import { useInfoItems } from "@/hooks/use-info-items";
 import { useMultiSelect } from "@/hooks/use-multi-select";
 import { usePaginatedItems } from "@/hooks/use-paginated-items";
-import  { type InfoItem } from "@/lib/info";
-import  { type DeleteResult } from "@/lib/workflow/info-actions";
+import type  { InfoItem } from "@/lib/info";
+import type  { DeleteResult } from "@/lib/workflow/info-actions";
 
 import { InfoItemList } from "./info-item-list";
 

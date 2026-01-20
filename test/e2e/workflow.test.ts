@@ -11,7 +11,7 @@ import { env } from "@/env";
 import { getBearerTokens } from "@/lib/testing/tokens";
 import { runStep, undoStep } from "@/lib/workflow/engine";
 import { StepId } from "@/lib/workflow/step-ids";
-import  { type WorkflowVars } from "@/lib/workflow/variables";
+import type  { WorkflowVars } from "@/lib/workflow/variables";
 import { Var } from "@/lib/workflow/variables";
 
 import {

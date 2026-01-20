@@ -1,6 +1,7 @@
-import  { type z } from "zod";
+import type  { z } from "zod";
 
-import { HttpMethod, HttpStatus, LogLevel, type StepLogEntry } from "@/types";
+import { HttpMethod, HttpStatus, LogLevel } from '@/types';
+import type { StepLogEntry } from '@/types';
 
 import {
   ConflictError,
@@ -8,7 +9,8 @@ import {
   NotFoundError,
   PreconditionFailedError,
 } from "./core/errors";
-import { detectLRO, type LROMetadata } from "./lro-detector";
+import { detectLRO } from './lro-detector';
+import type { LROMetadata } from './lro-detector';
 
 /**
  * Extra request options for workflow fetchers.

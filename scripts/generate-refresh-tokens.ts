@@ -2,7 +2,8 @@
 import { readFile, writeFile } from "node:fs/promises";
 import { createServer } from "node:http";
 
-import { PROVIDERS, type Provider } from "@/constants";
+import { PROVIDERS } from '@/constants';
+import type { Provider } from '@/constants';
 import { env } from "@/env";
 import { exchangeCodeForToken, generateAuthUrl } from "@/lib/auth";
 

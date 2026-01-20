@@ -2,10 +2,11 @@ import { z } from "zod";
 
 import { ApiEndpoint } from "@/constants";
 
-import  { type AdminPrivilege } from "../constants/google-admin";
+import type  { AdminPrivilege } from "../constants/google-admin";
 import { GoogleOperationSchema } from "../types/api-schemas";
-import  { type HttpClient } from "../types/http-client";
-import { type CrudSchemas, createCrudMethods, empty } from "./crud-factory";
+import type  { HttpClient } from "../types/http-client";
+import { createCrudMethods, empty } from './crud-factory';
+import type { CrudSchemas } from './crud-factory';
 import { ResourceBuilder } from "./fluent-builder";
 
 const userGetSchema = z

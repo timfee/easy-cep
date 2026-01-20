@@ -2,7 +2,7 @@ import { inspect } from "node:util";
 
 import { HttpStatus } from "@/types";
 
-import  { type WorkflowVars } from "../variables";
+import type  { WorkflowVars } from "../variables";
 
 /**
  * Base HTTP error with status metadata.
