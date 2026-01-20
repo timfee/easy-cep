@@ -72,19 +72,19 @@ export function StepCardContent({ definition, state, vars, executing }: Props) {
   const canUndo = state?.status === "complete";
 
   return (
-    <CardContent className="px-6 pb-8 pt-2">
+    <CardContent className="px-6 pb-8 pt-4">
       <div className="space-y-6">
         {detail?.description && (
-          <div className="space-y-2 rounded-lg border border-border/70 bg-muted/30 p-4 text-left text-foreground/70 text-sm">
+          <div className="space-y-2 rounded-lg border border-border/70 bg-muted/30 px-4 py-3 text-left text-foreground/70 text-sm">
             {detail.description.split("\n").map((l, i) => (
               <p key={`${definition.id}-desc-${i}`}>{l}</p>
             ))}
           </div>
         )}
-        <div className="w-full overflow-x-auto rounded-lg border border-border/70 bg-muted/30 p-4 text-left empty:hidden">
+        <div className="w-full overflow-x-auto rounded-lg border border-border/70 bg-muted/30 px-4 py-3 text-left empty:hidden">
           <StepApiCalls stepId={definition.id} />
         </div>
-        <div className="flex flex-wrap items-start justify-between gap-4 px-4">
+        <div className="flex flex-wrap items-start justify-between gap-4">
           <div>
             <div className="flex items-center gap-2">
               <Button
@@ -133,7 +133,7 @@ export function StepCardContent({ definition, state, vars, executing }: Props) {
             </Button>
           </div>
         </div>
-        <div className="w-full overflow-x-auto rounded-lg border border-border/70 bg-muted/30 p-4 text-left">
+        <div className="w-full overflow-x-auto rounded-lg border border-border/70 bg-muted/30 px-4 py-3 text-left">
           <StepVariables
             missing={missingAll}
             onChange={actions.onVarChange}

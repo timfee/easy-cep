@@ -131,7 +131,7 @@ export function StepVariables({
 
   return (
     <div className="flex w-full flex-wrap gap-4 text-left">
-      <div className="min-w-[260px] flex-1 space-y-3 rounded-lg border border-border/60 border-l-2 border-l-primary/60 bg-muted/30 p-4">
+      <div className="min-w-[320px] flex-1 space-y-3 rounded-lg border border-border/60 border-l-[3px] border-l-primary bg-muted/30 px-4 py-3">
         <h4 className="mb-3 text-[11px] font-semibold uppercase tracking-[0.08em] text-foreground/80">
           Requires
         </h4>
@@ -155,7 +155,7 @@ export function StepVariables({
         )}
       </div>
 
-      <div className="min-w-[260px] flex-1 space-y-3 rounded-lg border border-border/60 border-l-2 border-l-ring/60 bg-muted/30 p-4">
+      <div className="min-w-[320px] flex-1 space-y-3 rounded-lg border border-border/60 border-l-[3px] border-l-ring bg-muted/30 px-4 py-3">
         <h4 className="mb-3 text-[11px] font-semibold uppercase tracking-[0.08em] text-foreground/80">
           Provides
         </h4>

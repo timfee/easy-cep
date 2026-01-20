@@ -64,18 +64,22 @@ function VariableRowContent({
     }
 
     if (value !== undefined) {
+      const valueClasses =
+        isConfigurable && !isEditing
+          ? "text-foreground/80 underline decoration-dotted decoration-foreground/30 underline-offset-2 group-hover:text-foreground group-hover:decoration-foreground/60"
+          : "text-foreground/70";
       return (
-        <code className="block truncate px-3 py-0.5 font-mono text-foreground/70 text-xs">
+        <code className={`block truncate py-0.5 font-mono text-xs ${valueClasses}`}>
           {meta.sensitive ? "••••••••" : String(value)}
         </code>
       );
     }
 
-    return (
-      <span className="px-3 text-foreground/50 text-xs italic">
-        (Not set)
-      </span>
-    );
+    const emptyClasses =
+      isConfigurable && !isEditing
+        ? "text-foreground/60 underline decoration-dotted decoration-foreground/30 underline-offset-2 group-hover:decoration-foreground/60"
+        : "text-foreground/50";
+    return <span className={`text-xs italic ${emptyClasses}`}>(Not set)</span>;
   };
 
   return (
@@ -93,12 +97,16 @@ function VariableRow(props: VariableRowProps) {
   const { varKey, editingVar, meta, onStartEditing, value } = props;
   const isEditing = editingVar?.key === varKey;
   const isConfigurable = meta.configurable;
-  const commonClasses =
+  const baseClasses =
     "group block w-full px-3 py-1.5 text-left transition-colors duration-150";
+  const readOnlyClasses =
+    "cursor-default hover:bg-muted/20 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-primary/20 focus-visible:ring-inset";
+  const interactiveClasses =
+    "cursor-pointer hover:bg-muted/50 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-primary/30 focus-visible:ring-inset active:bg-muted/60";
 
   if (isEditing) {
     return (
-      <div className={`${commonClasses} bg-muted/30`}>
+      <div className={`${baseClasses} bg-muted/30`}>
         <VariableRowContent
           {...props}
           isConfigurable={!!isConfigurable}
@@ -111,7 +119,7 @@ function VariableRow(props: VariableRowProps) {
   if (isConfigurable) {
     return (
       <button
-        className={`${commonClasses} cursor-text hover:bg-muted/40 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-primary/30 focus-visible:ring-offset-1 focus-visible:ring-offset-background`}
+        className={`${baseClasses} ${interactiveClasses}`}
         onClick={() => onStartEditing(varKey, value)}
         type="button"
       >
@@ -125,7 +133,7 @@ function VariableRow(props: VariableRowProps) {
   }
 
   return (
-    <div className={`${commonClasses} cursor-default`}>
+    <div className={`${baseClasses} ${readOnlyClasses}`}>
       <VariableRowContent
         {...props}
         isConfigurable={!!isConfigurable}
@@ -206,11 +214,11 @@ export function VarsInspector({ vars, onChange }: VarsInspectorProps) {
           const categoryTitle = categoryTitles[category];
           return (
             <div className="py-3" key={category}>
-              <h4 className="sticky top-0 z-10 border-border/70 border-b bg-background/95 px-3 py-2 text-[11px] font-semibold uppercase tracking-[0.08em] text-foreground/80 backdrop-blur">
+              <h4 className="sticky top-0 z-10 bg-background/95 px-3 py-2 text-[11px] font-semibold uppercase tracking-[0.08em] text-foreground/80 backdrop-blur shadow-[0_1px_0_0_hsl(var(--border)/0.7)]">
                 {categoryTitle}
               </h4>
 
-              <div className="divide-y divide-border/70">
+              <div className="divide-y divide-border/70 pt-0">
                 {variables.map((entry) => {
                   const { key, ...meta } = entry;
                   return (
