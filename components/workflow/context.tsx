@@ -11,15 +11,9 @@ import {
 } from "react";
 
 import type { StepIdValue } from "@/lib/workflow/step-ids";
-import type { StepStatusValue } from "@/lib/workflow/step-status";
 import type { BasicVarStore } from "@/lib/workflow/var-store";
 import type { VarName, WorkflowVars } from "@/lib/workflow/variables";
-import type {
-  StepDefinition,
-  StepLogEntry,
-  StepStreamEvent,
-  StepUIState,
-} from "@/types";
+import type { StepDefinition, StepStreamEvent, StepUIState } from "@/types";
 
 import { computeEffectiveStatus } from "@/lib/workflow/core/status";
 import { checkStep, runStep, undoStep } from "@/lib/workflow/engine";

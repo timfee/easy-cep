@@ -69,7 +69,7 @@ const hasGoogleRefreshFlow = Boolean(
 );
 const hasGoogleServiceAccount = Boolean(
   googleImpersonatedEmail &&
-    (googleServiceAccountJson || googleServiceAccountFile)
+  (googleServiceAccountJson || googleServiceAccountFile)
 );
 const hasGoogleCredentials = hasGoogleRefreshFlow || hasGoogleServiceAccount;
 
@@ -110,97 +110,103 @@ if (process.env.UNIT_TEST === "1") {
 
     if (googleToken?.accessToken) {
       const tokenInfoUrl = ApiEndpoint.GoogleAuth.TokenInfo;
-    const googleAccessToken = googleToken.accessToken;
-    const googleResponse = await fetchWithTimeout(
-      `${tokenInfoUrl}?access_token=${encodeURIComponent(googleAccessToken)}`,
-      { method: "GET" }
-    );
-    if (!googleResponse.ok) {
-      const details = await googleResponse.text();
-      throw new Error(`Google tokeninfo failed: ${details}`);
-    }
-    const googleTokenInfo = await googleResponse.json();
-    const tokenEmail =
-      typeof googleTokenInfo.email === "string" ? googleTokenInfo.email : "";
-    const tokenHd =
-      typeof googleTokenInfo.hd === "string" ? googleTokenInfo.hd : "";
-    const tokenAud =
-      typeof googleTokenInfo.aud === "string" ? googleTokenInfo.aud : "";
-    const expectedGoogleDomain =
-      normalizeEnvValue(env.GOOGLE_HD_DOMAIN) ||
-      normalizeEnvValue(env.TEST_DOMAIN) ||
-      "test.example.com";
-    console.warn(`Google tokeninfo email: ${tokenEmail || "(none)"}`);
-    console.warn(`Google tokeninfo hd: ${tokenHd || "(none)"}`);
-    console.warn(`Google tokeninfo aud: ${tokenAud || "(none)"}`);
-
-    if (!tokenHd) {
-      console.warn(
-        "Google token has no hd claim; proceeding but Admin SDK may fail if not a Workspace admin token."
+      const googleAccessToken = googleToken.accessToken;
+      const googleResponse = await fetchWithTimeout(
+        `${tokenInfoUrl}?access_token=${encodeURIComponent(googleAccessToken)}`,
+        { method: "GET" }
       );
-    } else if (expectedGoogleDomain && tokenHd !== expectedGoogleDomain) {
-      throw new Error(
-        `Google token domain mismatch: expected ${expectedGoogleDomain}, got ${tokenHd}. Re-run bun run tokens:generate with the correct Workspace admin account.`
+      if (!googleResponse.ok) {
+        const details = await googleResponse.text();
+        throw new Error(`Google tokeninfo failed: ${details}`);
+      }
+      const googleTokenInfo = await googleResponse.json();
+      const tokenEmail =
+        typeof googleTokenInfo.email === "string" ? googleTokenInfo.email : "";
+      const tokenHd =
+        typeof googleTokenInfo.hd === "string" ? googleTokenInfo.hd : "";
+      const tokenAud =
+        typeof googleTokenInfo.aud === "string" ? googleTokenInfo.aud : "";
+      const expectedGoogleDomain =
+        normalizeEnvValue(env.GOOGLE_HD_DOMAIN) ||
+        normalizeEnvValue(env.TEST_DOMAIN) ||
+        "test.example.com";
+      console.warn(`Google tokeninfo email: ${tokenEmail || "(none)"}`);
+      console.warn(`Google tokeninfo hd: ${tokenHd || "(none)"}`);
+      console.warn(`Google tokeninfo aud: ${tokenAud || "(none)"}`);
+
+      if (!tokenHd) {
+        console.warn(
+          "Google token has no hd claim; proceeding but Admin SDK may fail if not a Workspace admin token."
+        );
+      } else if (expectedGoogleDomain && tokenHd !== expectedGoogleDomain) {
+        throw new Error(
+          `Google token domain mismatch: expected ${expectedGoogleDomain}, got ${tokenHd}. Re-run bun run tokens:generate with the correct Workspace admin account.`
+        );
+      }
+
+      const googleScopes = normalizeScopes(googleTokenInfo.scope);
+      const missingGoogleScopes = REQUIRED_GOOGLE_SCOPES.filter(
+        (scope) => !googleScopes.includes(scope)
       );
-    }
+      if (missingGoogleScopes.length > 0) {
+        throw new Error(
+          `Google token missing scopes: ${missingGoogleScopes.join(", ")}`
+        );
+      }
 
-    const googleScopes = normalizeScopes(googleTokenInfo.scope);
-    const missingGoogleScopes = REQUIRED_GOOGLE_SCOPES.filter(
-      (scope) => !googleScopes.includes(scope)
-    );
-    if (missingGoogleScopes.length > 0) {
-      throw new Error(
-        `Google token missing scopes: ${missingGoogleScopes.join(", ")}`
+      const microsoftAccessToken = microsoftToken?.accessToken ?? "";
+      const microsoftPayload = decodeJwtPayload(microsoftAccessToken);
+
+      const microsoftUpn =
+        typeof microsoftPayload?.preferred_username === "string"
+          ? microsoftPayload.preferred_username
+          : "";
+      const microsoftTenantId =
+        typeof microsoftPayload?.tid === "string" ? microsoftPayload.tid : "";
+      const expectedMsTenant = normalizeEnvValue(env.MICROSOFT_TENANT);
+      console.warn(`Microsoft token subject: ${microsoftUpn || "(none)"}`);
+
+      if (
+        microsoftUpn &&
+        expectedMsTenant &&
+        !microsoftUpn
+          .toLowerCase()
+          .endsWith(`@${expectedMsTenant.toLowerCase()}`)
+      ) {
+        throw new Error(
+          `Microsoft token user ${microsoftUpn} does not match tenant/domain ${expectedMsTenant}. Re-run bun run tokens:generate with the correct tenant account.`
+        );
+      }
+
+      if (microsoftTenantId === "9188040d-6c67-4c5b-b112-36a304b66dad") {
+        throw new Error(
+          "Microsoft token is from a personal (MSA) account. Use an Entra ID organizational account and re-run bun run tokens:generate."
+        );
+      }
+
+      const microsoftResponse = await fetchWithTimeout(
+        ApiEndpoint.Microsoft.Me,
+        {
+          headers: { Authorization: `Bearer ${microsoftAccessToken}` },
+        }
       );
-    }
-
-    const microsoftAccessToken = microsoftToken?.accessToken ?? "";
-    const microsoftPayload = decodeJwtPayload(microsoftAccessToken);
-
-    const microsoftUpn =
-      typeof microsoftPayload?.preferred_username === "string"
-        ? microsoftPayload.preferred_username
-        : "";
-    const microsoftTenantId =
-      typeof microsoftPayload?.tid === "string" ? microsoftPayload.tid : "";
-    const expectedMsTenant = normalizeEnvValue(env.MICROSOFT_TENANT);
-    console.warn(`Microsoft token subject: ${microsoftUpn || "(none)"}`);
-
-    if (
-      microsoftUpn &&
-      expectedMsTenant &&
-      !microsoftUpn.toLowerCase().endsWith(`@${expectedMsTenant.toLowerCase()}`)
-    ) {
-      throw new Error(
-        `Microsoft token user ${microsoftUpn} does not match tenant/domain ${expectedMsTenant}. Re-run bun run tokens:generate with the correct tenant account.`
+      if (!microsoftResponse.ok) {
+        const details = await microsoftResponse.text();
+        throw new Error(`Microsoft token validation failed: ${details}`);
+      }
+      const microsoftScopes = normalizeScopes(microsoftPayload?.scp);
+      const missingMicrosoftScopes = REQUIRED_MICROSOFT_SCOPES.filter(
+        (scope) => !microsoftScopes.includes(scope)
       );
-    }
+      if (missingMicrosoftScopes.length > 0) {
+        throw new Error(
+          `Microsoft token missing scopes: ${missingMicrosoftScopes.join(", ")}`
+        );
+      }
 
-    if (microsoftTenantId === "9188040d-6c67-4c5b-b112-36a304b66dad") {
-      throw new Error(
-        "Microsoft token is from a personal (MSA) account. Use an Entra ID organizational account and re-run bun run tokens:generate."
-      );
-    }
-
-    const microsoftResponse = await fetchWithTimeout(ApiEndpoint.Microsoft.Me, {
-      headers: { Authorization: `Bearer ${microsoftAccessToken}` },
-    });
-    if (!microsoftResponse.ok) {
-      const details = await microsoftResponse.text();
-      throw new Error(`Microsoft token validation failed: ${details}`);
-    }
-    const microsoftScopes = normalizeScopes(microsoftPayload?.scp);
-    const missingMicrosoftScopes = REQUIRED_MICROSOFT_SCOPES.filter(
-      (scope) => !microsoftScopes.includes(scope)
-    );
-    if (missingMicrosoftScopes.length > 0) {
-      throw new Error(
-        `Microsoft token missing scopes: ${missingMicrosoftScopes.join(", ")}`
-      );
-    }
-
-    if (!(googleToken && microsoftToken)) {
-      throw new Error("Failed to refresh required tokens for tests.");
+      if (!(googleToken && microsoftToken)) {
+        throw new Error("Failed to refresh required tokens for tests.");
+      }
     }
   }
 }
