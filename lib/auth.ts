@@ -1,5 +1,6 @@
+import type { NextResponse } from "next/server";
+
 import { cookies } from "next/headers";
-import  { type NextResponse } from "next/server";
 import {
   createCipheriv,
   createDecipheriv,
@@ -8,10 +9,10 @@ import {
 } from "node:crypto";
 
 import {
+  type Provider,
   ApiEndpoint,
   OAUTH_STATE_COOKIE_NAME,
   PROVIDERS,
-  type Provider,
   WORKFLOW_CONSTANTS,
 } from "@/constants";
 import { env } from "@/env";
@@ -387,12 +388,30 @@ export function setChunkedCookie(
   value: string,
   options?: CookieOptions
 ) {
-  const chunks = Math.ceil(value.length / CHUNK_SIZE);
+  const chunkCount = Math.ceil(value.length / CHUNK_SIZE);
   const defaults: CookieOptions = { httpOnly: true, path: "/" };
-  for (let i = 0; i < chunks; i++) {
+  for (const i of Array.from({ length: chunkCount }).keys()) {
     const chunk = value.slice(i * CHUNK_SIZE, (i + 1) * CHUNK_SIZE);
     const cookieName = i === 0 ? name : `${name}-${i}`;
     response.cookies.set(cookieName, chunk, { ...defaults, ...options });
+  }
+}
+
+/**
+ * Helper to iterate over chunked cookies.
+ */
+function* iterateCookieChunks(
+  store: Awaited<ReturnType<typeof cookies>>,
+  name: string
+) {
+  let i = 1;
+  while (true) {
+    const part = store.get(`${name}-${i}`);
+    if (!part) {
+      break;
+    }
+    yield part;
+    i++;
   }
 }
 
@@ -409,11 +428,7 @@ export async function getChunkedCookie(
       return undefined;
     }
     let { value } = first;
-    for (let i = 1; ; i++) {
-      const part = store.get(`${name}-${i}`);
-      if (!part) {
-        break;
-      }
+    for (const part of iterateCookieChunks(store, name)) {
       value += part.value;
     }
     return value;
@@ -431,12 +446,8 @@ export async function clearChunkedCookie(response: NextResponse, name: string) {
     if (store.get(name)) {
       response.cookies.delete(name);
     }
-    for (let i = 1; ; i++) {
-      const part = store.get(`${name}-${i}`);
-      if (!part) {
-        break;
-      }
-      response.cookies.delete(`${name}-${i}`);
+    for (const part of iterateCookieChunks(store, name)) {
+      response.cookies.delete(part.name);
     }
   } catch {
     /* ignore cookie clearing errors */

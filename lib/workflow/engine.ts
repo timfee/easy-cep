@@ -196,14 +196,23 @@ async function processStep<T extends StepIdValue>(
   const addLog = (entry: StepLogEntry) => {
     const nextLogs = appendLog(entry, vars, logs);
     const sanitizedEntry = nextLogs.at(-1);
-    if (!sanitizedEntry) {
-      return;
-    }
-    logs = nextLogs;
-    logDev(sanitizedEntry, vars);
-    emitLogEvent(eventMeta, sanitizedEntry);
-    pushState({});
-  };
+      if (!sanitizedEntry) {
+        return;
+      }
+      logs = nextLogs;
+      logDev(sanitizedEntry, vars);
+      emitLogEvent(eventMeta, sanitizedEntry);
+      pushState({});
+    };
+
+    const logPhase = (phase: "check" | "execute", status: "start" | "end") => {
+      addLog({
+        data: { phase, status, stepId },
+        level: LogLevel.Debug,
+        message: `Phase ${phase} ${status}`,
+        timestamp: Date.now(),
+      });
+    };
 
   const shouldUseCookieTokens = env.NODE_ENV !== "test";
   const googleTokenObj = shouldUseCookieTokens
@@ -227,9 +236,9 @@ async function processStep<T extends StepIdValue>(
     },
   };
 
+  logPhase("check", "start");
   emitPhaseEvent(eventMeta, "check", "start");
   pushState({ isChecking: true });
-
   type CheckType =
     Parameters<typeof step.check>[0] extends StepCheckContext<infer D>
       ? D
@@ -288,6 +297,7 @@ async function processStep<T extends StepIdValue>(
 
   if (checkFailed) {
     pushState({ isChecking: false });
+    logPhase("check", "end");
     completeCheckPhase();
     return { newVars: finalVars, state: currentState };
   }
@@ -295,6 +305,7 @@ async function processStep<T extends StepIdValue>(
   if (isComplete) {
     const newVars = checkData ?? {};
     pushState({ isChecking: false });
+    logPhase("check", "end");
     completeCheckPhase();
     return { newVars, state: currentState };
   }
@@ -302,6 +313,7 @@ async function processStep<T extends StepIdValue>(
   if (!checkData) {
     pushState({ error: "Check data missing", status: StepStatus.Blocked });
     pushState({ isChecking: false });
+    logPhase("check", "end");
     completeCheckPhase();
     return { newVars: finalVars, state: currentState };
   }
@@ -312,7 +324,9 @@ async function processStep<T extends StepIdValue>(
   emitVarsEvent(eventMeta, checkData);
 
   if (execute) {
+    logPhase("check", "end");
     emitPhaseEvent(eventMeta, "check", "end");
+    logPhase("execute", "start");
     emitPhaseEvent(eventMeta, "execute", "start");
     pushState({ isExecuting: true, isChecking: false });
 
@@ -341,8 +355,10 @@ async function processStep<T extends StepIdValue>(
         status: StepStatus.Blocked,
       });
     }
+    logPhase("execute", "end");
     emitPhaseEvent(eventMeta, "execute", "end");
   } else {
+    logPhase("check", "end");
     emitPhaseEvent(eventMeta, "check", "end");
   }
 

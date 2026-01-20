@@ -6,10 +6,12 @@
     "./node_modules/ultracite/config/oxlint/react/.oxlintrc.json",
     "./node_modules/ultracite/config/oxlint/next/.oxlintrc.json"
   ],
+
   "rules": {
     "max-statements": "off",
     "func-style": "off", //["error", "declaration"]
     "sort-keys": "off",
-    "import/consistent-type-specifier-style": "error"
+    "import/consistent-type-specifier-style": "off",
+    "no-import-type-side-effects": "off"
   }
 }

@@ -1,12 +1,14 @@
 import { NextResponse } from "next/server";
 
 import { ApiEndpoint, PROVIDERS } from "@/constants";
-import { getChunkedCookie } from "@/lib/auth";
+import { getChunkedCookie, getToken } from "@/lib/auth";
 
 /**
  * Verify provider tokens against their APIs.
  */
 export async function GET() {
+  const gt = await getToken(PROVIDERS.GOOGLE);
+  console.log(gt);
   const googleToken = await getChunkedCookie(`${PROVIDERS.GOOGLE}_token`);
   const msToken = await getChunkedCookie(`${PROVIDERS.MICROSOFT}_token`);
   const result = { google: { valid: false }, microsoft: { valid: false } };
@@ -35,5 +37,5 @@ export async function GET() {
     }
   }
 
-  return NextResponse.json(result);
+  return NextResponse.json({ result, googleToken, msToken });
 }
