@@ -206,7 +206,7 @@ export async function listProvisioningJobs(): Promise<InfoItem[]> {
     throw new Error(`HTTP ${spRes.status}`);
   }
   const spData = SpSchema.parse(await spRes.json());
-  const sp = spData.value[0];
+  const [sp] = spData.value;
   if (!sp) {
     return [];
   }
