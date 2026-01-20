@@ -393,6 +393,13 @@ export function WorkflowProvider({
         if (Object.keys(result.newVars).length > 0) {
           updateVars(result.newVars);
         }
+      } catch (error) {
+        updateStep(step.id, {
+          error: error instanceof Error ? error.message : "Check failed",
+          isChecking: false,
+          status: StepStatus.Blocked,
+        });
+        checkedSteps.current.delete(step.id);
       } finally {
         inflightChecks.current.delete(step.id);
       }
