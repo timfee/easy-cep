@@ -77,7 +77,7 @@ function logDev(entry: StepLogEntry, vars: Partial<WorkflowVars>) {
         ? { error: entry.data, vars: sanitizeVars(vars) }
         : entry.data,
   };
-  console.debug("[workflow]", payload);
+  console.debug(`[workflow - ${entry.data?.stepId}]`, entry, payload);
 }
 
 type StepEventContext =

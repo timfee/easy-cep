@@ -32,7 +32,7 @@ export async function GET(
   const encoder = new TextEncoder();
 
   let completed = false;
-  let latestState: StepUIState | undefined;
+  let latestState: Partial<StepUIState> | undefined;
   let latestVars: Partial<WorkflowVars> = {};
   let lastTraceId: string | undefined;
 
@@ -59,12 +59,13 @@ export async function GET(
     if (completed) {
       return;
     }
+    const fallbackStatus = latestState?.status ?? StepStatus.Blocked;
     const fallbackState: StepUIState = {
-      status: latestState?.status ?? StepStatus.Blocked,
+      status: fallbackStatus,
       logs: latestState?.logs ?? [],
       error:
         latestState?.error ??
-        (latestState?.status ? undefined : "Step did not complete"),
+        (fallbackStatus ? undefined : "Step did not complete"),
       notes: latestState?.notes,
       summary: latestState?.summary,
       blockReason: latestState?.blockReason,
@@ -124,13 +125,14 @@ export async function GET(
     await writeEvent({
       state: {
         error: error instanceof Error ? error.message : "Unknown error",
-        status: "blocked",
+        status: StepStatus.Blocked,
       },
       stepId,
       traceId: "error",
       type: "state",
     });
   } finally {
+    await finalizeStream();
     await writer.close();
   }
 

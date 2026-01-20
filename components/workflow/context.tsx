@@ -197,6 +197,8 @@ export function WorkflowProvider({
       if (event.type === "complete") {
         updateStep(stepId, event.state);
         updateVars(filterSensitiveVars(event.newVars));
+        setExecuting(null);
+        checkedSteps.current.delete(stepId);
         return;
       }
 
@@ -322,10 +324,13 @@ export function WorkflowProvider({
               error instanceof Error ? error.message : "Unknown error occurred",
             status: StepStatus.Blocked,
           });
+        } finally {
+          setExecuting(null);
         }
-      } finally {
-        setExecuting(null);
+        return;
       }
+
+      setExecuting(null);
     },
     [steps, vars, updateStep, updateVars, applyStepEvent, filterSensitiveVars]
   );
