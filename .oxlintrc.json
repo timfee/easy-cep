@@ -9,6 +9,7 @@
   "rules": {
     "max-statements": "off",
     "func-style": "off", //["error", "declaration"]
-    "sort-keys": "off"
+    "sort-keys": "off",
+    "import/consistent-type-specifier-style": "error"
   }
 }

@@ -306,13 +306,15 @@ async function processStep<T extends StepIdValue>(
     return { newVars: finalVars, state: currentState };
   }
 
+  pushState({ isChecking: false });
+
   finalVars = checkData;
   emitVarsEvent(eventMeta, checkData);
-  completeCheckPhase();
 
   if (execute) {
+    emitPhaseEvent(eventMeta, "check", "end");
     emitPhaseEvent(eventMeta, "execute", "start");
-    pushState({ isExecuting: true });
+    pushState({ isExecuting: true, isChecking: false });
 
     try {
       await step.execute({
@@ -340,6 +342,8 @@ async function processStep<T extends StepIdValue>(
       });
     }
     emitPhaseEvent(eventMeta, "execute", "end");
+  } else {
+    emitPhaseEvent(eventMeta, "check", "end");
   }
 
   emitVarsEvent(eventMeta, finalVars);

@@ -1,3 +1,4 @@
+// oxlint-disable unicorn/prefer-logical-operator-over-ternary
 "use client";
 
 import {
@@ -8,16 +9,17 @@ import {
   Network,
   XCircle,
 } from "lucide-react";
-import {useState} from "react";
+import { useState } from "react";
+
+import type { StepLogEntry } from "@/types";
 
 import {
   Collapsible,
   CollapsibleContent,
   CollapsibleTrigger,
 } from "@/components/ui/collapsible";
-import {cn} from "@/lib/utils";
-import {extractPath} from "@/lib/utils/url";
-import {type StepLogEntry} from "@/types";
+import { cn } from "@/lib/utils";
+import { extractPath } from "@/lib/utils/url";
 
 /**
  * Select the icon for a log level.
@@ -27,14 +29,17 @@ function getLevelIcon(level?: string) {
     case "warn": {
       return <AlertTriangle className="h-3 w-3 text-chart-1" />;
     }
+
     case "error": {
       return <XCircle className="h-3 w-3 text-destructive" />;
-    case "debug":
+    }
+    case "debug": {
       return <Bug className="h-3 w-3 text-accent-foreground" />;
-    default:
+    }
+    default: {
       return <Info className="h-3 w-3 text-primary" />;
+    }
   }
-}
 }
 
 /**
@@ -42,14 +47,18 @@ function getLevelIcon(level?: string) {
  */
 function getLevelClasses(level?: string) {
   switch (level) {
-    case "warn":
+    case "warn": {
       return "border-chart-1/30 bg-chart-1/10 text-chart-1";
-    case "error":
+    }
+    case "error": {
       return "border-destructive/20 bg-destructive/10 text-destructive";
-    case "debug":
+    }
+    case "debug": {
       return "border-accent/30 bg-accent/20 text-accent-foreground";
-    default:
+    }
+    default: {
       return "border-primary/20 bg-primary/10 text-primary";
+    }
   }
 }
 
@@ -69,7 +78,7 @@ interface StepLogItemProps {
 /**
  * Render a single log entry row with expandable details.
  */
-export function StepLogItem({log}: StepLogItemProps) {
+export function StepLogItem({ log }: StepLogItemProps) {
   const [open, setOpen] = useState(false);
   const time = new Date(log.timestamp).toLocaleTimeString();
 
