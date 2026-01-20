@@ -73,7 +73,7 @@ export interface StepCheckContext<T> {
   vars: Partial<WorkflowVars>;
   markComplete(data: T): void;
   markIncomplete(summary: string, data: T): void;
-  markStale(message: string): void;
+  markStale(message: string, data: T): void;
   markCheckFailed(error: string): void;
 }
 
