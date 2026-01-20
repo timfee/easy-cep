@@ -1,4 +1,5 @@
 import { Database } from "lucide-react";
+import { Pencil } from "lucide-react";
 import { useState } from "react";
 
 import { Input } from "@/components/ui/input";
@@ -66,7 +67,7 @@ function VariableRowContent({
     if (value !== undefined) {
       const valueClasses =
         isConfigurable && !isEditing
-          ? "text-foreground/80 underline decoration-dotted decoration-foreground/30 underline-offset-2 group-hover:text-foreground group-hover:decoration-foreground/60"
+          ? "text-foreground/80 group-hover:text-foreground"
           : "text-foreground/70";
       return (
         <code className={`block truncate py-0.5 font-mono text-xs ${valueClasses}`}>
@@ -77,16 +78,19 @@ function VariableRowContent({
 
     const emptyClasses =
       isConfigurable && !isEditing
-        ? "text-foreground/60 underline decoration-dotted decoration-foreground/30 underline-offset-2 group-hover:decoration-foreground/60"
+        ? "text-foreground/60 group-hover:text-foreground/70"
         : "text-foreground/50";
     return <span className={`text-xs italic ${emptyClasses}`}>(Not set)</span>;
   };
 
   return (
     <div className="flex flex-col gap-0.5">
-      <div className="flex items-center gap-1.5">
+      <div className="flex w-full items-center gap-1.5">
         <Database className="h-2.5 w-2.5 text-foreground/50" />
         <span className="font-medium text-foreground text-xs">{varKey}</span>
+        {isConfigurable && !isEditing && (
+          <Pencil className="ml-auto h-3 w-3 text-foreground/40 opacity-0 transition-opacity duration-150 group-hover:opacity-100 group-hover:text-foreground/60 group-focus-visible:opacity-100" />
+        )}
       </div>
       <div>{renderValue()}</div>
     </div>

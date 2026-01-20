@@ -107,7 +107,7 @@ export function StepCardHeader({
 
   return (
     <CardHeader
-      className="cursor-pointer rounded-t-xl px-6 py-4 transition-colors hover:bg-muted/60 focus-visible:bg-muted/70 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/30 focus-visible:ring-inset"
+      className="cursor-pointer rounded-t-xl px-6 py-4 transition-colors focus-visible:outline-none"
       aria-expanded={isExpanded}
       onClick={(e) => {
         e.stopPropagation();

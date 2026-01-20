@@ -54,8 +54,9 @@ export const StepCard = memo(function StepCard({
       <Collapsible onOpenChange={setIsExpanded} open={isExpanded}>
         <Card
           className={cn(
-            "bg-card border border-border/40 shadow-sm transition-shadow duration-300 ease-out",
-            state?.status !== StepStatus.Blocked && "hover:shadow-md",
+            "gap-0 bg-card py-0 border border-border/40 shadow-sm ring-1 ring-primary/10 transition-colors transition-shadow duration-300 ease-out",
+            state?.status !== StepStatus.Blocked &&
+              "hover:bg-muted/10 hover:shadow-md hover:ring-primary/20 focus-within:bg-muted/10 focus-within:ring-primary/20",
             config.borderClass
           )}
         >
