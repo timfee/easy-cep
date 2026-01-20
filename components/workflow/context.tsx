@@ -204,6 +204,14 @@ export function WorkflowProvider({
     []
   );
 
+  const clearStepActivity = useCallback(
+    (stepId: StepIdValue) => {
+      updateStep(stepId, { isExecuting: false, isUndoing: false });
+      setExecuting((prev) => (prev === stepId ? null : prev));
+    },
+    [updateStep]
+  );
+
   const applyStepEvent = useCallback(
     (event: StepStreamEvent) => {
       const { stepId } = event;
@@ -216,7 +224,7 @@ export function WorkflowProvider({
       if (event.type === "complete") {
         updateStep(stepId, event.state);
         updateVars(filterSensitiveVars(event.newVars));
-        setExecuting(null);
+        clearStepActivity(stepId);
         checkedSteps.current.delete(stepId);
         return;
       }
@@ -292,8 +300,8 @@ export function WorkflowProvider({
         });
       }
     },
-    [filterSensitiveVars, updateStep, updateVars]
-  );
+     [clearStepActivity, filterSensitiveVars, updateStep, updateVars]
+   );
 
   const executeStep = useCallback(
     async (id: StepIdValue) => {
@@ -385,15 +393,24 @@ export function WorkflowProvider({
             status: StepStatus.Blocked,
           });
         } finally {
-          setExecuting(null);
+          clearStepActivity(id);
         }
         return;
       }
 
-      setExecuting(null);
+      clearStepActivity(id);
     },
-    [steps, vars, updateStep, updateVars, applyStepEvent, filterSensitiveVars]
+    [
+      steps,
+      vars,
+      updateStep,
+      updateVars,
+      applyStepEvent,
+      filterSensitiveVars,
+      clearStepActivity,
+    ]
   );
+
 
   const undoStepAction = useCallback(
     async (id: StepIdValue) => {
@@ -425,9 +442,11 @@ export function WorkflowProvider({
           error: error instanceof Error ? error.message : "Failed to undo step",
           status: StepStatus.Blocked,
         });
+      } finally {
+        clearStepActivity(id);
       }
     },
-    [steps, vars, updateStep]
+    [steps, vars, updateStep, clearStepActivity]
   );
 
   const checkSteps = useCallback(async () => {
@@ -456,41 +475,66 @@ export function WorkflowProvider({
         continue;
       }
 
+      const isExecutingStep =
+        executing === step.id || statusRef.current[step.id]?.isExecuting;
+      const isUndoingStep = statusRef.current[step.id]?.isUndoing;
+      if (isExecutingStep || isUndoingStep) {
+        continue;
+      }
+
       checkedSteps.current.add(step.id);
       inflightChecks.current.add(step.id);
-      updateStep(step.id, {
-        isChecking: true,
-        status: statusRef.current[step.id]?.status ?? StepStatus.Ready,
-      });
 
       let result: Awaited<ReturnType<typeof checkStep>> | undefined;
+      let checkError: string | undefined;
+
       try {
         result = await checkStep(step.id, vars);
-        updateStep(step.id, result.state);
-
-        if (Object.keys(result.newVars).length > 0) {
-          updateVars(result.newVars);
-        }
       } catch (error) {
-        updateStep(step.id, {
-          error: error instanceof Error ? error.message : "Check failed",
-          status: StepStatus.Blocked,
-        });
+        checkError = error instanceof Error ? error.message : "Check failed";
         checkedSteps.current.delete(step.id);
       } finally {
         inflightChecks.current.delete(step.id);
+
+        // Calculate final status and state
+        const prevStatus = statusRef.current[step.id]?.status ?? StepStatus.Ready;
+        let nextStatus = prevStatus;
+        let nextError = result?.state.error;
+
+        if (checkError) {
+          nextStatus = StepStatus.Blocked;
+          nextError = checkError;
+        } else if (result?.state.status) {
+          nextStatus = result.state.status;
+        }
+
+        const existingLogs = statusRef.current[step.id]?.logs ?? [];
+        const incomingLogs = result?.state.logs ?? [];
+        const mergedLogs = incomingLogs.reduce((acc, log) => {
+          const exists = acc.some(
+            (entry) =>
+              entry.timestamp === log.timestamp && entry.message === log.message
+          );
+          if (!exists) {
+            acc.push(log);
+          }
+          return acc;
+        }, [...existingLogs]);
+
         updateStep(step.id, {
-          isChecking: false,
-          status:
-            result?.state.status ??
-            statusRef.current[step.id]?.status ??
-            StepStatus.Ready,
+          isChecking: false, // Ensure spinner is cleared if it was stuck
+          status: nextStatus,
           summary: result?.state.summary,
-          error: result?.state.error,
+          error: nextError,
           notes: result?.state.notes,
           blockReason: result?.state.blockReason,
           lro: result?.state.lro,
+          logs: mergedLogs,
         });
+
+        if (result?.newVars && Object.keys(result.newVars).length > 0) {
+          updateVars(result.newVars).catch(() => {});
+        }
       }
     }
   }, [vars, steps, status, updateStep, updateVars]);
@@ -528,7 +572,7 @@ export function WorkflowProvider({
       };
     }
     return computed;
-  }, [steps, vars]);
+  }, [steps, vars, status]);
 
   const value: WorkflowContextValue = {
     applyStepEvent,

@@ -63,24 +63,6 @@ function appendLog(
   return [...logs, { ...entry, data }];
 }
 
-/**
- * Emit verbose logs in development mode.
- */
-function logDev(entry: StepLogEntry, vars: Partial<WorkflowVars>) {
-  if (env.NODE_ENV !== "development") {
-    return;
-  }
-  const payload = {
-    ...entry,
-    data:
-      entry.level === LogLevel.Error
-        ? { error: entry.data, vars: sanitizeVars(vars) }
-        : entry.data,
-  };
-  const logData = entry.data as { stepId?: string } | undefined;
-  console.debug(`[workflow - ${logData?.stepId}]`, entry, payload);
-}
-
 type StepEventContext =
   | {
       stepId: StepIdValue;
@@ -204,7 +186,6 @@ async function processStep<T extends StepIdValue>(
       return;
     }
     logs = nextLogs;
-    logDev(sanitizedEntry, vars);
     emitLogEvent(eventMeta, sanitizedEntry);
     currentState = { ...currentState, logs };
   };
@@ -442,7 +423,6 @@ async function processUndoStep<T extends StepIdValue>(
 
   const addLog = (entry: StepLogEntry) => {
     logs = appendLog(entry, vars, logs);
-    logDev(entry, vars);
     pushState({});
   };
 

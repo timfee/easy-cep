@@ -54,5 +54,9 @@ export function computeEffectiveStatus(
     return { status: StepStatus.Stale };
   }
 
+  if (currentState?.status === StepStatus.Blocked) {
+    return { blockReason: currentState.error, status: StepStatus.Blocked };
+  }
+
   return { status: StepStatus.Ready };
 }
