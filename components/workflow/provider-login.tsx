@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
+import { z } from "zod";
 
 import type { Provider } from "@/constants";
 import type { WorkflowVars } from "@/lib/workflow/variables";
@@ -20,6 +21,62 @@ interface SessionTokens {
   msGraphExpiresAt?: number;
 }
 
+interface ReauthMessages {
+  google?: string;
+  microsoft?: string;
+}
+
+const ProviderStatusSchema = z.object({
+  connected: z.boolean(),
+  valid: z.boolean(),
+  reauthRequired: z.boolean(),
+  reason: z.string().optional(),
+  accessToken: z.string().optional(),
+  expiresAt: z.number().optional(),
+});
+
+const AuthStatusSchema = z.object({
+  google: ProviderStatusSchema,
+  microsoft: ProviderStatusSchema,
+});
+
+type AuthStatus = z.infer<typeof AuthStatusSchema>;
+
+const REAUTH_REASON_MESSAGES: Record<string, string> = {
+  consent_required: "Consent required. Reconnect to continue.",
+  interaction_required: "Reauthentication required. Reconnect to continue.",
+  invalid_grant: "Session expired or revoked. Reconnect to continue.",
+  invalid_rapt: "Admin session control requires reauthentication.",
+  invalid_token: "Token no longer valid. Reconnect to continue.",
+  login_required: "Login required. Reconnect to continue.",
+  missing_scope: "Missing required admin scopes. Reconnect to continue.",
+};
+
+const getReauthMessage = (reason?: string) => {
+  if (!reason) {
+    return "Reconnect to continue.";
+  }
+
+  const normalized = reason.toLowerCase();
+  return REAUTH_REASON_MESSAGES[normalized] ?? "Reconnect to continue.";
+};
+
+const fetchAuthStatus = async (): Promise<AuthStatus | null> => {
+  try {
+    const statusRes = await fetch("/api/auth/status", {
+      cache: "no-store",
+    });
+    if (!statusRes.ok) {
+      return null;
+    }
+
+    const parsed = AuthStatusSchema.safeParse(await statusRes.json());
+    return parsed.success ? parsed.data : null;
+  } catch {
+    return null;
+  }
+};
+
 interface ProviderItemProps {
   Icon: React.ElementType;
   name: string;
@@ -28,6 +85,8 @@ interface ProviderItemProps {
   onDisconnectClick: () => void;
   minutesLeft: number;
   iconColorClass: string;
+  connectLabel?: string;
+  statusMessage?: string;
 }
 
 /**
@@ -41,41 +100,50 @@ function ProviderItem({
   onDisconnectClick,
   minutesLeft,
   iconColorClass,
+  connectLabel = "Connect",
+  statusMessage,
 }: ProviderItemProps) {
   return (
-    <div className="flex items-center justify-between gap-3 rounded-md px-3 py-2 transition-colors hover:bg-muted/50">
-      <div className="flex items-center gap-2.5">
-        <Icon className={`h-5 w-5 ${iconColorClass}`} />
-        <span className="font-medium text-foreground text-sm">{name}</span>
+    <div className="space-y-1">
+      <div className="flex items-center justify-between gap-3 rounded-md px-3 py-2 transition-colors hover:bg-muted/50">
+        <div className="flex items-center gap-2.5">
+          <Icon className={`h-5 w-5 ${iconColorClass}`} />
+          <span className="font-medium text-foreground text-sm">{name}</span>
+        </div>
+        <div className="flex items-center gap-2">
+          {isConnected ? (
+            <Button
+              aria-label={`Disconnect ${name}`}
+              className="group relative mx-1.5 min-w-[92px] overflow-hidden text-[11px] text-foreground/80"
+              onClick={onDisconnectClick}
+              size="sm"
+              title="Disconnect"
+              variant="outline"
+            >
+              <span className="transition-all duration-300 group-hover:-translate-y-full group-hover:opacity-0">
+                {minutesLeft}m left
+              </span>
+              <span className="absolute inset-0 flex translate-y-full items-center justify-center opacity-0 transition-all duration-300 group-hover:translate-y-0 group-hover:opacity-100">
+                Sign out
+              </span>
+            </Button>
+          ) : (
+            <Button
+              className="mx-1.5 text-[11px] font-medium"
+              onClick={onConnectClick}
+              size="sm"
+              variant="default"
+            >
+              {connectLabel}
+            </Button>
+          )}
+        </div>
       </div>
-      <div className="flex items-center gap-2">
-        {isConnected ? (
-          <Button
-            aria-label={`Disconnect ${name}`}
-            className="group relative mx-1.5 min-w-[92px] overflow-hidden text-[11px] text-foreground/80"
-            onClick={onDisconnectClick}
-            size="sm"
-            title="Disconnect"
-            variant="outline"
-          >
-            <span className="transition-all duration-300 group-hover:-translate-y-full group-hover:opacity-0">
-              {minutesLeft}m left
-            </span>
-            <span className="absolute inset-0 flex translate-y-full items-center justify-center opacity-0 transition-all duration-300 group-hover:translate-y-0 group-hover:opacity-100">
-              Sign out
-            </span>
-          </Button>
-        ) : (
-          <Button
-            className="mx-1.5 text-[11px] font-medium"
-            onClick={onConnectClick}
-            size="sm"
-            variant="default"
-          >
-            Connect
-          </Button>
-        )}
-      </div>
+      {statusMessage && (
+        <p className="px-3 text-[11px] text-destructive" aria-live="polite">
+          {statusMessage}
+        </p>
+      )}
     </div>
   );
 }
@@ -86,52 +154,53 @@ function ProviderItem({
 export function ProviderLogin({ onUpdate }: Props) {
   const { setSessionLoaded } = useWorkflow();
   const [tokens, setTokens] = useState<SessionTokens>({});
+  const [reauthMessages, setReauthMessages] = useState<ReauthMessages>({});
 
   const loadTokens = useCallback(async () => {
     try {
-      const statusRes = await fetch("/api/auth/status");
-      if (statusRes.status === 401) {
-        setTokens({});
-        onUpdate({
-          [Var.GoogleAccessToken]: undefined,
-          [Var.MsGraphToken]: undefined,
-        });
+      const status = await fetchAuthStatus();
+      if (!status) {
         return;
       }
-
-      const res = await fetch("/api/auth/session");
-      if (!res.ok) {
-        return;
-      }
-
-      const data: SessionTokens = await res.json();
       const now = Date.now();
       const validGoogle =
-        data.googleAccessToken &&
-        data.googleExpiresAt &&
-        data.googleExpiresAt > now;
+        status.google.connected &&
+        status.google.accessToken &&
+        status.google.expiresAt &&
+        status.google.expiresAt > now;
       const validMicrosoft =
-        data.msGraphToken &&
-        data.msGraphExpiresAt &&
-        data.msGraphExpiresAt > now;
+        status.microsoft.connected &&
+        status.microsoft.accessToken &&
+        status.microsoft.expiresAt &&
+        status.microsoft.expiresAt > now;
 
       const current: SessionTokens = {};
       if (validGoogle) {
-        current.googleAccessToken = data.googleAccessToken;
-        current.googleExpiresAt = data.googleExpiresAt;
+        current.googleAccessToken = status.google.accessToken;
+        current.googleExpiresAt = status.google.expiresAt;
       }
       if (validMicrosoft) {
-        current.msGraphToken = data.msGraphToken;
-        current.msGraphExpiresAt = data.msGraphExpiresAt;
+        current.msGraphToken = status.microsoft.accessToken;
+        current.msGraphExpiresAt = status.microsoft.expiresAt;
       }
 
       setTokens(current);
+      setReauthMessages({
+        google: status.google.reauthRequired
+          ? getReauthMessage(status.google.reason)
+          : undefined,
+        microsoft: status.microsoft.reauthRequired
+          ? getReauthMessage(status.microsoft.reason)
+          : undefined,
+      });
 
       const vars: Partial<WorkflowVars> = {
         [Var.GoogleAccessToken]: validGoogle
-          ? data.googleAccessToken
+          ? status.google.accessToken
           : undefined,
-        [Var.MsGraphToken]: validMicrosoft ? data.msGraphToken : undefined,
+        [Var.MsGraphToken]: validMicrosoft
+          ? status.microsoft.accessToken
+          : undefined,
       };
       onUpdate(vars);
     } finally {
@@ -184,6 +253,8 @@ export function ProviderLogin({ onUpdate }: Props) {
         name="Google"
         onConnectClick={handleGoogleConnect}
         onDisconnectClick={handleGoogleDisconnect}
+        connectLabel={reauthMessages.google ? "Reconnect" : "Connect"}
+        statusMessage={reauthMessages.google}
       />
       <ProviderItem
         Icon={Microsoft}
@@ -193,6 +264,8 @@ export function ProviderLogin({ onUpdate }: Props) {
         name="Microsoft"
         onConnectClick={handleMicrosoftConnect}
         onDisconnectClick={handleMicrosoftDisconnect}
+        connectLabel={reauthMessages.microsoft ? "Reconnect" : "Connect"}
+        statusMessage={reauthMessages.microsoft}
       />
     </>
   );

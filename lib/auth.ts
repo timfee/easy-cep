@@ -40,6 +40,25 @@ const TokenSchema = z.object({
 
 export type Token = z.infer<typeof TokenSchema>;
 
+const RefreshErrorSchema = z
+  .object({
+    error: z.string().optional(),
+    error_description: z.string().optional(),
+    error_codes: z.array(z.number()).optional(),
+  })
+  .passthrough();
+
+export type RefreshTokenStatus = "ok" | "missing" | "reauth" | "failed";
+
+export interface RefreshTokenResult {
+  token: Token | null;
+  status: RefreshTokenStatus;
+  error?: {
+    code?: string;
+    description?: string;
+  };
+}
+
 const CONFIGS = {
   [PROVIDERS.GOOGLE]: {
     authorizationUrl: ApiEndpoint.GoogleAuth.Authorize,
@@ -82,6 +101,14 @@ const CONFIGS = {
     ],
   },
 } as const;
+
+const REAUTH_ERROR_CODES = new Set([
+  "invalid_grant",
+  "invalid_rapt",
+  "interaction_required",
+  "login_required",
+  "consent_required",
+]);
 
 // --- Crypto Helpers ---
 
@@ -257,16 +284,52 @@ export async function setToken(
   });
 }
 
-export async function refreshTokenIfNeeded(
+async function parseRefreshError(
+  response: Response
+): Promise<RefreshTokenResult["error"] | undefined> {
+  const body = await response.text();
+  if (!body) {
+    return undefined;
+  }
+
+  try {
+    const parsed = RefreshErrorSchema.parse(JSON.parse(body));
+    return {
+      code: parsed.error,
+      description: parsed.error_description,
+    };
+  } catch {
+    return { description: body };
+  }
+}
+
+function shouldReauth(error?: RefreshTokenResult["error"]): boolean {
+  if (!error?.code) {
+    return false;
+  }
+
+  return REAUTH_ERROR_CODES.has(error.code.toLowerCase());
+}
+
+export async function refreshTokenWithResult(
   provider: Provider,
   response?: NextResponse
-): Promise<Token | null> {
+): Promise<RefreshTokenResult> {
   const token = await getToken(provider);
-  if (
-    !token?.refreshToken ||
-    token.expiresAt - Date.now() > WORKFLOW_CONSTANTS.TOKEN_REFRESH_BUFFER_MS
-  ) {
-    return token;
+  if (!token) {
+    return { token: null, status: "missing" };
+  }
+
+  const now = Date.now();
+  const refreshDue =
+    token.expiresAt - now <= WORKFLOW_CONSTANTS.TOKEN_REFRESH_BUFFER_MS;
+  if (!refreshDue) {
+    return { token, status: "ok" };
+  }
+
+  if (!token.refreshToken) {
+    const expired = token.expiresAt <= now;
+    return { token: expired ? null : token, status: "reauth" };
   }
 
   try {
@@ -283,7 +346,14 @@ export async function refreshTokenIfNeeded(
     });
 
     if (!res.ok) {
-      return null;
+      const error = await parseRefreshError(res);
+      const expired = token.expiresAt <= now;
+      const requiresReauth = shouldReauth(error);
+      return {
+        token: requiresReauth || expired ? null : token,
+        status: requiresReauth ? "reauth" : "failed",
+        error,
+      };
     }
 
     const data = await res.json();
@@ -298,10 +368,19 @@ export async function refreshTokenIfNeeded(
     if (response) {
       await setToken(response, provider, newToken);
     }
-    return newToken;
+    return { token: newToken, status: "ok" };
   } catch {
-    return null;
+    const expired = token.expiresAt <= now;
+    return { token: expired ? null : token, status: "failed" };
   }
+}
+
+export async function refreshTokenIfNeeded(
+  provider: Provider,
+  response?: NextResponse
+): Promise<Token | null> {
+  const result = await refreshTokenWithResult(provider, response);
+  return result.token;
 }
 
 export async function validateOAuthState(state: string, provider: Provider) {

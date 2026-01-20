@@ -1,18 +1,30 @@
 import { NextResponse } from "next/server";
 
 import { PROVIDERS } from "@/constants";
-import { refreshTokenIfNeeded } from "@/lib/auth";
+import { clearChunkedCookie, refreshTokenWithResult } from "@/lib/auth";
 
 /**
  * Return the latest access tokens and expiry timestamps.
  */
 export async function GET() {
-  const googleToken = await refreshTokenIfNeeded(PROVIDERS.GOOGLE);
-  const microsoftToken = await refreshTokenIfNeeded(PROVIDERS.MICROSOFT);
-  return NextResponse.json({
-    googleAccessToken: googleToken?.accessToken,
-    googleExpiresAt: googleToken?.expiresAt,
-    msGraphExpiresAt: microsoftToken?.expiresAt,
-    msGraphToken: microsoftToken?.accessToken,
+  const [googleResult, microsoftResult] = await Promise.all([
+    refreshTokenWithResult(PROVIDERS.GOOGLE),
+    refreshTokenWithResult(PROVIDERS.MICROSOFT),
+  ]);
+
+  const response = NextResponse.json({
+    googleAccessToken: googleResult.token?.accessToken,
+    googleExpiresAt: googleResult.token?.expiresAt,
+    msGraphExpiresAt: microsoftResult.token?.expiresAt,
+    msGraphToken: microsoftResult.token?.accessToken,
   });
+
+  if (googleResult.status === "reauth") {
+    await clearChunkedCookie(response, `${PROVIDERS.GOOGLE}_token`);
+  }
+  if (microsoftResult.status === "reauth") {
+    await clearChunkedCookie(response, `${PROVIDERS.MICROSOFT}_token`);
+  }
+
+  return response;
 }
