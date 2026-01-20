@@ -1,7 +1,8 @@
 "use client";
 
 import { ChevronRight, Play, RotateCcw, Terminal, Zap } from "lucide-react";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
+import type { MouseEvent } from "react";
 
 import type { StepIdValue } from "@/lib/workflow/step-ids";
 import type { WorkflowVars } from "@/lib/workflow/variables";
@@ -73,6 +74,30 @@ export function StepCardContent({ definition, state, vars, executing }: Props) {
   const canExecute = missingAll.length === 0;
   const canUndo = state?.status === "complete";
 
+  const handleExecuteClick = useCallback(
+    (event: MouseEvent<HTMLButtonElement>) => {
+      event.stopPropagation();
+      actions.onExecute(definition.id);
+    },
+    [actions, definition.id]
+  );
+
+  const handleUndoClick = useCallback(
+    (event: MouseEvent<HTMLButtonElement>) => {
+      event.stopPropagation();
+      actions.onUndo(definition.id);
+    },
+    [actions, definition.id]
+  );
+
+  const handleForceClick = useCallback(
+    (event: MouseEvent<HTMLButtonElement>) => {
+      event.stopPropagation();
+      actions.onForce(definition.id);
+    },
+    [actions, definition.id]
+  );
+
   return (
     <CardContent className="px-6 pb-8 pt-4">
       <div className="space-y-6">
@@ -93,10 +118,7 @@ export function StepCardContent({ definition, state, vars, executing }: Props) {
                 disabled={
                   !canExecute || executing || state?.status === "complete"
                 }
-                onClick={(e) => {
-                  e.stopPropagation();
-                  actions.onExecute(definition.id);
-                }}
+                onClick={handleExecuteClick}
                 size="sm"
               >
                 <Play className="h-3.5 w-3.5" /> Execute
@@ -110,27 +132,21 @@ export function StepCardContent({ definition, state, vars, executing }: Props) {
             )}
           </div>
           <div className="flex items-center gap-2">
-            {canUndo && (
-              <Button
-                onClick={(e) => {
-                  e.stopPropagation();
-                  actions.onUndo(definition.id);
-                }}
-                size="sm"
-                variant="outline"
-              >
+              {canUndo && (
+                <Button
+                  onClick={handleUndoClick}
+                  size="sm"
+                  variant="outline"
+                >
                 <RotateCcw className="h-3.5 w-3.5" /> Undo
               </Button>
             )}
-            <Button
-              disabled={executing}
-              onClick={(e) => {
-                e.stopPropagation();
-                actions.onForce(definition.id);
-              }}
-              size="sm"
-              variant="outline"
-            >
+              <Button
+                disabled={executing}
+                onClick={handleForceClick}
+                size="sm"
+                variant="outline"
+              >
               <Zap className="h-3.5 w-3.5" /> Force
             </Button>
           </div>

@@ -1,6 +1,6 @@
 "use client";
 
-import { memo, useState } from "react";
+import { memo, useCallback, useState } from "react";
 
 import type { StepIdValue } from "@/lib/workflow/step-ids";
 import type { VarName, WorkflowVars } from "@/lib/workflow/variables";
@@ -45,6 +45,10 @@ export const StepCard = memo(function StepCard({
   const currentState = state?.status || StepStatus.Ready;
   const config = STEP_STATE_CONFIG[currentState];
 
+  const handleToggle = useCallback(() => {
+    setIsExpanded((prev) => !prev);
+  }, []);
+
   const shouldExpand = executing;
   if (shouldExpand && !isExpanded) {
     setIsExpanded(true);
@@ -65,7 +69,7 @@ export const StepCard = memo(function StepCard({
             executing={executing}
             index={index}
             isExpanded={isExpanded}
-            onToggle={() => setIsExpanded(!isExpanded)}
+            onToggle={handleToggle}
             state={state}
             stepId={definition.id}
           />

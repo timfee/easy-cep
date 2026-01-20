@@ -1,5 +1,6 @@
 import { Database } from "lucide-react";
 import { useCallback, useMemo } from "react";
+import type { ChangeEvent } from "react";
 
 import type { StepIdValue } from "@/lib/workflow/step-ids";
 import type {
@@ -41,6 +42,13 @@ function VariableItem({
   vars,
   onChange,
 }: VariableItemProps) {
+  const handleInputChange = useCallback(
+    (event: ChangeEvent<HTMLInputElement>) => {
+      onChange(varKey, event.target.value);
+    },
+    [onChange, varKey]
+  );
+
   return (
     <div className="space-y-1.5">
       <label
@@ -58,7 +66,7 @@ function VariableItem({
           aria-invalid={missing.includes(varKey)}
           className="h-8 w-full rounded-md border-input bg-background px-2 py-1 text-xs text-foreground/90 placeholder:text-foreground/50"
           id={`var-${varKey}-${stepId}`}
-          onChange={(e) => onChange(varKey, e.target.value)}
+          onChange={handleInputChange}
           placeholder={meta.description || "Enter value"}
           type="text"
           value={vars[varKey] ?? ""}

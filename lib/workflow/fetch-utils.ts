@@ -222,7 +222,6 @@ const toNextPageUrl = (
       : new URL(nextLink, baseUrl).toString();
   }
 
-  return;
 };
 
 /**

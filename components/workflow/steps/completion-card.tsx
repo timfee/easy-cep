@@ -1,5 +1,7 @@
 "use client";
 
+import { useCallback } from "react";
+
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
@@ -7,6 +9,10 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
  * Show the final completion message and test hint.
  */
 export function CompletionCard() {
+  const handleOpenGoogle = useCallback(() => {
+    window.open("https://accounts.google.com/", "_blank");
+  }, []);
+
   return (
     <Card>
       <CardHeader>
@@ -18,10 +24,7 @@ export function CompletionCard() {
           Open a new browser window and sign in with a test account to verify
           single sign-on works as expected.
         </p>
-        <Button
-          onClick={() => window.open("https://accounts.google.com/", "_blank")}
-          size="sm"
-        >
+        <Button onClick={handleOpenGoogle} size="sm">
           Open Google sign-in
         </Button>
       </CardContent>

@@ -151,6 +151,22 @@ export function ProviderLogin({ onUpdate }: Props) {
     }
   }, []);
 
+  const handleGoogleConnect = useCallback(() => {
+    window.location.href = "/api/auth/google";
+  }, []);
+
+  const handleMicrosoftConnect = useCallback(() => {
+    window.location.href = "/api/auth/microsoft";
+  }, []);
+
+  const handleGoogleDisconnect = useCallback(() => {
+    signOut("google");
+  }, [signOut]);
+
+  const handleMicrosoftDisconnect = useCallback(() => {
+    signOut("microsoft");
+  }, [signOut]);
+
   const googleTimeLeftInMinutes = tokens.googleExpiresAt
     ? Math.max(0, Math.floor((tokens.googleExpiresAt - Date.now()) / 60_000))
     : 0;
@@ -166,10 +182,8 @@ export function ProviderLogin({ onUpdate }: Props) {
         isConnected={tokens.googleAccessToken !== undefined}
         minutesLeft={googleTimeLeftInMinutes}
         name="Google"
-        onConnectClick={() => {
-          window.location.href = "/api/auth/google";
-        }}
-        onDisconnectClick={() => signOut("google")}
+        onConnectClick={handleGoogleConnect}
+        onDisconnectClick={handleGoogleDisconnect}
       />
       <ProviderItem
         Icon={Microsoft}
@@ -177,10 +191,8 @@ export function ProviderLogin({ onUpdate }: Props) {
         isConnected={tokens.msGraphToken !== undefined}
         minutesLeft={msGraphTimeLeftInMinutes}
         name="Microsoft"
-        onConnectClick={() => {
-          window.location.href = "/api/auth/microsoft";
-        }}
-        onDisconnectClick={() => signOut("microsoft")}
+        onConnectClick={handleMicrosoftConnect}
+        onDisconnectClick={handleMicrosoftDisconnect}
       />
     </>
   );

@@ -1,9 +1,8 @@
 "use client";
 
-import type { ReactNode } from "react";
-
 import { Info, Loader2, Trash2 } from "lucide-react";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
+import type { ChangeEvent, MouseEvent, ReactNode } from "react";
 
 import type { InfoItem } from "@/lib/info";
 import type { DeleteResult } from "@/lib/workflow/info-actions";
@@ -90,6 +89,40 @@ export function InfoButton({
     (item) => item.deletable !== false
   );
 
+  const handleInspectClick = useCallback(
+    (event: MouseEvent<HTMLButtonElement>) => {
+      event.stopPropagation();
+    },
+    []
+  );
+
+  const handleToggleAllVisible = useCallback(
+    () => toggleAll(visibleDeletableItems),
+    [toggleAll, visibleDeletableItems]
+  );
+
+  const handleDeleteConfirmChange = useCallback(
+    (event: ChangeEvent<HTMLInputElement>) => {
+      setDeleteConfirmText(event.target.value);
+    },
+    []
+  );
+
+  const handleResetDeleteConfirm = useCallback(() => {
+    setDeleteConfirmText("");
+  }, []);
+
+
+  const handlePageClick = useCallback(
+    (event: MouseEvent<HTMLButtonElement | HTMLAnchorElement>) => {
+      const pageNumber = Number(event.currentTarget.dataset.page);
+      if (!Number.isNaN(pageNumber)) {
+        goToPage(pageNumber);
+      }
+    },
+    [goToPage]
+  );
+
   useEffect(() => {
     if (!open) {
       resetSelection();
@@ -99,7 +132,7 @@ export function InfoButton({
     }
   }, [open, resetPagination, resetSelection]);
 
-  const handleDeleteSelected = async () => {
+  const handleDeleteSelected = useCallback(async () => {
     if (!deleteItems || selectedIds.size === 0) {
       return;
     }
@@ -120,9 +153,9 @@ export function InfoButton({
     resetSelection();
 
     setIsDeleting(false);
-  };
+  }, [deleteItems, refetch, resetSelection, selectedIds]);
 
-  const handlePurgeAll = async () => {
+  const handlePurgeAll = useCallback(async () => {
     if (!deleteItems || deleteConfirmText !== "DELETE ALL") {
       return;
     }
@@ -148,14 +181,22 @@ export function InfoButton({
     } finally {
       setIsDeleting(false);
     }
-  };
+  }, [deleteConfirmText, deleteItems, deletableItems, refetch, resetPagination, resetSelection]);
+
+  const handlePurgeAllClick = useCallback(
+    async (event: MouseEvent<HTMLButtonElement>) => {
+      event.preventDefault();
+      await handlePurgeAll();
+    },
+    [handlePurgeAll]
+  );
 
   const showPagination = items.length > 25;
 
   return (
     <Dialog onOpenChange={setOpen} open={open}>
       <DialogTrigger asChild>
-        <Button onClick={(e) => e.stopPropagation()} size="sm" variant="link">
+        <Button onClick={handleInspectClick} size="sm" variant="link">
           <Info className="h-3.5 w-3.5" /> Inspect
         </Button>
       </DialogTrigger>
@@ -175,7 +216,7 @@ export function InfoButton({
                     visibleDeletableItems.length > 0
                   }
                   className="h-3 w-3"
-                  onCheckedChange={() => toggleAll(visibleDeletableItems)}
+                  onCheckedChange={handleToggleAllVisible}
                 />
               )}
               <span className="text-foreground/60 text-xs">
@@ -221,14 +262,14 @@ export function InfoButton({
                   <Input
                     className="mt-2"
                     disabled={isDeleting}
-                    onChange={(e) => setDeleteConfirmText(e.target.value)}
+                    onChange={handleDeleteConfirmChange}
                     placeholder="Type DELETE ALL to confirm"
                     value={deleteConfirmText}
                   />
                   <AlertDialogFooter>
                     <AlertDialogCancel
                       disabled={isDeleting}
-                      onClick={() => setDeleteConfirmText("")}
+                      onClick={handleResetDeleteConfirm}
                     >
                       Cancel
                     </AlertDialogCancel>
@@ -237,10 +278,7 @@ export function InfoButton({
                       disabled={
                         deleteConfirmText !== "DELETE ALL" || isDeleting
                       }
-                      onClick={async (e) => {
-                        e.preventDefault();
-                        await handlePurgeAll();
-                      }}
+                      onClick={handlePurgeAllClick}
                     >
                       {isDeleting && (
                         <Loader2 className="mr-1 h-3 w-3 animate-spin" />
@@ -297,8 +335,9 @@ export function InfoButton({
                     <PaginationItem key={pageNum}>
                       <PaginationLink
                         className="cursor-pointer"
+                        data-page={pageNum}
                         isActive={currentPage === pageNum}
-                        onClick={() => goToPage(pageNum)}
+                        onClick={handlePageClick}
                       >
                         {pageNum}
                       </PaginationLink>

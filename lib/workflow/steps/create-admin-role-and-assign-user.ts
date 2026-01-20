@@ -34,7 +34,6 @@ const findPrivilegeServiceId = (privileges: AdminPrivilege[]) => {
       stack.push(...priv.childPrivileges);
     }
   }
-  return;
 };
 
 export default defineStep(StepId.CreateAdminRoleAndAssignUser)
@@ -76,34 +75,34 @@ export default defineStep(StepId.CreateAdminRoleAndAssignUser)
               adminRoleId: role.roleId,
               directoryServiceId: role.rolePrivileges[0]?.serviceId,
             });
-            return;
-          }
-          const userId = vars.require(Var.ProvisioningUserId);
-
-          const { items: assignments = [] } = (await google.roleAssignments
-            .list()
-            .query({ userKey: userId })
-            .get()) as { items?: RoleAssignment[] };
-
-          const exists = assignments.some(
-            (assignment) => assignment.roleId === role.roleId
-          );
-
-          if (exists) {
-            log(LogLevel.Info, "Role and assignment exist");
-            markComplete({
-              adminRoleId: role.roleId,
-              directoryServiceId: role.rolePrivileges[0]?.serviceId,
-            });
           } else {
-            log(LogLevel.Info, "Role exists without assignment", {
-              adminRoleId: role.roleId,
-              directoryServiceId: role.rolePrivileges[0]?.serviceId,
-            });
-            markIncomplete("Role assignment missing", {
-              adminRoleId: role.roleId,
-              directoryServiceId: role.rolePrivileges[0]?.serviceId,
-            });
+            const userId = vars.require(Var.ProvisioningUserId);
+
+            const { items: assignments = [] } = (await google.roleAssignments
+              .list()
+              .query({ userKey: userId })
+              .get()) as { items?: RoleAssignment[] };
+
+            const exists = assignments.some(
+              (assignment) => assignment.roleId === role.roleId
+            );
+
+            if (exists) {
+              log(LogLevel.Info, "Role and assignment exist");
+              markComplete({
+                adminRoleId: role.roleId,
+                directoryServiceId: role.rolePrivileges[0]?.serviceId,
+              });
+            } else {
+              log(LogLevel.Info, "Role exists without assignment", {
+                adminRoleId: role.roleId,
+                directoryServiceId: role.rolePrivileges[0]?.serviceId,
+              });
+              markIncomplete("Role assignment missing", {
+                adminRoleId: role.roleId,
+                directoryServiceId: role.rolePrivileges[0]?.serviceId,
+              });
+            }
           }
         } else {
           log(LogLevel.Info, "Custom admin role missing", { roleName });

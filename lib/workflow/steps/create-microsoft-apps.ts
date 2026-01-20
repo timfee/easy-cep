@@ -153,7 +153,6 @@ export default defineStep(StepId.CreateMicrosoftApps)
               return { app, spId };
             }
           }
-          return;
         };
 
         const provPair = await findAppWithSp(provApps);
@@ -169,27 +168,23 @@ export default defineStep(StepId.CreateMicrosoftApps)
         if (!(provApp && ssoApp)) {
           log(LogLevel.Info, "Microsoft apps not found");
           markIncomplete("Microsoft apps not found", {});
-          return;
-        }
-
-        if (!(provId && ssoId)) {
+        } else if (!(provId && ssoId)) {
           log(LogLevel.Info, "Microsoft service principals not found");
           markIncomplete("Microsoft service principals not found", {});
-          return;
+        } else {
+          log(
+            LogLevel.Info,
+            sameApp
+              ? "Provisioning and SSO use the same app"
+              : "Provisioning and SSO use separate apps"
+          );
+          log(LogLevel.Info, "Microsoft apps already exist");
+          markComplete({
+            provisioningServicePrincipalId: provId,
+            ssoAppId: ssoApp.appId,
+            ssoServicePrincipalId: ssoId,
+          });
         }
-
-        log(
-          LogLevel.Info,
-          sameApp
-            ? "Provisioning and SSO use the same app"
-            : "Provisioning and SSO use separate apps"
-        );
-        log(LogLevel.Info, "Microsoft apps already exist");
-        markComplete({
-          provisioningServicePrincipalId: provId,
-          ssoAppId: ssoApp.appId,
-          ssoServicePrincipalId: ssoId,
-        });
       } catch (error) {
         log(LogLevel.Error, "Failed to check Microsoft apps", { error });
         markCheckFailed(

@@ -1,6 +1,7 @@
 "use client";
 
-import { useEffect, useRef } from "react";
+import { useCallback, useEffect, useRef } from "react";
+import type { MouseEvent } from "react";
 
 import type { StepLogEntry } from "@/types";
 
@@ -17,6 +18,9 @@ interface StepLogsProps {
  */
 export function StepLogs({ logs }: StepLogsProps) {
   const scrollAreaRef = useRef<HTMLDivElement | null>(null);
+  const handleClick = useCallback((event: MouseEvent<HTMLDivElement>) => {
+    event.stopPropagation();
+  }, []);
 
   useEffect(() => {
     if (!logs || logs.length === 0) {
@@ -40,7 +44,7 @@ export function StepLogs({ logs }: StepLogsProps) {
   return (
     <ScrollArea
       className="max-h-64 overflow-y-auto"
-      onClick={(e) => e.stopPropagation()}
+      onClick={handleClick}
       ref={scrollAreaRef}
     >
       <div className="divide-y">

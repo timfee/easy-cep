@@ -1,6 +1,6 @@
-import { Database } from "lucide-react";
-import { Pencil } from "lucide-react";
-import { useState } from "react";
+import { Database, Pencil } from "lucide-react";
+import { useCallback, useState } from "react";
+import type { ChangeEvent, KeyboardEvent, MouseEvent } from "react";
 
 import type {
   VariableMetadata,
@@ -42,6 +42,26 @@ function VariableRowContent({
   isConfigurable: boolean;
 }) {
   const isEditing = editingVar?.key === varKey;
+  const handleInputChange = useCallback(
+    (event: ChangeEvent<HTMLInputElement>) => {
+      onUpdateEdit(event.target.value);
+    },
+    [onUpdateEdit]
+  );
+  const handleInputClick = useCallback((event: MouseEvent<HTMLInputElement>) => {
+    event.stopPropagation();
+  }, []);
+  const handleInputKeyDown = useCallback(
+    (event: KeyboardEvent<HTMLInputElement>) => {
+      if (event.key === "Enter") {
+        onSaveEdit();
+      }
+      if (event.key === "Escape") {
+        onCancelEdit();
+      }
+    },
+    [onSaveEdit, onCancelEdit]
+  );
 
   const renderValue = () => {
     if (isEditing) {
@@ -50,16 +70,9 @@ function VariableRowContent({
           autoFocus
           className="h-7 w-full rounded-none border-x-0 border-t-0 border-b border-border/60 bg-transparent px-0 text-xs text-foreground/90"
           onBlur={onSaveEdit}
-          onChange={(e) => onUpdateEdit(e.target.value)}
-          onClick={(e) => e.stopPropagation()}
-          onKeyDown={(e) => {
-            if (e.key === "Enter") {
-              onSaveEdit();
-            }
-            if (e.key === "Escape") {
-              onCancelEdit();
-            }
-          }}
+          onChange={handleInputChange}
+          onClick={handleInputClick}
+          onKeyDown={handleInputKeyDown}
           value={editingVar?.value}
         />
       );
@@ -111,6 +124,10 @@ function VariableRow(props: VariableRowProps) {
   const interactiveClasses =
     "cursor-pointer hover:bg-muted/50 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-primary/30 focus-visible:ring-inset active:bg-muted/60";
 
+  const handleStartEditing = () => {
+    onStartEditing(varKey, value);
+  };
+
   if (isEditing) {
     return (
       <div className={`${baseClasses} bg-muted/30`}>
@@ -127,7 +144,7 @@ function VariableRow(props: VariableRowProps) {
     return (
       <button
         className={`${baseClasses} ${interactiveClasses}`}
-        onClick={() => onStartEditing(varKey, value)}
+        onClick={handleStartEditing}
         type="button"
       >
         <VariableRowContent
@@ -159,33 +176,42 @@ export function VarsInspector({ vars, onChange }: VarsInspectorProps) {
     value: string;
   } | null>(null);
 
-  const handleValueChange = (key: VarName, value: string) => {
-    onChange({ [key]: value });
-  };
+  const handleValueChange = useCallback(
+    (key: VarName, value: string) => {
+      onChange({ [key]: value });
+    },
+    [onChange]
+  );
 
-  const startEditing = (key: VarName, currentValue: unknown) => {
-    setEditingVar({
-      key,
-      value: currentValue !== undefined ? String(currentValue) : "",
-    });
-  };
+  const startEditing = useCallback(
+    (key: VarName, currentValue: unknown) => {
+      setEditingVar({
+        key,
+        value: currentValue !== undefined ? String(currentValue) : "",
+      });
+    },
+    []
+  );
 
-  const saveEdit = () => {
+  const saveEdit = useCallback(() => {
     if (editingVar) {
       handleValueChange(editingVar.key, editingVar.value);
       setEditingVar(null);
     }
-  };
+  }, [editingVar, handleValueChange]);
 
-  const cancelEdit = () => {
+  const cancelEdit = useCallback(() => {
     setEditingVar(null);
-  };
+  }, []);
 
-  const updateEdit = (value: string) => {
-    if (editingVar) {
-      setEditingVar({ ...editingVar, value });
-    }
-  };
+  const updateEdit = useCallback(
+    (value: string) => {
+      if (editingVar) {
+        setEditingVar({ ...editingVar, value });
+      }
+    },
+    [editingVar]
+  );
 
   const groupedVars: Record<
     VariableMetadata["category"],

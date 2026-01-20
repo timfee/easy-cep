@@ -1,5 +1,3 @@
-import type { ElementType } from "react";
-
 import {
   AlertTriangle,
   CheckCircle,
@@ -7,6 +5,9 @@ import {
   ChevronRight,
   Loader2,
 } from "lucide-react";
+
+import { useCallback } from "react";
+import type { ElementType, KeyboardEvent, MouseEvent } from "react";
 
 import type { StepIdValue } from "@/lib/workflow/step-ids";
 import type { StepUIState } from "@/types";
@@ -107,20 +108,30 @@ export function StepCardHeader({
     Icon = CheckCircle;
   }
 
+  const handleCardClick = useCallback(
+    (event: MouseEvent<HTMLDivElement>) => {
+      event.stopPropagation();
+      onToggle();
+    },
+    [onToggle]
+  );
+
+  const handleCardKeyDown = useCallback(
+    (event: KeyboardEvent<HTMLDivElement>) => {
+      if (event.key === "Enter" || event.key === " ") {
+        event.preventDefault();
+        onToggle();
+      }
+    },
+    [onToggle]
+  );
+
   return (
     <CardHeader
       className="cursor-pointer rounded-t-xl px-6 py-4 transition-colors focus-visible:outline-none"
       aria-expanded={isExpanded}
-      onClick={(e) => {
-        e.stopPropagation();
-        onToggle();
-      }}
-      onKeyDown={(event) => {
-        if (event.key === "Enter" || event.key === " ") {
-          event.preventDefault();
-          onToggle();
-        }
-      }}
+      onClick={handleCardClick}
+      onKeyDown={handleCardKeyDown}
       role="button"
       tabIndex={0}
     >
