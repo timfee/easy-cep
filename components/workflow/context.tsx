@@ -34,7 +34,7 @@ interface WorkflowContextValue {
   status: Partial<Record<StepIdValue, StepUIState>>;
   executing: StepIdValue | null;
   steps: StepDefinition[];
-  updateVars: (updates: Partial<WorkflowVars>) => void;
+  updateVars: (updates: Partial<WorkflowVars>) => Promise<void>;
   updateStep: (stepId: StepIdValue, state: StepUIState) => void;
   applyStepEvent: (event: StepStreamEvent) => void;
   executeStep: (stepId: StepIdValue) => Promise<void>;
@@ -103,13 +103,18 @@ export function WorkflowProvider({
   );
 
   const updateVars = useCallback(
-    (newVars: Partial<WorkflowVars>) => {
+    async (newVars: Partial<WorkflowVars>) => {
       const keys = Object.keys(newVars).filter(
         (key): key is VarName => key in newVars
       );
       if (keys.length === 0) {
         return;
       }
+
+      const listenerInvocations: {
+        cb: (value: unknown) => unknown;
+        value: unknown;
+      }[] = [];
 
       setVarsState((prev) => {
         const updated = { ...prev, ...newVars };
@@ -118,7 +123,7 @@ export function WorkflowProvider({
           const keyListeners = listeners.current.get(key);
           if (keyListeners) {
             for (const cb of keyListeners) {
-              cb(updated[key]);
+              listenerInvocations.push({ cb, value: updated[key] });
             }
           }
         }
@@ -137,6 +142,12 @@ export function WorkflowProvider({
 
         return updated;
       });
+
+      if (listenerInvocations.length > 0) {
+        await Promise.all(
+          listenerInvocations.map(({ cb, value }) => cb(value))
+        );
+      }
     },
     [steps]
   );
@@ -160,7 +171,7 @@ export function WorkflowProvider({
       },
 
       set(updates: Partial<WorkflowVars>) {
-        updateVars(updates);
+        updateVars(updates).catch(() => {});
       },
 
       subscribe(key: VarName, callback: (value: unknown) => void): () => void {
@@ -190,13 +201,13 @@ export function WorkflowProvider({
       const { stepId } = event;
       if (event.type === "vars") {
         const updates = filterSensitiveVars(event.vars);
-        updateVars(updates);
+        updateVars(updates).catch(() => {});
         return;
       }
 
       if (event.type === "complete") {
         updateStep(stepId, event.state);
-        updateVars(filterSensitiveVars(event.newVars));
+        updateVars(filterSensitiveVars(event.newVars)).catch(() => {});
         setExecuting(null);
         checkedSteps.current.delete(stepId);
         return;
@@ -316,7 +327,7 @@ export function WorkflowProvider({
         try {
           const fallback = await runStep(id, vars);
           updateStep(id, fallback.state);
-          updateVars(fallback.newVars);
+          updateVars(fallback.newVars).catch(() => {});
         } catch (error) {
           console.error("Failed to run step:", error);
           updateStep(id, {
@@ -396,7 +407,7 @@ export function WorkflowProvider({
         updateStep(step.id, result.state);
 
         if (Object.keys(result.newVars).length > 0) {
-          updateVars(result.newVars);
+          updateVars(result.newVars).catch(() => {});
         }
       } catch (error) {
         updateStep(step.id, {
