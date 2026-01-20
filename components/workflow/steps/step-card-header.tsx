@@ -38,6 +38,9 @@ function getStatusDescriptor(executing: boolean, state?: StepUIState) {
   if (state?.status === StepStatus.Ready) {
     return "Ready to execute";
   }
+  if (state?.status === StepStatus.Pending) {
+    return "Initializing";
+  }
   if (state?.status === StepStatus.Stale) {
     return state.summary || "Attention needed";
   }
@@ -95,7 +98,7 @@ export function StepCardHeader({
       .join(" ");
 
   const descriptor = getStatusDescriptor(executing, state);
-  const currentState = state?.status || StepStatus.Ready;
+  const currentState = state?.status ?? StepStatus.Pending;
   const config = STEP_STATE_CONFIG[currentState];
 
   const showSpinner = executing || state?.isChecking || state?.isUndoing;

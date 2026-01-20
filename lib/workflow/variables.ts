@@ -277,3 +277,16 @@ export type WorkflowVars = {
  * Valid workflow variable names.
  */
 export type VarName = keyof typeof WORKFLOW_VARIABLES;
+
+export function isAuthVar(varName: VarName): boolean {
+  return WORKFLOW_VARIABLES[varName]?.category === "auth";
+}
+
+export function getMissingRequiredVars(
+  requires: readonly VarName[],
+  vars: Partial<WorkflowVars>
+): VarName[] {
+  return requires.filter(
+    (varName) => !isAuthVar(varName) && vars[varName] === undefined
+  );
+}

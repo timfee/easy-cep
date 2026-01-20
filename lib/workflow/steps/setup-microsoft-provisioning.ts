@@ -40,9 +40,10 @@ export default defineStep(StepId.SetupMicrosoftProvisioning)
           value?: { id: string; status?: { code?: string } }[];
         };
 
-        const active = value.some(
-          (job: SyncJob) => job.status?.code !== "Paused"
-        );
+        const active = value.some((job: SyncJob) => {
+          const status = job.status?.code;
+          return status ? status !== "Paused" : false;
+        });
 
         if (active) {
           log(LogLevel.Info, "Synchronization already active");

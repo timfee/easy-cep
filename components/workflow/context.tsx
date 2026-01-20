@@ -26,38 +26,10 @@ import { checkStep, runStep, undoStep } from "@/lib/workflow/engine";
 import { STEP_DETAILS } from "@/lib/workflow/step-details";
 import { StepStatus } from "@/lib/workflow/step-status";
 import { createVarStore } from "@/lib/workflow/var-store";
-import { WORKFLOW_VARIABLES } from "@/lib/workflow/variables";
-
-function mergeLogs(
-  existing: StepLogEntry[],
-  incoming: StepLogEntry[]
-): StepLogEntry[] {
-  const result = [...existing];
-  for (const log of incoming) {
-    const exists = result.some(
-      (entry) =>
-        entry.timestamp === log.timestamp && entry.message === log.message
-    );
-    if (!exists) {
-      result.push(log);
-    }
-  }
-  return result;
-}
-
-function resolveCheckStatus(
-  checkError: string | undefined,
-  resultState: StepUIState | undefined,
-  currentStatus: StepStatusValue
-) {
-  if (checkError) {
-    return { status: StepStatus.Blocked, error: checkError };
-  }
-  if (resultState?.status) {
-    return { status: resultState.status, error: resultState.error };
-  }
-  return { status: currentStatus, error: resultState?.error };
-}
+import {
+  WORKFLOW_VARIABLES,
+  getMissingRequiredVars,
+} from "@/lib/workflow/variables";
 
 interface VarStore extends BasicVarStore {
   set(updates: Partial<WorkflowVars>): void;
@@ -347,11 +319,7 @@ export function WorkflowProvider({
         return;
       }
 
-      const missingVars = step.requires.filter(
-        (varName) =>
-          vars[varName] === undefined &&
-          WORKFLOW_VARIABLES[varName]?.category !== "auth"
-      );
+      const missingVars = getMissingRequiredVars(step.requires, vars);
       if (missingVars.length > 0) {
         const messages = missingVars.map((key) => {
           const meta = WORKFLOW_VARIABLES[key];
@@ -604,12 +572,7 @@ export function WorkflowProvider({
         continue;
       }
 
-      const missingVars = step.requires.some(
-        (varName) =>
-          vars[varName] === undefined &&
-          WORKFLOW_VARIABLES[varName]?.category !== "auth"
-      );
-      if (missingVars) {
+      if (getMissingRequiredVars(step.requires, vars).length > 0) {
         continue;
       }
 

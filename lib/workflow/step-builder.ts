@@ -15,6 +15,7 @@ import type { BasicVarStore } from "./var-store";
 import { GoogleClient } from "./http/google-client";
 import { MicrosoftClient } from "./http/microsoft-client";
 import { createVarStore } from "./var-store";
+import { getMissingRequiredVars } from "./variables";
 
 interface StepBuilder<
   TData extends Partial<WorkflowVars> = Partial<WorkflowVars>,
@@ -92,22 +93,20 @@ export function defineStep<
       }
 
       const check = async (originalCtx: StepCheckContext<TData>) => {
-        for (const key of requires) {
-          if (originalCtx.vars[key] === undefined) {
-            return originalCtx.markCheckFailed(
-              `Missing required variable ${key}`
-            );
-          }
+        const missing = getMissingRequiredVars(requires, originalCtx.vars);
+        if (missing.length > 0) {
+          return originalCtx.markCheckFailed(
+            `Missing required variable ${missing.join(", ")}`
+          );
         }
         const ctx = wrapContext(originalCtx);
         await checkFn?.(ctx);
       };
 
       const execute = async (originalCtx: StepExecuteContext<TData>) => {
-        for (const key of requires) {
-          if (originalCtx.vars[key] === undefined) {
-            throw new Error(`Missing required variable ${key}`);
-          }
+        const missing = getMissingRequiredVars(requires, originalCtx.vars);
+        if (missing.length > 0) {
+          throw new Error(`Missing required variable ${missing.join(", ")}`);
         }
         const ctx = {
           ...wrapContext(originalCtx),

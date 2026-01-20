@@ -48,6 +48,7 @@ export default defineStep(StepId.SetupMicrosoftClaimsPolicy)
   .execute(async ({ vars, microsoft, output, markFailed, log }) => {
     try {
       const spId = vars.require(Var.SsoServicePrincipalId);
+      const displayName = vars.require(Var.ClaimsPolicyDisplayName);
 
       let policyId: string | undefined;
       try {
@@ -55,16 +56,24 @@ export default defineStep(StepId.SetupMicrosoftClaimsPolicy)
           definition: [
             '{"ClaimsMappingPolicy":{"Version":1,"IncludeBasicClaimSet":true,"ClaimsSchema":[]}}',
           ],
-          displayName: vars.require(Var.ClaimsPolicyDisplayName),
+          displayName,
           isOrganizationDefault: false,
         })) as { id?: string };
         policyId = created.id;
       } catch (error) {
         if (isConflictError(error)) {
           const { value } = (await microsoft.claimsPolicies.list().get()) as {
-            value: { id: string }[];
+            value: { displayName?: string; id: string }[];
           };
-          policyId = value[0]?.id;
+          const matchedPolicy = value.find(
+            (policy) => policy.displayName === displayName
+          );
+          if (!matchedPolicy?.id) {
+            throw new Error(
+              `Claims policy '${displayName}' already exists but could not be found.`
+            );
+          }
+          policyId = matchedPolicy.id;
         } else {
           throw error;
         }

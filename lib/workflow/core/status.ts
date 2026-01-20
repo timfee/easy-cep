@@ -1,11 +1,10 @@
 import type { StepDefinition, StepUIState } from "@/types";
-
 import type { StepStatusValue } from "../step-status";
-import type { VarName, WorkflowVars } from "../variables";
+import type { WorkflowVars } from "../variables";
 
 import { STEP_DETAILS } from "../step-details";
 import { StepStatus } from "../step-status";
-import { WORKFLOW_VARIABLES } from "../variables";
+import { WORKFLOW_VARIABLES, getMissingRequiredVars } from "../variables";
 
 /**
  * Status details computed for a workflow step.
@@ -24,9 +23,7 @@ export function computeEffectiveStatus(
   vars: Partial<WorkflowVars>,
   allStates: Record<string, StepUIState>
 ): StatusInfo {
-  const missing = step.requires.filter(
-    (varName: VarName) => vars[varName] === undefined
-  );
+  const missing = getMissingRequiredVars(step.requires, vars);
 
   if (missing.length > 0) {
     const provider = WORKFLOW_VARIABLES[missing[0]]?.producedBy;
@@ -55,8 +52,20 @@ export function computeEffectiveStatus(
   }
 
   if (currentState?.status === StepStatus.Blocked) {
-    return { blockReason: currentState.error, status: StepStatus.Blocked };
+    return { blockReason: currentState.blockReason, status: StepStatus.Blocked };
   }
 
-  return { status: StepStatus.Ready };
+  if (currentState?.status === StepStatus.Pending) {
+    return { status: StepStatus.Pending };
+  }
+
+  if (currentState?.status === StepStatus.Ready) {
+    return { status: StepStatus.Ready };
+  }
+
+  if (!currentState) {
+    return { status: StepStatus.Pending };
+  }
+
+  return { status: StepStatus.Pending };
 }

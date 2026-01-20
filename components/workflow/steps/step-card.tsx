@@ -42,7 +42,7 @@ export const StepCard = memo(function StepCard({
   actions,
 }: StepCardProps) {
   const [isExpanded, setIsExpanded] = useState(false);
-  const currentState = state?.status || StepStatus.Ready;
+  const currentState = state?.status ?? StepStatus.Pending;
   const config = STEP_STATE_CONFIG[currentState];
 
   const handleToggle = useCallback(() => {

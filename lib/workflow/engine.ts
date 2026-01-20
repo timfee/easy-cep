@@ -151,7 +151,7 @@ async function processStep<T extends StepIdValue>(
   const step = getStep(stepId);
 
   let logs: StepLogEntry[] = [];
-  let currentState: StepUIState = { logs, status: StepStatus.Ready };
+  let currentState: StepUIState = { logs, status: StepStatus.Pending };
   let finalVars: Partial<WorkflowVars> = {};
 
   const eventMeta = eventContext

@@ -686,12 +686,7 @@ Configure Microsoft SAML SSO settings and generate signing certificate.
 #### Step 9 Check Request
 
 ```http
-GET https://graph.microsoft.com/v1.0/servicePrincipals/{ssoServicePrincipalId}?$select=preferredSingleSignOnMode,samlSingleSignOnSettings
-Authorization: Bearer {msGraphToken}
-```
-
-```http
-GET https://graph.microsoft.com/beta/servicePrincipals/{ssoServicePrincipalId}/tokenSigningCertificates
+GET https://graph.microsoft.com/v1.0/servicePrincipals/{ssoServicePrincipalId}?$select=preferredSingleSignOnMode,samlSingleSignOnSettings,keyCredentials
 Authorization: Bearer {msGraphToken}
 ```
 

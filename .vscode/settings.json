@@ -49,7 +49,7 @@
     "editor.defaultFormatter": "oxc.oxc-vscode"
   },
   "[markdown]": {
-    "editor.defaultFormatter": "oxc.oxc-vscode"
+    "editor.defaultFormatter": "DavidAnson.vscode-markdownlint"
   },
   "editor.codeActionsOnSave": {
     "source.fixAll.oxc": "explicit",
