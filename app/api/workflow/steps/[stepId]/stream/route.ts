@@ -120,22 +120,26 @@ export async function GET(
     [Var.MsGraphToken]: microsoftToken?.accessToken,
   };
 
-  try {
-    await runStepWithEvents(stepId, vars, writeEvent);
-  } catch (error) {
-    await writeEvent({
-      state: {
-        error: error instanceof Error ? error.message : "Unknown error",
-        status: StepStatus.Blocked,
-      },
-      stepId,
-      traceId: "error",
-      type: "state",
-    });
-  } finally {
-    await finalizeStream();
-    await writer.close();
-  }
+  const run = async () => {
+    try {
+      await runStepWithEvents(stepId, vars, writeEvent);
+    } catch (error) {
+      await writeEvent({
+        state: {
+          error: error instanceof Error ? error.message : "Unknown error",
+          status: StepStatus.Blocked,
+        },
+        stepId,
+        traceId: "error",
+        type: "state",
+      });
+    } finally {
+      await finalizeStream();
+      await writer.close();
+    }
+  };
+
+  void run();
 
   return new NextResponse(stream.readable, { headers: STREAM_HEADERS });
 }

@@ -338,6 +338,9 @@ export function WorkflowProvider({
 
       let handleMessage: ((message: MessageEvent) => void) | null = null;
       let handleError: ((event: Event) => void) | null = null;
+      let streamTimedOut = false;
+      let timeoutId: number | undefined;
+
       try {
         const currentStream = new EventSource(
           `/api/workflow/steps/${id}/stream?vars=${encodeURIComponent(
@@ -348,12 +351,21 @@ export function WorkflowProvider({
         try {
           /* eslint-disable promise/avoid-new, unicorn/prefer-add-event-listener */
           await new Promise<void>((resolve, reject) => {
+            timeoutId = window.setTimeout(() => {
+              streamTimedOut = true;
+              reject(new Error("Stream timeout"));
+            }, 5000);
+
             handleMessage = (message: MessageEvent) => {
               if (!message.data) {
                 return;
               }
               try {
                 const event: StepStreamEvent = JSON.parse(message.data);
+                if (timeoutId) {
+                  clearTimeout(timeoutId);
+                  timeoutId = undefined;
+                }
                 applyStepEvent(event);
                 if (event.type === "complete") {
                   resolve();
@@ -372,6 +384,9 @@ export function WorkflowProvider({
           });
           /* eslint-enable promise/avoid-new, unicorn/prefer-add-event-listener */
         } finally {
+          if (timeoutId) {
+            clearTimeout(timeoutId);
+          }
           if (handleMessage) {
             currentStream.removeEventListener("message", handleMessage);
           }
@@ -380,16 +395,27 @@ export function WorkflowProvider({
           }
           currentStream.close();
         }
-      } catch {
+      } catch (error) {
+        if (!streamTimedOut) {
+          clearStepActivity(id);
+          updateStep(id, {
+            error: error instanceof Error ? error.message : "Stream error",
+            status: StepStatus.Blocked,
+          });
+          return;
+        }
+
         try {
           const fallback = await runStep(id, vars);
           updateStep(id, fallback.state);
           updateVars(fallback.newVars);
-        } catch (error) {
-          console.error("Failed to run step:", error);
+        } catch (fallbackError) {
+          console.error("Failed to run step:", fallbackError);
           updateStep(id, {
             error:
-              error instanceof Error ? error.message : "Unknown error occurred",
+              fallbackError instanceof Error
+                ? fallbackError.message
+                : "Unknown error occurred",
             status: StepStatus.Blocked,
           });
         } finally {
