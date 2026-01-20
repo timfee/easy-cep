@@ -1,7 +1,8 @@
 import { Lock } from "lucide-react";
 
+import type { InfoItem } from "@/lib/info";
+
 import { Checkbox } from "@/components/ui/checkbox";
-import type  { InfoItem } from "@/lib/info";
 import { cn } from "@/lib/utils";
 
 interface InfoItemListProps {

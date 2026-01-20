@@ -1,3 +1,5 @@
+import type { ElementType } from "react";
+
 import {
   AlertTriangle,
   CheckCircle,
@@ -5,16 +7,16 @@ import {
   ChevronRight,
   Loader2,
 } from "lucide-react";
-import type  { ElementType } from "react";
+
+import type { StepIdValue } from "@/lib/workflow/step-ids";
+import type { StepUIState } from "@/types";
 
 import { Badge } from "@/components/ui/badge";
 import { CardHeader } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
 import { STEP_STATE_CONFIG } from "@/lib/workflow/step-constants";
 import { STEP_DETAILS } from "@/lib/workflow/step-details";
-import type  { StepIdValue } from "@/lib/workflow/step-ids";
 import { StepStatus } from "@/lib/workflow/step-status";
-import type  { StepUIState } from "@/types";
 
 /**
  * Summarize the current execution status for display.

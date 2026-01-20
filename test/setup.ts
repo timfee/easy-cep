@@ -33,7 +33,7 @@ const decodeJwtPayload = (token: string) => {
     payload.length + ((4 - (payload.length % 4)) % 4),
     "="
   );
-  const normalized = padded.replaceAll('-', "+").replaceAll('_', "/");
+  const normalized = padded.replaceAll("-", "+").replaceAll("_", "/");
   try {
     const json = Buffer.from(normalized, "base64").toString("utf8");
     return JSON.parse(json) as Record<string, unknown>;

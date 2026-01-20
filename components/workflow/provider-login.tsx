@@ -2,11 +2,12 @@
 
 import { useCallback, useEffect, useState } from "react";
 
+import type { Provider } from "@/constants";
+import type { WorkflowVars } from "@/lib/workflow/variables";
+
 import { Button } from "@/components/ui/button";
 import { useWorkflow } from "@/components/workflow/context";
-import type  { Provider } from "@/constants";
-import { Var } from '@/lib/workflow/variables';
-import type { WorkflowVars } from '@/lib/workflow/variables';
+import { Var } from "@/lib/workflow/variables";
 
 interface Props {
   onUpdate(vars: Partial<WorkflowVars>): void;
@@ -88,6 +89,16 @@ export function ProviderLogin({ onUpdate }: Props) {
 
   const loadTokens = useCallback(async () => {
     try {
+      const statusRes = await fetch("/api/auth/status");
+      if (statusRes.status === 401) {
+        setTokens({});
+        onUpdate({
+          [Var.GoogleAccessToken]: undefined,
+          [Var.MsGraphToken]: undefined,
+        });
+        return;
+      }
+
       const res = await fetch("/api/auth/session");
       if (!res.ok) {
         return;

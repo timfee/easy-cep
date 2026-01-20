@@ -1,4 +1,5 @@
-import type  { StepIdValue } from "./step-ids";
+import type { StepIdValue } from "./step-ids";
+
 import { StepId } from "./step-ids";
 
 /**

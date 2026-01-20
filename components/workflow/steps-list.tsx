@@ -3,11 +3,12 @@
 import { Loader2 } from "lucide-react";
 import { useMemo } from "react";
 
+import type { VarName, WorkflowVars } from "@/lib/workflow/variables";
+
 import { useWorkflow } from "@/components/workflow/context";
 import { CompletionCard } from "@/components/workflow/steps/completion-card";
 import { StepCard } from "@/components/workflow/steps/step-card";
-import { Var } from '@/lib/workflow/variables';
-import type { VarName, WorkflowVars } from '@/lib/workflow/variables';
+import { Var } from "@/lib/workflow/variables";
 
 /**
  * Render the workflow steps with login gating.

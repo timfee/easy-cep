@@ -1,4 +1,4 @@
-import type  { StepStatus } from "./step-status";
+import type { StepStatus } from "./step-status";
 
 /**
  * Badge variants supported by step state styles.

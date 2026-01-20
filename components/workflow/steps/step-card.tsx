@@ -2,6 +2,10 @@
 
 import { memo, useState } from "react";
 
+import type { StepIdValue } from "@/lib/workflow/step-ids";
+import type { VarName, WorkflowVars } from "@/lib/workflow/variables";
+import type { StepDefinition, StepUIState } from "@/types";
+
 import { Card } from "@/components/ui/card";
 import { Collapsible, CollapsibleContent } from "@/components/ui/collapsible";
 import { StepCardContent } from "@/components/workflow/steps/step-card-content";
@@ -10,10 +14,7 @@ import { StepCardHeader } from "@/components/workflow/steps/step-card-header";
 import { StepLROIndicator } from "@/components/workflow/steps/step-lro-indicator";
 import { cn } from "@/lib/utils";
 import { STEP_STATE_CONFIG } from "@/lib/workflow/step-constants";
-import type  { StepIdValue } from "@/lib/workflow/step-ids";
 import { StepStatus } from "@/lib/workflow/step-status";
-import type  { VarName, WorkflowVars } from "@/lib/workflow/variables";
-import type  { StepDefinition, StepUIState } from "@/types";
 
 interface StepCardProps {
   index: number;

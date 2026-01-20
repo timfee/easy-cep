@@ -2,8 +2,9 @@
 
 import { useEffect, useRef } from "react";
 
+import type { StepLogEntry } from "@/types";
+
 import { ScrollArea } from "@/components/ui/scroll-area";
-import type  { StepLogEntry } from "@/types";
 
 import { StepLogItem } from "./step-log-item";
 

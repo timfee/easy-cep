@@ -4,7 +4,8 @@ import { StepId } from "@/lib/workflow/step-ids";
 import { Var } from "@/lib/workflow/variables";
 import { LogLevel } from "@/types";
 
-import type  { MicrosoftClient } from "../http/microsoft-client";
+import type { MicrosoftClient } from "../http/microsoft-client";
+
 import { defineStep } from "../step-builder";
 
 const createProvisioningApp = async (

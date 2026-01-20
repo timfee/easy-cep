@@ -3,8 +3,9 @@
 import pLimit from "p-limit";
 import { z } from "zod";
 
-import { ApiEndpoint, PROTECTED_RESOURCES, PROVIDERS } from '@/constants';
-import type { Provider } from '@/constants';
+import type { Provider } from "@/constants";
+
+import { ApiEndpoint, PROTECTED_RESOURCES, PROVIDERS } from "@/constants";
 import { env } from "@/env";
 import { refreshTokenIfNeeded } from "@/lib/auth";
 import { extractResourceId, ResourceTypes } from "@/lib/workflow/core/http";

@@ -1,7 +1,7 @@
-import type  { z } from "zod";
+import type { z } from "zod";
 
-import type  { StepIdValue } from "./lib/workflow/step-ids";
-import type  { VarName, WorkflowVars } from "./lib/workflow/variables";
+import type { StepIdValue } from "./lib/workflow/step-ids";
+import type { VarName, WorkflowVars } from "./lib/workflow/variables";
 
 export interface StepLogEntry {
   timestamp: number;
@@ -114,7 +114,7 @@ export interface StepUndoContext {
   markFailed(error: string): void;
 }
 
-import type  { StepStatusValue } from "./lib/workflow/step-status";
+import type { StepStatusValue } from "./lib/workflow/step-status";
 
 export interface StepUIState {
   status: StepStatusValue;

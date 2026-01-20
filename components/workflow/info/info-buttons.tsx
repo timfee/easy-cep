@@ -2,12 +2,32 @@
 
 import type React from "react";
 
+import type { InfoItem } from "@/lib/info";
+import type { DeleteResult } from "@/lib/workflow/info-actions";
+
 import { PROTECTED_RESOURCES } from "@/constants";
 import { env } from "@/env";
-import { listAdminRoles, listClaimsPolicies, listDomains, listEnterpriseApps, listOrgUnits, listProvisioningJobs, listSamlProfiles, listSsoAssignments, listUsers } from '@/lib/info';
-import type { InfoItem } from '@/lib/info';
-import { deleteClaimsPolicies, deleteEnterpriseApps, deleteGoogleRoles, deleteGoogleUsers, deleteOrgUnits, deleteProvisioningJobs, deleteSamlProfiles, deleteSsoAssignments } from '@/lib/workflow/info-actions';
-import type { DeleteResult } from '@/lib/workflow/info-actions';
+import {
+  listAdminRoles,
+  listClaimsPolicies,
+  listDomains,
+  listEnterpriseApps,
+  listOrgUnits,
+  listProvisioningJobs,
+  listSamlProfiles,
+  listSsoAssignments,
+  listUsers,
+} from "@/lib/info";
+import {
+  deleteClaimsPolicies,
+  deleteEnterpriseApps,
+  deleteGoogleRoles,
+  deleteGoogleUsers,
+  deleteOrgUnits,
+  deleteProvisioningJobs,
+  deleteSamlProfiles,
+  deleteSsoAssignments,
+} from "@/lib/workflow/info-actions";
 
 import { InfoButton } from "./info-button";
 

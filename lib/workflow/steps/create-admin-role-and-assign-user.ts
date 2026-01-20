@@ -3,8 +3,9 @@ import { StepId } from "@/lib/workflow/step-ids";
 import { Var } from "@/lib/workflow/variables";
 import { LogLevel } from "@/types";
 
-import { GOOGLE_ADMIN_PRIVILEGES } from '../constants/google-admin';
-import type { AdminPrivilege } from '../constants/google-admin';
+import type { AdminPrivilege } from "../constants/google-admin";
+
+import { GOOGLE_ADMIN_PRIVILEGES } from "../constants/google-admin";
 import { defineStep } from "../step-builder";
 
 interface RoleItem {
@@ -59,7 +60,9 @@ export default defineStep(StepId.CreateAdminRoleAndAssignUser)
           items?: RoleItem[];
         };
         const roleName = vars.require(Var.AdminRoleName);
-        const [role] = items.filter((roleItem) => roleItem.roleName === roleName);
+        const [role] = items.filter(
+          (roleItem) => roleItem.roleName === roleName
+        );
         if (role) {
           const privilegeNames = new Set(
             role.rolePrivileges.map((privilege) => privilege.privilegeName)
@@ -104,9 +107,10 @@ export default defineStep(StepId.CreateAdminRoleAndAssignUser)
           }
         } else {
           log(LogLevel.Info, "Custom admin role missing", { roleName });
-          markIncomplete("Custom admin role missing", { adminRoleId: undefined });
+          markIncomplete("Custom admin role missing", {
+            adminRoleId: undefined,
+          });
         }
-
       } catch (error) {
         log(LogLevel.Error, "Failed to check custom role", { error });
         markCheckFailed(

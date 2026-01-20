@@ -1,5 +1,6 @@
 import "./globals.css";
-import type  { Metadata } from "next";
+import type { Metadata } from "next";
+
 import { Roboto_Flex } from "next/font/google";
 
 import { WorkflowProvider } from "@/components/workflow/context";

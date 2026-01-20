@@ -21,14 +21,16 @@ const DEFAULT_MS_APP_IDS = [
 ];
 const PROVISIONING_EMAIL =
   process.env.PROVISIONING_EMAIL || DEFAULT_PROVISIONING_EMAIL;
-const KEEP_MS_APP_IDS = new Set(new Set(
+const KEEP_MS_APP_IDS = new Set(
+  new Set(
     [
       ...DEFAULT_MS_APP_IDS,
       process.env.MICROSOFT_OAUTH_CLIENT_ID,
       process.env.TEST_MS_CLIENT_ID,
       ...(process.env.KEEP_MS_APP_IDS || "").split(","),
     ].filter(Boolean)
-  ));
+  )
+);
 const SSO_ASSIGNMENT_ID_PATTERN = /^(?:.*\/)?inboundSsoAssignments\//;
 
 /**

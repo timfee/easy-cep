@@ -48,8 +48,8 @@ const base64UrlEncode = (input: string | Buffer) => {
   return buffer
     .toString("base64")
     .replaceAll(/[=]/g, "")
-    .replaceAll('+', "-")
-    .replaceAll('/', "_");
+    .replaceAll("+", "-")
+    .replaceAll("/", "_");
 };
 
 const signJwt = (

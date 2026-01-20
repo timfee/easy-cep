@@ -2,10 +2,15 @@ import { Database } from "lucide-react";
 import { Pencil } from "lucide-react";
 import { useState } from "react";
 
+import type {
+  VariableMetadata,
+  VarName,
+  WorkflowVars,
+} from "@/lib/workflow/variables";
+
 import { Input } from "@/components/ui/input";
 import { categoryTitles } from "@/constants";
-import { WORKFLOW_VARIABLES } from '@/lib/workflow/variables';
-import type { VariableMetadata, VarName, WorkflowVars } from '@/lib/workflow/variables';
+import { WORKFLOW_VARIABLES } from "@/lib/workflow/variables";
 
 interface VarsInspectorProps {
   vars: Partial<WorkflowVars>;
@@ -66,7 +71,9 @@ function VariableRowContent({
           ? "text-foreground/80 group-hover:text-foreground"
           : "text-foreground/70";
       return (
-        <code className={`block truncate py-0.5 font-mono text-xs ${valueClasses}`}>
+        <code
+          className={`block truncate py-0.5 font-mono text-xs ${valueClasses}`}
+        >
           {meta.sensitive ? "••••••••" : String(value)}
         </code>
       );

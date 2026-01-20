@@ -2,17 +2,24 @@
 
 import { inspect } from "node:util";
 
+import type { StepIdValue } from "@/lib/workflow/step-ids";
+import type { WorkflowVars } from "@/lib/workflow/variables";
+import type {
+  StepCheckContext,
+  StepLogEntry,
+  StepStreamEvent,
+  StepUIState,
+} from "@/types";
+
 import { PROVIDERS } from "@/constants";
 import { env } from "@/env";
 import { refreshTokenIfNeeded } from "@/lib/auth";
-import type  { StepIdValue } from "@/lib/workflow/step-ids";
-import { Var } from '@/lib/workflow/variables';
-import type { WorkflowVars } from '@/lib/workflow/variables';
-import { LogLevel } from '@/types';
-import type { StepCheckContext, StepLogEntry, StepStreamEvent, StepUIState } from '@/types';
+import { Var } from "@/lib/workflow/variables";
+import { LogLevel } from "@/types";
+
+import type { LROMetadata } from "./lro-detector";
 
 import { createAuthenticatedFetch } from "./fetch-utils";
-import type  { LROMetadata } from "./lro-detector";
 import { getStep } from "./step-registry";
 import { StepStatus } from "./step-status";
 
@@ -192,23 +199,23 @@ async function processStep<T extends StepIdValue>(
   const addLog = (entry: StepLogEntry) => {
     const nextLogs = appendLog(entry, vars, logs);
     const sanitizedEntry = nextLogs.at(-1);
-      if (!sanitizedEntry) {
-        return;
-      }
-      logs = nextLogs;
-      logDev(sanitizedEntry, vars);
-      emitLogEvent(eventMeta, sanitizedEntry);
-      pushState({});
-    };
+    if (!sanitizedEntry) {
+      return;
+    }
+    logs = nextLogs;
+    logDev(sanitizedEntry, vars);
+    emitLogEvent(eventMeta, sanitizedEntry);
+    pushState({});
+  };
 
-    const logPhase = (phase: "check" | "execute", status: "start" | "end") => {
-      addLog({
-        data: { phase, status, stepId },
-        level: LogLevel.Debug,
-        message: `Phase ${phase} ${status}`,
-        timestamp: Date.now(),
-      });
-    };
+  const logPhase = (phase: "check" | "execute", status: "start" | "end") => {
+    addLog({
+      data: { phase, status, stepId },
+      level: LogLevel.Debug,
+      message: `Phase ${phase} ${status}`,
+      timestamp: Date.now(),
+    });
+  };
 
   const shouldUseCookieTokens = env.NODE_ENV !== "test";
   const googleTokenObj = shouldUseCookieTokens

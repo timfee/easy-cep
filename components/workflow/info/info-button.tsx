@@ -1,8 +1,12 @@
 "use client";
 
+import type { ReactNode } from "react";
+
 import { Info, Loader2, Trash2 } from "lucide-react";
-import { useEffect, useState } from 'react';
-import type { ReactNode } from 'react';
+import { useEffect, useState } from "react";
+
+import type { InfoItem } from "@/lib/info";
+import type { DeleteResult } from "@/lib/workflow/info-actions";
 
 import {
   AlertDialog,
@@ -35,8 +39,6 @@ import {
 import { useInfoItems } from "@/hooks/use-info-items";
 import { useMultiSelect } from "@/hooks/use-multi-select";
 import { usePaginatedItems } from "@/hooks/use-paginated-items";
-import type  { InfoItem } from "@/lib/info";
-import type  { DeleteResult } from "@/lib/workflow/info-actions";
 
 import { InfoItemList } from "./info-item-list";
 
@@ -160,9 +162,7 @@ export function InfoButton({
       <DialogContent className="flex max-h-150 max-w-2xl flex-col p-0">
         <div className="space-y-1 border-b px-6 py-4">
           <DialogTitle>{title}</DialogTitle>
-          {context && (
-            <p className="text-foreground/60 text-xs">{context}</p>
-          )}
+          {context && <p className="text-foreground/60 text-xs">{context}</p>}
         </div>
 
         {deleteItems && deletableItems.length > 0 && (

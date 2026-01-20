@@ -1,7 +1,8 @@
 import { z } from "zod";
 
-import { normalizePathSegment } from "../core/http";
 import type { HttpClient } from "../types/http-client";
+
+import { normalizePathSegment } from "../core/http";
 import { ResourceBuilder } from "./fluent-builder";
 
 /**

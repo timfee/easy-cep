@@ -2,10 +2,11 @@ import { z } from "zod";
 
 import { ApiEndpoint } from "@/constants";
 
+import type { HttpClient } from "../types/http-client";
+import type { CrudSchemas } from "./crud-factory";
+
 import { ServicePrincipalIdSchema } from "../types/api-schemas";
-import type  { HttpClient } from "../types/http-client";
-import { createCrudMethods, empty } from './crud-factory';
-import type { CrudSchemas } from './crud-factory';
+import { createCrudMethods, empty } from "./crud-factory";
 import { ResourceBuilder } from "./fluent-builder";
 
 const appGetSchema = z.object({
