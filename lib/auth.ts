@@ -1,215 +1,187 @@
-import type {NextResponse} from "next/server";
-
-import {cookies} from "next/headers";
-import type {NextResponse} from "next/server";
+import { cookies } from "next/headers";
+import type { NextResponse } from "next/server";
 import {
   createCipheriv,
   createDecipheriv,
   createHash,
   randomBytes,
 } from "node:crypto";
+import { z } from "zod";
 
 import {
-  type Provider,
   ApiEndpoint,
   OAUTH_STATE_COOKIE_NAME,
   PROVIDERS,
+  type Provider,
   WORKFLOW_CONSTANTS,
 } from "@/constants";
-import {ApiEndpoint, OAUTH_STATE_COOKIE_NAME, PROVIDERS, WORKFLOW_CONSTANTS} from '@/constants';
-import type {Provider} from '@/constants';
-import {env} from "@/env";
-import {TIME} from "@/lib/workflow/constants/workflow-limits";
+import { env } from "@/env";
+import { TIME } from "@/lib/workflow/constants/workflow-limits";
 
-/**
- * Cookie option type for NextResponse.cookies.set.
- */
+// --- Configuration & Constants ---
+
 type CookieOptions = Parameters<NextResponse["cookies"]["set"]>[2];
 
-/**
- * Size of each cookie chunk in bytes.
- */
-const CHUNK_SIZE = 3800;
+const CRYPTO = {
+  ALGORITHM: "aes-256-gcm",
+  IV_LENGTH: 12,
+  TAG_LENGTH: 16,
+  STATE_BYTES: 16,
+  VERIFIER_BYTES: 32,
+  CHUNK_SIZE: 3800,
+  KEY: createHash("sha256").update(env.AUTH_SECRET).digest(),
+} as const;
 
-/**
- * Encrypt/decrypt configuration.
- */
-const ALGORITHM = "aes-256-gcm";
-const IV_LENGTH = 12;
-const TAG_LENGTH = 16;
-const STATE_BYTES = 16;
-const VERIFIER_BYTES = 32;
-const key = createHash("sha256").update(env.AUTH_SECRET).digest();
+const TokenSchema = z.object({
+  accessToken: z.string(),
+  refreshToken: z.string(),
+  expiresAt: z.number(),
+  scope: z.array(z.string()),
+});
 
-/**
- * Encrypt plain text with AES-GCM.
- */
+export type Token = z.infer<typeof TokenSchema>;
+
+const CONFIGS = {
+  [PROVIDERS.GOOGLE]: {
+    authorizationUrl: ApiEndpoint.GoogleAuth.Authorize,
+    clientId: env.GOOGLE_OAUTH_CLIENT_ID,
+    clientSecret: env.GOOGLE_OAUTH_CLIENT_SECRET,
+    redirectUri: "/api/auth/callback/google",
+    tokenUrl: ApiEndpoint.GoogleAuth.Token,
+    scopes: [
+      "openid",
+      "email",
+      "profile",
+      "https://www.googleapis.com/auth/admin.directory.user",
+      "https://www.googleapis.com/auth/admin.directory.orgunit",
+      "https://www.googleapis.com/auth/admin.directory.domain",
+      "https://www.googleapis.com/auth/admin.directory.rolemanagement",
+      "https://www.googleapis.com/auth/cloud-identity.inboundsso",
+      "https://www.googleapis.com/auth/siteverification",
+    ],
+  },
+  [PROVIDERS.MICROSOFT]: {
+    authorizationUrl: ApiEndpoint.MicrosoftAuth.Authorize(
+      env.MICROSOFT_TENANT ?? "organizations"
+    ),
+    clientId: env.MICROSOFT_OAUTH_CLIENT_ID,
+    clientSecret: env.MICROSOFT_OAUTH_CLIENT_SECRET,
+    redirectUri: "/api/auth/callback/microsoft",
+    tokenUrl: ApiEndpoint.MicrosoftAuth.Token(
+      env.MICROSOFT_TENANT ?? "organizations"
+    ),
+    scopes: [
+      "openid",
+      "profile",
+      "email",
+      "offline_access",
+      "User.Read",
+      "Directory.Read.All",
+      "Application.ReadWrite.All",
+      "AppRoleAssignment.ReadWrite.All",
+      "Policy.ReadWrite.ApplicationConfiguration",
+    ],
+  },
+} as const;
+
+// --- Crypto Helpers ---
+
 export function encrypt(text: string): string {
-  const iv = randomBytes(IV_LENGTH);
-  const cipher = createCipheriv(ALGORITHM, key, iv);
+  const iv = randomBytes(CRYPTO.IV_LENGTH);
+  const cipher = createCipheriv(CRYPTO.ALGORITHM, CRYPTO.KEY, iv);
   const enc = Buffer.concat([cipher.update(text, "utf8"), cipher.final()]);
   const tag = cipher.getAuthTag();
   return Buffer.concat([iv, tag, enc]).toString("base64url");
 }
 
-/**
- * Decrypt text produced by {@link encrypt}.
- */
 export function decrypt(encoded: string): string {
   const data = Buffer.from(encoded, "base64url");
-  const iv = data.subarray(0, IV_LENGTH);
-  const tag = data.subarray(IV_LENGTH, IV_LENGTH + TAG_LENGTH);
-  const text = data.subarray(IV_LENGTH + TAG_LENGTH);
-  const decipher = createDecipheriv(ALGORITHM, key, iv);
+  const iv = data.subarray(0, CRYPTO.IV_LENGTH);
+  const tag = data.subarray(
+    CRYPTO.IV_LENGTH,
+    CRYPTO.IV_LENGTH + CRYPTO.TAG_LENGTH
+  );
+  const text = data.subarray(CRYPTO.IV_LENGTH + CRYPTO.TAG_LENGTH);
+  const decipher = createDecipheriv(CRYPTO.ALGORITHM, CRYPTO.KEY, iv);
   decipher.setAuthTag(tag);
-  const dec = Buffer.concat([decipher.update(text), decipher.final()]);
-  return dec.toString("utf8");
-}
-
-/**
- * Generate a random OAuth state parameter.
- */
-export function generateState(): string {
-  return randomBytes(STATE_BYTES).toString("hex");
-}
-
-/**
- * Generate a PKCE code verifier.
- */
-export function generateCodeVerifier(): string {
-  return randomBytes(VERIFIER_BYTES).toString("hex");
-}
-
-/**
- * Generate a PKCE code challenge from a verifier.
- */
-export function generateCodeChallenge(verifier: string): string {
-  const hash = createHash("sha256").update(verifier).digest();
-  return hash.toString("base64url");
-}
-
-interface OAuthConfig {
-  clientId: string;
-  clientSecret: string;
-  redirectUri: string;
-  authorizationUrl: string;
-  tokenUrl: string;
-  scopes: string[];
-}
-
-/**
- * OAuth configuration for Google providers.
- */
-const googleOAuthConfig: OAuthConfig = {
-  authorizationUrl: ApiEndpoint.GoogleAuth.Authorize,
-  clientId: env.GOOGLE_OAUTH_CLIENT_ID,
-  clientSecret: env.GOOGLE_OAUTH_CLIENT_SECRET,
-  redirectUri: "/api/auth/callback/google",
-  scopes: [
-    "openid",
-    "email",
-    "profile",
-    "https://www.googleapis.com/auth/admin.directory.user",
-    "https://www.googleapis.com/auth/admin.directory.orgunit",
-    "https://www.googleapis.com/auth/admin.directory.domain",
-    "https://www.googleapis.com/auth/admin.directory.rolemanagement",
-    "https://www.googleapis.com/auth/cloud-identity.inboundsso",
-    "https://www.googleapis.com/auth/siteverification",
-    "https://www.googleapis.com/auth/admin.directory.rolemanagement",
-  ],
-  tokenUrl: ApiEndpoint.GoogleAuth.Token,
-};
-
-/**
- * OAuth configuration for Microsoft providers.
- */
-const microsoftOAuthConfig: OAuthConfig = {
-  authorizationUrl: ApiEndpoint.MicrosoftAuth.Authorize(
-    env.MICROSOFT_TENANT ?? "organizations"
-  ),
-  clientId: env.MICROSOFT_OAUTH_CLIENT_ID,
-  clientSecret: env.MICROSOFT_OAUTH_CLIENT_SECRET,
-  redirectUri: "/api/auth/callback/microsoft",
-  scopes: [
-    "openid",
-    "profile",
-    "email",
-    "offline_access",
-    "User.Read",
-    "Directory.Read.All",
-    "Application.ReadWrite.All",
-    "AppRoleAssignment.ReadWrite.All",
-    "Policy.ReadWrite.ApplicationConfiguration",
-    "offline_access",
-  ],
-  tokenUrl: ApiEndpoint.MicrosoftAuth.Token(
-    env.MICROSOFT_TENANT ?? "organizations"
-  ),
-};
-
-/**
- * Resolve OAuth settings for a provider.
- */
-function getOAuthConfig(provider: Provider): OAuthConfig {
-  return provider === PROVIDERS.GOOGLE
-    ? googleOAuthConfig
-    : microsoftOAuthConfig;
-}
-
-/**
- * OAuth token metadata stored in cookies.
- */
-export interface Token {
-  accessToken: string;
-  refreshToken: string;
-  expiresAt: number;
-  scope: string[];
-}
-
-function isRecord(value: unknown): value is Record<string, unknown> {
-  return typeof value === "object" && value !== null;
-}
-
-function isStringArray(value: unknown): value is string[] {
-  return (
-    Array.isArray(value) && value.every((item) => typeof item === "string")
+  return Buffer.concat([decipher.update(text), decipher.final()]).toString(
+    "utf8"
   );
 }
 
-function parseToken(value: unknown): Token | null {
-  if (!isRecord(value)) {
-    return null;
-  }
+export const generateState = () =>
+  randomBytes(CRYPTO.STATE_BYTES).toString("hex");
+export const generateCodeVerifier = () =>
+  randomBytes(CRYPTO.VERIFIER_BYTES).toString("hex");
+export const generateCodeChallenge = (verifier: string) =>
+  createHash("sha256").update(verifier).digest("base64url");
 
-  const {accessToken, refreshToken, expiresAt, scope} = value;
-  if (
-    typeof accessToken !== "string" ||
-    typeof refreshToken !== "string" ||
-    typeof expiresAt !== "number" ||
-    !isStringArray(scope)
-  ) {
-    return null;
-  }
+// --- Cookie Management ---
 
-  return {accessToken, expiresAt, refreshToken, scope};
+const DEFAULT_COOKIE_OPTIONS: CookieOptions = { httpOnly: true, path: "/" };
+
+export function setChunkedCookie(
+  response: NextResponse,
+  name: string,
+  value: string,
+  options: CookieOptions = DEFAULT_COOKIE_OPTIONS
+) {
+  const chunks = Math.ceil(value.length / CRYPTO.CHUNK_SIZE);
+
+  for (let i = 0; i < chunks; i += 1) {
+    const chunk = value.slice(
+      i * CRYPTO.CHUNK_SIZE,
+      (i + 1) * CRYPTO.CHUNK_SIZE
+    );
+    response.cookies.set(i === 0 ? name : `${name}-${i}`, chunk, options);
+  }
 }
 
-/**
- * Generate the provider authorization URL.
- */
+export async function getChunkedCookie(
+  name: string
+): Promise<string | undefined> {
+  const store = await cookies();
+  const main = store.get(name);
+  if (!main) {
+    return undefined;
+  }
+
+  let { value } = main;
+  let i = 1;
+  while (store.has(`${name}-${i}`)) {
+    value += store.get(`${name}-${i}`)?.value ?? "";
+    i += 1;
+  }
+  return value;
+}
+
+export async function clearChunkedCookie(response: NextResponse, name: string) {
+  const store = await cookies();
+  response.cookies.delete(name);
+
+  let i = 1;
+  while (store.has(`${name}-${i}`)) {
+    response.cookies.delete(`${name}-${i}`);
+    i += 1;
+  }
+}
+
+// --- OAuth Logic ---
+
 export function generateAuthUrl(
   provider: Provider,
   state: string,
   baseUrl: string
 ): string {
-  const config = getOAuthConfig(provider);
-  const params = new URLSearchParams();
-  const redirectUri = new URL(config.redirectUri, baseUrl).toString();
-  params.set("client_id", config.clientId);
-  params.set("redirect_uri", redirectUri);
-  params.set("response_type", "code");
-  params.set("scope", config.scopes.join(" "));
-  params.set("state", state);
+  const config = CONFIGS[provider];
+  const params = new URLSearchParams({
+    client_id: config.clientId,
+    redirect_uri: new URL(config.redirectUri, baseUrl).toString(),
+    response_type: "code",
+    scope: config.scopes.join(" "),
+    state,
+  });
+
   if (provider === PROVIDERS.GOOGLE) {
     params.set("access_type", "offline");
     params.set("prompt", "consent");
@@ -217,141 +189,71 @@ export function generateAuthUrl(
       params.set("hd", env.GOOGLE_HD_DOMAIN);
     }
   }
+
   if (
     provider === PROVIDERS.MICROSOFT &&
-    env.MICROSOFT_TENANT &&
-    env.MICROSOFT_TENANT.includes(".")
+    env.MICROSOFT_TENANT?.includes(".")
   ) {
     params.set("domain_hint", env.MICROSOFT_TENANT);
   }
+
   return `${config.authorizationUrl}?${params.toString()}`;
 }
 
-/**
- * Exchange an authorization code for an access token.
- */
 export async function exchangeCodeForToken(
   provider: Provider,
   code: string,
   baseUrl: string
 ): Promise<Token> {
-  const config = getOAuthConfig(provider);
+  const config = CONFIGS[provider];
   const redirectUri = new URL(config.redirectUri, baseUrl).toString();
-  const params = new URLSearchParams({
-    client_id: config.clientId,
-    client_secret: config.clientSecret,
-    code,
-    grant_type: "authorization_code",
-    redirect_uri: redirectUri,
-  });
 
   const res = await fetch(config.tokenUrl, {
-    body: params.toString(),
-    headers: {"Content-Type": "application/x-www-form-urlencoded"},
     method: "POST",
+    headers: { "Content-Type": "application/x-www-form-urlencoded" },
+    body: new URLSearchParams({
+      client_id: config.clientId,
+      client_secret: config.clientSecret,
+      code,
+      grant_type: "authorization_code",
+      redirect_uri: redirectUri,
+    }).toString(),
   });
 
   if (!res.ok) {
-    const error = await res.text();
-    throw new Error(`Token exchange failed: ${error}`);
+    throw new Error(`Token exchange failed: ${await res.text()}`);
   }
 
   const data = await res.json();
-  return {
+  return TokenSchema.parse({
     accessToken: data.access_token,
-    expiresAt: Date.now() + data.expires_in * TIME.MS_IN_SECOND,
     refreshToken: data.refresh_token,
+    expiresAt: Date.now() + data.expires_in * TIME.MS_IN_SECOND,
     scope: data.scope?.split(" ") || config.scopes,
-  };
+  });
 }
 
-/**
- * Retrieve an encrypted provider token from chunked cookies.
- */
 export async function getToken(provider: Provider): Promise<Token | null> {
-  const cookieName = `${provider}_token`;
-  const encrypted = await getChunkedCookie(cookieName);
-  if (!encrypted) {
-    return null;
-  }
   try {
-    const data = decrypt(encrypted);
-    return parseToken(JSON.parse(data));
-  } catch {
-    return null;
-  }
-}
-
-/**
- * Refresh the provider token when nearing expiration.
- */
-export async function refreshTokenIfNeeded(
-  provider: Provider,
-  response?: NextResponse
-): Promise<Token | null> {
-  const token = await getToken(provider);
-  if (!token) {
-    return null;
-  }
-
-  const expiresIn = token.expiresAt - Date.now();
-  if (expiresIn > WORKFLOW_CONSTANTS.TOKEN_REFRESH_BUFFER_MS) {
-    return token;
-  }
-
-  if (!token.refreshToken) {
-    return null;
-  }
-
-  try {
-    const config = getOAuthConfig(provider);
-    const params = new URLSearchParams({
-      client_id: config.clientId,
-      client_secret: config.clientSecret,
-      grant_type: "refresh_token",
-      refresh_token: token.refreshToken,
-    });
-
-    const res = await fetch(config.tokenUrl, {
-      body: params.toString(),
-      headers: {"Content-Type": "application/x-www-form-urlencoded"},
-      method: "POST",
-    });
-
-    if (!res.ok) {
+    const encrypted = await getChunkedCookie(`${provider}_token`);
+    if (!encrypted) {
       return null;
     }
-
-    const data = await res.json();
-    const newToken: Token = {
-      accessToken: data.access_token,
-      expiresAt: Date.now() + data.expires_in * TIME.MS_IN_SECOND,
-      refreshToken: data.refresh_token || token.refreshToken,
-      scope: data.scope?.split(" ") || token.scope,
-    };
-
-    if (response) {
-      await setToken(response, provider, newToken);
-    }
-
-    return newToken;
+    return TokenSchema.parse(JSON.parse(decrypt(encrypted)));
   } catch {
     return null;
   }
 }
 
-/**
- * Store an encrypted provider token in chunked cookies.
- */
 export async function setToken(
   response: NextResponse,
   provider: Provider,
   token: Token
-): Promise<void> {
+) {
   const encrypted = encrypt(JSON.stringify(token));
-  const cookieName = `${provider}_token`;
-  await clearChunkedCookie(response, cookieName);
-  await setChunkedCookie(response, cookieName, encrypted, {
+  // Clean up old chunks
+  await clearChunkedCookie(response, `${provider}_token`);
+  setChunkedCookie(response, `${provider}_token`, encrypted, {
     httpOnly: true,
     maxAge: WORKFLOW_CONSTANTS.TOKEN_COOKIE_MAX_AGE,
     path: "/",
@@ -359,18 +261,60 @@ export async function setToken(
   });
 }
 
-/**
- * Validate the OAuth state stored in chunked cookies.
- */
-export async function validateOAuthState(
-  state: string,
-  provider: Provider
-): Promise<boolean> {
-  const encrypted = await getChunkedCookie(OAUTH_STATE_COOKIE_NAME);
-  if (!encrypted) {
-    return false;
+export async function refreshTokenIfNeeded(
+  provider: Provider,
+  response?: NextResponse
+): Promise<Token | null> {
+  const token = await getToken(provider);
+  if (
+    !token?.refreshToken ||
+    token.expiresAt - Date.now() > WORKFLOW_CONSTANTS.TOKEN_REFRESH_BUFFER_MS
+  ) {
+    return token;
   }
+
   try {
+    const config = CONFIGS[provider];
+    const res = await fetch(config.tokenUrl, {
+      method: "POST",
+      headers: { "Content-Type": "application/x-www-form-urlencoded" },
+      body: new URLSearchParams({
+        client_id: config.clientId,
+        client_secret: config.clientSecret,
+        grant_type: "refresh_token",
+        refresh_token: token.refreshToken,
+      }).toString(),
+    });
+
+    if (!res.ok) {
+      return null;
+    }
+
+    const data = await res.json();
+    const newToken = TokenSchema.parse({
+      accessToken: data.access_token,
+      // Keep old refresh token if not rotated
+      refreshToken: data.refresh_token ?? token.refreshToken,
+      expiresAt: Date.now() + data.expires_in * TIME.MS_IN_SECOND,
+      scope: data.scope?.split(" ") || token.scope,
+    });
+
+    if (response) {
+      await setToken(response, provider, newToken);
+    }
+    return newToken;
+  } catch {
+    return null;
+  }
+}
+
+export async function validateOAuthState(state: string, provider: Provider) {
+  try {
+    const encrypted = await getChunkedCookie(OAUTH_STATE_COOKIE_NAME);
+    if (!encrypted) {
+      return false;
+    }
+
     const data = JSON.parse(decrypt(encrypted));
     return (
       data.state === state &&
@@ -379,80 +323,5 @@ export async function validateOAuthState(
     );
   } catch {
     return false;
-  }
-}
-
-/**
- * Set a cookie value split into multiple chunks.
- */
-export function setChunkedCookie(
-  response: NextResponse,
-  name: string,
-  value: string,
-  options?: CookieOptions
-) {
-  const chunkCount = Math.ceil(value.length / CHUNK_SIZE);
-  const defaults: CookieOptions = {httpOnly: true, path: "/"};
-  for (const i of Array.from({length: chunkCount}).keys()) {
-    const chunk = value.slice(i * CHUNK_SIZE, (i + 1) * CHUNK_SIZE);
-    const cookieName = i === 0 ? name : `${name}-${i}`;
-    response.cookies.set(cookieName, chunk, {...defaults, ...options});
-  }
-}
-
-/**
- * Helper to iterate over chunked cookies.
- */
-function* iterateCookieChunks(
-  store: Awaited<ReturnType<typeof cookies>>,
-  name: string
-) {
-  let i = 1;
-  while (true) {
-    const part = store.get(`${name}-${i}`);
-    if (!part) {
-      break;
-    }
-    yield part;
-    i++;
-  }
-}
-
-/**
- * Retrieve a value stored via {@link setChunkedCookie}.
- */
-export async function getChunkedCookie(
-  name: string
-): Promise<string | undefined> {
-  try {
-    const store = await cookies();
-    const first = store.get(name);
-    if (!first) {
-      return undefined;
-    }
-    let {value} = first;
-    for (const part of iterateCookieChunks(store, name)) {
-      value += part.value;
-    }
-    return value;
-  } catch {
-    return undefined;
-  }
-}
-
-/**
- * Clear cookies created via {@link setChunkedCookie}.
- */
-export async function clearChunkedCookie(response: NextResponse, name: string) {
-  try {
-    const store = await cookies();
-    if (store.get(name)) {
-      response.cookies.delete(name);
-    }
-    for (const part of iterateCookieChunks(store, name)) {
-      response.cookies.delete(part.name);
-    }
-  } catch {
-    /* ignore cookie clearing errors */
   }
 }
