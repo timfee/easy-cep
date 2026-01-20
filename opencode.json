@@ -8,6 +8,13 @@
         "CONTEXT7_API_KEY": "{env:CONTEXT7_API_KEY}"
       }
     },
+    "v0": {
+      "type": "remote",
+      "url": "https://api.v0.dev/v1",
+      "headers": {
+        "Authorization": "Bearer {env:V0_API_KEY}"
+      }
+    },
     "gh_grep": {
       "type": "remote",
       "url": "https://mcp.grep.app"

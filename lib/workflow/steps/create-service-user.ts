@@ -30,6 +30,7 @@ export default defineStep(StepId.CreateServiceUser)
       markComplete,
       markIncomplete,
       markCheckFailed,
+      markStale,
       log,
     }) => {
       try {
@@ -43,7 +44,10 @@ export default defineStep(StepId.CreateServiceUser)
         };
 
         if (user.id && user.primaryEmail) {
-          log(LogLevel.Info, "Service user already exists");
+          log(LogLevel.Info, "Service user already exists", {
+            provisioningUserId: user.id,
+            provisioningUserEmail: user.primaryEmail,
+          });
           const existingPassword = vars.get(Var.GeneratedPassword);
           if (existingPassword) {
             markComplete({
@@ -52,7 +56,7 @@ export default defineStep(StepId.CreateServiceUser)
               generatedPassword: existingPassword,
             });
           } else {
-            markIncomplete("Service user password missing", {
+            markStale("Service user password missing", {
               provisioningUserId: user.id,
               provisioningUserEmail: user.primaryEmail,
             });
