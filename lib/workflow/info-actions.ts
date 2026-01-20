@@ -51,7 +51,9 @@ async function fetchRoleAssignments(
   }
 
   const data = RoleAssignmentListSchema.parse(await res.json());
-  return (data.items ?? []).filter((assignment) => assignment.roleId === roleId);
+  return (data.items ?? []).filter(
+    (assignment) => assignment.roleId === roleId
+  );
 }
 
 async function deleteRoleAssignment(
@@ -86,7 +88,10 @@ async function unassignRoleUsers(roleId: string): Promise<void> {
   const errors: string[] = [];
   for (const assignment of assignments) {
     try {
-      await deleteRoleAssignment(assignment.roleAssignmentId, token.accessToken);
+      await deleteRoleAssignment(
+        assignment.roleAssignmentId,
+        token.accessToken
+      );
     } catch (error) {
       const message = error instanceof Error ? error.message : String(error);
       errors.push(`${assignment.assignedTo}: ${message}`);

@@ -70,7 +70,8 @@ export default defineStep(StepId.SetupMicrosoftClaimsPolicy)
           );
           if (!matchedPolicy?.id) {
             throw new Error(
-              `Claims policy '${displayName}' already exists but could not be found.`
+              `Claims policy '${displayName}' already exists but could not be found.`,
+              { cause: error }
             );
           }
           policyId = matchedPolicy.id;

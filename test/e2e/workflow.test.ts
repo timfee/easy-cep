@@ -78,106 +78,106 @@ if (shouldSkipLiveE2E) {
     const varsRef: { current: Partial<WorkflowVars> } = { current: {} };
 
     beforeAll(async () => {
-    setDefaultTimeout(120_000);
-    console.log("🧹 Cleaning test environment before tests...");
+      setDefaultTimeout(120_000);
+      console.log("🧹 Cleaning test environment before tests...");
 
-    let retries = 3;
-    while (retries > 0) {
+      let retries = 3;
+      while (retries > 0) {
+        try {
+          await cleanupGoogleEnvironment();
+          await cleanupMicrosoftEnvironment();
+          console.log("🧹 Environment cleaned");
+          break;
+        } catch (error) {
+          retries -= 1;
+          if (retries === 0) {
+            console.error("🧹 Cleanup failed after 3 attempts:", error);
+            throw error;
+          }
+          console.warn(
+            `🧹 Cleanup attempt failed, retrying... (${retries} attempts left)`
+          );
+          await delay(2000);
+        }
+      }
+
+      const { googleToken, microsoftToken } = await getBearerTokens(true);
+
+      if (!(googleToken && microsoftToken)) {
+        throw new Error(
+          "Missing E2E bearer tokens; ensure refresh tokens or service account credentials are set in .env.local."
+        );
+      }
+
+      const now = new Date();
+      const [date] = now.toISOString().split("T");
+      const timestamp = Math.floor(now.getTime() / 1000);
+      const testRunId = `${date}-${timestamp}`;
+      const suffix = `_test-${testRunId}`;
+      varsRef.current = {
+        [Var.PrimaryDomain]: env.TEST_DOMAIN ?? "test.example.com",
+        [Var.IsDomainVerified]: "true",
+        [Var.AutomationOuName]: `automation${suffix}`,
+        [Var.AutomationOuPath]: `/automation${suffix}`,
+        [Var.ProvisioningUserPrefix]: `azuread-provisioning${suffix}`,
+        [Var.AdminRoleName]: `Microsoft Entra Provisioning${suffix}`,
+        [Var.SamlProfileDisplayName]: `Azure AD${suffix}`,
+        [Var.ProvisioningAppDisplayName]: `Google Workspace Provisioning${suffix}`,
+        [Var.SsoAppDisplayName]: `Google Workspace SSO${suffix}`,
+        [Var.ClaimsPolicyDisplayName]: `Google Workspace Basic Claims${suffix}`,
+        [Var.GoogleAccessToken]: googleToken.accessToken,
+        [Var.MsGraphToken]: microsoftToken.accessToken,
+      };
+    });
+
+    const steps = [
+      StepId.VerifyPrimaryDomain,
+      StepId.CreateAutomationOU,
+      StepId.CreateServiceUser,
+      StepId.CreateAdminRoleAndAssignUser,
+      StepId.ConfigureGoogleSamlProfile,
+      StepId.CreateMicrosoftApps,
+      StepId.SetupMicrosoftProvisioning,
+      StepId.ConfigureMicrosoftSso,
+      StepId.SetupMicrosoftClaimsPolicy,
+      StepId.CompleteGoogleSsoSetup,
+      StepId.AssignUsersToSso,
+    ];
+
+    it.each(steps)("Execute: %s", async (step) => {
+      console.log(`\n📋 Executing ${step}...`);
+      const result = await runStep(step, varsRef.current);
+      console.log(`   Status: ${result.state.status}`);
+      logExecutionFailure(step, result);
+      expect(["complete", "blocked", "pending"]).toContain(result.state.status);
+      assertFixture(step, {
+        error: result.state.error,
+        status: result.state.status,
+      });
+      varsRef.current = { ...varsRef.current, ...result.newVars };
+    });
+
+    const undoSteps = [...steps].toReversed();
+    it.each(undoSteps)("Undo: %s", async (step) => {
+      console.log(`\n🔄 Undoing ${step}...`);
+      const result = await undoStep(step, varsRef.current);
+      console.log(`   Status: ${result.state.status}`);
+      expect(["complete", "blocked"]).toContain(result.state.status);
+      assertFixture(`${step}-undo`, {
+        error: result.state.error,
+        status: result.state.status,
+      });
+    });
+
+    afterAll(async () => {
+      console.log("\n🧹 Final cleanup...");
       try {
         await cleanupGoogleEnvironment();
         await cleanupMicrosoftEnvironment();
-        console.log("🧹 Environment cleaned");
-        break;
+        console.log("✅ Final cleanup complete");
       } catch (error) {
-        retries -= 1;
-        if (retries === 0) {
-          console.error("🧹 Cleanup failed after 3 attempts:", error);
-          throw error;
-        }
-        console.warn(
-          `🧹 Cleanup attempt failed, retrying... (${retries} attempts left)`
-        );
-        await delay(2000);
+        console.error("❌ Final cleanup failed:", error);
       }
-    }
-
-    const { googleToken, microsoftToken } = await getBearerTokens(true);
-
-    if (!(googleToken && microsoftToken)) {
-      throw new Error(
-        "Missing E2E bearer tokens; ensure refresh tokens or service account credentials are set in .env.local."
-      );
-    }
-
-    const now = new Date();
-    const [date] = now.toISOString().split("T");
-    const timestamp = Math.floor(now.getTime() / 1000);
-    const testRunId = `${date}-${timestamp}`;
-    const suffix = `_test-${testRunId}`;
-    varsRef.current = {
-      [Var.PrimaryDomain]: env.TEST_DOMAIN ?? "test.example.com",
-      [Var.IsDomainVerified]: "true",
-      [Var.AutomationOuName]: `automation${suffix}`,
-      [Var.AutomationOuPath]: `/automation${suffix}`,
-      [Var.ProvisioningUserPrefix]: `azuread-provisioning${suffix}`,
-      [Var.AdminRoleName]: `Microsoft Entra Provisioning${suffix}`,
-      [Var.SamlProfileDisplayName]: `Azure AD${suffix}`,
-      [Var.ProvisioningAppDisplayName]: `Google Workspace Provisioning${suffix}`,
-      [Var.SsoAppDisplayName]: `Google Workspace SSO${suffix}`,
-      [Var.ClaimsPolicyDisplayName]: `Google Workspace Basic Claims${suffix}`,
-      [Var.GoogleAccessToken]: googleToken.accessToken,
-      [Var.MsGraphToken]: microsoftToken.accessToken,
-    };
-  });
-
-  const steps = [
-    StepId.VerifyPrimaryDomain,
-    StepId.CreateAutomationOU,
-    StepId.CreateServiceUser,
-    StepId.CreateAdminRoleAndAssignUser,
-    StepId.ConfigureGoogleSamlProfile,
-    StepId.CreateMicrosoftApps,
-    StepId.SetupMicrosoftProvisioning,
-    StepId.ConfigureMicrosoftSso,
-    StepId.SetupMicrosoftClaimsPolicy,
-    StepId.CompleteGoogleSsoSetup,
-    StepId.AssignUsersToSso,
-  ];
-
-  it.each(steps)("Execute: %s", async (step) => {
-    console.log(`\n📋 Executing ${step}...`);
-    const result = await runStep(step, varsRef.current);
-    console.log(`   Status: ${result.state.status}`);
-    logExecutionFailure(step, result);
-    expect(["complete", "blocked", "pending"]).toContain(result.state.status);
-    assertFixture(step, {
-      error: result.state.error,
-      status: result.state.status,
-    });
-    varsRef.current = { ...varsRef.current, ...result.newVars };
-  });
-
-  const undoSteps = [...steps].toReversed();
-  it.each(undoSteps)("Undo: %s", async (step) => {
-    console.log(`\n🔄 Undoing ${step}...`);
-    const result = await undoStep(step, varsRef.current);
-    console.log(`   Status: ${result.state.status}`);
-    expect(["complete", "blocked"]).toContain(result.state.status);
-    assertFixture(`${step}-undo`, {
-      error: result.state.error,
-      status: result.state.status,
     });
   });
-
-  afterAll(async () => {
-    console.log("\n🧹 Final cleanup...");
-    try {
-      await cleanupGoogleEnvironment();
-      await cleanupMicrosoftEnvironment();
-      console.log("✅ Final cleanup complete");
-    } catch (error) {
-      console.error("❌ Final cleanup failed:", error);
-    }
-  });
-});
 }

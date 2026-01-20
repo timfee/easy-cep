@@ -77,7 +77,9 @@ function InfoCallout({
     ));
 
   return (
-    <div className={`flex gap-3 rounded-lg px-4 py-3 text-sm ${variantClasses}`}>
+    <div
+      className={`flex gap-3 rounded-lg px-4 py-3 text-sm ${variantClasses}`}
+    >
       <div className="flex h-5 w-5 items-center justify-center text-current">
         {iconNode}
       </div>
@@ -104,10 +106,7 @@ interface InfoCalloutsProps {
   failureDetails: FailureDetail[];
 }
 
-function InfoCallouts({
-  error,
-  failureDetails,
-}: InfoCalloutsProps) {
+function InfoCallouts({ error, failureDetails }: InfoCalloutsProps) {
   if (!error && failureDetails.length === 0) {
     return null;
   }
@@ -306,7 +305,9 @@ export function InfoButton({
     label: labelById.get(id) ?? id,
     message,
   }));
-  const showSelectionToolbar = Boolean(deleteItems && deletableItems.length > 0);
+  const showSelectionToolbar = Boolean(
+    deleteItems && deletableItems.length > 0
+  );
   const showPagination = items.length > 25;
 
   const selectAllChecked =
@@ -374,7 +375,8 @@ export function InfoButton({
                   />
                 )}
                 <p className="text-xs text-foreground/70">
-                  {selectedIds.size} selected · {deletableItems.length} deletable
+                  {selectedIds.size} selected · {deletableItems.length}{" "}
+                  deletable
                 </p>
               </div>
 

@@ -1,4 +1,5 @@
 import type { StepDefinition, StepUIState } from "@/types";
+
 import type { StepStatusValue } from "../step-status";
 import type { WorkflowVars } from "../variables";
 
@@ -52,7 +53,10 @@ export function computeEffectiveStatus(
   }
 
   if (currentState?.status === StepStatus.Blocked) {
-    return { blockReason: currentState.blockReason, status: StepStatus.Blocked };
+    return {
+      blockReason: currentState.blockReason,
+      status: StepStatus.Blocked,
+    };
   }
 
   if (currentState?.status === StepStatus.Pending) {

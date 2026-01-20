@@ -4,8 +4,8 @@ import path from "node:path";
 import { fileURLToPath } from "node:url";
 
 import type { Token } from "@/lib/auth";
-import type { DeleteResult } from "@/lib/workflow/info-actions";
 import type * as Info from "@/lib/info";
+import type { DeleteResult } from "@/lib/workflow/info-actions";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
@@ -40,9 +40,8 @@ beforeAll(async () => {
   ({ listProvisioningJobs } = mod);
   ({ listClaimsPolicies } = mod);
   ({ listEnterpriseApps } = mod);
-  const { deleteGoogleRoles: deleteRoles } = await import(
-    "@/lib/workflow/info-actions"
-  );
+  const { deleteGoogleRoles: deleteRoles } =
+    await import("@/lib/workflow/info-actions");
   deleteGoogleRoles = deleteRoles;
 });
 
@@ -239,8 +238,12 @@ describe("info server actions", () => {
     const result = await deleteGoogleRoles(["role-1"]);
     expect(result).toEqual({ deleted: ["role-1"], failed: [] });
     expect(fetchMock).toHaveBeenCalledTimes(3);
-    expect(fetchMock.mock.calls[0][0]).toContain("roleassignments?roleId=role-1");
-    expect(fetchMock.mock.calls[1][0]).toContain("roleassignments/assignment-1");
+    expect(fetchMock.mock.calls[0][0]).toContain(
+      "roleassignments?roleId=role-1"
+    );
+    expect(fetchMock.mock.calls[1][0]).toContain(
+      "roleassignments/assignment-1"
+    );
     expect(fetchMock.mock.calls[2][0]).toContain("/roles/role-1");
   });
 });

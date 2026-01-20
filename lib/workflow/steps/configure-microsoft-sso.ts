@@ -54,10 +54,11 @@ export default defineStep(StepId.ConfigureMicrosoftSso)
         log(LogLevel.Info, "Microsoft SSO already configured");
         const now = new Date();
         const activeCert = sp.keyCredentials?.find((cert) => {
-          const start = cert.startDateTime ? new Date(cert.startDateTime) : null;
+          const start = cert.startDateTime
+            ? new Date(cert.startDateTime)
+            : null;
           const end = cert.endDateTime ? new Date(cert.endDateTime) : null;
-          const isActive =
-            (!start || start <= now) && (!end || now <= end);
+          const isActive = (!start || start <= now) && (!end || now <= end);
           return isActive && cert.key && cert.usage === "Verify";
         });
 
