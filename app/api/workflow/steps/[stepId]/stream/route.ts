@@ -72,7 +72,7 @@ export async function GET(
       isChecking: false,
       isExecuting: false,
       isUndoing: latestState?.isUndoing,
-    };
+    } as StepUIState;
     await writeEvent({
       newVars: latestVars,
       state: fallbackState,
