@@ -179,10 +179,11 @@ export class ResourceBuilder<TContext = Record<string, never>> {
       }
     }
 
-    if (lastError instanceof Error) {
-      throw lastError;
-    }
-    throw new Error("Request failed after retries");
+    const errorToThrow =
+      lastError instanceof Error
+        ? lastError
+        : new Error("Request failed after retries");
+    throw errorToThrow;
   }
 
   private send(method: HttpMethod, body?: unknown): Promise<unknown> {

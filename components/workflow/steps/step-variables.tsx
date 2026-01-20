@@ -79,14 +79,14 @@ function VariableItem({
             missing.includes(varKey) && "border-destructive text-destructive"
           )}
         >
-          {vars[varKey] !== undefined ? (
-            <code className="block w-full truncate font-mono text-xs">
-              {meta.sensitive ? "••••••••" : String(vars[varKey])}
-            </code>
-          ) : (
+          {vars[varKey] === undefined ? (
             <span className="text-[11px] text-foreground/50 italic">
               Not set
             </span>
+          ) : (
+            <code className="block w-full truncate font-mono text-xs">
+              {meta.sensitive ? "••••••••" : String(vars[varKey])}
+            </code>
           )}
         </div>
       )}

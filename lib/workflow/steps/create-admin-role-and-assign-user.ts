@@ -67,13 +67,7 @@ export default defineStep(StepId.CreateAdminRoleAndAssignUser)
           const hasPrivs = GOOGLE_ADMIN_PRIVILEGES.REQUIRED.every((priv) =>
             privilegeNames.has(priv)
           );
-          if (!hasPrivs) {
-            log(LogLevel.Info, "Role missing required privileges");
-            markIncomplete("Role privileges incorrect", {
-              adminRoleId: role.roleId,
-              directoryServiceId: role.rolePrivileges[0]?.serviceId,
-            });
-          } else {
+          if (hasPrivs) {
             const userId = vars.require(Var.ProvisioningUserId);
 
             const { items: assignments = [] } = (await google.roleAssignments
@@ -101,6 +95,12 @@ export default defineStep(StepId.CreateAdminRoleAndAssignUser)
                 directoryServiceId: role.rolePrivileges[0]?.serviceId,
               });
             }
+          } else {
+            log(LogLevel.Info, "Role missing required privileges");
+            markIncomplete("Role privileges incorrect", {
+              adminRoleId: role.roleId,
+              directoryServiceId: role.rolePrivileges[0]?.serviceId,
+            });
           }
         } else {
           log(LogLevel.Info, "Custom admin role missing", { roleName });
