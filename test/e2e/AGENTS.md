@@ -10,6 +10,7 @@
 - `bun run e2e:live` (live E2E runner)
 
 - Tests require refresh tokens or service account credentials in `.env.local`.
+  If missing, the live E2E suite is skipped with a warning so unit tests can run.
   Bun auto-loads `.env`, `.env.test`, and `.env.local` based on `NODE_ENV`, so
   do not pass `--env-file`. Set `TEST_GOOGLE_REFRESH_TOKEN`/`TEST_MS_REFRESH_TOKEN`
   (exchanged for bearer tokens during `bun test`) and `TEST_DOMAIN` as needed.

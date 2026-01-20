@@ -21,6 +21,16 @@ import { TIME } from "@/lib/workflow/constants/workflow-limits";
 
 type CookieOptions = Parameters<NextResponse["cookies"]["set"]>[2];
 
+const authSecret =
+  env.AUTH_SECRET ||
+  (process.env.NODE_ENV === "test" || env.NODE_ENV === "test"
+    ? "test-auth-secret"
+    : "");
+
+if (!authSecret) {
+  throw new Error("AUTH_SECRET is required.");
+}
+
 const CRYPTO = {
   ALGORITHM: "aes-256-gcm",
   IV_LENGTH: 12,
@@ -28,7 +38,7 @@ const CRYPTO = {
   STATE_BYTES: 16,
   VERIFIER_BYTES: 32,
   CHUNK_SIZE: 3800,
-  KEY: createHash("sha256").update(env.AUTH_SECRET).digest(),
+  KEY: createHash("sha256").update(authSecret).digest(),
 } as const;
 
 const TokenSchema = z.object({

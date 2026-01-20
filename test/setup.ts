@@ -52,29 +52,64 @@ const normalizeScopes = (value: unknown) => {
   return [] as string[];
 };
 
+const googleRefreshToken = normalizeEnvValue(env.TEST_GOOGLE_REFRESH_TOKEN);
+const googleClientId = normalizeEnvValue(env.GOOGLE_OAUTH_CLIENT_ID);
+const googleClientSecret = normalizeEnvValue(env.GOOGLE_OAUTH_CLIENT_SECRET);
+const googleImpersonatedEmail = normalizeEnvValue(
+  env.GOOGLE_IMPERSONATED_ADMIN_EMAIL
+);
+const googleServiceAccountJson = normalizeEnvValue(
+  env.GOOGLE_SERVICE_ACCOUNT_JSON
+);
+const googleServiceAccountFile = normalizeEnvValue(
+  env.GOOGLE_SERVICE_ACCOUNT_FILE
+);
+const hasGoogleRefreshFlow = Boolean(
+  googleRefreshToken && googleClientId && googleClientSecret
+);
+const hasGoogleServiceAccount = Boolean(
+  googleImpersonatedEmail &&
+    (googleServiceAccountJson || googleServiceAccountFile)
+);
+const hasGoogleCredentials = hasGoogleRefreshFlow || hasGoogleServiceAccount;
+
+const microsoftRefreshToken = normalizeEnvValue(env.TEST_MS_REFRESH_TOKEN);
+const microsoftClientId = normalizeEnvValue(env.MICROSOFT_OAUTH_CLIENT_ID);
+const microsoftClientSecret = normalizeEnvValue(
+  env.MICROSOFT_OAUTH_CLIENT_SECRET
+);
+const hasMicrosoftCredentials = Boolean(
+  microsoftRefreshToken && microsoftClientId && microsoftClientSecret
+);
+
 if (process.env.UNIT_TEST === "1") {
   console.log("Skipping E2E setup for unit tests");
 } else {
-  const missingKeys = [
-    ["TEST_GOOGLE_REFRESH_TOKEN", env.TEST_GOOGLE_REFRESH_TOKEN],
-    ["TEST_MS_REFRESH_TOKEN", env.TEST_MS_REFRESH_TOKEN],
-    ["GOOGLE_OAUTH_CLIENT_ID", env.GOOGLE_OAUTH_CLIENT_ID],
-    ["GOOGLE_OAUTH_CLIENT_SECRET", env.GOOGLE_OAUTH_CLIENT_SECRET],
-    ["MICROSOFT_OAUTH_CLIENT_ID", env.MICROSOFT_OAUTH_CLIENT_ID],
-    ["MICROSOFT_OAUTH_CLIENT_SECRET", env.MICROSOFT_OAUTH_CLIENT_SECRET],
-    ["MICROSOFT_TENANT", env.MICROSOFT_TENANT],
-    ["GOOGLE_HD_DOMAIN", env.GOOGLE_HD_DOMAIN],
-  ].filter(([, value]) => !value);
-  if (missingKeys.length > 0) {
-    throw new Error(
-      `E2E requires ${missingKeys.map(([key]) => key).join(", ")} in .env.local`
+  const missingLiveE2ECredentials: string[] = [];
+  if (!hasGoogleCredentials) {
+    missingLiveE2ECredentials.push(
+      "Google credentials (service account or refresh token flow)"
+    );
+  }
+  if (!hasMicrosoftCredentials) {
+    missingLiveE2ECredentials.push(
+      "Microsoft refresh token flow (TEST_MS_REFRESH_TOKEN, MICROSOFT_OAUTH_CLIENT_ID, MICROSOFT_OAUTH_CLIENT_SECRET)"
     );
   }
 
-  const { googleToken, microsoftToken } = await getBearerTokens(true);
+  const shouldSkipLiveE2E = missingLiveE2ECredentials.length > 0;
+  if (shouldSkipLiveE2E) {
+    process.env.SKIP_LIVE_E2E = "1";
+    console.warn(
+      `Live E2E tests skipped: missing ${missingLiveE2ECredentials.join(
+        " and "
+      )}. Set the required credentials in .env.local to enable live tests.`
+    );
+  } else {
+    const { googleToken, microsoftToken } = await getBearerTokens(true);
 
-  if (googleToken?.accessToken) {
-    const tokenInfoUrl = ApiEndpoint.GoogleAuth.TokenInfo;
+    if (googleToken?.accessToken) {
+      const tokenInfoUrl = ApiEndpoint.GoogleAuth.TokenInfo;
     const googleAccessToken = googleToken.accessToken;
     const googleResponse = await fetchWithTimeout(
       `${tokenInfoUrl}?access_token=${encodeURIComponent(googleAccessToken)}`,
