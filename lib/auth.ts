@@ -1,5 +1,6 @@
-import { cookies } from "next/headers";
 import type { NextResponse } from "next/server";
+
+import { cookies } from "next/headers";
 import {
   createCipheriv,
   createDecipheriv,
@@ -17,8 +18,6 @@ import {
 } from "@/constants";
 import { env } from "@/env";
 import { TIME } from "@/lib/workflow/constants/workflow-limits";
-
-// --- Configuration & Constants ---
 
 type CookieOptions = Parameters<NextResponse["cookies"]["set"]>[2];
 
@@ -190,10 +189,7 @@ export function generateAuthUrl(
     }
   }
 
-  if (
-    provider === PROVIDERS.MICROSOFT &&
-    env.MICROSOFT_TENANT?.includes(".")
-  ) {
+  if (provider === PROVIDERS.MICROSOFT && env.MICROSOFT_TENANT?.includes(".")) {
     params.set("domain_hint", env.MICROSOFT_TENANT);
   }
 
