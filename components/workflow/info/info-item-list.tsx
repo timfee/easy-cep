@@ -26,18 +26,18 @@ export function InfoItemList({
 }: InfoItemListProps) {
   if (items.length === 0) {
     return (
-      <p className="py-4 text-center text-muted-foreground text-xs">
+      <p className="py-4 text-center text-[11px] text-foreground/60">
         No entries found.
       </p>
     );
   }
 
   return (
-    <div className="divide-y divide-border/60">
+    <div className="divide-y divide-border/70">
       {items.map((item, idx) => (
         <div
           className={cn(
-            "flex items-start gap-2 px-2 py-1",
+            "flex items-start gap-2 rounded-md px-3 py-2 transition-colors hover:bg-muted/60",
             failedDeletes.has(item.id) && "bg-destructive/10"
           )}
           key={`${item.id}-${idx}`}
@@ -51,7 +51,7 @@ export function InfoItemList({
             />
           )}
           {item.deletable === false && showCheckboxes && (
-            <Lock className="h-3 w-3 text-muted-foreground" />
+            <Lock className="h-3 w-3 text-foreground/60" />
           )}
           <div className="min-w-0 flex-1">
             {item.href ? (
@@ -69,12 +69,12 @@ export function InfoItemList({
               </span>
             )}
             {item.subLabel && (
-              <span className="block truncate text-muted-foreground text-xs">
+              <span className="block truncate text-foreground/75 text-xs">
                 {item.subLabel}
               </span>
             )}
             {failedDeletes.has(item.id) && (
-              <span className="text-destructive text-xs">
+              <span className="text-[11px] text-destructive">
                 Failed: {failedDeletes.get(item.id)}
               </span>
             )}

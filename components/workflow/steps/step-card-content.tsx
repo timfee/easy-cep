@@ -72,90 +72,94 @@ export function StepCardContent({ definition, state, vars, executing }: Props) {
   const canUndo = state?.status === "complete";
 
   return (
-    <CardContent className="px-6 pb-8">
-      {detail?.description && (
-        <div className="w-full px-6 text-left text-muted-foreground text-sm">
-          {detail.description.split("\n").map((l, i) => (
-            <p key={`${definition.id}-desc-${i}`}>{l}</p>
-          ))}
-        </div>
-      )}
-      <div className="my-6 w-full overflow-x-auto px-6 text-left">
-        <StepApiCalls stepId={definition.id} />
-      </div>
-      <div className="my-6 flex items-start justify-between px-6">
-        <div>
-          <div className="flex items-center gap-2">
-            <Button
-              disabled={
-                !canExecute || executing || state?.status === "complete"
-              }
-              onClick={(e) => {
-                e.stopPropagation();
-                actions.onExecute(definition.id);
-              }}
-              size="sm"
-            >
-              <Play className="h-3.5 w-3.5" /> Execute
-            </Button>
-            {InfoBtn && <InfoBtn />}
+    <CardContent className="px-6 pb-8 pt-2">
+      <div className="space-y-6">
+        {detail?.description && (
+          <div className="space-y-2 rounded-lg border border-border/70 bg-muted/30 p-4 text-left text-foreground/70 text-sm">
+            {detail.description.split("\n").map((l, i) => (
+              <p key={`${definition.id}-desc-${i}`}>{l}</p>
+            ))}
           </div>
-          {!canExecute && state?.blockReason && (
-            <p className="mt-2 text-destructive text-xs">{state.blockReason}</p>
-          )}
+        )}
+        <div className="w-full overflow-x-auto rounded-lg border border-border/70 bg-muted/30 p-4 text-left empty:hidden">
+          <StepApiCalls stepId={definition.id} />
         </div>
-        <div className="flex items-center gap-2">
-          {canUndo && (
+        <div className="flex flex-wrap items-start justify-between gap-4">
+          <div>
+            <div className="flex items-center gap-2">
+              <Button
+                disabled={
+                  !canExecute || executing || state?.status === "complete"
+                }
+                onClick={(e) => {
+                  e.stopPropagation();
+                  actions.onExecute(definition.id);
+                }}
+                size="sm"
+              >
+                <Play className="h-3.5 w-3.5" /> Execute
+              </Button>
+              {InfoBtn && <InfoBtn />}
+            </div>
+            {!canExecute && state?.blockReason && (
+              <p className="mt-2 text-[11px] text-destructive">
+                {state.blockReason}
+              </p>
+            )}
+          </div>
+          <div className="flex items-center gap-2">
+            {canUndo && (
+              <Button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  actions.onUndo(definition.id);
+                }}
+                size="sm"
+                variant="outline"
+              >
+                <RotateCcw className="h-3.5 w-3.5" /> Undo
+              </Button>
+            )}
             <Button
+              disabled={executing}
               onClick={(e) => {
                 e.stopPropagation();
-                actions.onUndo(definition.id);
+                actions.onForce(definition.id);
               }}
               size="sm"
               variant="outline"
             >
-              <RotateCcw className="h-3.5 w-3.5" /> Undo
+              <Zap className="h-3.5 w-3.5" /> Force
             </Button>
-          )}
-          <Button
-            disabled={executing}
-            onClick={(e) => {
-              e.stopPropagation();
-              actions.onForce(definition.id);
-            }}
-            size="sm"
-            variant="outline"
-          >
-            <Zap className="h-3.5 w-3.5" /> Force
-          </Button>
-        </div>
-      </div>
-      <div className="my-6 w-full overflow-x-auto px-6 text-left">
-        <StepVariables
-          missing={missingAll}
-          onChange={actions.onVarChange}
-          stepId={definition.id}
-          vars={vars}
-        />
-      </div>
-      <Collapsible className="px-6" onOpenChange={setLogsOpen} open={logsOpen}>
-        <CollapsibleTrigger className="mt-4 flex w-full items-center justify-between rounded border border-border bg-muted/60 p-4 font-medium text-muted-foreground transition-colors hover:bg-muted">
-          <div className="flex items-center gap-2">
-            <Terminal className="h-4 w-4 text-secondary" /> Execution Logs
           </div>
-          <ChevronRight
-            className={cn(
-              "h-4 w-4 transition-transform",
-              logsOpen && "rotate-90"
-            )}
+        </div>
+        <div className="w-full overflow-x-auto rounded-lg border border-border/70 bg-muted/30 p-4 text-left">
+          <StepVariables
+            missing={missingAll}
+            onChange={actions.onVarChange}
+            stepId={definition.id}
+            vars={vars}
           />
-        </CollapsibleTrigger>
-        <CollapsibleContent className="rounded rounded-t-none border border-border/60 border-t-0 p-4 data-[state=closed]:animate-collapsible-up data-[state=open]:animate-collapsible-down">
-          {state?.logs && state.logs.length > 0 && (
-            <StepLogs logs={state.logs} />
-          )}
-        </CollapsibleContent>
-      </Collapsible>
+        </div>
+        <Collapsible onOpenChange={setLogsOpen} open={logsOpen}>
+          <CollapsibleTrigger className="flex w-full items-center justify-between rounded-lg border border-border bg-muted/40 px-4 py-3 font-medium text-foreground/80 transition-colors hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/30 focus-visible:ring-offset-2 focus-visible:ring-offset-background">
+            <div className="flex items-center gap-2">
+              <Terminal className="h-4 w-4 text-primary" /> Execution Logs
+            </div>
+            <ChevronRight
+              className={cn(
+                "h-4 w-4 text-foreground/60 transition-transform",
+                logsOpen && "rotate-90"
+              )}
+            />
+          </CollapsibleTrigger>
+          <CollapsibleContent className="rounded-lg rounded-t-none border border-border/70 border-t-0 bg-card/40 p-4 data-[state=closed]:animate-collapsible-up data-[state=open]:animate-collapsible-down">
+            {state?.logs && state.logs.length > 0 && (
+              <StepLogs logs={state.logs} />
+            )}
+          </CollapsibleContent>
+        </Collapsible>
+      </div>
     </CardContent>
   );
 }

@@ -12,20 +12,20 @@ export function WorkflowHeader() {
   const { updateVars } = useWorkflow();
 
   return (
-    <header className="flex items-center justify-between border-b bg-white py-2">
+    <header className="flex h-16 items-center justify-between border-b bg-background/95 px-6 backdrop-blur">
       <section>
-        <div className="flex items-center">
+        <div className="flex items-center gap-2">
           <Image
             alt="Easy CEP Logo"
-            className="mr-2 ml-3.5"
+            className="shrink-0"
             height="36"
             src="/icon.svg"
             width="36"
           />
-          <h1 className="font-bold text-3xl">Easy CEP</h1>
+          <h1 className="font-semibold text-2xl tracking-tight">Easy CEP</h1>
         </div>
       </section>
-      <section className="mr-2 flex space-x-4">
+      <section className="flex items-center gap-4">
         <ProviderLogin onUpdate={updateVars} />
       </section>
     </header>

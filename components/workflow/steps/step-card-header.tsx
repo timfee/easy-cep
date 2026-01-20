@@ -107,11 +107,20 @@ export function StepCardHeader({
 
   return (
     <CardHeader
-      className="cursor-pointer p-4 focus-within:ring-2 focus-within:ring-primary/30 focus-within:ring-offset-2 focus-within:ring-offset-background"
+      className="cursor-pointer px-6 py-4 transition-colors hover:bg-muted/60 focus-within:ring-2 focus-within:ring-primary/30 focus-within:ring-offset-2 focus-within:ring-offset-background"
+      aria-expanded={isExpanded}
       onClick={(e) => {
         e.stopPropagation();
         onToggle();
       }}
+      onKeyDown={(event) => {
+        if (event.key === "Enter" || event.key === " ") {
+          event.preventDefault();
+          onToggle();
+        }
+      }}
+      role="button"
+      tabIndex={0}
     >
       <div className="flex items-center justify-between">
         <div className="flex min-w-0 flex-1 items-center gap-3">
@@ -129,7 +138,7 @@ export function StepCardHeader({
           </div>
           <div className="min-w-0 flex-1">
             <h3 className="font-semibold text-base text-foreground">{title}</h3>
-            <p className="mt-1 text-muted-foreground text-sm">{descriptor}</p>
+            <p className="mt-1 text-foreground/80 text-sm">{descriptor}</p>
           </div>
         </div>
         <div className="flex flex-shrink-0 items-center gap-2">
@@ -139,7 +148,7 @@ export function StepCardHeader({
           >
             {getBadgeText(executing, state?.status)}
           </Badge>
-          <div className="text-muted-foreground">
+          <div className="text-foreground/60">
             {isExpanded ? (
               <ChevronDown className="h-4 w-4" />
             ) : (

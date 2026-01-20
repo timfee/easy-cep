@@ -61,15 +61,17 @@ export function StepApiCalls({ stepId }: StepApiCallsProps) {
   const getMethodBadge = (method: string) => {
     const colors = {
       [HttpMethod.GET]: "bg-primary/10 text-primary border-primary/20",
-      [HttpMethod.POST]: "bg-secondary/10 text-secondary border-secondary/20",
-      [HttpMethod.PUT]: "bg-accent/60 text-accent-foreground border-border",
-      [HttpMethod.PATCH]: "bg-accent/40 text-accent-foreground border-border",
+      [HttpMethod.POST]:
+        "bg-secondary/40 text-secondary-foreground border-secondary/30",
+      [HttpMethod.PUT]: "bg-accent/50 text-accent-foreground border-accent/40",
+      [HttpMethod.PATCH]:
+        "bg-accent/40 text-accent-foreground border-accent/30",
       [HttpMethod.DELETE]:
         "bg-destructive/10 text-destructive border-destructive/20",
     };
 
     const match = Object.entries(colors).find(([key]) => key === method);
-    return match?.[1] ?? "bg-muted text-muted-foreground border-border";
+    return match?.[1] ?? "bg-muted/50 text-foreground/70 border-border";
   };
 
   return (
@@ -78,7 +80,10 @@ export function StepApiCalls({ stepId }: StepApiCallsProps) {
         {apiTemplates.map((template, index) => (
           <Tooltip key={`${template.method}-${template.endpoint}-${index}`}>
             <TooltipTrigger asChild>
-              <div className="flex cursor-pointer items-center gap-3 rounded py-2 hover:bg-muted">
+              <button
+                className="flex w-full items-center gap-3 rounded-md px-3 py-2 text-left transition-colors hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40 focus-visible:ring-offset-2 focus-visible:ring-offset-background"
+                type="button"
+              >
                 <div
                   className={cn(
                     "rounded border px-2 py-1 font-semibold text-[10px]",
@@ -87,10 +92,10 @@ export function StepApiCalls({ stepId }: StepApiCallsProps) {
                 >
                   {template.method}
                 </div>
-                <code className="ml-1 break-all text-muted-foreground">
+                <code className="ml-1 break-all text-[11px] text-foreground/80">
                   {template.endpoint}
                 </code>
-              </div>
+              </button>
             </TooltipTrigger>
 
             <TooltipContent className="max-w-xl" side="bottom">

@@ -44,18 +44,23 @@ function VariableItem({
     <div className="space-y-1.5">
       <label
         className={cn(
-          "flex items-center gap-1.5 font-medium text-muted-foreground text-xs",
+          "flex items-center gap-1.5 font-medium text-foreground/70 text-xs",
           missing.includes(varKey) && "text-destructive"
         )}
         htmlFor={`var-${varKey}-${stepId}`}
       >
-        <Database className="h-3 w-3 text-accent" />
+        <Database className="h-3 w-3 text-foreground/60" />
         <span>{varKey}</span>
+        {isEditable && (
+          <span className="rounded-full border border-primary/30 bg-primary/10 px-1.5 py-0.5 text-[9px] font-semibold uppercase tracking-wider text-primary/80">
+            Editable
+          </span>
+        )}
       </label>
       {isEditable ? (
         <Input
           aria-invalid={missing.includes(varKey)}
-          className="h-8 w-full rounded-md border-input bg-background px-2 py-1 text-xs"
+          className="h-8 w-full rounded-md border-input bg-background px-2 py-1 text-xs text-foreground/90 placeholder:text-foreground/50"
           id={`var-${varKey}-${stepId}`}
           onChange={(e) => onChange(varKey, e.target.value)}
           placeholder={meta.description || "Enter value"}
@@ -66,7 +71,7 @@ function VariableItem({
         <div
           aria-invalid={missing.includes(varKey)}
           className={cn(
-            "flex min-h-[32px] w-full items-center rounded-md border border-border bg-muted/60 px-2 py-1.5 text-muted-foreground text-xs",
+            "flex min-h-[32px] w-full items-center rounded-md border border-border/70 bg-muted/40 px-2 py-1.5 text-foreground/70 text-xs",
             missing.includes(varKey) && "border-destructive text-destructive"
           )}
         >
@@ -75,7 +80,7 @@ function VariableItem({
               {meta.sensitive ? "••••••••" : String(vars[varKey])}
             </code>
           ) : (
-            <span className="text-2xs text-muted-foreground/70 italic">
+            <span className="text-[11px] text-foreground/50 italic">
               Not set
             </span>
           )}
@@ -131,8 +136,10 @@ export function StepVariables({
 
   return (
     <div className="grid w-full gap-3 text-left md:grid-cols-2">
-      <div className="flex-1 space-y-3 rounded-lg border border-border/60 bg-muted/30 p-4">
-        <h4 className="mb-3 font-semibold text-foreground text-sm">Requires</h4>
+      <div className="flex-1 space-y-3 rounded-lg border border-border/60 border-l-2 border-l-primary/60 bg-muted/30 p-4">
+        <h4 className="mb-3 text-[11px] font-semibold uppercase tracking-[0.08em] text-foreground/80">
+          Requires
+        </h4>
         {requiredVars.length > 0 ? (
           requiredVars.map((meta) => (
             <VariableItem
@@ -147,14 +154,16 @@ export function StepVariables({
             />
           ))
         ) : (
-          <p className="py-4 text-center text-muted-foreground text-xs">
+          <p className="py-4 text-center text-[11px] text-foreground/60">
             No required inputs for this step.
           </p>
         )}
       </div>
 
-      <div className="flex-1 space-y-3 rounded-lg border border-border/60 bg-muted/30 p-4">
-        <h4 className="mb-3 font-semibold text-foreground text-sm">Provides</h4>
+      <div className="flex-1 space-y-3 rounded-lg border border-border/60 border-l-2 border-l-ring/60 bg-muted/30 p-4">
+        <h4 className="mb-3 text-[11px] font-semibold uppercase tracking-[0.08em] text-foreground/80">
+          Provides
+        </h4>
         {providedVars.length > 0 ? (
           providedVars.map((meta) => (
             <VariableItem
@@ -169,7 +178,7 @@ export function StepVariables({
             />
           ))
         ) : (
-          <p className="py-4 text-center text-muted-foreground text-xs">
+          <p className="py-4 text-center text-[11px] text-foreground/60">
             No provided outputs for this step.
           </p>
         )}

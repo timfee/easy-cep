@@ -41,7 +41,7 @@ function ProviderItem({
   iconColorClass,
 }: ProviderItemProps) {
   return (
-    <div className="flex items-center justify-between py-2.5">
+    <div className="flex items-center justify-between gap-3 rounded-md px-3 py-2 transition-colors hover:bg-muted/50">
       <div className="flex items-center gap-2.5">
         <Icon className={`h-5 w-5 ${iconColorClass}`} />
         <span className="font-medium text-foreground text-sm">{name}</span>
@@ -50,7 +50,7 @@ function ProviderItem({
         {isConnected ? (
           <Button
             aria-label={`Disconnect ${name}`}
-            className="group relative mx-2 overflow-hidden text-muted-foreground text-xs"
+            className="group relative mx-1.5 min-w-[92px] overflow-hidden text-[11px] text-foreground/80"
             onClick={onDisconnectClick}
             size="sm"
             title="Disconnect"
@@ -65,7 +65,7 @@ function ProviderItem({
           </Button>
         ) : (
           <Button
-            className="mx-2 text-xs"
+            className="mx-1.5 text-[11px] font-medium"
             onClick={onConnectClick}
             size="sm"
             variant="default"
@@ -161,7 +161,7 @@ export function ProviderLogin({ onUpdate }: Props) {
       />
       <ProviderItem
         Icon={Microsoft}
-        iconColorClass="text-accent"
+        iconColorClass="text-foreground/70"
         isConnected={tokens.msGraphToken !== undefined}
         minutesLeft={msGraphTimeLeftInMinutes}
         name="Microsoft"

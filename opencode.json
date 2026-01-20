@@ -16,7 +16,10 @@
         "https://mcp.v0.dev",
         "--header",
         "Authorization: {env:V0_API_KEY}"
-      ]
+      ],
+      "environment": {
+        "V0_API_KEY": "{env:V0_API_KEY}"
+      }
     },
     "gh_grep": {
       "type": "remote",

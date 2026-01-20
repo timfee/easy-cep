@@ -160,7 +160,7 @@ export function InfoButton({
         <div className="space-y-1 border-b px-6 py-4">
           <DialogTitle>{title}</DialogTitle>
           {context && (
-            <p className="text-muted-foreground text-xs">{context}</p>
+            <p className="text-foreground/60 text-xs">{context}</p>
           )}
         </div>
 
@@ -177,7 +177,7 @@ export function InfoButton({
                   onCheckedChange={() => toggleAll(visibleDeletableItems)}
                 />
               )}
-              <span className="text-muted-foreground text-xs">
+              <span className="text-foreground/60 text-xs">
                 {selectedIds.size} selected
               </span>
             </div>
@@ -255,7 +255,7 @@ export function InfoButton({
 
         <div className="flex-1 overflow-y-auto px-6 py-4">
           {loading && (
-            <p className="p-4 text-muted-foreground text-sm">Loading...</p>
+            <p className="p-4 text-foreground/70 text-sm">Loading...</p>
           )}
           {error && <p className="p-4 text-destructive text-sm">{error}</p>}
           {!(loading || error) && (
@@ -273,7 +273,7 @@ export function InfoButton({
         {showPagination && (
           <div className="border-t px-6 py-3">
             <div className="flex items-center justify-between">
-              <span className="text-muted-foreground text-xs">
+              <span className="text-foreground/60 text-xs">
                 Showing {(currentPage - 1) * 25 + 1}-
                 {Math.min(currentPage * 25, items.length)} of {items.length}
               </span>

@@ -34,6 +34,7 @@ function VariableRowContent({
   onSaveEdit,
   onCancelEdit,
   onUpdateEdit,
+  isConfigurable,
 }: Omit<VariableRowProps, "onStartEditing"> & {
   isEditing: boolean;
   isConfigurable: boolean;
@@ -45,7 +46,7 @@ function VariableRowContent({
       return (
         <Input
           autoFocus
-          className="h-7 w-full rounded-md text-xs"
+          className="h-7 w-full rounded-md bg-background text-xs text-foreground/90"
           onBlur={onSaveEdit}
           onChange={(e) => onUpdateEdit(e.target.value)}
           onClick={(e) => e.stopPropagation()}
@@ -64,14 +65,14 @@ function VariableRowContent({
 
     if (value !== undefined) {
       return (
-        <code className="block truncate rounded-md px-4 py-0.5 font-mono text-muted-foreground text-xs">
+        <code className="block truncate rounded-md bg-muted/30 px-3 py-0.5 font-mono text-foreground/70 text-xs">
           {meta.sensitive ? "••••••••" : String(value)}
         </code>
       );
     }
 
     return (
-      <span className="px-4 text-muted-foreground/60 text-xs italic">
+      <span className="px-3 text-foreground/50 text-xs italic">
         (Not set)
       </span>
     );
@@ -80,8 +81,13 @@ function VariableRowContent({
   return (
     <div className="flex flex-col gap-0.5">
       <div className="flex items-center gap-1.5">
-        <Database className="h-2.5 w-2.5 text-accent" />
+        <Database className="h-2.5 w-2.5 text-foreground/50" />
         <span className="font-medium text-foreground text-xs">{varKey}</span>
+        {isConfigurable && !isEditing && (
+          <span className="rounded-full border border-foreground/15 bg-muted/50 px-1.5 py-0.5 text-[9px] font-semibold uppercase tracking-wider text-foreground/60">
+            Editable
+          </span>
+        )}
       </div>
       <div>{renderValue()}</div>
     </div>
@@ -93,11 +99,11 @@ function VariableRow(props: VariableRowProps) {
   const isEditing = editingVar?.key === varKey;
   const isConfigurable = meta.configurable;
   const commonClasses =
-    "group px-3 py-2 transition-colors duration-150 hover:bg-muted/50 block w-full text-left";
+    "group block w-full rounded-md px-3 py-1.5 text-left transition-colors duration-150 hover:bg-muted/50";
 
   if (isEditing) {
     return (
-      <div className={commonClasses}>
+      <div className={`${commonClasses} border-l-2 border-l-primary/30`}>
         <VariableRowContent
           {...props}
           isConfigurable={!!isConfigurable}
@@ -110,7 +116,7 @@ function VariableRow(props: VariableRowProps) {
   if (isConfigurable) {
     return (
       <button
-        className={`${commonClasses} cursor-pointer`}
+        className={`${commonClasses} cursor-pointer border-l-2 border-l-primary/30 hover:border-l-primary/50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/30 focus-visible:ring-offset-1 focus-visible:ring-offset-background`}
         onClick={() => onStartEditing(varKey, value)}
         type="button"
       >
@@ -124,7 +130,7 @@ function VariableRow(props: VariableRowProps) {
   }
 
   return (
-    <div className={commonClasses}>
+    <div className={`${commonClasses} border-l-2 border-l-transparent`}>
       <VariableRowContent
         {...props}
         isConfigurable={!!isConfigurable}
@@ -198,18 +204,18 @@ export function VarsInspector({ vars, onChange }: VarsInspectorProps) {
   ];
 
   return (
-    <div className="flex flex-col">
-      <div className="flex-1 overflow-y-auto">
+    <div className="flex h-full flex-col bg-background">
+      <div className="flex-1 overflow-y-auto py-2">
         {categories.map((category) => {
           const variables = groupedVars[category];
           const categoryTitle = categoryTitles[category];
           return (
-            <div key={category}>
-              <h4 className="top-0 border-border border-b bg-muted px-2 py-1.5 font-semibold text-foreground text-sm">
+            <div className="py-3" key={category}>
+              <h4 className="sticky top-0 z-10 border-border/70 border-b bg-background/95 px-3 py-2 text-[11px] font-semibold uppercase tracking-[0.08em] text-foreground/80 backdrop-blur">
                 {categoryTitle}
               </h4>
 
-              <div className="divide-y divide-border/60">
+              <div className="divide-y divide-border/70">
                 {variables.map((entry) => {
                   const { key, ...meta } = entry;
                   return (
