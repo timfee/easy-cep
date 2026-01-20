@@ -1,8 +1,9 @@
 "use client";
 
+import type { ChangeEvent, MouseEvent, ReactNode } from "react";
+
 import { Info, Loader2, Trash2 } from "lucide-react";
 import { useCallback, useEffect, useState } from "react";
-import type { ChangeEvent, MouseEvent, ReactNode } from "react";
 
 import type { InfoItem } from "@/lib/info";
 import type { DeleteResult } from "@/lib/workflow/info-actions";
@@ -112,7 +113,6 @@ export function InfoButton({
     setDeleteConfirmText("");
   }, []);
 
-
   const handlePageClick = useCallback(
     (event: MouseEvent<HTMLButtonElement | HTMLAnchorElement>) => {
       const pageNumber = Number(event.currentTarget.dataset.page);
@@ -181,7 +181,14 @@ export function InfoButton({
     } finally {
       setIsDeleting(false);
     }
-  }, [deleteConfirmText, deleteItems, deletableItems, refetch, resetPagination, resetSelection]);
+  }, [
+    deleteConfirmText,
+    deleteItems,
+    deletableItems,
+    refetch,
+    resetPagination,
+    resetSelection,
+  ]);
 
   const handlePurgeAllClick = useCallback(
     async (event: MouseEvent<HTMLButtonElement>) => {

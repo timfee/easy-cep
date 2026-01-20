@@ -1,7 +1,8 @@
 "use client";
 
-import { useCallback, useEffect, useRef } from "react";
 import type { MouseEvent } from "react";
+
+import { useCallback, useEffect, useRef } from "react";
 
 import type { StepLogEntry } from "@/types";
 

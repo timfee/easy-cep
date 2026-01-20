@@ -1,8 +1,9 @@
 "use client";
 
+import type { MouseEvent } from "react";
+
 import { ChevronRight, Play, RotateCcw, Terminal, Zap } from "lucide-react";
 import { useCallback, useEffect, useState } from "react";
-import type { MouseEvent } from "react";
 
 import type { StepIdValue } from "@/lib/workflow/step-ids";
 import type { WorkflowVars } from "@/lib/workflow/variables";
@@ -132,21 +133,17 @@ export function StepCardContent({ definition, state, vars, executing }: Props) {
             )}
           </div>
           <div className="flex items-center gap-2">
-              {canUndo && (
-                <Button
-                  onClick={handleUndoClick}
-                  size="sm"
-                  variant="outline"
-                >
+            {canUndo && (
+              <Button onClick={handleUndoClick} size="sm" variant="outline">
                 <RotateCcw className="h-3.5 w-3.5" /> Undo
               </Button>
             )}
-              <Button
-                disabled={executing}
-                onClick={handleForceClick}
-                size="sm"
-                variant="outline"
-              >
+            <Button
+              disabled={executing}
+              onClick={handleForceClick}
+              size="sm"
+              variant="outline"
+            >
               <Zap className="h-3.5 w-3.5" /> Force
             </Button>
           </div>

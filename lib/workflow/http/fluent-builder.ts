@@ -1,7 +1,7 @@
+import { setTimeout as delay } from "node:timers/promises";
 import { z } from "zod";
 
 import { HttpMethod } from "@/types";
-import { setTimeout as delay } from "node:timers/promises";
 
 import type { HttpClient } from "../types/http-client";
 

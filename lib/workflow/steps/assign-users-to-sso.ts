@@ -416,9 +416,14 @@ export default defineStep(StepId.AssignUsersToSso)
       handleAssignmentFailure(error, log, markFailed, output);
     }
   })
-  .undo(async ({ vars, google, markReverted, markFailed, log }) => {
+  .undo(async ({ vars, google, markReverted, log }) => {
     try {
-      const profileId = vars.require(Var.SamlProfileId);
+      const profileId = vars.get(Var.SamlProfileId);
+      if (!profileId) {
+        markReverted();
+        return;
+      }
+
       const { inboundSsoAssignments = [] } = (await google.ssoAssignments
         .list()
         .get()) as { inboundSsoAssignments?: SsoAssignment[] };
@@ -471,8 +476,9 @@ export default defineStep(StepId.AssignUsersToSso)
 
       markReverted();
     } catch (error) {
-      log(LogLevel.Error, "Failed to delete SSO assignment", { error });
-      markFailed(error instanceof Error ? error.message : "Undo failed");
+      log(LogLevel.Error, "Failed to undo SSO assignment", { error });
+      // Don't fail undo if assignment removal fails (it might be gone)
+      markReverted();
     }
   })
   .build();

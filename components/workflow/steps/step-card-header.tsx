@@ -1,3 +1,5 @@
+import type { ElementType, KeyboardEvent, MouseEvent } from "react";
+
 import {
   AlertTriangle,
   CheckCircle,
@@ -5,9 +7,7 @@ import {
   ChevronRight,
   Loader2,
 } from "lucide-react";
-
 import { useCallback } from "react";
-import type { ElementType, KeyboardEvent, MouseEvent } from "react";
 
 import type { StepIdValue } from "@/lib/workflow/step-ids";
 import type { StepUIState } from "@/types";

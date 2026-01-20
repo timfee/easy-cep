@@ -1,8 +1,7 @@
 import { Lock } from "lucide-react";
+import { useCallback } from "react";
 
 import type { InfoItem } from "@/lib/info";
-
-import { useCallback } from "react";
 
 import { Checkbox } from "@/components/ui/checkbox";
 import { cn } from "@/lib/utils";

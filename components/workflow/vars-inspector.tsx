@@ -1,6 +1,7 @@
+import type { ChangeEvent, KeyboardEvent, MouseEvent } from "react";
+
 import { Database, Pencil } from "lucide-react";
 import { useCallback, useState } from "react";
-import type { ChangeEvent, KeyboardEvent, MouseEvent } from "react";
 
 import type {
   VariableMetadata,
@@ -48,9 +49,12 @@ function VariableRowContent({
     },
     [onUpdateEdit]
   );
-  const handleInputClick = useCallback((event: MouseEvent<HTMLInputElement>) => {
-    event.stopPropagation();
-  }, []);
+  const handleInputClick = useCallback(
+    (event: MouseEvent<HTMLInputElement>) => {
+      event.stopPropagation();
+    },
+    []
+  );
   const handleInputKeyDown = useCallback(
     (event: KeyboardEvent<HTMLInputElement>) => {
       if (event.key === "Enter") {
@@ -124,12 +128,9 @@ function VariableRow(props: VariableRowProps) {
   const interactiveClasses =
     "cursor-pointer hover:bg-muted/50 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-primary/30 focus-visible:ring-inset active:bg-muted/60";
 
-  const handleStartEditing = useCallback(
-    () => {
-      onStartEditing(varKey, value);
-    },
-    [onStartEditing, varKey, value]
-  );
+  const handleStartEditing = useCallback(() => {
+    onStartEditing(varKey, value);
+  }, [onStartEditing, varKey, value]);
 
   if (isEditing) {
     return (
@@ -186,15 +187,12 @@ export function VarsInspector({ vars, onChange }: VarsInspectorProps) {
     [onChange]
   );
 
-  const startEditing = useCallback(
-    (key: VarName, currentValue: unknown) => {
-      setEditingVar({
-        key,
+  const startEditing = useCallback((key: VarName, currentValue: unknown) => {
+    setEditingVar({
+      key,
       value: currentValue === undefined ? "" : String(currentValue),
-      });
-    },
-    []
-  );
+    });
+  }, []);
 
   const saveEdit = useCallback(() => {
     if (editingVar) {
