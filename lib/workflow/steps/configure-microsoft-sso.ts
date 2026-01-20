@@ -31,11 +31,18 @@ export default defineStep(StepId.ConfigureMicrosoftSso)
         const sp = (await microsoft.servicePrincipals
           .getPartial(spId)
           .query({
-            $select: "preferredSingleSignOnMode,samlSingleSignOnSettings",
+            $select:
+              "preferredSingleSignOnMode,samlSingleSignOnSettings,keyCredentials",
           })
           .get()) as {
           preferredSingleSignOnMode?: string | null;
           samlSingleSignOnSettings?: { relayState: string | null } | null;
+          keyCredentials?: {
+            key?: string | null;
+            startDateTime?: string | null;
+            endDateTime?: string | null;
+            usage?: string | null;
+          }[];
         };
 
         if (sp.preferredSingleSignOnMode !== "saml") {
@@ -45,29 +52,14 @@ export default defineStep(StepId.ConfigureMicrosoftSso)
         }
 
         log(LogLevel.Info, "Microsoft SSO already configured");
-        const certs = (await microsoft.servicePrincipals
-          .tokenSigningCertificates(spId)
-          .list()
-          .get()
-          .catch((error) => {
-            if (isNotFoundError(error)) {
-              return { value: [] };
-            }
-            throw error;
-          })) as {
-          value: {
-            keyId: string;
-            key?: string | null;
-            startDateTime: string;
-            endDateTime: string;
-          }[];
-        };
-
         const now = new Date();
-        const activeCert = certs.value.find((cert) => {
-          const start = new Date(cert.startDateTime);
-          const end = new Date(cert.endDateTime);
-          return start <= now && now <= end && cert.key;
+        const activeCert = sp.keyCredentials?.find((cert) => {
+          const start = cert.startDateTime
+            ? new Date(cert.startDateTime)
+            : null;
+          const end = cert.endDateTime ? new Date(cert.endDateTime) : null;
+          const isActive = (!start || start <= now) && (!end || now <= end);
+          return isActive && cert.key && cert.usage === "Verify";
         });
 
         if (!activeCert?.key) {

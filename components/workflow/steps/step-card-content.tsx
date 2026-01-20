@@ -31,6 +31,7 @@ import { useStepCardActions } from "@/components/workflow/steps/step-card-contex
 import { cn } from "@/lib/utils";
 import { STEP_DETAILS } from "@/lib/workflow/step-details";
 import { StepId } from "@/lib/workflow/step-ids";
+import { WORKFLOW_VARIABLES } from "@/lib/workflow/variables";
 
 import { StepApiCalls } from "./step-api-calls";
 import { StepLogs } from "./step-logs";
@@ -71,7 +72,11 @@ export function StepCardContent({ definition, state, vars, executing }: Props) {
     }
   }, [executing]);
 
-  const missingAll = definition.requires.filter((v) => vars[v] === undefined);
+  const missingAll = definition.requires.filter(
+    (varName) =>
+      vars[varName] === undefined &&
+      WORKFLOW_VARIABLES[varName]?.category !== "auth"
+  );
   const canExecute = missingAll.length === 0;
   const canUndo = state?.status === "complete";
 

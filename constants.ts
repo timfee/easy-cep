@@ -25,6 +25,9 @@ export const ApiEndpoint = {
       "https://cloudidentity.googleapis.com/v1/inboundSamlSsoProfiles",
     Users: "https://admin.googleapis.com/admin/directory/v1/users",
   },
+  GoogleCloudResourceManager: {
+    Projects: "https://cloudresourcemanager.googleapis.com/v1/projects",
+  },
   GoogleAuth: {
     Authorize: "https://accounts.google.com/o/oauth2/v2/auth",
     Token: "https://oauth2.googleapis.com/token",

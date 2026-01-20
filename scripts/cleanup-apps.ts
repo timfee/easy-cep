@@ -5,20 +5,12 @@
  */
 
 import { ApiEndpoint } from "@/constants";
-import { env } from "@/env";
+import { getBearerTokens } from "@/lib/testing/tokens";
+
+// Required to load .env.local
+import "tsconfig-paths/register";
 
 const ISO_FRACTION_REGEX = /\.\d{3}Z$/;
-
-/**
- * Require a named environment variable.
- */
-function requireEnv(name: "TEST_GOOGLE_BEARER_TOKEN" | "TEST_MS_BEARER_TOKEN") {
-  const value = env[name];
-  if (!value) {
-    throw new Error(`${name} not found in environment or .env.local`);
-  }
-  return value;
-}
 
 /**
  * Format a date as UTC without fractional seconds.
@@ -70,16 +62,13 @@ async function deleteMicrosoftApps(token: string, threshold: string) {
 async function deleteGoogleProjects(token: string, threshold: string) {
   console.log(`# Deleting Google projects created since ${threshold}`);
 
-  const res = await fetch(
-    "https://cloudresourcemanager.googleapis.com/v1/projects:list",
-    {
-      headers: {
-        Authorization: `Bearer ${token}`,
-        "Content-Type": "application/json",
-      },
-      method: "POST",
-    }
-  );
+  const res = await fetch(ApiEndpoint.GoogleCloudResourceManager.Projects, {
+    headers: {
+      Authorization: `Bearer ${token}`,
+      "Content-Type": "application/json",
+    },
+    method: "GET",
+  });
   if (!res.ok) {
     throw new Error(
       `Failed to list Google projects: ${res.status} ${res.statusText}`
@@ -92,7 +81,7 @@ async function deleteGoogleProjects(token: string, threshold: string) {
     if (project.createTime >= threshold) {
       console.log(`Deleting Google project ${project.projectId}`);
       const deleteRes = await fetch(
-        `https://cloudresourcemanager.googleapis.com/v1/projects/${project.projectId}`,
+        `${ApiEndpoint.GoogleCloudResourceManager.Projects}/${project.projectId}`,
         {
           headers: {
             Authorization: `Bearer ${token}`,
@@ -114,15 +103,25 @@ async function deleteGoogleProjects(token: string, threshold: string) {
  * Load env and delete recent apps/projects.
  */
 async function main() {
-  const googleToken = requireEnv("TEST_GOOGLE_BEARER_TOKEN");
-  const microsoftToken = requireEnv("TEST_MS_BEARER_TOKEN");
+  const { googleToken, microsoftToken } = await getBearerTokens(true);
+
+  if (!googleToken?.accessToken || !microsoftToken?.accessToken) {
+    throw new Error("Failed to obtain bearer tokens");
+  }
 
   const thresholdDate = new Date();
-  thresholdDate.setUTCDate(thresholdDate.getUTCDate() - 10);
+  thresholdDate.setUTCDate(thresholdDate.getUTCDate() - 90);
   const threshold = formatDateUtc(thresholdDate);
 
-  await deleteMicrosoftApps(microsoftToken, threshold);
-  await deleteGoogleProjects(googleToken, threshold);
+  await deleteMicrosoftApps(microsoftToken.accessToken, threshold);
+  try {
+    await deleteGoogleProjects(googleToken.accessToken, threshold);
+  } catch (error) {
+    console.warn(
+      "⚠️ Failed to cleanup Google projects (likely missing permission):",
+      error
+    );
+  }
 }
 
 if (typeof require !== "undefined" && require.main === module) {

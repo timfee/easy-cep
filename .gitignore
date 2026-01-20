@@ -44,3 +44,7 @@ microsoft_bearer.token
 
 scripts/*.json
 scripts/get-tokens.sh
+
+.agent
+scratchpad
+PROMPT.md

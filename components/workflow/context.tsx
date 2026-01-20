@@ -11,9 +11,15 @@ import {
 } from "react";
 
 import type { StepIdValue } from "@/lib/workflow/step-ids";
+import type { StepStatusValue } from "@/lib/workflow/step-status";
 import type { BasicVarStore } from "@/lib/workflow/var-store";
 import type { VarName, WorkflowVars } from "@/lib/workflow/variables";
-import type { StepDefinition, StepStreamEvent, StepUIState } from "@/types";
+import type {
+  StepDefinition,
+  StepLogEntry,
+  StepStreamEvent,
+  StepUIState,
+} from "@/types";
 
 import { computeEffectiveStatus } from "@/lib/workflow/core/status";
 import { checkStep, runStep, undoStep } from "@/lib/workflow/engine";
@@ -21,6 +27,37 @@ import { STEP_DETAILS } from "@/lib/workflow/step-details";
 import { StepStatus } from "@/lib/workflow/step-status";
 import { createVarStore } from "@/lib/workflow/var-store";
 import { WORKFLOW_VARIABLES } from "@/lib/workflow/variables";
+
+function mergeLogs(
+  existing: StepLogEntry[],
+  incoming: StepLogEntry[]
+): StepLogEntry[] {
+  const result = [...existing];
+  for (const log of incoming) {
+    const exists = result.some(
+      (entry) =>
+        entry.timestamp === log.timestamp && entry.message === log.message
+    );
+    if (!exists) {
+      result.push(log);
+    }
+  }
+  return result;
+}
+
+function resolveCheckStatus(
+  checkError: string | undefined,
+  resultState: StepUIState | undefined,
+  currentStatus: StepStatusValue
+) {
+  if (checkError) {
+    return { status: StepStatus.Blocked, error: checkError };
+  }
+  if (resultState?.status) {
+    return { status: resultState.status, error: resultState.error };
+  }
+  return { status: currentStatus, error: resultState?.error };
+}
 
 interface VarStore extends BasicVarStore {
   set(updates: Partial<WorkflowVars>): void;
@@ -300,8 +337,8 @@ export function WorkflowProvider({
         });
       }
     },
-     [clearStepActivity, filterSensitiveVars, updateStep, updateVars]
-   );
+    [clearStepActivity, filterSensitiveVars, updateStep, updateVars]
+  );
 
   const executeStep = useCallback(
     async (id: StepIdValue) => {
@@ -310,7 +347,11 @@ export function WorkflowProvider({
         return;
       }
 
-      const missingVars = step.requires.filter((varName) => !vars[varName]);
+      const missingVars = step.requires.filter(
+        (varName) =>
+          vars[varName] === undefined &&
+          WORKFLOW_VARIABLES[varName]?.category !== "auth"
+      );
       if (missingVars.length > 0) {
         const messages = missingVars.map((key) => {
           const meta = WORKFLOW_VARIABLES[key];
@@ -323,7 +364,7 @@ export function WorkflowProvider({
         updateStep(id, {
           error: `Missing required vars: ${messages.join(", ")}`,
           status: StepStatus.Blocked,
-          logs: [], // Clear logs if blocked by vars
+          logs: [],
         });
         return;
       }
@@ -332,12 +373,14 @@ export function WorkflowProvider({
       updateStep(id, {
         isExecuting: true,
         status: statusRef.current[id]?.status ?? StepStatus.Ready,
-        logs: [], // Clear logs on new execution
         error: undefined,
       });
 
       let handleMessage: ((message: MessageEvent) => void) | null = null;
       let handleError: ((event: Event) => void) | null = null;
+      let timeoutId: number | undefined;
+      let streamTimedOut = false;
+
       try {
         const currentStream = new EventSource(
           `/api/workflow/steps/${id}/stream?vars=${encodeURIComponent(
@@ -348,12 +391,33 @@ export function WorkflowProvider({
         try {
           /* eslint-disable promise/avoid-new, unicorn/prefer-add-event-listener */
           await new Promise<void>((resolve, reject) => {
+            timeoutId = window.setTimeout(
+              () => {
+                streamTimedOut = true;
+                currentStream.close();
+                reject(new Error("Stream timeout"));
+              },
+              5 * 60 * 1000
+            );
+
             handleMessage = (message: MessageEvent) => {
               if (!message.data) {
                 return;
               }
               try {
                 const event: StepStreamEvent = JSON.parse(message.data);
+                if (timeoutId) {
+                  window.clearTimeout(timeoutId);
+                  timeoutId = window.setTimeout(
+                    () => {
+                      streamTimedOut = true;
+                      currentStream.close();
+                      reject(new Error("Stream timeout"));
+                    },
+                    5 * 60 * 1000
+                  );
+                }
+
                 applyStepEvent(event);
                 if (event.type === "complete") {
                   resolve();
@@ -372,6 +436,9 @@ export function WorkflowProvider({
           });
           /* eslint-enable promise/avoid-new, unicorn/prefer-add-event-listener */
         } finally {
+          if (timeoutId) {
+            window.clearTimeout(timeoutId);
+          }
           if (handleMessage) {
             currentStream.removeEventListener("message", handleMessage);
           }
@@ -380,25 +447,32 @@ export function WorkflowProvider({
           }
           currentStream.close();
         }
-      } catch {
-        try {
-          const fallback = await runStep(id, vars);
-          updateStep(id, fallback.state);
-          updateVars(fallback.newVars);
-        } catch (error) {
-          console.error("Failed to run step:", error);
+      } catch (error) {
+        const streamError = error;
+        if (streamTimedOut) {
           updateStep(id, {
-            error:
-              error instanceof Error ? error.message : "Unknown error occurred",
+            error: "Stream timed out",
             status: StepStatus.Blocked,
           });
-        } finally {
-          clearStepActivity(id);
+        } else {
+          try {
+            const fallback = await runStep(id, vars);
+            updateStep(id, fallback.state);
+            updateVars(fallback.newVars);
+          } catch (error) {
+            console.error("Failed to run step fallback:", error);
+            updateStep(id, {
+              error:
+                streamError instanceof Error
+                  ? streamError.message
+                  : "Stream failed",
+              status: StepStatus.Blocked,
+            });
+          }
         }
-        return;
+      } finally {
+        clearStepActivity(id);
       }
-
-      clearStepActivity(id);
     },
     [
       steps,
@@ -410,7 +484,6 @@ export function WorkflowProvider({
       clearStepActivity,
     ]
   );
-
 
   const undoStepAction = useCallback(
     async (id: StepIdValue) => {
@@ -429,12 +502,27 @@ export function WorkflowProvider({
         updateStep(id, result.state);
 
         if (result.state.status === StepStatus.Complete) {
-          const clearedVarsEntries = Object.entries(vars).filter(([key]) =>
-            step.provides.every((providedVar) => providedVar !== key)
-          );
-          setVarsState(Object.fromEntries(clearedVarsEntries));
+          const clearedVars: Partial<WorkflowVars> = {};
+          for (const providedVar of step.provides) {
+            if (vars[providedVar] !== undefined) {
+              clearedVars[providedVar] = undefined;
+            }
+          }
+
+          if (Object.keys(clearedVars).length > 0) {
+            await updateVars(clearedVars);
+          }
+
           checkedSteps.current.delete(id);
-          updateStep(id, { status: StepStatus.Ready });
+          updateStep(id, {
+            blockReason: undefined,
+            error: undefined,
+            lro: undefined,
+            logs: [],
+            notes: undefined,
+            status: StepStatus.Ready,
+            summary: undefined,
+          });
         }
       } catch (error) {
         console.error("Failed to undo step:", error);
@@ -446,42 +534,11 @@ export function WorkflowProvider({
         clearStepActivity(id);
       }
     },
-    [steps, vars, updateStep, clearStepActivity]
+    [steps, vars, updateStep, clearStepActivity, updateVars]
   );
 
-  const checkSteps = useCallback(async () => {
-    const shouldSkipStep = (
-      step: StepDefinition,
-      current?: StepUIState
-    ): boolean => {
-      if (checkedSteps.current.has(step.id)) {
-        return true;
-      }
-      if (inflightChecks.current.has(step.id)) {
-        return true;
-      }
-      if (current?.status === StepStatus.Complete && current.logs?.length) {
-        return true;
-      }
-      if (step.requires.some((varName) => !vars[varName])) {
-        return true;
-      }
-      return false;
-    };
-
-    for (const step of steps) {
-      const current = status[step.id];
-      if (shouldSkipStep(step, current)) {
-        continue;
-      }
-
-      const isExecutingStep =
-        executing === step.id || statusRef.current[step.id]?.isExecuting;
-      const isUndoingStep = statusRef.current[step.id]?.isUndoing;
-      if (isExecutingStep || isUndoingStep) {
-        continue;
-      }
-
+  const checkSingleStep = useCallback(
+    async (step: StepDefinition) => {
       checkedSteps.current.add(step.id);
       inflightChecks.current.add(step.id);
 
@@ -496,33 +553,21 @@ export function WorkflowProvider({
       } finally {
         inflightChecks.current.delete(step.id);
 
-        // Calculate final status and state
-        const prevStatus = statusRef.current[step.id]?.status ?? StepStatus.Ready;
-        let nextStatus = prevStatus;
-        let nextError = result?.state.error;
+        const prevStatus =
+          statusRef.current[step.id]?.status ?? StepStatus.Pending;
 
-        if (checkError) {
-          nextStatus = StepStatus.Blocked;
-          nextError = checkError;
-        } else if (result?.state.status) {
-          nextStatus = result.state.status;
-        }
+        const { status: nextStatus, error: nextError } = resolveCheckStatus(
+          checkError,
+          result?.state,
+          prevStatus
+        );
 
         const existingLogs = statusRef.current[step.id]?.logs ?? [];
         const incomingLogs = result?.state.logs ?? [];
-        const mergedLogs = incomingLogs.reduce((acc, log) => {
-          const exists = acc.some(
-            (entry) =>
-              entry.timestamp === log.timestamp && entry.message === log.message
-          );
-          if (!exists) {
-            acc.push(log);
-          }
-          return acc;
-        }, [...existingLogs]);
+        const mergedLogs = mergeLogs(existingLogs, incomingLogs);
 
         updateStep(step.id, {
-          isChecking: false, // Ensure spinner is cleared if it was stuck
+          isChecking: false,
           status: nextStatus,
           summary: result?.state.summary,
           error: nextError,
@@ -533,11 +578,51 @@ export function WorkflowProvider({
         });
 
         if (result?.newVars && Object.keys(result.newVars).length > 0) {
-          updateVars(result.newVars).catch(() => {});
+          try {
+            await updateVars(result.newVars);
+          } catch (error) {
+            console.error("Failed to update vars", error);
+          }
         }
       }
+    },
+    [vars, updateStep, updateVars]
+  );
+
+  const checkSteps = useCallback(async () => {
+    for (const step of steps) {
+      const current = status[step.id];
+
+      // Skip logic
+      if (checkedSteps.current.has(step.id)) {
+        continue;
+      }
+      if (inflightChecks.current.has(step.id)) {
+        continue;
+      }
+      if (current?.status === StepStatus.Complete && current.logs?.length) {
+        continue;
+      }
+
+      const missingVars = step.requires.some(
+        (varName) =>
+          vars[varName] === undefined &&
+          WORKFLOW_VARIABLES[varName]?.category !== "auth"
+      );
+      if (missingVars) {
+        continue;
+      }
+
+      const isExecutingStep =
+        executing === step.id || statusRef.current[step.id]?.isExecuting;
+      const isUndoingStep = statusRef.current[step.id]?.isUndoing;
+      if (isExecutingStep || isUndoingStep) {
+        continue;
+      }
+
+      await checkSingleStep(step);
     }
-  }, [vars, steps, status, updateStep, updateVars]);
+  }, [vars, steps, status, executing, checkSingleStep]);
 
   useEffect(() => {
     if (debouncedCheckTimeout.current) {
@@ -546,7 +631,7 @@ export function WorkflowProvider({
 
     debouncedCheckTimeout.current = window.setTimeout(() => {
       checkSteps();
-    }, 200);
+    }, 500);
 
     return () => {
       if (debouncedCheckTimeout.current) {
@@ -558,7 +643,7 @@ export function WorkflowProvider({
   const effectiveStatus = useMemo(() => {
     const computed: Partial<Record<StepIdValue, StepUIState>> = {};
     for (const step of steps) {
-      const currentState = statusRef.current[step.id];
+      const currentState = status[step.id] ?? statusRef.current[step.id];
       const info = computeEffectiveStatus(
         step,
         currentState,

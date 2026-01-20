@@ -62,7 +62,10 @@ const logExecutionFailure = (step: string, result: StepResult) => {
   logErrorLogs(result.state.logs?.filter(isErrorLog));
 };
 
-describe("Workflow Live E2E", () => {
+const isUnitTest = process.env.UNIT_TEST === "1";
+
+// eslint-disable-next-line jest/require-hook
+(isUnitTest ? describe.skip : describe)("Workflow Live E2E", () => {
   const varsRef: { current: Partial<WorkflowVars> } = { current: {} };
 
   beforeAll(async () => {
@@ -97,7 +100,10 @@ describe("Workflow Live E2E", () => {
       );
     }
 
-    const testRunId = Date.now().toString(36);
+    const now = new Date();
+    const [date] = now.toISOString().split("T");
+    const timestamp = Math.floor(now.getTime() / 1000);
+    const testRunId = `${date}-${timestamp}`;
     const suffix = `_test-${testRunId}`;
     varsRef.current = {
       [Var.PrimaryDomain]: env.TEST_DOMAIN ?? "test.example.com",

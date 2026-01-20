@@ -31,6 +31,9 @@ export async function GET(
   const stream = new TransformStream();
   const writer = stream.writable.getWriter();
   const encoder = new TextEncoder();
+  const response = new NextResponse(stream.readable, {
+    headers: STREAM_HEADERS,
+  });
 
   let completed = false;
   let latestState: Partial<StepUIState> | undefined;
@@ -84,58 +87,71 @@ export async function GET(
     });
   };
 
-  await writer.write(encoder.encode(":ok\n\n"));
-
-  const { searchParams } = new URL(request.url);
-  const varsParam = searchParams.get("vars");
-  let vars: Partial<WorkflowVars> = {};
-  if (varsParam) {
+  const run = async () => {
     try {
-      vars = JSON.parse(varsParam) as Partial<WorkflowVars>;
-    } catch {
-      vars = {};
+      await writer.write(encoder.encode(":ok\n\n"));
+
+      const { searchParams } = new URL(request.url);
+      const varsParam = searchParams.get("vars");
+      let vars: Partial<WorkflowVars> = {};
+      if (varsParam) {
+        try {
+          vars = JSON.parse(varsParam) as Partial<WorkflowVars>;
+        } catch {
+          vars = {};
+        }
+      }
+
+      const googleToken = await getToken(PROVIDERS.GOOGLE);
+      const microsoftToken = await getToken(PROVIDERS.MICROSOFT);
+
+      // We check for tokens but don't hard fail just yet if some steps might not need them?
+      // Actually Agent 1 failed hard here. Let's keep the hard fail for safety as most steps need them.
+      if (!(googleToken || microsoftToken)) {
+        await writeEvent({
+          state: {
+            error: "Missing provider tokens",
+            status: StepStatus.Blocked,
+          },
+          stepId,
+          traceId: "error",
+          type: "state",
+        });
+        return;
+        // execution ends, finally block will finalize
+      }
+
+      vars = {
+        ...vars,
+        [Var.GoogleAccessToken]: googleToken?.accessToken,
+        [Var.MsGraphToken]: microsoftToken?.accessToken,
+      };
+
+      await runStepWithEvents(stepId, vars, writeEvent);
+    } catch (error) {
+      await writeEvent({
+        state: {
+          error: error instanceof Error ? error.message : "Unknown error",
+          status: StepStatus.Blocked,
+        },
+        stepId,
+        traceId: "error",
+        type: "state",
+      });
+    } finally {
+      await finalizeStream();
+      await writer.close();
     }
-  }
-
-  const googleToken = await getToken(PROVIDERS.GOOGLE);
-  const microsoftToken = await getToken(PROVIDERS.MICROSOFT);
-  if (!(googleToken || microsoftToken)) {
-    await writeEvent({
-      state: {
-        error: "Missing provider tokens",
-        status: StepStatus.Blocked,
-      },
-      stepId,
-      traceId: "error",
-      type: "state",
-    });
-    await finalizeStream();
-    await writer.close();
-    return new NextResponse(stream.readable, { headers: STREAM_HEADERS });
-  }
-
-  vars = {
-    ...vars,
-    [Var.GoogleAccessToken]: googleToken?.accessToken,
-    [Var.MsGraphToken]: microsoftToken?.accessToken,
   };
 
-  try {
-    await runStepWithEvents(stepId, vars, writeEvent);
-  } catch (error) {
-    await writeEvent({
-      state: {
-        error: error instanceof Error ? error.message : "Unknown error",
-        status: StepStatus.Blocked,
-      },
-      stepId,
-      traceId: "error",
-      type: "state",
-    });
-  } finally {
-    await finalizeStream();
-    await writer.close();
-  }
+  // Start execution in background
+  (async () => {
+    try {
+      await run();
+    } catch (error) {
+      console.error("Stream execution failed:", error);
+    }
+  })();
 
-  return new NextResponse(stream.readable, { headers: STREAM_HEADERS });
+  return response;
 }
