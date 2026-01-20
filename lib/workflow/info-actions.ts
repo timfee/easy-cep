@@ -27,6 +27,77 @@ export interface DeleteResult {
   failed: { id: string; error: string }[];
 }
 
+const RoleAssignmentSchema = z.object({
+  assignedTo: z.string(),
+  roleAssignmentId: z.string(),
+  roleId: z.string(),
+});
+const RoleAssignmentListSchema = z.object({
+  items: z.array(RoleAssignmentSchema).optional(),
+});
+
+async function fetchRoleAssignments(
+  roleId: string,
+  accessToken: string
+): Promise<z.infer<typeof RoleAssignmentSchema>[]> {
+  const res = await fetch(
+    `${ApiEndpoint.Google.RoleAssignments}?roleId=${encodeURIComponent(roleId)}`,
+    { headers: { Authorization: `Bearer ${accessToken}` } }
+  );
+
+  if (!res.ok) {
+    const text = await res.text();
+    throw new Error(`HTTP ${res.status}: ${text}`);
+  }
+
+  const data = RoleAssignmentListSchema.parse(await res.json());
+  return (data.items ?? []).filter((assignment) => assignment.roleId === roleId);
+}
+
+async function deleteRoleAssignment(
+  assignmentId: string,
+  accessToken: string
+): Promise<void> {
+  const res = await fetch(
+    `${ApiEndpoint.Google.RoleAssignments}/${assignmentId}`,
+    {
+      headers: { Authorization: `Bearer ${accessToken}` },
+      method: "DELETE",
+    }
+  );
+
+  if (!res.ok) {
+    const text = await res.text();
+    throw new Error(`HTTP ${res.status}: ${text}`);
+  }
+}
+
+async function unassignRoleUsers(roleId: string): Promise<void> {
+  const token = await refreshTokenIfNeeded(PROVIDERS.GOOGLE);
+  if (!token) {
+    throw new Error("No Google token available");
+  }
+
+  const assignments = await fetchRoleAssignments(roleId, token.accessToken);
+  if (assignments.length === 0) {
+    return;
+  }
+
+  const errors: string[] = [];
+  for (const assignment of assignments) {
+    try {
+      await deleteRoleAssignment(assignment.roleAssignmentId, token.accessToken);
+    } catch (error) {
+      const message = error instanceof Error ? error.message : String(error);
+      errors.push(`${assignment.assignedTo}: ${message}`);
+    }
+  }
+
+  if (errors.length > 0) {
+    throw new Error(`Failed to unassign users: ${errors.join(", ")}`);
+  }
+}
+
 function checkPurgeAllowed() {
   if (!env.ALLOW_INFO_PURGE) {
     throw new Error("Purge functionality is disabled");
@@ -203,12 +274,43 @@ export async function deleteSsoAssignments(
  * Delete Google admin roles by ID.
  */
 export async function deleteGoogleRoles(ids: string[]): Promise<DeleteResult> {
-  return await createGoogleDeleteAction(
+  checkPurgeAllowed();
+
+  if (ids.length === 0) {
+    return { deleted: [], failed: [] };
+  }
+
+  const deleteAction = createGoogleDeleteAction(
     (id) => `${ApiEndpoint.Google.Roles}/${id}`,
     "Admin Role",
     (id) => id.startsWith("_"),
     { concurrency: 1, delayMs: 1500 }
-  )(ids);
+  );
+
+  const results: DeleteResult = { deleted: [], failed: [] };
+  const toDelete: string[] = [];
+
+  for (const id of ids) {
+    try {
+      await unassignRoleUsers(id);
+      toDelete.push(id);
+    } catch (error) {
+      results.failed.push({
+        id,
+        error: error instanceof Error ? error.message : String(error),
+      });
+    }
+  }
+
+  if (toDelete.length === 0) {
+    return results;
+  }
+
+  const deleteResult = await deleteAction(toDelete);
+  results.deleted.push(...deleteResult.deleted);
+  results.failed.push(...deleteResult.failed);
+
+  return results;
 }
 
 /**

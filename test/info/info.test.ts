@@ -4,6 +4,7 @@ import path from "node:path";
 import { fileURLToPath } from "node:url";
 
 import type { Token } from "@/lib/auth";
+import type { DeleteResult } from "@/lib/workflow/info-actions";
 import type * as Info from "@/lib/info";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
@@ -21,10 +22,16 @@ let listSsoAssignments: typeof Info.listSsoAssignments;
 let listProvisioningJobs: typeof Info.listProvisioningJobs;
 let listClaimsPolicies: typeof Info.listClaimsPolicies;
 let listEnterpriseApps: typeof Info.listEnterpriseApps;
+let deleteGoogleRoles: (ids: string[]) => Promise<DeleteResult>;
 
 beforeAll(async () => {
   mock.module("@/lib/auth", () => ({
     refreshTokenIfNeeded: mock(() => token),
+  }));
+  mock.module("@/env", () => ({
+    env: {
+      ALLOW_INFO_PURGE: true,
+    },
   }));
   const mod = await import("@/lib/info");
   ({ listOrgUnits } = mod);
@@ -33,6 +40,10 @@ beforeAll(async () => {
   ({ listProvisioningJobs } = mod);
   ({ listClaimsPolicies } = mod);
   ({ listEnterpriseApps } = mod);
+  const { deleteGoogleRoles: deleteRoles } = await import(
+    "@/lib/workflow/info-actions"
+  );
+  deleteGoogleRoles = deleteRoles;
 });
 
 function load(name: string) {
@@ -205,5 +216,31 @@ describe("info server actions", () => {
         label: "Google Workspace Provisioning",
       },
     ]);
+  });
+
+  test("deleteGoogleRoles unassigns users before removal", async () => {
+    const fetchMock = mock()
+      .mockResolvedValueOnce({
+        json: () => ({
+          items: [
+            {
+              assignedTo: "user-1",
+              roleAssignmentId: "assignment-1",
+              roleId: "role-1",
+            },
+          ],
+        }),
+        ok: true,
+      })
+      .mockResolvedValueOnce({ ok: true })
+      .mockResolvedValueOnce({ ok: true });
+    setFetchMock(fetchMock);
+
+    const result = await deleteGoogleRoles(["role-1"]);
+    expect(result).toEqual({ deleted: ["role-1"], failed: [] });
+    expect(fetchMock).toHaveBeenCalledTimes(3);
+    expect(fetchMock.mock.calls[0][0]).toContain("roleassignments?roleId=role-1");
+    expect(fetchMock.mock.calls[1][0]).toContain("roleassignments/assignment-1");
+    expect(fetchMock.mock.calls[2][0]).toContain("/roles/role-1");
   });
 });

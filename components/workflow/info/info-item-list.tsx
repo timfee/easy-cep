@@ -4,6 +4,7 @@ import { useCallback } from "react";
 
 import type { InfoItem } from "@/lib/info";
 
+import { Badge } from "@/components/ui/badge";
 import { Checkbox } from "@/components/ui/checkbox";
 import { cn } from "@/lib/utils";
 
@@ -40,13 +41,14 @@ function InfoItemRow({
     onToggleSelect(item.id);
   }, [item.id, onToggleSelect]);
 
+  const failed = failedDeletes.has(item.id);
+
   return (
     <div
       className={cn(
-        "flex items-start gap-2 rounded-md px-3 py-2 transition-colors hover:bg-muted/60",
-        failedDeletes.has(item.id) && "bg-destructive/10"
+        "flex items-start gap-3 px-4 py-3 text-xs transition-colors",
+        failed ? "bg-destructive/10" : "hover:bg-muted/70"
       )}
-      key={item.id}
     >
       {showCheckboxes && item.deletable !== false && (
         <Checkbox
@@ -79,10 +81,13 @@ function InfoItemRow({
             {item.subLabel}
           </span>
         )}
-        {failedDeletes.has(item.id) && (
-          <span className="text-[11px] text-destructive">
-            Failed: {failedDeletes.get(item.id)}
-          </span>
+        {failed && (
+          <div className="mt-1 flex items-start gap-2 text-[11px] text-destructive/80">
+            <Badge variant="destructive">Failed</Badge>
+            <p className="min-w-0 text-destructive/80">
+              {failedDeletes.get(item.id)}
+            </p>
+          </div>
         )}
       </div>
     </div>
@@ -106,18 +111,20 @@ export function InfoItemList({
   }
 
   return (
-    <div className="divide-y divide-border/70">
-      {items.map((item, idx) => (
-        <InfoItemRow
-          key={`${item.id}-${idx}`}
-          item={item}
-          showCheckboxes={showCheckboxes}
-          selectedIds={selectedIds}
-          failedDeletes={failedDeletes}
-          isDeleting={isDeleting}
-          onToggleSelect={onToggleSelect}
-        />
-      ))}
+    <div className="overflow-hidden rounded-xl border border-border/70 bg-card">
+      <div className="divide-y divide-border/70">
+        {items.map((item, idx) => (
+          <InfoItemRow
+            key={`${item.id}-${idx}`}
+            item={item}
+            showCheckboxes={showCheckboxes}
+            selectedIds={selectedIds}
+            failedDeletes={failedDeletes}
+            isDeleting={isDeleting}
+            onToggleSelect={onToggleSelect}
+          />
+        ))}
+      </div>
     </div>
   );
 }
