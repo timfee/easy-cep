@@ -195,9 +195,10 @@ export default defineStep(StepId.ConfigureMicrosoftSso)
         description: "Reset application URLs",
         rollback: async () => {
           try {
-            await microsoft.applications
-              .update(applicationObjectId)
-              .patch({ identifierUris: [], web: { redirectUris: [] } });
+            await microsoft.applications.update(applicationObjectId).patch({
+              identifierUris: existingIdentifierUris,
+              web: { redirectUris: existingRedirectUris },
+            });
           } catch {
             // Ignore defaultRedirectUri constraints during rollback.
           }

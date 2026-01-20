@@ -402,8 +402,9 @@ export function WorkflowProvider({
         status: statusRef.current[step.id]?.status ?? StepStatus.Ready,
       });
 
+      let result: Awaited<ReturnType<typeof checkStep>> | undefined;
       try {
-        const result = await checkStep(step.id, vars);
+        result = await checkStep(step.id, vars);
         updateStep(step.id, result.state);
 
         if (Object.keys(result.newVars).length > 0) {
@@ -412,12 +413,23 @@ export function WorkflowProvider({
       } catch (error) {
         updateStep(step.id, {
           error: error instanceof Error ? error.message : "Check failed",
-          isChecking: false,
           status: StepStatus.Blocked,
         });
         checkedSteps.current.delete(step.id);
       } finally {
         inflightChecks.current.delete(step.id);
+        updateStep(step.id, {
+          isChecking: false,
+          status:
+            result?.state.status ??
+            statusRef.current[step.id]?.status ??
+            StepStatus.Ready,
+          summary: result?.state.summary,
+          error: result?.state.error,
+          notes: result?.state.notes,
+          blockReason: result?.state.blockReason,
+          lro: result?.state.lro,
+        });
       }
     }
   }, [vars, steps, status, updateStep, updateVars]);
