@@ -1,9 +1,11 @@
+import type * as React from "react";
+
 import {
   ChevronLeftIcon,
   ChevronRightIcon,
   MoreHorizontalIcon,
 } from "lucide-react";
-import type * as React from "react";
+
 import { type Button, buttonVariants } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
@@ -51,7 +53,7 @@ function PaginationLink({
     <a
       aria-current={isActive ? "page" : undefined}
       className={cn(
-        buttonVariants({ variant: isActive ? "outline" : "ghost", size }),
+        buttonVariants({ size, variant: isActive ? "outline" : "ghost" }),
         className
       )}
       data-active={isActive}

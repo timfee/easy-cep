@@ -26,12 +26,12 @@ export function detectLRO(
   if (isRecord(response) && "name" in response && "done" in response) {
     const operationId = getString(response.name);
     if (operationId) {
-      return { type: "google-operation", operationId, estimatedSeconds: 30 };
+      return { estimatedSeconds: 30, operationId, type: "google-operation" };
     }
   }
 
   if (status === 202) {
-    return { type: "ms-async", estimatedSeconds: 60 };
+    return { estimatedSeconds: 60, type: "ms-async" };
   }
 
   return null;

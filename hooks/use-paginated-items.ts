@@ -41,15 +41,15 @@ export function usePaginatedItems<T>(items: T[], itemsPerPage = 25) {
 
   return {
     currentPage,
-    totalPages,
-    paginatedItems,
-    totalItems: items.length,
-    itemsPerPage,
-    goToPage,
     goToFirstPage,
     goToLastPage,
     goToNextPage,
+    goToPage,
     goToPrevPage,
+    itemsPerPage,
+    paginatedItems,
     reset,
+    totalItems: items.length,
+    totalPages,
   };
 }

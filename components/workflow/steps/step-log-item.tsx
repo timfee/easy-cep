@@ -9,6 +9,7 @@ import {
   XCircle,
 } from "lucide-react";
 import { useState } from "react";
+
 import {
   Collapsible,
   CollapsibleContent,
@@ -16,21 +17,25 @@ import {
 } from "@/components/ui/collapsible";
 import { cn } from "@/lib/utils";
 import { extractPath } from "@/lib/utils/url";
-import type { StepLogEntry } from "@/types";
+import  { type StepLogEntry } from "@/types";
 
 /**
  * Select the icon for a log level.
  */
 function getLevelIcon(level?: string) {
   switch (level) {
-    case "warn":
+    case "warn": {
       return <AlertTriangle className="h-3 w-3 text-chart-1" />;
-    case "error":
+    }
+    case "error": {
       return <XCircle className="h-3 w-3 text-destructive" />;
-    case "debug":
+    }
+    case "debug": {
       return <Bug className="h-3 w-3 text-accent" />;
-    default:
+    }
+    default: {
       return <Info className="h-3 w-3 text-primary" />;
+    }
   }
 }
 
@@ -39,14 +44,18 @@ function getLevelIcon(level?: string) {
  */
 function getLevelClasses(level?: string) {
   switch (level) {
-    case "warn":
+    case "warn": {
       return "border-chart-1/20 text-chart-1";
-    case "error":
+    }
+    case "error": {
       return "border-destructive/20 text-destructive";
-    case "debug":
+    }
+    case "debug": {
       return "border-accent/20 text-accent";
-    default:
+    }
+    default: {
       return "border-primary/20 text-primary";
+    }
   }
 }
 

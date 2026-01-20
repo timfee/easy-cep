@@ -1,6 +1,7 @@
 import { z } from "zod";
+
 import { normalizePathSegment } from "../core/http";
-import type { HttpClient } from "../types/http-client";
+import  { type HttpClient } from "../types/http-client";
 import { ResourceBuilder } from "./fluent-builder";
 
 /**
@@ -39,6 +40,13 @@ export function createCrudMethods<G, L, C, R, U, F>(
   const buildPath = (id: string) => `${basePath}/${normalizePathSegment(id)}`;
 
   return {
+    create: () =>
+      new ResourceBuilder(client, {})
+        .path(basePath)
+        .sends(schemas.create)
+        .accepts(schemas.response),
+    delete: (id: string) =>
+      new ResourceBuilder(client, {}).path(buildPath(id)).accepts(empty),
     get: (id: string) =>
       new ResourceBuilder(client, {}).path(buildPath(id)).accepts(schemas.get),
     list: () => {
@@ -53,13 +61,6 @@ export function createCrudMethods<G, L, C, R, U, F>(
       }
       return builder;
     },
-    create: () =>
-      new ResourceBuilder(client, {})
-        .path(basePath)
-        .sends(schemas.create)
-        .accepts(schemas.response),
-    delete: (id: string) =>
-      new ResourceBuilder(client, {}).path(buildPath(id)).accepts(empty),
     update: (id: string) =>
       new ResourceBuilder(client, {})
         .path(buildPath(id))

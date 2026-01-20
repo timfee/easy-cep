@@ -1,15 +1,17 @@
-import type { z } from "zod";
-import type { StepIdValue } from "@/lib/workflow/step-ids";
-import type { VarName, WorkflowVars } from "@/lib/workflow/variables";
-import type {
-  StepCheckContext,
-  StepDefinition,
-  StepExecuteContext,
-  StepUndoContext,
+import  { type z } from "zod";
+
+import  { type StepIdValue } from "@/lib/workflow/step-ids";
+import  { type VarName, type WorkflowVars } from "@/lib/workflow/variables";
+import  {
+  type StepCheckContext,
+  type StepDefinition,
+  type StepExecuteContext,
+  type StepUndoContext,
 } from "@/types";
+
 import { GoogleClient } from "./http/google-client";
 import { MicrosoftClient } from "./http/microsoft-client";
-import type { HttpClient } from "./types/http-client";
+import  { type HttpClient } from "./types/http-client";
 import { type BasicVarStore, createVarStore } from "./var-store";
 
 interface StepBuilder<
@@ -80,31 +82,6 @@ export function defineStep<
   let undoFn: ((ctx: BuilderUndoContext) => Promise<void>) | null = null;
 
   const builder: StepBuilder<TData> = {
-    requires(...vars: VarName[]) {
-      requires = vars;
-      return builder;
-    },
-
-    provides(...vars: VarName[]) {
-      provides = vars;
-      return builder;
-    },
-
-    check(fn) {
-      checkFn = fn;
-      return builder;
-    },
-
-    execute(fn) {
-      executeFn = fn;
-      return builder;
-    },
-
-    undo(fn) {
-      undoFn = fn;
-      return builder;
-    },
-
     build() {
       if (!(checkFn && executeFn)) {
         throw new Error(
@@ -146,13 +123,38 @@ export function defineStep<
       };
 
       return {
-        id,
-        requires,
-        provides,
         check,
         execute,
+        id,
+        provides,
+        requires,
         undo: undoFn ? undo : undefined,
       };
+    },
+
+    check(fn) {
+      checkFn = fn;
+      return builder;
+    },
+
+    execute(fn) {
+      executeFn = fn;
+      return builder;
+    },
+
+    provides(...vars: VarName[]) {
+      provides = vars;
+      return builder;
+    },
+
+    requires(...vars: VarName[]) {
+      requires = vars;
+      return builder;
+    },
+
+    undo(fn) {
+      undoFn = fn;
+      return builder;
     },
   };
 

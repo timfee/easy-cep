@@ -1,5 +1,6 @@
 import { Database } from "lucide-react";
 import { useState } from "react";
+
 import { Input } from "@/components/ui/input";
 import { categoryTitles } from "@/constants";
 import {
@@ -172,8 +173,8 @@ export function VarsInspector({ vars, onChange }: VarsInspectorProps) {
 
   const groupedVars: Record<
     VariableMetadata["category"],
-    Array<{ key: VarName } & VariableMetadata>
-  > = { auth: [], domain: [], config: [], state: [] };
+    ({ key: VarName } & VariableMetadata)[]
+  > = { auth: [], config: [], domain: [], state: [] };
 
   const isVarName = (value: string): value is VarName =>
     value in WORKFLOW_VARIABLES;

@@ -5,15 +5,16 @@ import {
   ChevronRight,
   Loader2,
 } from "lucide-react";
-import type { ElementType } from "react";
+import  { type ElementType } from "react";
+
 import { Badge } from "@/components/ui/badge";
 import { CardHeader } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
 import { STEP_STATE_CONFIG } from "@/lib/workflow/step-constants";
 import { STEP_DETAILS } from "@/lib/workflow/step-details";
-import type { StepIdValue } from "@/lib/workflow/step-ids";
+import  { type StepIdValue } from "@/lib/workflow/step-ids";
 import { StepStatus } from "@/lib/workflow/step-status";
-import type { StepUIState } from "@/types";
+import  { type StepUIState } from "@/types";
 
 /**
  * Summarize the current execution status for display.
@@ -34,6 +35,9 @@ function getStatusDescriptor(executing: boolean, state?: StepUIState) {
   if (state?.status === StepStatus.Ready) {
     return "Ready to execute";
   }
+  if (state?.status === StepStatus.Stale) {
+    return state.summary || "Attention needed";
+  }
   return state?.summary || "Initializing";
 }
 
@@ -49,6 +53,9 @@ function getBadgeText(executing: boolean, status?: string) {
   }
   if (status === "ready") {
     return "Ready";
+  }
+  if (status === "stale") {
+    return "Attention";
   }
   if (status) {
     return status.charAt(0).toUpperCase() + status.slice(1);

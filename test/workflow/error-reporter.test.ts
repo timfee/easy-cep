@@ -1,4 +1,5 @@
 import { describe, expect, it, spyOn } from "bun:test";
+
 import { logUncaughtError } from "@/lib/workflow/core/errors";
 
 describe("logUncaughtError", () => {
@@ -8,8 +9,8 @@ describe("logUncaughtError", () => {
     });
 
     logUncaughtError(new Error("fail"), {
-      stepId: "test",
       operation: "execute",
+      stepId: "test",
       vars: {
         googleAccessToken: "secret",
         plainVar: "value",

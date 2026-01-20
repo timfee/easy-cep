@@ -2,6 +2,7 @@ import { isNotFoundError } from "@/lib/workflow/core/errors";
 import { StepId } from "@/lib/workflow/step-ids";
 import { Var } from "@/lib/workflow/variables";
 import { LogLevel } from "@/types";
+
 import { WORKFLOW_LIMITS } from "../constants/workflow-limits";
 import { defineStep } from "../step-builder";
 
@@ -19,10 +20,10 @@ export default defineStep(StepId.ConfigureGoogleSamlProfile)
         const { inboundSamlSsoProfiles = [] } = (await google.samlProfiles
           .list()
           .get()) as {
-          inboundSamlSsoProfiles?: Array<{
+          inboundSamlSsoProfiles?: {
             name: string;
             spConfig: { entityId: string; assertionConsumerServiceUri: string };
-          }>;
+          }[];
         };
 
         if (
@@ -39,9 +40,9 @@ export default defineStep(StepId.ConfigureGoogleSamlProfile)
           const profile = inboundSamlSsoProfiles[0];
           log(LogLevel.Info, "SAML profile already exists");
           markComplete({
-            samlProfileId: profile.name,
-            entityId: profile.spConfig.entityId,
             acsUrl: profile.spConfig.assertionConsumerServiceUri,
+            entityId: profile.spConfig.entityId,
+            samlProfileId: profile.name,
           });
         } else {
           log(LogLevel.Info, "SAML profile missing");
@@ -90,9 +91,9 @@ export default defineStep(StepId.ConfigureGoogleSamlProfile)
       };
 
       output({
-        samlProfileId: profile.name,
-        entityId: profile.spConfig.entityId,
         acsUrl: profile.spConfig.assertionConsumerServiceUri,
+        entityId: profile.spConfig.entityId,
+        samlProfileId: profile.name,
       });
     } catch (error) {
       log(LogLevel.Error, "Failed to create SAML profile", { error });

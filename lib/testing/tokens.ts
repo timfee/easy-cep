@@ -1,4 +1,5 @@
 import { createSign } from "node:crypto";
+
 import { ApiEndpoint } from "@/constants";
 import { env } from "@/env";
 
@@ -46,9 +47,9 @@ const base64UrlEncode = (input: string | Buffer) => {
   const buffer = typeof input === "string" ? Buffer.from(input) : input;
   return buffer
     .toString("base64")
-    .replace(/=/g, "")
-    .replace(/\+/g, "-")
-    .replace(/\//g, "_");
+    .replaceAll(/[=]/g, "")
+    .replaceAll('+', "-")
+    .replaceAll('/', "_");
 };
 
 const signJwt = (
@@ -73,7 +74,7 @@ const signJwt = (
 const isRecord = (value: unknown): value is Record<string, unknown> =>
   typeof value === "object" && value !== null;
 
-const stripQuotes = (value: string) => value.replace(/^['"]|['"]$/g, "");
+const stripQuotes = (value: string) => value.replaceAll(/^['"]|['"]$/g, "");
 
 export const normalizeEnvValue = (value: string | undefined) =>
   value ? stripQuotes(value.trim()) : "";
@@ -84,7 +85,7 @@ const parseRefreshResponse = (data: unknown, refreshToken: string) => {
   }
   const accessToken = data.access_token;
   const expiresIn = data.expires_in;
-  const scope = data.scope;
+  const { scope } = data;
   const nextRefreshToken = data.refresh_token;
   const expiresInValue =
     typeof expiresIn === "string" ? Number(expiresIn) : expiresIn;
@@ -99,11 +100,11 @@ const parseRefreshResponse = (data: unknown, refreshToken: string) => {
     typeof scope === "string" ? scope.split(" ").filter(Boolean) : [];
   return {
     accessToken,
+    expiresAt: Date.now() + expiresInValue * 1000,
     refreshToken:
       typeof nextRefreshToken === "string" && nextRefreshToken.length > 0
         ? nextRefreshToken
         : refreshToken,
-    expiresAt: Date.now() + expiresInValue * 1000,
     scope: scopeList,
   } satisfies BearerToken & { refreshToken: string };
 };
@@ -138,26 +139,26 @@ const getServiceAccountToken = async (): Promise<BearerToken | null> => {
   const exp = iat + 3600;
   const header = { alg: "RS256", typ: "JWT" };
   const payload = {
-    iss: creds.client_email,
-    sub: impersonatedEmail,
     aud: creds.token_uri || ApiEndpoint.GoogleAuth.Token,
     exp,
     iat,
+    iss: creds.client_email,
     scope: REQUIRED_GOOGLE_SCOPES.join(" "),
+    sub: impersonatedEmail,
   };
 
   const assertion = signJwt(header, payload, creds.private_key);
   const params = new URLSearchParams({
-    grant_type: "urn:ietf:params:oauth:grant-type:jwt-bearer",
     assertion,
+    grant_type: "urn:ietf:params:oauth:grant-type:jwt-bearer",
   });
 
   const response = await fetchWithTimeout(
     creds.token_uri || ApiEndpoint.GoogleAuth.Token,
     {
-      method: "POST",
-      headers: { "Content-Type": "application/x-www-form-urlencoded" },
       body: params.toString(),
+      headers: { "Content-Type": "application/x-www-form-urlencoded" },
+      method: "POST",
     }
   );
 
@@ -212,13 +213,13 @@ const refreshTokenWithClient = async (
   const params = new URLSearchParams({
     client_id: clientId,
     client_secret: clientSecret,
-    refresh_token: refreshTokenEnv,
     grant_type: "refresh_token",
+    refresh_token: refreshTokenEnv,
   });
   const response = await fetchWithTimeout(tokenUrl, {
-    method: "POST",
-    headers: { "Content-Type": "application/x-www-form-urlencoded" },
     body: params.toString(),
+    headers: { "Content-Type": "application/x-www-form-urlencoded" },
+    method: "POST",
   });
   if (!response.ok) {
     const error = await response.text();

@@ -1,4 +1,5 @@
 import { type NextRequest, NextResponse } from "next/server";
+
 import { OAUTH_STATE_COOKIE_NAME, PROVIDERS } from "@/constants";
 import {
   clearChunkedCookie,
@@ -26,7 +27,7 @@ export async function GET(
   const authUrl = generateAuthUrl(provider, state, baseUrl);
 
   const response = NextResponse.redirect(authUrl);
-  const data = { state, provider, timestamp: Date.now() };
+  const data = { provider, state, timestamp: Date.now() };
   const encrypted = encrypt(JSON.stringify(data));
   await clearChunkedCookie(response, OAUTH_STATE_COOKIE_NAME);
   await setChunkedCookie(response, OAUTH_STATE_COOKIE_NAME, encrypted);

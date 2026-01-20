@@ -6,10 +6,11 @@ import {
 } from "@/lib/workflow/core/errors";
 import { extractResourceId, ResourceTypes } from "@/lib/workflow/core/http";
 import { StepId } from "@/lib/workflow/step-ids";
-import type { WorkflowVars } from "@/lib/workflow/variables";
+import  { type WorkflowVars } from "@/lib/workflow/variables";
 import { Var } from "@/lib/workflow/variables";
 import { LogLevel } from "@/types";
-import type { GoogleClient } from "../http/google-client";
+
+import  { type GoogleClient } from "../http/google-client";
 import { defineStep } from "../step-builder";
 
 interface OrgUnit {
@@ -49,8 +50,8 @@ async function deleteAssignment(
     await google.ssoAssignments.delete(assignmentId).delete();
     log(LogLevel.Info, "Deleted existing SSO assignment", {
       assignmentId,
-      targetOrgUnit: assignment.targetOrgUnit,
       ssoMode: assignment.ssoMode,
+      targetOrgUnit: assignment.targetOrgUnit,
     });
   } catch (error) {
     if (!isNotFoundError(error)) {
@@ -132,12 +133,12 @@ async function assertSamlProfileReady(google: GoogleClient, profileId: string) {
     };
   };
 
-  let idpCredentials: Array<{ name: string }> = [];
+  let idpCredentials: { name: string }[] = [];
   try {
     const credsResponse = (await google.samlProfiles
       .credentials(profileResourceId)
       .list()
-      .get()) as { idpCredentials?: Array<{ name: string }> };
+      .get()) as { idpCredentials?: { name: string }[] };
     idpCredentials = credsResponse.idpCredentials ?? [];
   } catch (error) {
     if (!isNotFoundError(error)) {
@@ -195,8 +196,8 @@ async function applySsoAssignment(
         const existingAssignment = await findAssignment(google, targetOrgUnit);
         if (existingAssignment) {
           log(LogLevel.Info, `Replacing existing ${label} assignment`, {
-            targetOrgUnit: existingAssignment.targetOrgUnit,
             ssoMode: existingAssignment.ssoMode,
+            targetOrgUnit: existingAssignment.targetOrgUnit,
           });
           await deleteAssignment(google, existingAssignment, log);
           return applySsoAssignment(
@@ -223,7 +224,7 @@ function extractResponseMessage(error: unknown): string | undefined {
   if (!(error instanceof Error && "responseBody" in error)) {
     return undefined;
   }
-  const responseBody = (error as { responseBody?: unknown }).responseBody;
+  const { responseBody } = error as { responseBody?: unknown };
   if (!responseBody || typeof responseBody !== "object") {
     return undefined;
   }

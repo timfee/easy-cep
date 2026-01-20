@@ -4,6 +4,7 @@
  */
 
 import { z } from "zod";
+
 import { ApiEndpoint } from "@/constants";
 import { env } from "@/env";
 import { getBearerTokens, normalizeEnvValue } from "@/lib/testing/tokens";
@@ -37,17 +38,17 @@ export async function cleanupGoogleEnvironment() {
   });
   const OrgUnitsSchema = z.object({
     organizationUnits: z
-      .array(z.object({ orgUnitPath: z.string(), name: z.string() }))
+      .array(z.object({ name: z.string(), orgUnitPath: z.string() }))
       .optional(),
   });
   const RolesSchema = z.object({
     items: z
-      .array(z.object({ roleName: z.string(), roleId: z.string() }))
+      .array(z.object({ roleId: z.string(), roleName: z.string() }))
       .optional(),
   });
   const SamlSchema = z.object({
     inboundSamlSsoProfiles: z
-      .array(z.object({ name: z.string(), displayName: z.string() }))
+      .array(z.object({ displayName: z.string(), name: z.string() }))
       .optional(),
   });
 
@@ -61,8 +62,8 @@ export async function cleanupGoogleEnvironment() {
       await fetch(
         `${ApiEndpoint.Google.Users}/${encodeURIComponent(user.primaryEmail)}`,
         {
-          method: "DELETE",
           headers: { Authorization: `Bearer ${googleToken}` },
+          method: "DELETE",
         }
       );
     }
@@ -80,8 +81,8 @@ export async function cleanupGoogleEnvironment() {
         await fetch(
           `${ApiEndpoint.Google.OrgUnits}/${encodeURIComponent(ou.orgUnitPath)}`,
           {
-            method: "DELETE",
             headers: { Authorization: `Bearer ${googleToken}` },
+            method: "DELETE",
           }
         );
       }
@@ -97,8 +98,8 @@ export async function cleanupGoogleEnvironment() {
   for (const role of roles.items ?? []) {
     if (role.roleName?.includes(TEST_SUFFIX)) {
       await fetch(`${ApiEndpoint.Google.Roles}/${role.roleId}`, {
-        method: "DELETE",
         headers: { Authorization: `Bearer ${googleToken}` },
+        method: "DELETE",
       });
     }
   }
@@ -111,8 +112,8 @@ export async function cleanupGoogleEnvironment() {
     if (profile.displayName?.includes(TEST_SUFFIX)) {
       try {
         await fetch(ApiEndpoint.Google.SamlProfile(profile.name), {
-          method: "DELETE",
           headers: { Authorization: `Bearer ${googleToken}` },
+          method: "DELETE",
         });
         console.log(`🗑️ Deleted SAML profile: ${profile.displayName}`);
       } catch (error) {
@@ -126,10 +127,10 @@ export async function cleanupGoogleEnvironment() {
 
   console.log("\u2705 Google environment cleaned");
 }
-const PROTECTED_APP_IDS = [
+const PROTECTED_APP_IDS = new Set([
   "28f2e988-0021-4521-b215-202dc300de38",
   "da8790bf-7b6d-457d-9f8d-a3c073b97070",
-];
+]);
 
 /**
  * Remove Microsoft Entra resources created by E2E runs.
@@ -142,9 +143,9 @@ export async function cleanupMicrosoftEnvironment() {
     value: z
       .array(
         z.object({
-          id: z.string(),
           appId: z.string(),
           displayName: z.string().optional(),
+          id: z.string(),
         })
       )
       .optional(),
@@ -154,7 +155,7 @@ export async function cleanupMicrosoftEnvironment() {
   });
   const PoliciesSchema = z.object({
     value: z
-      .array(z.object({ id: z.string(), displayName: z.string().optional() }))
+      .array(z.object({ displayName: z.string().optional(), id: z.string() }))
       .optional(),
   });
 
@@ -170,7 +171,7 @@ export async function cleanupMicrosoftEnvironment() {
     if (!app.displayName?.includes(TEST_SUFFIX)) {
       continue;
     }
-    if (PROTECTED_APP_IDS.includes(app.appId)) {
+    if (PROTECTED_APP_IDS.has(app.appId)) {
       console.log(
         `🔒 Skipping protected app: ${app.displayName} (${app.appId})`
       );
@@ -184,14 +185,14 @@ export async function cleanupMicrosoftEnvironment() {
     const sps = ServicePrincipalSchema.parse(await spRes.json());
     for (const sp of sps.value ?? []) {
       await fetch(`${ApiEndpoint.Microsoft.ServicePrincipals}/${sp.id}`, {
-        method: "DELETE",
         headers: { Authorization: `Bearer ${msToken}` },
+        method: "DELETE",
       });
     }
 
     await fetch(`${ApiEndpoint.Microsoft.Applications}/${app.id}`, {
-      method: "DELETE",
       headers: { Authorization: `Bearer ${msToken}` },
+      method: "DELETE",
     });
 
     console.log(`🗑️  Deleted test app: ${app.displayName}`);
@@ -209,8 +210,8 @@ export async function cleanupMicrosoftEnvironment() {
       continue;
     }
     await fetch(`${ApiEndpoint.Microsoft.ClaimsPolicies}/${policy.id}`, {
-      method: "DELETE",
       headers: { Authorization: `Bearer ${msToken}` },
+      method: "DELETE",
     });
     console.log(`🗑️  Deleted claims policy: ${policy.displayName}`);
   }
@@ -228,8 +229,8 @@ export async function setupEnvironment() {
 }
 
 if (typeof require !== "undefined" && require.main === module) {
-  setupEnvironment().catch((err) => {
-    console.error(err);
+  setupEnvironment().catch((error) => {
+    console.error(error);
     process.exitCode = 1;
   });
 }

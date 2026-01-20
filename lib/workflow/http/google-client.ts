@@ -1,16 +1,18 @@
 import { z } from "zod";
+
 import { ApiEndpoint } from "@/constants";
-import type { AdminPrivilege } from "../constants/google-admin";
+
+import  { type AdminPrivilege } from "../constants/google-admin";
 import { GoogleOperationSchema } from "../types/api-schemas";
-import type { HttpClient } from "../types/http-client";
+import  { type HttpClient } from "../types/http-client";
 import { type CrudSchemas, createCrudMethods, empty } from "./crud-factory";
 import { ResourceBuilder } from "./fluent-builder";
 
 const userGetSchema = z
   .object({
     id: z.string().optional(),
-    primaryEmail: z.string().optional(),
     orgUnitPath: z.string().optional(),
+    primaryEmail: z.string().optional(),
   })
   .passthrough();
 const userListSchema = z.object({
@@ -19,10 +21,10 @@ const userListSchema = z.object({
     .optional(),
 });
 const userCreateSchema = z.object({
-  primaryEmail: z.string(),
-  name: z.object({ givenName: z.string(), familyName: z.string() }),
-  password: z.string(),
+  name: z.object({ familyName: z.string(), givenName: z.string() }),
   orgUnitPath: z.string(),
+  password: z.string(),
+  primaryEmail: z.string(),
 });
 const userResponseSchema = z.object({
   id: z.string(),
@@ -31,10 +33,10 @@ const userResponseSchema = z.object({
 const userUpdateSchema = z.object({ password: z.string() });
 
 const userSchemas = {
+  create: userCreateSchema,
+  flatten: "users",
   get: userGetSchema,
   list: userListSchema,
-  flatten: "users",
-  create: userCreateSchema,
   response: userResponseSchema,
   update: userUpdateSchema,
 } satisfies CrudSchemas<
@@ -45,17 +47,17 @@ const userSchemas = {
   z.infer<typeof userUpdateSchema>
 >;
 const ouGetSchema = z.object({
-  orgUnitPath: z.string(),
   name: z.string(),
   orgUnitId: z.string().optional(),
+  orgUnitPath: z.string(),
 });
 const ouListSchema = z.object({
   organizationUnits: z
     .array(
       z.object({
         orgUnitId: z.string(),
-        parentOrgUnitId: z.string().optional(),
         orgUnitPath: z.string(),
+        parentOrgUnitId: z.string().optional(),
       })
     )
     .optional(),
@@ -64,8 +66,8 @@ const ouFlattenSchema = z.object({
   organizationUnits: z.array(
     z.object({
       orgUnitId: z.string(),
-      parentOrgUnitId: z.string().optional(),
       orgUnitPath: z.string(),
+      parentOrgUnitId: z.string().optional(),
     })
   ),
 });
@@ -74,17 +76,17 @@ const ouCreateSchema = z.object({
   parentOrgUnitPath: z.string(),
 });
 const ouResponseSchema = z.object({
-  orgUnitPath: z.string(),
   name: z.string(),
+  orgUnitPath: z.string(),
   parentOrgUnitId: z.string(),
 });
 
 const ouSchemas = {
-  get: ouGetSchema,
-  list: ouListSchema,
+  create: ouCreateSchema,
   flatten: "organizationUnits",
   flattenResponse: ouFlattenSchema,
-  create: ouCreateSchema,
+  get: ouGetSchema,
+  list: ouListSchema,
   response: ouResponseSchema,
   update: empty,
 } satisfies CrudSchemas<
@@ -99,7 +101,7 @@ const roleGetSchema = z.object({
   roleId: z.string(),
   roleName: z.string(),
   rolePrivileges: z.array(
-    z.object({ serviceId: z.string(), privilegeName: z.string() })
+    z.object({ privilegeName: z.string(), serviceId: z.string() })
   ),
 });
 const roleListSchema = z.object({
@@ -109,27 +111,27 @@ const roleListSchema = z.object({
         roleId: z.string(),
         roleName: z.string(),
         rolePrivileges: z.array(
-          z.object({ serviceId: z.string(), privilegeName: z.string() })
+          z.object({ privilegeName: z.string(), serviceId: z.string() })
         ),
       })
     )
     .optional(),
 });
 const roleCreateSchema = z.object({
-  roleName: z.string(),
   roleDescription: z.string(),
+  roleName: z.string(),
   rolePrivileges: z.array(
-    z.object({ serviceId: z.string(), privilegeName: z.string() })
+    z.object({ privilegeName: z.string(), serviceId: z.string() })
   ),
 });
 const roleResponseSchema = z.object({ roleId: z.string() });
 
 const roleSchemas = {
-  get: roleGetSchema,
-  list: roleListSchema,
+  create: roleCreateSchema,
   flatten: true,
   flattenResponse: roleListSchema,
-  create: roleCreateSchema,
+  get: roleGetSchema,
+  list: roleListSchema,
   response: roleResponseSchema,
   update: empty,
 } satisfies CrudSchemas<
@@ -145,26 +147,26 @@ const assignmentListSchema = z.object({
   items: z
     .array(
       z.object({
+        assignedTo: z.string(),
         roleAssignmentId: z.string(),
         roleId: z.string(),
-        assignedTo: z.string(),
       })
     )
     .optional(),
 });
 const assignmentCreateSchema = z.object({
-  roleId: z.string(),
   assignedTo: z.string(),
+  roleId: z.string(),
   scopeType: z.string(),
 });
 const assignmentResponseSchema = z.object({ kind: z.string().optional() });
 
 const assignmentSchemas = {
-  get: assignmentGetSchema,
-  list: assignmentListSchema,
+  create: assignmentCreateSchema,
   flatten: false,
   flattenResponse: assignmentListSchema,
-  create: assignmentCreateSchema,
+  get: assignmentGetSchema,
+  list: assignmentListSchema,
   response: assignmentResponseSchema,
   update: empty,
 } satisfies CrudSchemas<
@@ -176,19 +178,19 @@ const assignmentSchemas = {
   z.infer<typeof assignmentListSchema>
 >;
 const samlGetSchema = z.object({
-  name: z.string(),
   displayName: z.string().optional(),
   idpConfig: z
     .object({
-      entityId: z.string().optional(),
-      singleSignOnServiceUri: z.string().optional(),
-      signOutUri: z.string().optional(),
       changePasswordUri: z.string().optional(),
+      entityId: z.string().optional(),
+      signOutUri: z.string().optional(),
+      singleSignOnServiceUri: z.string().optional(),
     })
     .optional(),
+  name: z.string(),
   spConfig: z.object({
-    entityId: z.string(),
     assertionConsumerServiceUri: z.string(),
+    entityId: z.string(),
   }),
 });
 
@@ -196,11 +198,11 @@ const samlListSchema = z.object({
   inboundSamlSsoProfiles: z
     .array(
       z.object({
-        name: z.string(),
         displayName: z.string().optional(),
+        name: z.string(),
         spConfig: z.object({
-          entityId: z.string(),
           assertionConsumerServiceUri: z.string(),
+          entityId: z.string(),
         }),
       })
     )
@@ -220,21 +222,21 @@ const samlUpdateSchema = z
   .object({
     idpConfig: z
       .object({
-        entityId: z.string().optional(),
-        singleSignOnServiceUri: z.string().optional(),
-        signOutUri: z.string().optional(),
         changePasswordUri: z.string().optional(),
+        entityId: z.string().optional(),
+        signOutUri: z.string().optional(),
+        singleSignOnServiceUri: z.string().optional(),
       })
       .optional(),
   })
   .passthrough();
 
 const samlSchemas = {
-  get: samlGetSchema,
-  list: samlListSchema,
+  create: samlCreateSchema,
   flatten: "inboundSamlSsoProfiles",
   flattenResponse: samlListSchema,
-  create: samlCreateSchema,
+  get: samlGetSchema,
+  list: samlListSchema,
   response: samlResponseSchema,
   update: samlUpdateSchema,
 } satisfies CrudSchemas<
@@ -251,27 +253,27 @@ const ssoListSchema = z.object({
     .array(
       z.object({
         name: z.string(),
+        samlSsoInfo: z.object({ inboundSamlSsoProfile: z.string() }).optional(),
+        ssoMode: z.string().optional(),
         targetGroup: z.string().optional(),
         targetOrgUnit: z.string().optional(),
-        ssoMode: z.string().optional(),
-        samlSsoInfo: z.object({ inboundSamlSsoProfile: z.string() }).optional(),
       })
     )
     .optional(),
 });
 const ssoCreateSchema = z.object({
-  targetGroup: z.string().optional(),
-  targetOrgUnit: z.string().optional(),
   samlSsoInfo: z.object({ inboundSamlSsoProfile: z.string() }).optional(),
   ssoMode: z.string(),
+  targetGroup: z.string().optional(),
+  targetOrgUnit: z.string().optional(),
 });
 
 const ssoSchemas = {
-  get: ssoGetSchema,
-  list: ssoListSchema,
+  create: ssoCreateSchema,
   flatten: "inboundSsoAssignments",
   flattenResponse: ssoListSchema,
-  create: ssoCreateSchema,
+  get: ssoGetSchema,
+  list: ssoListSchema,
   response: GoogleOperationSchema,
   update: empty,
 } satisfies CrudSchemas<
@@ -334,9 +336,9 @@ export class GoogleClient {
     );
     const privilegeSchema: z.ZodType<AdminPrivilege> = z.lazy(() =>
       z.object({
-        serviceId: z.string(),
-        privilegeName: z.string(),
         childPrivileges: z.array(privilegeSchema).optional(),
+        privilegeName: z.string(),
+        serviceId: z.string(),
       })
     );
     return {
@@ -373,6 +375,12 @@ export class GoogleClient {
             .path(ApiEndpoint.Google.SamlProfileCredentials(profileId))
             .sends(z.object({ pemData: z.string() }))
             .accepts(GoogleOperationSchema),
+        delete: (credentialId: string) =>
+          this.builder()
+            .path(
+              `${ApiEndpoint.Google.SamlProfileCredentialsList(profileId)}/${credentialId}`
+            )
+            .accepts(empty),
         list: () =>
           this.builder()
             .path(ApiEndpoint.Google.SamlProfileCredentialsList(profileId))
@@ -388,12 +396,6 @@ export class GoogleClient {
                   .optional(),
               })
             ),
-        delete: (credentialId: string) =>
-          this.builder()
-            .path(
-              `${ApiEndpoint.Google.SamlProfileCredentialsList(profileId)}/${credentialId}`
-            )
-            .accepts(empty),
       }),
     };
   }
@@ -411,16 +413,16 @@ export class GoogleClient {
           .path(`${ApiEndpoint.Google.SiteVerification}/token`)
           .sends(
             z.object({
-              site: z.object({ type: z.string(), identifier: z.string() }),
+              site: z.object({ identifier: z.string(), type: z.string() }),
               verificationMethod: z.string(),
             })
           )
           .accepts(
             z.object({
               method: z.string(),
-              type: z.string(),
-              site: z.object({ type: z.string(), identifier: z.string() }),
+              site: z.object({ identifier: z.string(), type: z.string() }),
               token: z.string(),
+              type: z.string(),
             })
           ),
       verify: () =>
@@ -428,14 +430,14 @@ export class GoogleClient {
           .path(`${ApiEndpoint.Google.SiteVerification}/webResource`)
           .sends(
             z.object({
-              site: z.object({ type: z.string(), identifier: z.string() }),
+              site: z.object({ identifier: z.string(), type: z.string() }),
               verificationMethod: z.string(),
             })
           )
           .accepts(
             z.object({
               id: z.string(),
-              site: z.object({ type: z.string(), identifier: z.string() }),
+              site: z.object({ identifier: z.string(), type: z.string() }),
             })
           ),
     };

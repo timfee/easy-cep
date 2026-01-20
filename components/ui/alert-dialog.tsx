@@ -10,7 +10,7 @@ import {
   Title as AlertDialogTitlePrimitive,
   Trigger as AlertDialogTriggerPrimitive,
 } from "@radix-ui/react-alert-dialog";
-import type { ComponentProps } from "react";
+import  { type ComponentProps } from "react";
 
 import { buttonVariants } from "@/components/ui/button";
 import { cn } from "@/lib/utils";

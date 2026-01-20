@@ -3,13 +3,14 @@ import { isNotFoundError } from "@/lib/workflow/core/errors";
 import { StepId } from "@/lib/workflow/step-ids";
 import { Var } from "@/lib/workflow/variables";
 import { LogLevel } from "@/types";
+
 import { defineStep } from "../step-builder";
 
 interface SyncJob {
   id?: string;
   templateId?: string;
   status?: { code?: string };
-  value?: Array<{ id: string }>;
+  value?: { id: string }[];
 }
 
 export default defineStep(StepId.SetupMicrosoftProvisioning)
@@ -36,7 +37,7 @@ export default defineStep(StepId.SetupMicrosoftProvisioning)
           .jobs(spId)
           .list()
           .get()) as {
-          value?: Array<{ id: string; status?: { code?: string } }>;
+          value?: { id: string; status?: { code?: string } }[];
         };
 
         const active = value.some(
@@ -66,7 +67,7 @@ export default defineStep(StepId.SetupMicrosoftProvisioning)
 
       const { value: templates } = (await microsoft.synchronization
         .templates(spId)
-        .get()) as { value?: Array<{ id: string; factoryTag: string }> };
+        .get()) as { value?: { id: string; factoryTag: string }[] };
 
       const templateId =
         templates?.find(
@@ -76,7 +77,7 @@ export default defineStep(StepId.SetupMicrosoftProvisioning)
       const { value: jobs = [] } = (await microsoft.synchronization
         .jobs(spId)
         .list()
-        .get()) as { value?: Array<{ id: string; templateId?: string }> };
+        .get()) as { value?: { id: string; templateId?: string }[] };
 
       for (const job of jobs) {
         if (job.id) {
@@ -115,7 +116,7 @@ export default defineStep(StepId.SetupMicrosoftProvisioning)
       const { value = [] } = (await microsoft.synchronization
         .jobs(spId)
         .list()
-        .get()) as { value?: Array<{ id: string }> };
+        .get()) as { value?: { id: string }[] };
 
       for (const job of value) {
         await microsoft.synchronization.jobs(spId).delete(job.id).delete();

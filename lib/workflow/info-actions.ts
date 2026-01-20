@@ -2,6 +2,7 @@
 
 import pLimit from "p-limit";
 import { z } from "zod";
+
 import {
   ApiEndpoint,
   PROTECTED_RESOURCES,
@@ -25,7 +26,7 @@ interface DeleteOptions {
  */
 export interface DeleteResult {
   deleted: string[];
-  failed: Array<{ id: string; error: string }>;
+  failed: { id: string; error: string }[];
 }
 
 function checkPurgeAllowed() {
@@ -60,7 +61,7 @@ function createDeleteAction(
     const protectedIds = isProtected ? ids.filter((id) => isProtected(id)) : [];
 
     for (const id of protectedIds) {
-      results.failed.push({ id, error: `${resourceName} is protected` });
+      results.failed.push({ error: `${resourceName} is protected`, id });
     }
 
     await Promise.all(
@@ -68,8 +69,8 @@ function createDeleteAction(
         limit(async () => {
           try {
             const res = await fetch(getEndpoint(id), {
-              method: "DELETE",
               headers: { Authorization: `Bearer ${token.accessToken}` },
+              method: "DELETE",
             });
 
             if (!res.ok) {
@@ -80,8 +81,8 @@ function createDeleteAction(
             results.deleted.push(id);
           } catch (error) {
             results.failed.push({
-              id,
               error: error instanceof Error ? error.message : String(error),
+              id,
             });
           }
 
@@ -144,8 +145,8 @@ export async function deleteOrgUnits(ids: string[]): Promise<DeleteResult> {
       const res = await fetch(
         `${ApiEndpoint.Google.OrgUnits}/${encodeURIComponent(id)}`,
         {
-          method: "DELETE",
           headers: { Authorization: `Bearer ${token.accessToken}` },
+          method: "DELETE",
         }
       );
 
@@ -157,8 +158,8 @@ export async function deleteOrgUnits(ids: string[]): Promise<DeleteResult> {
       results.deleted.push(id);
     } catch (error) {
       results.failed.push({
-        id,
         error: error instanceof Error ? error.message : String(error),
+        id,
       });
     }
 
@@ -280,8 +281,8 @@ export async function deleteProvisioningJobs(
     return {
       deleted: [],
       failed: ids.map((id) => ({
-        id,
         error: "Provisioning service principal not found",
+        id,
       })),
     };
   }

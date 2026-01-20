@@ -2,6 +2,7 @@ import { isConflictError, isNotFoundError } from "@/lib/workflow/core/errors";
 import { StepId } from "@/lib/workflow/step-ids";
 import { Var } from "@/lib/workflow/variables";
 import { LogLevel } from "@/types";
+
 import { defineStep } from "../step-builder";
 
 export default defineStep(StepId.SetupMicrosoftClaimsPolicy)
@@ -27,7 +28,7 @@ export default defineStep(StepId.SetupMicrosoftClaimsPolicy)
         const { value } = (await microsoft.servicePrincipals
           .claimsMappingPolicies(spId)
           .list()
-          .get()) as { value: Array<{ id: string }> };
+          .get()) as { value: { id: string }[] };
 
         if (value.length > 0) {
           log(LogLevel.Info, "Claims policy already assigned");
@@ -61,7 +62,7 @@ export default defineStep(StepId.SetupMicrosoftClaimsPolicy)
       } catch (error) {
         if (isConflictError(error)) {
           const { value } = (await microsoft.claimsPolicies.list().get()) as {
-            value: Array<{ id: string }>;
+            value: { id: string }[];
           };
           policyId = value[0]?.id;
         } else {

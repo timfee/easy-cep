@@ -6,17 +6,12 @@ export const ApiEndpoint = {
       "https://admin.googleapis.com/admin/directory/v1/customer/my_customer/domains",
     OrgUnits:
       "https://admin.googleapis.com/admin/directory/v1/customer/my_customer/orgunits",
-    Users: "https://admin.googleapis.com/admin/directory/v1/users",
-    Roles:
-      "https://admin.googleapis.com/admin/directory/v1/customer/my_customer/roles",
     RoleAssignments:
       "https://admin.googleapis.com/admin/directory/v1/customer/my_customer/roleassignments",
     RolePrivileges:
       "https://admin.googleapis.com/admin/directory/v1/customer/my_customer/roles/ALL/privileges",
-    SsoProfiles:
-      "https://cloudidentity.googleapis.com/v1/inboundSamlSsoProfiles",
-    SsoAssignments:
-      "https://cloudidentity.googleapis.com/v1/inboundSsoAssignments",
+    Roles:
+      "https://admin.googleapis.com/admin/directory/v1/customer/my_customer/roles",
     SamlProfile: (profileId: string) =>
       `https://cloudidentity.googleapis.com/v1/${profileId}`,
     SamlProfileCredentials: (profileId: string) =>
@@ -24,6 +19,11 @@ export const ApiEndpoint = {
     SamlProfileCredentialsList: (profileId: string) =>
       `https://cloudidentity.googleapis.com/v1/inboundSamlSsoProfiles/${profileId}/idpCredentials`,
     SiteVerification: "https://www.googleapis.com/siteVerification/v1",
+    SsoAssignments:
+      "https://cloudidentity.googleapis.com/v1/inboundSsoAssignments",
+    SsoProfiles:
+      "https://cloudidentity.googleapis.com/v1/inboundSamlSsoProfiles",
+    Users: "https://admin.googleapis.com/admin/directory/v1/users",
   },
   GoogleAuth: {
     Authorize: "https://accounts.google.com/o/oauth2/v2/auth",
@@ -32,17 +32,27 @@ export const ApiEndpoint = {
   },
 
   Microsoft: {
+    AddTokenSigningCertificate: (spId: string) =>
+      `https://graph.microsoft.com/beta/servicePrincipals/${spId}/addTokenSigningCertificate`,
     Applications: "https://graph.microsoft.com/beta/applications",
+
+    AssignClaimsPolicy: (spId: string) =>
+      `https://graph.microsoft.com/v1.0/servicePrincipals/${spId}/claimsMappingPolicies/$ref`,
+
+    ClaimsPolicies:
+      "https://graph.microsoft.com/beta/policies/claimsMappingPolicies",
+
+    Me: "https://graph.microsoft.com/v1.0/me",
+
+    Organization: "https://graph.microsoft.com/v1.0/organization",
+
+    ReadClaimsPolicy: (spId: string) =>
+      `https://graph.microsoft.com/beta/servicePrincipals/${spId}/claimsMappingPolicies`,
+
     ServicePrincipals: "https://graph.microsoft.com/beta/servicePrincipals",
 
-    Templates: (templateId: string) =>
-      `https://graph.microsoft.com/v1.0/applicationTemplates/${templateId}/instantiate`,
-
-    Synchronization: (spId: string) =>
-      `https://graph.microsoft.com/v1.0/servicePrincipals/${spId}/synchronization`,
-
-    SyncTemplates: (spId: string) =>
-      `https://graph.microsoft.com/v1.0/servicePrincipals/${spId}/synchronization/templates`,
+    StartSync: (spId: string, jobId: string) =>
+      `https://graph.microsoft.com/v1.0/servicePrincipals/${spId}/synchronization/jobs/${jobId}/start`,
 
     SyncJobs: (spId: string) =>
       `https://graph.microsoft.com/v1.0/servicePrincipals/${spId}/synchronization/jobs`,
@@ -50,30 +60,20 @@ export const ApiEndpoint = {
     SyncSecrets: (spId: string) =>
       `https://graph.microsoft.com/v1.0/servicePrincipals/${spId}/synchronization/secrets`,
 
-    StartSync: (spId: string, jobId: string) =>
-      `https://graph.microsoft.com/v1.0/servicePrincipals/${spId}/synchronization/jobs/${jobId}/start`,
+    SyncTemplates: (spId: string) =>
+      `https://graph.microsoft.com/v1.0/servicePrincipals/${spId}/synchronization/templates`,
 
-    ClaimsPolicies:
-      "https://graph.microsoft.com/beta/policies/claimsMappingPolicies",
+    Synchronization: (spId: string) =>
+      `https://graph.microsoft.com/v1.0/servicePrincipals/${spId}/synchronization`,
 
-    AssignClaimsPolicy: (spId: string) =>
-      `https://graph.microsoft.com/v1.0/servicePrincipals/${spId}/claimsMappingPolicies/$ref`,
-
-    UnassignClaimsPolicy: (spId: string, policyId: string) =>
-      `https://graph.microsoft.com/v1.0/servicePrincipals/${spId}/claimsMappingPolicies/${policyId}/$ref`,
-
-    ReadClaimsPolicy: (spId: string) =>
-      `https://graph.microsoft.com/beta/servicePrincipals/${spId}/claimsMappingPolicies`,
+    Templates: (templateId: string) =>
+      `https://graph.microsoft.com/v1.0/applicationTemplates/${templateId}/instantiate`,
 
     TokenSigningCertificates: (spId: string) =>
       `https://graph.microsoft.com/beta/servicePrincipals/${spId}/tokenSigningCertificates`,
 
-    AddTokenSigningCertificate: (spId: string) =>
-      `https://graph.microsoft.com/beta/servicePrincipals/${spId}/addTokenSigningCertificate`,
-
-    Organization: "https://graph.microsoft.com/v1.0/organization",
-
-    Me: "https://graph.microsoft.com/v1.0/me",
+    UnassignClaimsPolicy: (spId: string, policyId: string) =>
+      `https://graph.microsoft.com/v1.0/servicePrincipals/${spId}/claimsMappingPolicies/${policyId}/$ref`,
   },
   MicrosoftAuth: {
     Authorize: (tenant: string) =>
@@ -112,8 +112,8 @@ export const WORKFLOW_CONSTANTS: {
   OAUTH_STATE_TTL_MS: number;
   TOKEN_REFRESH_BUFFER_MS: number;
 } = {
-  TOKEN_COOKIE_MAX_AGE: TIME.DAY * 7,
   OAUTH_STATE_TTL_MS: 10 * TIME.MINUTE,
+  TOKEN_COOKIE_MAX_AGE: TIME.DAY * 7,
   TOKEN_REFRESH_BUFFER_MS: 5 * TIME.MINUTE,
 };
 
@@ -142,16 +142,16 @@ export const API_PREFIXES: Record<
 };
 
 export const PROTECTED_RESOURCES = {
-  microsoftAppIds: new Set<string>(),
   googleRoleNames: new Set<string>([
     "_SUPERADMIN_ROLE",
     "_SEED_ADMIN_ROLE",
     "_GROUPS_ADMIN_ROLE",
   ]),
+  microsoftAppIds: new Set<string>(),
 };
 
 export type CategoryTitleValue = "Auth" | "Domain" | "Config" | "State";
 export const categoryTitles: Record<
   "auth" | "domain" | "config" | "state",
   CategoryTitleValue
-> = { auth: "Auth", domain: "Domain", config: "Config", state: "State" };
+> = { auth: "Auth", config: "Config", domain: "Domain", state: "State" };

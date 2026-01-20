@@ -2,6 +2,7 @@
 
 import { Loader2 } from "lucide-react";
 import { useMemo } from "react";
+
 import { useWorkflow } from "@/components/workflow/context";
 import { CompletionCard } from "@/components/workflow/steps/completion-card";
 import { StepCard } from "@/components/workflow/steps/step-card";
@@ -25,8 +26,8 @@ export function StepsList() {
   const stepActions = useMemo(
     () => ({
       onExecute: executeStep,
-      onUndo: undoStep,
       onForce: executeStep,
+      onUndo: undoStep,
       onVarChange: (key: VarName, value: unknown) => {
         const updates: Partial<WorkflowVars> = {};
         if (typeof value === "string") {

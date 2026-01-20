@@ -3,7 +3,8 @@ import { isNotFoundError } from "@/lib/workflow/core/errors";
 import { StepId } from "@/lib/workflow/step-ids";
 import { Var } from "@/lib/workflow/variables";
 import { LogLevel } from "@/types";
-import type { MicrosoftClient } from "../http/microsoft-client";
+
+import  { type MicrosoftClient } from "../http/microsoft-client";
 import { defineStep } from "../step-builder";
 
 const createProvisioningApp = async (
@@ -17,8 +18,8 @@ const createProvisioningApp = async (
     application: { id: string };
   };
   return {
-    provisioningSpId: res.servicePrincipal.id,
     provisioningAppId: res.application.id,
+    provisioningSpId: res.servicePrincipal.id,
   };
 };
 
@@ -32,7 +33,7 @@ const createSsoApp = async (
     servicePrincipal: { id: string };
     application: { appId: string };
   };
-  return { ssoSpId: res.servicePrincipal.id, ssoAppId: res.application.appId };
+  return { ssoAppId: res.application.appId, ssoSpId: res.servicePrincipal.id };
 };
 
 const cleanupProvisioningApp = async (
@@ -97,8 +98,8 @@ const handleAppCreateFailure = async (
       provisioningSpId,
       provisioningAppId
     );
-  } catch (cleanupError) {
-    markFailed(reportCleanupFailure(error, cleanupError));
+  } catch (error) {
+    markFailed(reportCleanupFailure(error, error));
     return;
   }
 
@@ -132,28 +133,26 @@ export default defineStep(StepId.CreateMicrosoftApps)
         const { value: provApps } = (await microsoft.applications
           .list()
           .query({ $filter: provFilter })
-          .get()) as { value: Array<{ id: string; appId: string }> };
+          .get()) as { value: { id: string; appId: string }[] };
 
         const { value: ssoApps } = (await microsoft.applications
           .list()
           .query({ $filter: ssoFilter })
-          .get()) as { value: Array<{ id: string; appId: string }> };
+          .get()) as { value: { id: string; appId: string }[] };
 
-        const findAppWithSp = async (
-          apps: Array<{ id: string; appId: string }>
-        ) => {
+        const findAppWithSp = async (apps: { id: string; appId: string }[]) => {
           for (const app of apps) {
             const filter = `appId eq '${app.appId}'`;
             const { value } = (await microsoft.servicePrincipals
               .list()
               .query({ $filter: filter })
-              .get()) as { value: Array<{ id: string }> };
+              .get()) as { value: { id: string }[] };
             const spId = value[0]?.id;
             if (spId) {
               return { app, spId };
             }
           }
-          return undefined;
+          return;
         };
 
         const provPair = await findAppWithSp(provApps);
@@ -187,8 +186,8 @@ export default defineStep(StepId.CreateMicrosoftApps)
         log(LogLevel.Info, "Microsoft apps already exist");
         markComplete({
           provisioningServicePrincipalId: provId,
-          ssoServicePrincipalId: ssoId,
           ssoAppId: ssoApp.appId,
+          ssoServicePrincipalId: ssoId,
         });
       } catch (error) {
         log(LogLevel.Error, "Failed to check Microsoft apps", { error });
@@ -216,18 +215,18 @@ export default defineStep(StepId.CreateMicrosoftApps)
         microsoft,
         provisioningDisplayName
       );
-      provisioningSpId = provisioning.provisioningSpId;
-      provisioningAppId = provisioning.provisioningAppId;
+      ({ provisioningSpId } = provisioning);
+      ({ provisioningAppId } = provisioning);
 
       log(LogLevel.Info, "Creating SSO app");
       const sso = await createSsoApp(microsoft, ssoDisplayName);
-      ssoSpId = sso.ssoSpId;
-      ssoAppId = sso.ssoAppId;
+      ({ ssoSpId } = sso);
+      ({ ssoAppId } = sso);
 
       output({
         provisioningServicePrincipalId: provisioningSpId,
-        ssoServicePrincipalId: ssoSpId,
         ssoAppId,
+        ssoServicePrincipalId: ssoSpId,
       });
     } catch (error) {
       await handleAppCreateFailure(
@@ -253,7 +252,7 @@ export default defineStep(StepId.CreateMicrosoftApps)
             microsoft.servicePrincipals
               .delete(provSpId)
               .delete()
-              .then(() => undefined),
+              .then(() => {}),
           log,
           markFailed
         );
@@ -269,7 +268,7 @@ export default defineStep(StepId.CreateMicrosoftApps)
             microsoft.servicePrincipals
               .delete(ssoSpId)
               .delete()
-              .then(() => undefined),
+              .then(() => {}),
           log,
           markFailed
         );
@@ -285,7 +284,7 @@ export default defineStep(StepId.CreateMicrosoftApps)
             microsoft.applications
               .delete(appId)
               .delete()
-              .then(() => undefined),
+              .then(() => {}),
           log,
           markFailed
         );

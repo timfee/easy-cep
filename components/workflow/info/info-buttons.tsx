@@ -1,6 +1,7 @@
 "use client";
 
 import type React from "react";
+
 import { PROTECTED_RESOURCES } from "@/constants";
 import { env } from "@/env";
 import {
@@ -26,6 +27,7 @@ import {
   deleteSamlProfiles,
   deleteSsoAssignments,
 } from "@/lib/workflow/info-actions";
+
 import { InfoButton } from "./info-button";
 
 interface InfoButtonConfig {
@@ -55,9 +57,6 @@ export function createInfoButton(config: InfoButtonConfig): React.FC {
  * Inspect existing organizational units.
  */
 export const OuInfoButton = createInfoButton({
-  title: "Existing Organizational Units",
-  fetchItems: listOrgUnits,
-  deleteItems: env.ALLOW_INFO_PURGE ? deleteOrgUnits : undefined,
   context: (
     <a
       className="text-primary hover:underline"
@@ -68,15 +67,15 @@ export const OuInfoButton = createInfoButton({
       Open in Google Admin
     </a>
   ),
+  deleteItems: env.ALLOW_INFO_PURGE ? deleteOrgUnits : undefined,
+  fetchItems: listOrgUnits,
+  title: "Existing Organizational Units",
 });
 
 /**
  * Inspect existing SAML profiles.
  */
 export const SamlInfoButton = createInfoButton({
-  title: "Existing SAML Profiles",
-  fetchItems: listSamlProfiles,
-  deleteItems: env.ALLOW_INFO_PURGE ? deleteSamlProfiles : undefined,
   context: (
     <a
       className="text-primary hover:underline"
@@ -87,14 +86,15 @@ export const SamlInfoButton = createInfoButton({
       Open in Google Admin
     </a>
   ),
+  deleteItems: env.ALLOW_INFO_PURGE ? deleteSamlProfiles : undefined,
+  fetchItems: listSamlProfiles,
+  title: "Existing SAML Profiles",
 });
 
 /**
  * Inspect existing domains.
  */
 export const DomainInfoButton = createInfoButton({
-  title: "Existing Domains",
-  fetchItems: listDomains,
   context: (
     <a
       className="text-primary hover:underline"
@@ -105,15 +105,14 @@ export const DomainInfoButton = createInfoButton({
       Open in Google Admin
     </a>
   ),
+  fetchItems: listDomains,
+  title: "Existing Domains",
 });
 
 /**
  * Inspect existing user accounts.
  */
 export const UsersInfoButton = createInfoButton({
-  title: "Existing Users",
-  fetchItems: listUsers,
-  deleteItems: env.ALLOW_INFO_PURGE ? deleteGoogleUsers : undefined,
   context: (
     <a
       className="text-primary hover:underline"
@@ -124,15 +123,15 @@ export const UsersInfoButton = createInfoButton({
       Open in Google Admin
     </a>
   ),
+  deleteItems: env.ALLOW_INFO_PURGE ? deleteGoogleUsers : undefined,
+  fetchItems: listUsers,
+  title: "Existing Users",
 });
 
 /**
  * Inspect existing admin roles.
  */
 export const RolesInfoButton = createInfoButton({
-  title: "Existing Admin Roles",
-  fetchItems: listAdminRoles,
-  deleteItems: env.ALLOW_INFO_PURGE ? deleteGoogleRoles : undefined,
   context: (
     <a
       className="text-primary hover:underline"
@@ -143,15 +142,15 @@ export const RolesInfoButton = createInfoButton({
       Open in Google Admin
     </a>
   ),
+  deleteItems: env.ALLOW_INFO_PURGE ? deleteGoogleRoles : undefined,
+  fetchItems: listAdminRoles,
+  title: "Existing Admin Roles",
 });
 
 /**
  * Inspect existing SSO assignments.
  */
 export const SsoInfoButton = createInfoButton({
-  title: "Existing SSO Assignments",
-  fetchItems: listSsoAssignments,
-  deleteItems: env.ALLOW_INFO_PURGE ? deleteSsoAssignments : undefined,
   context: (
     <a
       className="text-primary hover:underline"
@@ -162,21 +161,15 @@ export const SsoInfoButton = createInfoButton({
       Open in Google Admin
     </a>
   ),
+  deleteItems: env.ALLOW_INFO_PURGE ? deleteSsoAssignments : undefined,
+  fetchItems: listSsoAssignments,
+  title: "Existing SSO Assignments",
 });
 
 /**
  * Inspect existing Microsoft enterprise apps.
  */
 export const AppsInfoButton = createInfoButton({
-  title: "Existing Enterprise Apps",
-  fetchItems: async () => {
-    const items = await listEnterpriseApps();
-    return items.map((item) => ({
-      ...item,
-      deletable: !PROTECTED_RESOURCES.microsoftAppIds.has(item.id),
-    }));
-  },
-  deleteItems: env.ALLOW_INFO_PURGE ? deleteEnterpriseApps : undefined,
   context: (
     <a
       className="text-primary hover:underline"
@@ -187,15 +180,21 @@ export const AppsInfoButton = createInfoButton({
       Open in Microsoft Entra
     </a>
   ),
+  deleteItems: env.ALLOW_INFO_PURGE ? deleteEnterpriseApps : undefined,
+  fetchItems: async () => {
+    const items = await listEnterpriseApps();
+    return items.map((item) => ({
+      ...item,
+      deletable: !PROTECTED_RESOURCES.microsoftAppIds.has(item.id),
+    }));
+  },
+  title: "Existing Enterprise Apps",
 });
 
 /**
  * Inspect existing provisioning jobs.
  */
 export const ProvisioningInfoButton = createInfoButton({
-  title: "Existing Provisioning Jobs",
-  fetchItems: listProvisioningJobs,
-  deleteItems: env.ALLOW_INFO_PURGE ? deleteProvisioningJobs : undefined,
   context: (
     <a
       className="text-primary hover:underline"
@@ -206,15 +205,15 @@ export const ProvisioningInfoButton = createInfoButton({
       Open in Microsoft Entra
     </a>
   ),
+  deleteItems: env.ALLOW_INFO_PURGE ? deleteProvisioningJobs : undefined,
+  fetchItems: listProvisioningJobs,
+  title: "Existing Provisioning Jobs",
 });
 
 /**
  * Inspect existing claims policies.
  */
 export const ClaimsInfoButton = createInfoButton({
-  title: "Existing Claims Policies",
-  fetchItems: listClaimsPolicies,
-  deleteItems: env.ALLOW_INFO_PURGE ? deleteClaimsPolicies : undefined,
   context: (
     <a
       className="text-primary hover:underline"
@@ -225,4 +224,7 @@ export const ClaimsInfoButton = createInfoButton({
       Open in Microsoft Entra
     </a>
   ),
+  deleteItems: env.ALLOW_INFO_PURGE ? deleteClaimsPolicies : undefined,
+  fetchItems: listClaimsPolicies,
+  title: "Existing Claims Policies",
 });

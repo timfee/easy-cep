@@ -45,15 +45,15 @@ async function deleteMicrosoftApps(token: string, threshold: string) {
       `Failed to list Microsoft apps: ${res.status} ${res.statusText}`
     );
   }
-  const data: { value?: Array<{ id: string }> } = await res.json();
+  const data: { value?: { id: string }[] } = await res.json();
 
   for (const app of data.value ?? []) {
     console.log(`Deleting Microsoft app ${app.id}`);
     const deleteRes = await fetch(
       `${ApiEndpoint.Microsoft.Applications}/${app.id}`,
       {
-        method: "DELETE",
         headers: { Authorization: `Bearer ${token}` },
+        method: "DELETE",
       }
     );
     if (!deleteRes.ok) {
@@ -73,11 +73,11 @@ async function deleteGoogleProjects(token: string, threshold: string) {
   const res = await fetch(
     "https://cloudresourcemanager.googleapis.com/v1/projects:list",
     {
-      method: "POST",
       headers: {
         Authorization: `Bearer ${token}`,
         "Content-Type": "application/json",
       },
+      method: "POST",
     }
   );
   if (!res.ok) {
@@ -86,7 +86,7 @@ async function deleteGoogleProjects(token: string, threshold: string) {
     );
   }
 
-  const data: { projects?: Array<{ projectId: string; createTime: string }> } =
+  const data: { projects?: { projectId: string; createTime: string }[] } =
     await res.json();
   for (const project of data.projects ?? []) {
     if (project.createTime >= threshold) {
@@ -94,11 +94,11 @@ async function deleteGoogleProjects(token: string, threshold: string) {
       const deleteRes = await fetch(
         `https://cloudresourcemanager.googleapis.com/v1/projects/${project.projectId}`,
         {
-          method: "DELETE",
           headers: {
             Authorization: `Bearer ${token}`,
             "Content-Type": "application/json",
           },
+          method: "DELETE",
         }
       );
       if (!deleteRes.ok) {

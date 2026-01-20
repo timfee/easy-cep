@@ -5,7 +5,7 @@ import { spawn } from "node:child_process";
  */
 function run(command: string, args: string[], env?: NodeJS.ProcessEnv) {
   return new Promise<void>((resolve, reject) => {
-    const child = spawn(command, args, { stdio: "inherit", env });
+    const child = spawn(command, args, { env, stdio: "inherit" });
     child.on("error", reject);
     child.on("close", (code) => {
       if (code === 0) {

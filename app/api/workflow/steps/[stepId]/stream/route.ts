@@ -1,15 +1,16 @@
 import { NextResponse } from "next/server";
+
 import { PROVIDERS } from "@/constants";
 import { getToken } from "@/lib/auth";
 import { runStepWithEvents } from "@/lib/workflow/engine";
 import { isStepIdValue } from "@/lib/workflow/step-ids";
 import { Var, type WorkflowVars } from "@/lib/workflow/variables";
-import type { StepStreamEvent } from "@/types";
+import  { type StepStreamEvent } from "@/types";
 
 const STREAM_HEADERS = {
-  "Content-Type": "text/event-stream",
   "Cache-Control": "no-cache, no-transform",
   Connection: "keep-alive",
+  "Content-Type": "text/event-stream",
 };
 
 function toSsePayload(event: StepStreamEvent) {
@@ -49,13 +50,13 @@ export async function GET(
   const microsoftToken = await getToken(PROVIDERS.MICROSOFT);
   if (!(googleToken || microsoftToken)) {
     await writeEvent({
-      type: "state",
+      state: {
+        error: "Missing provider tokens",
+        status: "blocked",
+      },
       stepId,
       traceId: "error",
-      state: {
-        status: "blocked",
-        error: "Missing provider tokens",
-      },
+      type: "state",
     });
     await writer.close();
     return new NextResponse(stream.readable, { headers: STREAM_HEADERS });
@@ -71,13 +72,13 @@ export async function GET(
     await runStepWithEvents(stepId, vars, writeEvent);
   } catch (error) {
     await writeEvent({
-      type: "state",
+      state: {
+        error: error instanceof Error ? error.message : "Unknown error",
+        status: "blocked",
+      },
       stepId,
       traceId: "error",
-      state: {
-        status: "blocked",
-        error: error instanceof Error ? error.message : "Unknown error",
-      },
+      type: "state",
     });
   } finally {
     await writer.close();

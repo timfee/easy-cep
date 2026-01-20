@@ -1,6 +1,8 @@
 import { z } from "zod";
+
 import { HttpMethod } from "@/types";
-import type { HttpClient } from "../types/http-client";
+
+import  { type HttpClient } from "../types/http-client";
 
 /**
  * Configuration for building HTTP requests.

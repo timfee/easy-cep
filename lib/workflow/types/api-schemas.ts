@@ -4,16 +4,16 @@ import { z } from "zod";
  * Schema for Google long-running operations.
  */
 export const GoogleOperationSchema = z.object({
-  name: z.string().optional(),
   done: z.boolean().optional(),
-  response: z.unknown().optional(),
   error: z
     .object({
-      message: z.string(),
       code: z.number().optional(),
+      message: z.string(),
       status: z.string().optional(),
     })
     .optional(),
+  name: z.string().optional(),
+  response: z.unknown().optional(),
 });
 
 /**

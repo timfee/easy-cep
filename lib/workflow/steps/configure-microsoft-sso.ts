@@ -2,6 +2,7 @@ import { isNotFoundError } from "@/lib/workflow/core/errors";
 import { StepId } from "@/lib/workflow/step-ids";
 import { Var } from "@/lib/workflow/variables";
 import { LogLevel } from "@/types";
+
 import { TIME } from "../constants/workflow-limits";
 import { defineStep } from "../step-builder";
 
@@ -54,12 +55,12 @@ export default defineStep(StepId.ConfigureMicrosoftSso)
             }
             throw error;
           })) as {
-          value: Array<{
+          value: {
             keyId: string;
             key?: string | null;
             startDateTime: string;
             endDateTime: string;
-          }>;
+          }[];
         };
 
         const now = new Date();
@@ -77,8 +78,8 @@ export default defineStep(StepId.ConfigureMicrosoftSso)
           if (existingCert && existingLoginUrl && existingEntityId) {
             markComplete({
               msSigningCertificate: existingCert,
-              msSsoLoginUrl: existingLoginUrl,
               msSsoEntityId: existingEntityId,
+              msSsoLoginUrl: existingLoginUrl,
             });
           } else {
             markIncomplete(
@@ -90,7 +91,7 @@ export default defineStep(StepId.ConfigureMicrosoftSso)
         }
 
         const tenantInfo = (await microsoft.organization.get()) as {
-          value: Array<{ id: string }>;
+          value: { id: string }[];
         };
         const tenantId = tenantInfo.value[0]?.id;
         if (!tenantId) {
@@ -100,8 +101,8 @@ export default defineStep(StepId.ConfigureMicrosoftSso)
 
         markComplete({
           msSigningCertificate: activeCert.key,
-          msSsoLoginUrl: `https://login.microsoftonline.com/${tenantId}/saml2`,
           msSsoEntityId: `https://sts.windows.net/${tenantId}/`,
+          msSsoLoginUrl: `https://login.microsoftonline.com/${tenantId}/saml2`,
         });
       } catch (error) {
         log(LogLevel.Error, "Failed to check SSO configuration", { error });
@@ -142,7 +143,7 @@ export default defineStep(StepId.ConfigureMicrosoftSso)
 
       // 2. Get tenant ID for URLs
       const tenantInfo = (await microsoft.organization.get()) as {
-        value: Array<{ id: string }>;
+        value: { id: string }[];
       };
       const tenantId = tenantInfo.value[0]?.id;
       if (!tenantId) {
@@ -169,7 +170,7 @@ export default defineStep(StepId.ConfigureMicrosoftSso)
       const apps = (await microsoft.applications
         .list()
         .query({ $filter: `appId eq '${appId}'` })
-        .get()) as { value: Array<{ id: string }> };
+        .get()) as { value: { id: string }[] };
       const applicationObjectId = apps.value[0]?.id;
       if (!applicationObjectId) {
         throw new Error("Unable to find application object");
@@ -187,8 +188,8 @@ export default defineStep(StepId.ConfigureMicrosoftSso)
       const existingIdentifierUris = appResponse.identifierUris ?? [];
       const identifierUriSet = new Set([entityId, ...existingIdentifierUris]);
       await microsoft.applications.update(applicationObjectId).patch({
-        identifierUris: Array.from(identifierUriSet),
-        web: { redirectUris: Array.from(redirectUriSet) },
+        identifierUris: [...identifierUriSet],
+        web: { redirectUris: [...redirectUriSet] },
       });
       completedOps.push({
         description: "Reset application URLs",
@@ -228,21 +229,21 @@ export default defineStep(StepId.ConfigureMicrosoftSso)
       log(LogLevel.Info, "Microsoft SSO configuration completed");
       output({
         msSigningCertificate: certResponse.key,
-        msSsoLoginUrl: loginUrl,
         msSsoEntityId,
+        msSsoLoginUrl: loginUrl,
       });
     } catch (error) {
       log(LogLevel.Error, "SSO configuration failed, attempting rollback", {
         error,
       });
 
-      for (const op of completedOps.reverse()) {
+      for (const op of completedOps.toReversed()) {
         try {
           await op.rollback();
           log(LogLevel.Info, `Rolled back: ${op.description}`);
-        } catch (rollbackError) {
+        } catch (error) {
           log(LogLevel.Info, `Failed to rollback: ${op.description}`, {
-            rollbackError,
+            error,
           });
         }
       }
@@ -273,7 +274,7 @@ export default defineStep(StepId.ConfigureMicrosoftSso)
         .list()
         .get()
         .then(async (certs) => {
-          const typed = certs as { value: Array<{ keyId: string }> };
+          const typed = certs as { value: { keyId: string }[] };
           for (const cert of typed.value) {
             await microsoft.servicePrincipals
               .tokenSigningCertificates(spId)

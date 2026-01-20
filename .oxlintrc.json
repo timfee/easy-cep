@@ -1,0 +1,14 @@
+{
+  "ignorePatterns": ["node_modules", "report"],
+  "$schema": "./node_modules/oxlint/configuration_schema.json",
+  "extends": [
+    "./node_modules/ultracite/config/oxlint/core/.oxlintrc.json",
+    "./node_modules/ultracite/config/oxlint/react/.oxlintrc.json",
+    "./node_modules/ultracite/config/oxlint/next/.oxlintrc.json"
+  ],
+  "rules": {
+    "max-statements": "off",
+    "func-style": "off", //["error", "declaration"]
+    "sort-keys": "off"
+  }
+}

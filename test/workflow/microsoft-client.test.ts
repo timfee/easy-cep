@@ -1,6 +1,7 @@
 import { describe, expect, it } from "bun:test";
+
 import { MicrosoftClient } from "@/lib/workflow/http/microsoft-client";
-import type { HttpClient } from "@/lib/workflow/types/http-client";
+import  { type HttpClient } from "@/lib/workflow/types/http-client";
 
 const sampleResponse = {
   preferredSingleSignOnMode: "saml",
@@ -10,9 +11,7 @@ const sampleResponse = {
 describe("MicrosoftClient getPartial", () => {
   it("parses partial service principal responses", async () => {
     const client: HttpClient = {
-      request: (_url, schema) => {
-        return Promise.resolve(schema.parse(sampleResponse));
-      },
+      request: (_url, schema) => Promise.resolve(schema.parse(sampleResponse)),
     };
 
     const ms = new MicrosoftClient(client);

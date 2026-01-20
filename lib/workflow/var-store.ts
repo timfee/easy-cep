@@ -1,4 +1,4 @@
-import type { VarName, WorkflowVars } from "./variables";
+import  { type VarName, type WorkflowVars } from "./variables";
 
 /**
  * Basic variable accessor used in workflow contexts.
@@ -35,16 +35,14 @@ function requireVar<K extends VarName>(
  */
 export function createVarStore(vars: Partial<WorkflowVars>): BasicVarStore {
   return {
-    get: <K extends VarName>(key: K) => vars[key],
-    require: <K extends VarName>(key: K) => requireVar(vars, key),
-    build: (template: string) => {
-      return template.replace(/\{(\w+)\}/g, (match, rawKey: string) => {
+    build: (template: string) => template.replaceAll(/\{(\w+)\}/g, (match, rawKey: string) => {
         if (!isVarName(rawKey, vars)) {
           throw new Error(`Template variable ${rawKey} is missing`);
         }
         const value = requireVar(vars, rawKey);
         return String(value ?? match);
-      });
-    },
+      }),
+    get: <K extends VarName>(key: K) => vars[key],
+    require: <K extends VarName>(key: K) => requireVar(vars, key),
   };
 }

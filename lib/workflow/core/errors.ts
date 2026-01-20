@@ -1,6 +1,8 @@
 import { inspect } from "node:util";
+
 import { HttpStatus } from "@/types";
-import type { WorkflowVars } from "../variables";
+
+import  { type WorkflowVars } from "../variables";
 
 /**
  * Base HTTP error with status metadata.
@@ -134,8 +136,8 @@ export function logUncaughtError(
 
   console.error(
     "Variables:",
-    inspect(sanitizedVars, { depth: 3, colors: true })
+    inspect(sanitizedVars, { colors: true, depth: 3 })
   );
-  console.error("Error:", inspect(error, { depth: null, colors: true }));
+  console.error("Error:", inspect(error, { colors: true, depth: null }));
   console.error("******** /UNCAUGHT ERROR ********\n");
 }

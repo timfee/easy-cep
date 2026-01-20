@@ -1,9 +1,10 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
+
 import { Button } from "@/components/ui/button";
 import { useWorkflow } from "@/components/workflow/context";
-import type { Provider } from "@/constants";
+import  { type Provider } from "@/constants";
 import { Var, type WorkflowVars } from "@/lib/workflow/variables";
 
 interface Props {
@@ -152,7 +153,7 @@ export function ProviderLogin({ onUpdate }: Props) {
         iconColorClass="text-primary"
         isConnected={tokens.googleAccessToken !== undefined}
         minutesLeft={googleTimeLeftInMinutes}
-        name={"Google"}
+        name="Google"
         onConnectClick={() => {
           window.location.href = "/api/auth/google";
         }}

@@ -81,7 +81,7 @@ export default defineStep(StepId.StepName)
       microsoft,
       markComplete,
       markIncomplete,
-      markCheckFailed
+      markCheckFailed,
     }) => {
       // Check if already complete
     }

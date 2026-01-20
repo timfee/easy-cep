@@ -32,17 +32,17 @@ export const StepId: Record<
   | "AssignUsersToSso",
   StepIdValue
 > = {
-  VerifyPrimaryDomain: "verify-primary-domain",
-  CreateAutomationOU: "create-automation-ou",
-  CreateServiceUser: "create-service-user",
-  CreateAdminRoleAndAssignUser: "create-admin-role-and-assign-user",
-  ConfigureGoogleSamlProfile: "configure-google-saml-profile",
-  CreateMicrosoftApps: "create-microsoft-apps",
-  SetupMicrosoftProvisioning: "setup-microsoft-provisioning",
-  ConfigureMicrosoftSso: "configure-microsoft-sso",
-  SetupMicrosoftClaimsPolicy: "setup-microsoft-claims-policy",
-  CompleteGoogleSsoSetup: "complete-google-sso-setup",
   AssignUsersToSso: "assign-users-to-sso",
+  CompleteGoogleSsoSetup: "complete-google-sso-setup",
+  ConfigureGoogleSamlProfile: "configure-google-saml-profile",
+  ConfigureMicrosoftSso: "configure-microsoft-sso",
+  CreateAdminRoleAndAssignUser: "create-admin-role-and-assign-user",
+  CreateAutomationOU: "create-automation-ou",
+  CreateMicrosoftApps: "create-microsoft-apps",
+  CreateServiceUser: "create-service-user",
+  SetupMicrosoftClaimsPolicy: "setup-microsoft-claims-policy",
+  SetupMicrosoftProvisioning: "setup-microsoft-provisioning",
+  VerifyPrimaryDomain: "verify-primary-domain",
 };
 
 export const STEP_ID_VALUES: ReadonlySet<string> = new Set(

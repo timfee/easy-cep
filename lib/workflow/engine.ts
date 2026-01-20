@@ -1,10 +1,11 @@
 "use server";
 
 import { inspect } from "node:util";
+
 import { PROVIDERS } from "@/constants";
 import { env } from "@/env";
 import { refreshTokenIfNeeded } from "@/lib/auth";
-import type { StepIdValue } from "@/lib/workflow/step-ids";
+import  { type StepIdValue } from "@/lib/workflow/step-ids";
 import { Var, type WorkflowVars } from "@/lib/workflow/variables";
 import {
   LogLevel,
@@ -13,8 +14,9 @@ import {
   type StepStreamEvent,
   type StepUIState,
 } from "@/types";
+
 import { createAuthenticatedFetch } from "./fetch-utils";
-import type { LROMetadata } from "./lro-detector";
+import  { type LROMetadata } from "./lro-detector";
 import { getStep } from "./step-registry";
 import { StepStatus } from "./step-status";
 
@@ -45,7 +47,7 @@ function appendLog(
   vars: Partial<WorkflowVars>,
   logs: StepLogEntry[]
 ): StepLogEntry[] {
-  let data = entry.data;
+  let { data } = entry;
   if (entry.level === LogLevel.Error) {
     data = {
       error: data instanceof Error ? inspect(data, { depth: null }) : data,
@@ -92,11 +94,11 @@ function emitPhaseEvent(
     return;
   }
   context.onEvent({
-    type: "phase",
-    stepId: context.stepId,
-    traceId: context.traceId,
     phase,
     status,
+    stepId: context.stepId,
+    traceId: context.traceId,
+    type: "phase",
   });
 }
 
@@ -105,9 +107,9 @@ function emitVarsEvent(context: StepEventContext, data: Partial<WorkflowVars>) {
     return;
   }
   context.onEvent({
-    type: "vars",
     stepId: context.stepId,
     traceId: context.traceId,
+    type: "vars",
     vars: data,
   });
 }
@@ -117,10 +119,10 @@ function emitStateEvent(context: StepEventContext, data: Partial<StepUIState>) {
     return;
   }
   context.onEvent({
-    type: "state",
+    state: data,
     stepId: context.stepId,
     traceId: context.traceId,
-    state: data,
+    type: "state",
   });
 }
 
@@ -129,10 +131,10 @@ function emitLogEvent(context: StepEventContext, entry: StepLogEntry) {
     return;
   }
   context.onEvent({
-    type: "log",
+    entry,
     stepId: context.stepId,
     traceId: context.traceId,
-    entry,
+    type: "log",
   });
 }
 
@@ -141,10 +143,10 @@ function emitLroEvent(context: StepEventContext, lro: StepUIState["lro"]) {
     return;
   }
   context.onEvent({
-    type: "lro",
+    lro,
     stepId: context.stepId,
     traceId: context.traceId,
-    lro,
+    type: "lro",
   });
 }
 
@@ -163,11 +165,11 @@ async function processStep<T extends StepIdValue>(
   const step = getStep(stepId);
 
   let logs: StepLogEntry[] = [];
-  let currentState: StepUIState = { status: StepStatus.Ready, logs };
+  let currentState: StepUIState = { logs, status: StepStatus.Ready };
   let finalVars: Partial<WorkflowVars> = {};
 
   const eventMeta = eventContext
-    ? { stepId, traceId: eventContext.traceId, onEvent: eventContext.onEvent }
+    ? { onEvent: eventContext.onEvent, stepId, traceId: eventContext.traceId }
     : undefined;
 
   const pushState = (data: Partial<StepUIState>) => {
@@ -179,9 +181,9 @@ async function processStep<T extends StepIdValue>(
     if (!currentState.lro) {
       const nextLro = {
         detected: true,
-        startTime: Date.now(),
         estimatedDuration: lro.estimatedSeconds,
         operationType: lro.type,
+        startTime: Date.now(),
       };
       currentState = {
         ...currentState,
@@ -221,7 +223,7 @@ async function processStep<T extends StepIdValue>(
       { addLog, onLroDetected: recordLro }
     ),
     log: (level: LogLevel, message: string, data?: unknown) => {
-      addLog({ timestamp: Date.now(), message, data, level });
+      addLog({ data, level, message, timestamp: Date.now() });
     },
   };
 
@@ -252,30 +254,32 @@ async function processStep<T extends StepIdValue>(
       markIncomplete: (summary: string, data: CheckType) => {
         checkData = data;
         isComplete = false;
+        emitVarsEvent(eventMeta, data);
         pushState({ status: StepStatus.Ready, summary });
       },
-      markStale: (message: string) => {
-        checkData = undefined;
+      markStale: (message: string, data: CheckType) => {
+        checkData = data;
         isComplete = false;
+        emitVarsEvent(eventMeta, data);
         pushState({ status: StepStatus.Stale, summary: message });
       },
       markCheckFailed: (error: string) => {
         checkFailed = true;
         pushState({
-          status: StepStatus.Blocked,
           error: `Check failed: ${error}`,
+          status: StepStatus.Blocked,
         });
       },
     });
   } catch (error) {
     pushState({
-      status: StepStatus.Blocked,
       error:
         "Check error: " +
         (error instanceof Error ? error.message : "Unknown error"),
+      status: StepStatus.Blocked,
     });
     pushState({ isChecking: false, isExecuting: false });
-    return { state: currentState, newVars: finalVars };
+    return { newVars: finalVars, state: currentState };
   }
 
   const completeCheckPhase = () => {
@@ -285,23 +289,24 @@ async function processStep<T extends StepIdValue>(
   if (checkFailed) {
     pushState({ isChecking: false });
     completeCheckPhase();
-    return { state: currentState, newVars: finalVars };
+    return { newVars: finalVars, state: currentState };
   }
 
   if (isComplete) {
     const newVars = checkData ?? {};
     pushState({ isChecking: false });
     completeCheckPhase();
-    return { state: currentState, newVars };
+    return { newVars, state: currentState };
   }
 
   if (!checkData) {
-    pushState({ status: StepStatus.Blocked, error: "Check data missing" });
+    pushState({ error: "Check data missing", status: StepStatus.Blocked });
     pushState({ isChecking: false });
     completeCheckPhase();
-    return { state: currentState, newVars: finalVars };
+    return { newVars: finalVars, state: currentState };
   }
 
+  finalVars = checkData;
   emitVarsEvent(eventMeta, checkData);
   completeCheckPhase();
 
@@ -312,26 +317,26 @@ async function processStep<T extends StepIdValue>(
     try {
       await step.execute({
         ...baseContext,
-        vars,
+        vars: { ...vars, ...checkData },
         checkData,
         output: (newVars: Partial<WorkflowVars>) => {
-          finalVars = newVars;
-          emitVarsEvent(eventMeta, newVars);
+          finalVars = { ...checkData, ...newVars };
+          emitVarsEvent(eventMeta, finalVars);
           pushState({ status: StepStatus.Complete, summary: "Succeeded" });
         },
         markFailed: (error: string) => {
-          pushState({ status: StepStatus.Blocked, error });
+          pushState({ error, status: StepStatus.Blocked });
         },
         markPending: (notes: string) => {
-          pushState({ status: StepStatus.Pending, notes });
+          pushState({ notes, status: StepStatus.Pending });
         },
       });
     } catch (error) {
       pushState({
-        status: StepStatus.Blocked,
         error:
           "Execute error: " +
           (error instanceof Error ? error.message : "Unknown error"),
+        status: StepStatus.Blocked,
       });
     }
     emitPhaseEvent(eventMeta, "execute", "end");
@@ -339,7 +344,7 @@ async function processStep<T extends StepIdValue>(
 
   emitVarsEvent(eventMeta, finalVars);
   pushState({ isChecking: false, isExecuting: false });
-  return { state: currentState, newVars: finalVars };
+  return { newVars: finalVars, state: currentState };
 }
 
 /**
@@ -358,13 +363,13 @@ export async function runStepWithEvents<T extends StepIdValue>(
   onEvent: (event: StepStreamEvent) => void
 ): Promise<{ state: StepUIState; newVars: Partial<WorkflowVars> }> {
   const traceId = crypto.randomUUID();
-  const result = await processStep(stepId, vars, true, { traceId, onEvent });
+  const result = await processStep(stepId, vars, true, { onEvent, traceId });
   onEvent({
-    type: "complete",
+    newVars: result.newVars,
+    state: result.state,
     stepId,
     traceId,
-    state: result.state,
-    newVars: result.newVars,
+    type: "complete",
   });
   return result;
 }
@@ -390,9 +395,9 @@ async function processUndoStep<T extends StepIdValue>(
 
   let logs: StepLogEntry[] = [];
   let currentState: StepUIState = {
-    status: StepStatus.Ready,
     isUndoing: true,
     logs,
+    status: StepStatus.Ready,
   };
 
   const pushState = (data: Partial<StepUIState>) => {
@@ -405,9 +410,9 @@ async function processUndoStep<T extends StepIdValue>(
         ...currentState,
         lro: {
           detected: true,
-          startTime: Date.now(),
           estimatedDuration: lro.estimatedSeconds,
           operationType: lro.type,
+          startTime: Date.now(),
         },
       };
     }
@@ -432,12 +437,12 @@ async function processUndoStep<T extends StepIdValue>(
       { addLog, onLroDetected: recordLro }
     ),
     log: (level: LogLevel, message: string, data?: unknown) => {
-      addLog({ timestamp: Date.now(), message, data, level });
+      addLog({ data, level, message, timestamp: Date.now() });
     },
   };
 
   if (!step.undo) {
-    pushState({ status: StepStatus.Blocked, error: "Undo not implemented" });
+    pushState({ error: "Undo not implemented", status: StepStatus.Blocked });
     pushState({ isUndoing: false });
     return { state: currentState };
   }
@@ -450,15 +455,15 @@ async function processUndoStep<T extends StepIdValue>(
         pushState({ status: StepStatus.Complete, summary: "Reverted" });
       },
       markFailed: (error: string) => {
-        pushState({ status: StepStatus.Blocked, error });
+        pushState({ error, status: StepStatus.Blocked });
       },
     });
   } catch (error) {
     pushState({
-      status: StepStatus.Blocked,
       error:
         "Undo error: " +
         (error instanceof Error ? error.message : "Unknown error"),
+      status: StepStatus.Blocked,
     });
   }
   pushState({ isUndoing: false });

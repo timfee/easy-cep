@@ -1,6 +1,7 @@
 import { StepId } from "@/lib/workflow/step-ids";
 import { Var } from "@/lib/workflow/variables";
 import { LogLevel } from "@/types";
+
 import { defineStep } from "../step-builder";
 
 export default defineStep(StepId.VerifyPrimaryDomain)
@@ -11,11 +12,11 @@ export default defineStep(StepId.VerifyPrimaryDomain)
     async ({ google, markComplete, markIncomplete, markCheckFailed, log }) => {
       try {
         const { domains } = (await google.domains.get()) as {
-          domains: Array<{
+          domains: {
             domainName: string;
             isPrimary: boolean;
             verified: boolean;
-          }>;
+          }[];
         };
 
         const primary = domains.find((domain) => domain.isPrimary);
@@ -34,7 +35,7 @@ export default defineStep(StepId.VerifyPrimaryDomain)
             const verificationData = (await google.siteVerification
               .getToken()
               .post({
-                site: { type: "INET_DOMAIN", identifier: primary.domainName },
+                site: { identifier: primary.domainName, type: "INET_DOMAIN" },
                 verificationMethod: "DNS_TXT",
               })) as { token: string };
 
@@ -77,8 +78,8 @@ export default defineStep(StepId.VerifyPrimaryDomain)
         try {
           const verified = await google.siteVerification.verify().post({
             site: {
-              type: "INET_DOMAIN",
               identifier: checkData.primaryDomain,
+              type: "INET_DOMAIN",
             },
             verificationMethod: "DNS_TXT",
           });

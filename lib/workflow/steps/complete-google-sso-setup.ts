@@ -3,6 +3,7 @@ import { extractResourceId, ResourceTypes } from "@/lib/workflow/core/http";
 import { StepId } from "@/lib/workflow/step-ids";
 import { Var } from "@/lib/workflow/variables";
 import { LogLevel } from "@/types";
+
 import { defineStep } from "../step-builder";
 
 export default defineStep(StepId.CompleteGoogleSsoSetup)
@@ -41,12 +42,12 @@ export default defineStep(StepId.CompleteGoogleSsoSetup)
           };
         };
 
-        let idpCredentials: Array<{ name: string }> = [];
+        let idpCredentials: { name: string }[] = [];
         try {
           const credsResponse = (await google.samlProfiles
             .credentials(profileResourceId)
             .list()
-            .get()) as { idpCredentials?: Array<{ name: string }> };
+            .get()) as { idpCredentials?: { name: string }[] };
           idpCredentials = credsResponse.idpCredentials ?? [];
         } catch (error) {
           if (!isNotFoundError(error)) {
@@ -56,10 +57,10 @@ export default defineStep(StepId.CompleteGoogleSsoSetup)
 
         if (idpCredentials.length >= 2) {
           log(LogLevel.Info, "Google SSO already configured", {
+            hasCredentials: true,
             hasEntityId: true,
             hasLoginUrl: true,
             hasSignOutUrl: true,
-            hasCredentials: true,
           });
           markComplete({});
           return;
@@ -76,10 +77,10 @@ export default defineStep(StepId.CompleteGoogleSsoSetup)
           markComplete({});
         } else {
           log(LogLevel.Info, "Google SSO configuration incomplete", {
+            hasCredentials,
             hasEntityId,
             hasLoginUrl,
             hasSignOutUrl,
-            hasCredentials,
           });
           markIncomplete("Google SSO configuration incomplete", {});
         }
@@ -115,10 +116,10 @@ export default defineStep(StepId.CompleteGoogleSsoSetup)
         .query({ updateMask })
         .patch({
           idpConfig: {
-            entityId,
-            singleSignOnServiceUri: loginUrl,
             changePasswordUri:
               "https://account.activedirectory.windowsazure.com/ChangePassword.aspx",
+            entityId,
+            singleSignOnServiceUri: loginUrl,
           },
         })) as { done?: boolean; error?: { message: string } };
 
@@ -135,12 +136,12 @@ export default defineStep(StepId.CompleteGoogleSsoSetup)
         return;
       }
 
-      let idpCredentials: Array<{ name: string }> = [];
+      let idpCredentials: { name: string }[] = [];
       try {
         const credsResponse = (await google.samlProfiles
           .credentials(profileResourceId)
           .list()
-          .get()) as { idpCredentials?: Array<{ name: string }> };
+          .get()) as { idpCredentials?: { name: string }[] };
         idpCredentials = credsResponse.idpCredentials ?? [];
       } catch (error) {
         if (!isNotFoundError(error)) {
@@ -203,7 +204,7 @@ export default defineStep(StepId.CompleteGoogleSsoSetup)
       const { idpCredentials = [] } = (await google.samlProfiles
         .credentials(profileResourceId)
         .list()
-        .get()) as { idpCredentials?: Array<{ name: string }> };
+        .get()) as { idpCredentials?: { name: string }[] };
 
       for (const cred of idpCredentials) {
         try {

@@ -2,6 +2,7 @@ import { isConflictError, isNotFoundError } from "@/lib/workflow/core/errors";
 import { StepId } from "@/lib/workflow/step-ids";
 import { Var } from "@/lib/workflow/variables";
 import { LogLevel } from "@/types";
+
 import {
   type AdminPrivilege,
   GOOGLE_ADMIN_PRIVILEGES,
@@ -11,7 +12,7 @@ import { defineStep } from "../step-builder";
 interface RoleItem {
   roleId: string;
   roleName: string;
-  rolePrivileges: Array<{ serviceId: string; privilegeName: string }>;
+  rolePrivileges: { serviceId: string; privilegeName: string }[];
 }
 
 interface RoleAssignment {
@@ -34,7 +35,7 @@ const findPrivilegeServiceId = (privileges: AdminPrivilege[]) => {
       stack.push(...priv.childPrivileges);
     }
   }
-  return undefined;
+  return;
 };
 
 export default defineStep(StepId.CreateAdminRoleAndAssignUser)
@@ -62,11 +63,11 @@ export default defineStep(StepId.CreateAdminRoleAndAssignUser)
         const roleName = vars.require(Var.AdminRoleName);
         const role = items.find((roleItem) => roleItem.roleName === roleName);
         if (role) {
-          const privilegeNames = role.rolePrivileges.map(
-            (privilege) => privilege.privilegeName
+          const privilegeNames = new Set(
+            role.rolePrivileges.map((privilege) => privilege.privilegeName)
           );
           const hasPrivs = GOOGLE_ADMIN_PRIVILEGES.REQUIRED.every((priv) =>
-            privilegeNames.includes(priv)
+            privilegeNames.has(priv)
           );
           if (!hasPrivs) {
             log(LogLevel.Info, "Role missing required privileges");
@@ -126,17 +127,17 @@ export default defineStep(StepId.CreateAdminRoleAndAssignUser)
       let roleId = checkData.adminRoleId;
       try {
         const res = (await google.roles.create().post({
-          roleName: vars.require(Var.AdminRoleName),
           roleDescription: "Custom role for Microsoft provisioning",
+          roleName: vars.require(Var.AdminRoleName),
           rolePrivileges: [
-            { serviceId, privilegeName: "ORGANIZATION_UNITS_RETRIEVE" },
-            { serviceId, privilegeName: "USERS_RETRIEVE" },
-            { serviceId, privilegeName: "USERS_CREATE" },
-            { serviceId, privilegeName: "USERS_UPDATE" },
-            { serviceId, privilegeName: "GROUPS_ALL" },
+            { privilegeName: "ORGANIZATION_UNITS_RETRIEVE", serviceId },
+            { privilegeName: "USERS_RETRIEVE", serviceId },
+            { privilegeName: "USERS_CREATE", serviceId },
+            { privilegeName: "USERS_UPDATE", serviceId },
+            { privilegeName: "GROUPS_ALL", serviceId },
           ],
         })) as { roleId: string };
-        roleId = res.roleId;
+        ({ roleId } = res);
       } catch (error) {
         if (isConflictError(error)) {
           if (!roleId) {
@@ -162,7 +163,7 @@ export default defineStep(StepId.CreateAdminRoleAndAssignUser)
         await google.roleAssignments
           .create()
           .retry(3)
-          .post({ roleId, assignedTo: userId, scopeType: "CUSTOMER" });
+          .post({ assignedTo: userId, roleId, scopeType: "CUSTOMER" });
 
         log(LogLevel.Info, "Role assignment succeeded");
       } catch (error) {

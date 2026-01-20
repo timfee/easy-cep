@@ -1,6 +1,7 @@
 #!/usr/bin/env bun
 import { readFile, writeFile } from "node:fs/promises";
 import { createServer } from "node:http";
+
 import { PROVIDERS, type Provider } from "@/constants";
 import { env } from "@/env";
 import { exchangeCodeForToken, generateAuthUrl } from "@/lib/auth";
@@ -174,16 +175,16 @@ const server = createServer(async (req, res) => {
       } else {
         onMicrosoftToken(refreshToken);
       }
-    } catch (exchangeError) {
-      console.error(`[${provider}] Token exchange failed:`, exchangeError);
+    } catch (error) {
+      console.error(`[${provider}] Token exchange failed:`, error);
       sendHtml(
         res,
         500,
-        `<h1>Token Exchange Failed</h1><p>${String(exchangeError)}</p>`
+        `<h1>Token Exchange Failed</h1><p>${String(error)}</p>`
       );
     }
-  } catch (err) {
-    console.error("[Server] Critical Error:", err);
+  } catch (error) {
+    console.error("[Server] Critical Error:", error);
     if (!res.headersSent) {
       res.writeHead(500, { "Content-Type": "text/plain" });
       res.end("Internal Server Error");
@@ -200,7 +201,7 @@ async function main() {
   console.log(`📡 Listening on ${HOST}`);
 
   try {
-    const googleState = Math.random().toString(36).substring(7);
+    const googleState = Math.random().toString(36).slice(7);
     const googleUrl = generateAuthUrl(PROVIDERS.GOOGLE, googleState, HOST);
 
     console.log("\n===========================================");
@@ -212,7 +213,7 @@ async function main() {
     const googleRefreshToken = await googleAuthPromise;
     await updateEnvFile("TEST_GOOGLE_REFRESH_TOKEN", googleRefreshToken);
 
-    const msState = Math.random().toString(36).substring(7);
+    const msState = Math.random().toString(36).slice(7);
     const msUrl = generateAuthUrl(PROVIDERS.MICROSOFT, msState, HOST);
 
     console.log("\n===========================================");
@@ -226,8 +227,8 @@ async function main() {
 
     console.log("\n✨ All done. Exiting.");
     process.exit(0);
-  } catch (err) {
-    console.error("\n❌ Script failed:", err);
+  } catch (error) {
+    console.error("\n❌ Script failed:", error);
     process.exit(1);
   } finally {
     server.close();

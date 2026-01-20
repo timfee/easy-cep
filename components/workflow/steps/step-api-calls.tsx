@@ -115,246 +115,246 @@ export function StepApiCalls({ stepId }: StepApiCallsProps) {
  * Known API calls mapped to each workflow step.
  */
 export const stepApiMetadata: Record<StepIdValue, ApiCallMetadata[]> = {
-  "verify-primary-domain": [
+  "assign-users-to-sso": [
     {
+      description: "Check user assignments",
+      endpoint: extractPath(ApiEndpoint.Google.SsoAssignments),
       method: "GET",
-      endpoint: extractPath(ApiEndpoint.Google.Domains),
-      description: "Check domain verification status",
     },
     {
+      body: {
+        targetOrgUnit: "orgUnits/{rootOrgUnitId}",
+        samlSsoInfo: { inboundSamlSsoProfile: "{samlProfileId}" },
+        ssoMode: "SAML_SSO",
+      },
+      description: "Assign all users to SSO",
+      endpoint: extractPath(ApiEndpoint.Google.SsoAssignments),
       method: "POST",
-      endpoint: `${extractPath(ApiEndpoint.Google.SiteVerification)}/token`,
-      description: "Get verification token",
+    },
+  ],
+
+  "complete-google-sso-setup": [
+    {
+      description: "Check SSO configuration",
+      endpoint: "/cloudidentity/{samlProfileId}",
+      method: "GET",
+    },
+    {
+      description: "Get tenant information",
+      endpoint: extractPath(ApiEndpoint.Microsoft.Organization),
+      method: "GET",
+    },
+    {
+      description: "Get signing certificates",
+      endpoint:
+        "/graph/beta/servicePrincipals/{ssoServicePrincipalId}/tokenSigningCertificates",
+      method: "GET",
+    },
+    {
+      description: "Update SAML profile",
+      endpoint: "/cloudidentity/{samlProfileId}",
+      method: "PATCH",
+    },
+    {
+      description: "Upload certificate",
+      endpoint: "/cloudidentity/{samlProfileId}/idpCredentials:add",
+      method: "POST",
+    },
+  ],
+
+  "configure-google-saml-profile": [
+    {
+      description: "Check SAML profiles",
+      endpoint: extractPath(ApiEndpoint.Google.SsoProfiles),
+      method: "GET",
+    },
+    {
+      body: {
+        displayName: Var.SamlProfileDisplayName,
+        idpConfig: { entityId: "", singleSignOnServiceUri: "" },
+      },
+      description: "Create SAML profile",
+      endpoint: "/cloudidentity/customers/my_customer/inboundSamlSsoProfiles",
+      method: "POST",
+    },
+  ],
+
+  "configure-microsoft-sso": [
+    {
+      description: "Set SSO mode to saml",
+      endpoint: "/graph/v1.0/servicePrincipals/{ssoServicePrincipalId}",
+      method: "PATCH",
+    },
+    {
+      description: "Get tenant information",
+      endpoint: extractPath(ApiEndpoint.Microsoft.Organization),
+      method: "GET",
+    },
+    {
+      description: "Configure SAML URLs",
+      endpoint: "/graph/v1.0/servicePrincipals/{ssoServicePrincipalId}",
+      method: "PATCH",
+    },
+    {
+      description: "Set identifier URIs and redirect URIs",
+      endpoint: "/graph/beta/applications/{applicationObjectId}",
+      method: "PATCH",
+    },
+    {
+      description: "Create signing certificate",
+      endpoint:
+        "/graph/beta/servicePrincipals/{ssoServicePrincipalId}/addTokenSigningCertificate",
+      method: "POST",
+    },
+  ],
+
+  "create-admin-role-and-assign-user": [
+    {
+      description: "Check existing roles",
+      endpoint: extractPath(ApiEndpoint.Google.Roles),
+      method: "GET",
+    },
+    {
+      description: "Get available privileges",
+      endpoint: extractPath(ApiEndpoint.Google.RolePrivileges),
+      method: "GET",
+    },
+    {
+      description: "Create custom admin role",
+      endpoint: extractPath(ApiEndpoint.Google.Roles),
+      method: "POST",
+    },
+    {
+      body: {
+        roleId: "{adminRoleId}",
+        assignedTo: "{provisioningUserId}",
+        scopeType: "CUSTOMER",
+      },
+      description: "Assign role to user",
+      endpoint: extractPath(ApiEndpoint.Google.RoleAssignments),
+      method: "POST",
     },
   ],
 
   "create-automation-ou": [
     {
-      method: "GET",
-      endpoint: `${extractPath(ApiEndpoint.Google.OrgUnits)}/{ouName}`,
       description: "Check if OU exists",
+      endpoint: `${extractPath(ApiEndpoint.Google.OrgUnits)}/{ouName}`,
+      method: "GET",
     },
     {
-      method: "POST",
-      endpoint: extractPath(ApiEndpoint.Google.OrgUnits),
-      description: "Create Automation OU",
       body: {
         name: Var.AutomationOuName,
         parentOrgUnitPath: Var.AutomationOuPath,
       },
+      description: "Create Automation OU",
+      endpoint: extractPath(ApiEndpoint.Google.OrgUnits),
+      method: "POST",
+    },
+  ],
+
+  "create-microsoft-apps": [
+    {
+      description: "Check existing apps",
+      endpoint:
+        extractPath(ApiEndpoint.Microsoft.Applications) +
+        "?$filter=applicationTemplateId eq '{templateId}'",
+      method: "GET",
+    },
+    {
+      description: "Get service principals",
+      endpoint:
+        extractPath(ApiEndpoint.Microsoft.ServicePrincipals) +
+        "?$filter=appId eq '{appId}'",
+      method: "GET",
+    },
+    {
+      body: { displayName: "{displayName}" },
+      description: "Create enterprise apps",
+      endpoint: "/graph/v1.0/applicationTemplates/{templateId}/instantiate",
+      method: "POST",
     },
   ],
 
   "create-service-user": [
     {
-      method: "GET",
+      description: "Check if service user exists",
       endpoint:
         extractPath(ApiEndpoint.Google.Users) +
         "/azuread-provisioning@{primaryDomain}",
-      description: "Check if service user exists",
+      method: "GET",
     },
     {
-      method: "POST",
-      endpoint: extractPath(ApiEndpoint.Google.Users),
-      description: "Create service user",
       body: {
         primaryEmail: "azuread-provisioning@{primaryDomain}",
         name: { givenName: "Microsoft", familyName: "Provisioning" },
         password: "{generatedPassword}",
         orgUnitPath: Var.AutomationOuPath,
       },
-    },
-  ],
-
-  "create-admin-role-and-assign-user": [
-    {
-      method: "GET",
-      endpoint: extractPath(ApiEndpoint.Google.Roles),
-      description: "Check existing roles",
-    },
-    {
-      method: "GET",
-      endpoint: extractPath(ApiEndpoint.Google.RolePrivileges),
-      description: "Get available privileges",
-    },
-    {
+      description: "Create service user",
+      endpoint: extractPath(ApiEndpoint.Google.Users),
       method: "POST",
-      endpoint: extractPath(ApiEndpoint.Google.Roles),
-      description: "Create custom admin role",
-    },
-    {
-      method: "POST",
-      endpoint: extractPath(ApiEndpoint.Google.RoleAssignments),
-      description: "Assign role to user",
-      body: {
-        roleId: "{adminRoleId}",
-        assignedTo: "{provisioningUserId}",
-        scopeType: "CUSTOMER",
-      },
-    },
-  ],
-
-  "configure-google-saml-profile": [
-    {
-      method: "GET",
-      endpoint: extractPath(ApiEndpoint.Google.SsoProfiles),
-      description: "Check SAML profiles",
-    },
-    {
-      method: "POST",
-      endpoint: "/cloudidentity/customers/my_customer/inboundSamlSsoProfiles",
-      description: "Create SAML profile",
-      body: {
-        displayName: Var.SamlProfileDisplayName,
-        idpConfig: { entityId: "", singleSignOnServiceUri: "" },
-      },
-    },
-  ],
-
-  "create-microsoft-apps": [
-    {
-      method: "GET",
-      endpoint:
-        extractPath(ApiEndpoint.Microsoft.Applications) +
-        "?$filter=applicationTemplateId eq '{templateId}'",
-      description: "Check existing apps",
-    },
-    {
-      method: "GET",
-      endpoint:
-        extractPath(ApiEndpoint.Microsoft.ServicePrincipals) +
-        "?$filter=appId eq '{appId}'",
-      description: "Get service principals",
-    },
-    {
-      method: "POST",
-      endpoint: "/graph/v1.0/applicationTemplates/{templateId}/instantiate",
-      description: "Create enterprise apps",
-      body: { displayName: "{displayName}" },
-    },
-  ],
-
-  "setup-microsoft-provisioning": [
-    {
-      method: "GET",
-      endpoint:
-        "/graph/v1.0/servicePrincipals/{provisioningServicePrincipalId}/synchronization/jobs",
-      description: "Check sync status",
-    },
-    {
-      method: "POST",
-      endpoint:
-        "/graph/v1.0/servicePrincipals/{provisioningServicePrincipalId}/synchronization/jobs",
-      description: "Create sync job",
-      body: { templateId: "gsuite" },
-    },
-    {
-      method: "PUT",
-      endpoint:
-        "/graph/v1.0/servicePrincipals/{provisioningServicePrincipalId}/synchronization/secrets",
-      description: "Set credentials",
-    },
-    {
-      method: "POST",
-      endpoint:
-        "/graph/v1.0/servicePrincipals/{provisioningServicePrincipalId}/synchronization/jobs/{jobId}/start",
-      description: "Start synchronization",
-    },
-  ],
-
-  "configure-microsoft-sso": [
-    {
-      method: "PATCH",
-      endpoint: "/graph/v1.0/servicePrincipals/{ssoServicePrincipalId}",
-      description: "Set SSO mode to saml",
-    },
-    {
-      method: "GET",
-      endpoint: extractPath(ApiEndpoint.Microsoft.Organization),
-      description: "Get tenant information",
-    },
-    {
-      method: "PATCH",
-      endpoint: "/graph/v1.0/servicePrincipals/{ssoServicePrincipalId}",
-      description: "Configure SAML URLs",
-    },
-    {
-      method: "PATCH",
-      endpoint: "/graph/beta/applications/{applicationObjectId}",
-      description: "Set identifier URIs and redirect URIs",
-    },
-    {
-      method: "POST",
-      endpoint:
-        "/graph/beta/servicePrincipals/{ssoServicePrincipalId}/addTokenSigningCertificate",
-      description: "Create signing certificate",
     },
   ],
 
   "setup-microsoft-claims-policy": [
     {
-      method: "GET",
+      description: "Check claims policy",
       endpoint:
         "/graph/beta/servicePrincipals/{ssoServicePrincipalId}/claimsMappingPolicies",
-      description: "Check claims policy",
+      method: "GET",
     },
     {
-      method: "POST",
-      endpoint: extractPath(ApiEndpoint.Microsoft.ClaimsPolicies),
       description: "Create claims policy",
+      endpoint: extractPath(ApiEndpoint.Microsoft.ClaimsPolicies),
+      method: "POST",
     },
     {
-      method: "POST",
+      description: "Assign policy to app",
       endpoint:
         "/graph/v1.0/servicePrincipals/{ssoServicePrincipalId}/claimsMappingPolicies/$ref",
-      description: "Assign policy to app",
+      method: "POST",
     },
   ],
 
-  "complete-google-sso-setup": [
+  "setup-microsoft-provisioning": [
     {
-      method: "GET",
-      endpoint: "/cloudidentity/{samlProfileId}",
-      description: "Check SSO configuration",
-    },
-    {
-      method: "GET",
-      endpoint: extractPath(ApiEndpoint.Microsoft.Organization),
-      description: "Get tenant information",
-    },
-    {
-      method: "GET",
+      description: "Check sync status",
       endpoint:
-        "/graph/beta/servicePrincipals/{ssoServicePrincipalId}/tokenSigningCertificates",
-      description: "Get signing certificates",
+        "/graph/v1.0/servicePrincipals/{provisioningServicePrincipalId}/synchronization/jobs",
+      method: "GET",
     },
     {
-      method: "PATCH",
-      endpoint: "/cloudidentity/{samlProfileId}",
-      description: "Update SAML profile",
-    },
-    {
+      body: { templateId: "gsuite" },
+      description: "Create sync job",
+      endpoint:
+        "/graph/v1.0/servicePrincipals/{provisioningServicePrincipalId}/synchronization/jobs",
       method: "POST",
-      endpoint: "/cloudidentity/{samlProfileId}/idpCredentials:add",
-      description: "Upload certificate",
+    },
+    {
+      description: "Set credentials",
+      endpoint:
+        "/graph/v1.0/servicePrincipals/{provisioningServicePrincipalId}/synchronization/secrets",
+      method: "PUT",
+    },
+    {
+      description: "Start synchronization",
+      endpoint:
+        "/graph/v1.0/servicePrincipals/{provisioningServicePrincipalId}/synchronization/jobs/{jobId}/start",
+      method: "POST",
     },
   ],
 
-  "assign-users-to-sso": [
+  "verify-primary-domain": [
     {
+      description: "Check domain verification status",
+      endpoint: extractPath(ApiEndpoint.Google.Domains),
       method: "GET",
-      endpoint: extractPath(ApiEndpoint.Google.SsoAssignments),
-      description: "Check user assignments",
     },
     {
+      description: "Get verification token",
+      endpoint: `${extractPath(ApiEndpoint.Google.SiteVerification)}/token`,
       method: "POST",
-      endpoint: extractPath(ApiEndpoint.Google.SsoAssignments),
-      description: "Assign all users to SSO",
-      body: {
-        targetOrgUnit: "orgUnits/{rootOrgUnitId}",
-        samlSsoInfo: { inboundSamlSsoProfile: "{samlProfileId}" },
-        ssoMode: "SAML_SSO",
-      },
     },
   ],
 };

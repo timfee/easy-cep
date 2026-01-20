@@ -57,15 +57,15 @@ export const ResourceTypes: Record<
   | "ClaimsMappingPolicies",
   ResourceTypeValue
 > = {
-  InboundSsoAssignments: "inboundSsoAssignments",
+  Applications: "applications",
+  ClaimsMappingPolicies: "claimsMappingPolicies",
   InboundSamlSsoProfiles: "inboundSamlSsoProfiles",
+  InboundSsoAssignments: "inboundSsoAssignments",
   OrgUnitId: "id",
   OrgUnits: "orgUnits",
-  Roles: "roles",
   RoleAssignments: "roleassignments",
-  Users: "users",
+  Roles: "roles",
   ServicePrincipals: "servicePrincipals",
-  Applications: "applications",
   SynchronizationJobs: "synchronization/jobs",
-  ClaimsMappingPolicies: "claimsMappingPolicies",
+  Users: "users",
 };

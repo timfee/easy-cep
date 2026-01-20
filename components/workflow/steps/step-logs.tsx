@@ -1,8 +1,10 @@
 "use client";
 
 import { useEffect, useRef } from "react";
+
 import { ScrollArea } from "@/components/ui/scroll-area";
-import type { StepLogEntry } from "@/types";
+import  { type StepLogEntry } from "@/types";
+
 import { StepLogItem } from "./step-log-item";
 
 interface StepLogsProps {

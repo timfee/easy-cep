@@ -1,6 +1,7 @@
 import "./globals.css";
-import type { Metadata } from "next";
+import  { type Metadata } from "next";
 import { Roboto_Flex } from "next/font/google";
+
 import { WorkflowProvider } from "@/components/workflow/context";
 import { WorkflowHeader } from "@/components/workflow/header";
 import { PROTECTED_RESOURCES } from "@/constants";
@@ -27,8 +28,8 @@ export default function RootLayout({
 }: Readonly<{ children: React.ReactNode }>) {
   const allSteps = getAllSteps().map((step) => ({
     id: step.id,
-    requires: step.requires,
     provides: step.provides,
+    requires: step.requires,
   }));
 
   const DEFAULT_CONFIG = {

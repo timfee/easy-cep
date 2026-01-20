@@ -6,12 +6,14 @@ import {
   it,
   setDefaultTimeout,
 } from "bun:test";
+
 import { env } from "@/env";
 import { getBearerTokens } from "@/lib/testing/tokens";
 import { runStep, undoStep } from "@/lib/workflow/engine";
 import { StepId } from "@/lib/workflow/step-ids";
-import type { WorkflowVars } from "@/lib/workflow/variables";
+import  { type WorkflowVars } from "@/lib/workflow/variables";
 import { Var } from "@/lib/workflow/variables";
+
 import {
   cleanupGoogleEnvironment,
   cleanupMicrosoftEnvironment,
@@ -119,14 +121,14 @@ describe("Workflow Live E2E", () => {
 
       expect(["complete", "blocked", "pending"]).toContain(result.state.status);
       assertFixture(step, {
-        status: result.state.status,
         error: result.state.error,
+        status: result.state.status,
       });
       vars = { ...vars, ...result.newVars };
     });
   }
 
-  const undoSteps = [...steps].reverse();
+  const undoSteps = [...steps].toReversed();
   for (const step of undoSteps) {
     it(`Undo: ${step}`, async () => {
       console.log(`\n🔄 Undoing ${step}...`);
@@ -134,8 +136,8 @@ describe("Workflow Live E2E", () => {
       console.log(`   Status: ${result.state.status}`);
       expect(["complete", "blocked"]).toContain(result.state.status);
       assertFixture(`${step}-undo`, {
-        status: result.state.status,
         error: result.state.error,
+        status: result.state.status,
       });
     });
   }

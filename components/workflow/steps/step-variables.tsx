@@ -1,8 +1,9 @@
 import { Database } from "lucide-react";
 import { useCallback, useMemo } from "react";
+
 import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
-import type { StepIdValue } from "@/lib/workflow/step-ids";
+import  { type StepIdValue } from "@/lib/workflow/step-ids";
 import {
   type VariableMetadata,
   type VarName,

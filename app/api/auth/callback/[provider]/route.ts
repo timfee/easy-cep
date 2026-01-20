@@ -1,4 +1,5 @@
 import { type NextRequest, NextResponse } from "next/server";
+
 import { exchangeCodeForToken, setToken, validateOAuthState } from "@/lib/auth";
 
 /**
@@ -9,7 +10,7 @@ export async function GET(
   { params }: { params: Promise<{ provider: string }> }
 ) {
   const { provider } = await params;
-  const searchParams = request.nextUrl.searchParams;
+  const { searchParams } = request.nextUrl;
   const code = searchParams.get("code");
   const state = searchParams.get("state");
   const error = searchParams.get("error");
@@ -38,8 +39,8 @@ export async function GET(
     const response = NextResponse.redirect(`${baseUrl}/`);
     await setToken(response, provider, token);
     return response;
-  } catch (err) {
-    console.error(err);
+  } catch (error) {
+    console.error(error);
     return NextResponse.redirect(`${baseUrl}/?error=token_exchange_failed`);
   }
 }

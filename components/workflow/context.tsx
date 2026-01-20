@@ -9,15 +9,20 @@ import {
   useRef,
   useState,
 } from "react";
+
 import { computeEffectiveStatus } from "@/lib/workflow/core/status";
 import { checkStep, runStep, undoStep } from "@/lib/workflow/engine";
 import { STEP_DETAILS } from "@/lib/workflow/step-details";
-import type { StepIdValue } from "@/lib/workflow/step-ids";
+import  { type StepIdValue } from "@/lib/workflow/step-ids";
 import { StepStatus } from "@/lib/workflow/step-status";
 import { type BasicVarStore, createVarStore } from "@/lib/workflow/var-store";
-import type { VarName, WorkflowVars } from "@/lib/workflow/variables";
+import  { type VarName, type WorkflowVars } from "@/lib/workflow/variables";
 import { WORKFLOW_VARIABLES } from "@/lib/workflow/variables";
-import type { StepDefinition, StepStreamEvent, StepUIState } from "@/types";
+import  {
+  type StepDefinition,
+  type StepStreamEvent,
+  type StepUIState,
+} from "@/types";
 
 interface VarStore extends BasicVarStore {
   set(updates: Partial<WorkflowVars>): void;
@@ -140,8 +145,16 @@ export function WorkflowProvider({
 
   const varStore = useMemo<VarStore>(
     () => ({
+      build(template: string): string {
+        return createVarStore(vars).build(template);
+      },
+
       get<K extends VarName>(key: K): WorkflowVars[K] | undefined {
         return createVarStore(vars).get(key);
+      },
+
+      has(key: VarName): boolean {
+        return vars[key] !== undefined;
       },
 
       require<K extends VarName>(key: K): NonNullable<WorkflowVars[K]> {
@@ -150,14 +163,6 @@ export function WorkflowProvider({
 
       set(updates: Partial<WorkflowVars>) {
         updateVars(updates);
-      },
-
-      has(key: VarName): boolean {
-        return vars[key] !== undefined;
-      },
-
-      build(template: string): string {
-        return createVarStore(vars).build(template);
       },
 
       subscribe(key: VarName, callback: (value: unknown) => void): () => void {
@@ -184,7 +189,7 @@ export function WorkflowProvider({
 
   const applyStepEvent = useCallback(
     (event: StepStreamEvent) => {
-      const stepId = event.stepId;
+      const { stepId } = event;
       if (event.type === "vars") {
         const updates = filterSensitiveVars(event.vars);
         updateVars(updates);
@@ -264,16 +269,16 @@ export function WorkflowProvider({
           return producerName ? `${key} (from "${producerName}")` : key;
         });
         updateStep(id, {
-          status: StepStatus.Blocked,
           error: `Missing required vars: ${messages.join(", ")}`,
+          status: StepStatus.Blocked,
         });
         return;
       }
 
       setExecuting(id);
       updateStep(id, {
-        status: statusRef.current[id]?.status ?? StepStatus.Ready,
         isExecuting: true,
+        status: statusRef.current[id]?.status ?? StepStatus.Ready,
       });
 
       try {
@@ -295,8 +300,8 @@ export function WorkflowProvider({
                 if (event.type === "complete") {
                   resolve();
                 }
-              } catch (parseError) {
-                reject(parseError);
+              } catch (error) {
+                reject(error);
               }
             };
 
@@ -307,19 +312,17 @@ export function WorkflowProvider({
         } finally {
           stream.close();
         }
-      } catch (_error) {
+      } catch {
         try {
           const fallback = await runStep(id, vars);
           updateStep(id, fallback.state);
           updateVars(fallback.newVars);
-        } catch (fallbackError) {
-          console.error("Failed to run step:", fallbackError);
+        } catch (error) {
+          console.error("Failed to run step:", error);
           updateStep(id, {
-            status: StepStatus.Blocked,
             error:
-              fallbackError instanceof Error
-                ? fallbackError.message
-                : "Unknown error occurred",
+              error instanceof Error ? error.message : "Unknown error occurred",
+            status: StepStatus.Blocked,
           });
         }
       } finally {
@@ -337,8 +340,8 @@ export function WorkflowProvider({
       }
 
       updateStep(id, {
-        status: statusRef.current[id]?.status ?? StepStatus.Ready,
         isUndoing: true,
+        status: statusRef.current[id]?.status ?? StepStatus.Ready,
       });
 
       try {
@@ -356,8 +359,8 @@ export function WorkflowProvider({
       } catch (error) {
         console.error("Failed to undo step:", error);
         updateStep(id, {
-          status: StepStatus.Blocked,
           error: error instanceof Error ? error.message : "Failed to undo step",
+          status: StepStatus.Blocked,
         });
       }
     },
@@ -381,8 +384,8 @@ export function WorkflowProvider({
       checkedSteps.current.add(step.id);
       inflightChecks.current.add(step.id);
       updateStep(step.id, {
-        status: statusRef.current[step.id]?.status ?? StepStatus.Ready,
         isChecking: true,
+        status: statusRef.current[step.id]?.status ?? StepStatus.Ready,
       });
 
       try {
@@ -425,7 +428,7 @@ export function WorkflowProvider({
         statusRef.current
       );
       computed[step.id] = {
-        ...(currentState || { status: StepStatus.Ready, logs: [] }),
+        ...(currentState || { logs: [], status: StepStatus.Ready }),
         status: info.status,
         blockReason: info.blockReason,
       };
@@ -434,19 +437,19 @@ export function WorkflowProvider({
   }, [steps, vars]);
 
   const value: WorkflowContextValue = {
-    vars: varStore,
-    varsRaw: vars,
-    status: effectiveStatus,
-    executing,
-    steps,
-    updateVars,
-    updateStep,
     applyStepEvent,
-    executeStep,
-    undoStep: undoStepAction,
     checkSteps,
+    executeStep,
+    executing,
     sessionLoaded,
     setSessionLoaded,
+    status: effectiveStatus,
+    steps,
+    undoStep: undoStepAction,
+    updateStep,
+    updateVars,
+    vars: varStore,
+    varsRaw: vars,
   };
 
   return (

@@ -1,4 +1,5 @@
 import { describe, expect, it } from "bun:test";
+
 import { extractResourceId, ResourceTypes } from "@/lib/workflow/core/http";
 
 describe("Resource ID utilities", () => {

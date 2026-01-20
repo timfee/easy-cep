@@ -11,10 +11,10 @@ export const StepStatus: Record<
   StepStatus
 > = {
   Blocked: "blocked",
-  Ready: "ready",
   Complete: "complete",
-  Stale: "stale",
   Pending: "pending",
+  Ready: "ready",
+  Stale: "stale",
 };
 
 /**

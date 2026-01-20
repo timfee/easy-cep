@@ -1,4 +1,5 @@
 import { createHash } from "node:crypto";
+
 import {
   isConflictError,
   isNotFoundError,
@@ -7,6 +8,7 @@ import {
 import { StepId } from "@/lib/workflow/step-ids";
 import { Var } from "@/lib/workflow/variables";
 import { LogLevel } from "@/types";
+
 import { defineStep } from "../step-builder";
 
 export default defineStep(StepId.CreateServiceUser)
@@ -27,9 +29,8 @@ export default defineStep(StepId.CreateServiceUser)
     async ({
       vars,
       google,
-      markComplete,
-      markIncomplete,
       markCheckFailed,
+      markIncomplete,
       markStale,
       log,
     }) => {
@@ -44,23 +45,28 @@ export default defineStep(StepId.CreateServiceUser)
         };
 
         if (user.id && user.primaryEmail) {
-          log(LogLevel.Info, "Service user already exists", {
-            provisioningUserId: user.id,
-            provisioningUserEmail: user.primaryEmail,
-          });
+          const primaryDomain = vars.require(Var.PrimaryDomain);
           const existingPassword = vars.get(Var.GeneratedPassword);
-          if (existingPassword) {
-            markComplete({
-              provisioningUserId: user.id,
+          const deterministicPassword =
+            existingPassword ??
+            createHash("md5")
+              .update(`${primaryDomain}cep${new Date().getFullYear()}`)
+              .digest("hex")
+              .slice(0, 11);
+
+          log(LogLevel.Info, "Service user already exists", {
+            provisioningUserEmail: user.primaryEmail,
+            provisioningUserId: user.id,
+          });
+
+          markStale(
+            "Using the password from the last run (deterministic by default). Overwrite it if you changed it manually, or undo and re-run to reset.",
+            {
+              generatedPassword: deterministicPassword,
               provisioningUserEmail: user.primaryEmail,
-              generatedPassword: existingPassword,
-            });
-          } else {
-            markStale("Service user password missing", {
               provisioningUserId: user.id,
-              provisioningUserEmail: user.primaryEmail,
-            });
-          }
+            }
+          );
         } else {
           log(LogLevel.Error, "Unexpected user response", { user });
           markCheckFailed("Malformed user object returned");
@@ -103,12 +109,12 @@ export default defineStep(StepId.CreateServiceUser)
           vars.require(Var.ProvisioningUserPrefix);
           const ouPath = vars.require(Var.AutomationOuPath);
           user = (await google.users.create().post({
+            name: { familyName: "Provisioning", givenName: "Microsoft" },
+            orgUnitPath: ouPath,
+            password,
             primaryEmail: vars.build(
               "{provisioningUserPrefix}@{primaryDomain}"
             ),
-            name: { givenName: "Microsoft", familyName: "Provisioning" },
-            password,
-            orgUnitPath: ouPath,
           })) as { id: string; primaryEmail: string };
         } catch (error) {
           if (!isConflictError(error)) {
@@ -124,16 +130,18 @@ export default defineStep(StepId.CreateServiceUser)
           const userId = existingUser.id;
           const userEmail = existingUser.primaryEmail;
           if (!(userId && userEmail)) {
-            throw new Error("User lookup missing identifiers");
+            throw new Error("User lookup missing identifiers", {
+              cause: error,
+            });
           }
           await google.users.update(userId).put({ password });
           user = { id: userId, primaryEmail: userEmail };
         }
 
         output({
-          provisioningUserId: user.id,
-          provisioningUserEmail: user.primaryEmail,
           generatedPassword: password,
+          provisioningUserEmail: user.primaryEmail,
+          provisioningUserId: user.id,
         });
       } catch (error) {
         log(LogLevel.Error, "Failed to create service user", { error });

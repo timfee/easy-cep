@@ -2,6 +2,7 @@
 
 import { Info, Loader2, Trash2 } from "lucide-react";
 import { type ReactNode, useEffect, useState } from "react";
+
 import {
   AlertDialog,
   AlertDialogAction,
@@ -33,8 +34,9 @@ import {
 import { useInfoItems } from "@/hooks/use-info-items";
 import { useMultiSelect } from "@/hooks/use-multi-select";
 import { usePaginatedItems } from "@/hooks/use-paginated-items";
-import type { InfoItem } from "@/lib/info";
-import type { DeleteResult } from "@/lib/workflow/info-actions";
+import  { type InfoItem } from "@/lib/info";
+import  { type DeleteResult } from "@/lib/workflow/info-actions";
+
 import { InfoItemList } from "./info-item-list";
 
 interface InfoButtonProps {
@@ -102,7 +104,7 @@ export function InfoButton({
     setIsDeleting(true);
     setFailedDeletes(new Map());
 
-    const result = await deleteItems(Array.from(selectedIds));
+    const result = await deleteItems([...selectedIds]);
 
     await refetch(new AbortController().signal);
 

@@ -2,6 +2,7 @@
 
 import { ChevronRight, Play, RotateCcw, Terminal, Zap } from "lucide-react";
 import { useEffect, useState } from "react";
+
 import { Button } from "@/components/ui/button";
 import { CardContent } from "@/components/ui/card";
 import {
@@ -24,8 +25,9 @@ import { useStepCardActions } from "@/components/workflow/steps/step-card-contex
 import { cn } from "@/lib/utils";
 import { STEP_DETAILS } from "@/lib/workflow/step-details";
 import { StepId, type StepIdValue } from "@/lib/workflow/step-ids";
-import type { WorkflowVars } from "@/lib/workflow/variables";
-import type { StepDefinition, StepUIState } from "@/types";
+import  { type WorkflowVars } from "@/lib/workflow/variables";
+import  { type StepDefinition, type StepUIState } from "@/types";
+
 import { StepApiCalls } from "./step-api-calls";
 import { StepLogs } from "./step-logs";
 import { StepVariables } from "./step-variables";

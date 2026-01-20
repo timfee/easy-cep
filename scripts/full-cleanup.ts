@@ -7,6 +7,7 @@
  */
 
 import { z } from "zod";
+
 import { ApiEndpoint } from "@/constants";
 
 const GOOGLE_TOKEN = process.env.TEST_GOOGLE_BEARER_TOKEN;
@@ -20,16 +21,14 @@ const DEFAULT_MS_APP_IDS = [
 ];
 const PROVISIONING_EMAIL =
   process.env.PROVISIONING_EMAIL || DEFAULT_PROVISIONING_EMAIL;
-const KEEP_MS_APP_IDS = Array.from(
-  new Set(
+const KEEP_MS_APP_IDS = new Set(new Set(
     [
       ...DEFAULT_MS_APP_IDS,
       process.env.MICROSOFT_OAUTH_CLIENT_ID,
       process.env.TEST_MS_CLIENT_ID,
       ...(process.env.KEEP_MS_APP_IDS || "").split(","),
     ].filter(Boolean)
-  )
-);
+  ));
 const SSO_ASSIGNMENT_ID_PATTERN = /^(?:.*\/)?inboundSsoAssignments\//;
 
 /**
@@ -52,8 +51,8 @@ async function cleanupGoogleAssignments() {
     await fetch(
       `${ApiEndpoint.Google.SsoAssignments}/${encodeURIComponent(id)}`,
       {
-        method: "DELETE",
         headers: { Authorization: `Bearer ${GOOGLE_TOKEN}` },
+        method: "DELETE",
       }
     );
   }
@@ -106,14 +105,14 @@ async function fetchRoleAssignments(roleId: string, pageToken?: string) {
  * Remove role assignments by ID.
  */
 async function removeRoleAssignments(
-  assignments: Array<{ roleAssignmentId: string }>
+  assignments: { roleAssignmentId: string }[]
 ) {
   for (const assignment of assignments) {
     await fetch(
       `${ApiEndpoint.Google.RoleAssignments}/${assignment.roleAssignmentId}`,
       {
-        method: "DELETE",
         headers: { Authorization: `Bearer ${GOOGLE_TOKEN}` },
+        method: "DELETE",
       }
     );
   }
@@ -140,8 +139,8 @@ async function removeUserRoleAssignments(roleId: string) {
       await fetch(
         `${ApiEndpoint.Google.RoleAssignments}/${userAssignment.roleAssignmentId}`,
         {
-          method: "DELETE",
           headers: { Authorization: `Bearer ${GOOGLE_TOKEN}` },
+          method: "DELETE",
         }
       );
     }
@@ -174,8 +173,8 @@ async function cleanupGoogleRoles() {
       } while (assignToken);
       await removeUserRoleAssignments(role.roleId);
       await fetch(`${ApiEndpoint.Google.Roles}/${role.roleId}`, {
-        method: "DELETE",
         headers: { Authorization: `Bearer ${GOOGLE_TOKEN}` },
+        method: "DELETE",
       });
     }
   } while (pageToken);
@@ -190,7 +189,7 @@ async function cleanupMicrosoftApps() {
   console.log("\uD83E\uDDF9 Cleaning up Microsoft applications...");
 
   const AppsSchema = z.object({
-    value: z.array(z.object({ id: z.string(), appId: z.string() })),
+    value: z.array(z.object({ appId: z.string(), id: z.string() })),
   });
 
   const appsRes = await fetch(ApiEndpoint.Microsoft.Applications, {
@@ -206,7 +205,7 @@ async function cleanupMicrosoftApps() {
   });
 
   for (const app of value) {
-    if (KEEP_MS_APP_IDS.includes(app.appId)) {
+    if (KEEP_MS_APP_IDS.has(app.appId)) {
       continue;
     }
 
@@ -225,21 +224,21 @@ async function cleanupMicrosoftApps() {
         await fetch(
           ApiEndpoint.Microsoft.UnassignClaimsPolicy(sp.id, policy.id),
           {
-            method: "DELETE",
             headers: { Authorization: `Bearer ${MS_TOKEN}` },
+            method: "DELETE",
           }
         );
       }
 
       await fetch(`${ApiEndpoint.Microsoft.ServicePrincipals}/${sp.id}`, {
-        method: "DELETE",
         headers: { Authorization: `Bearer ${MS_TOKEN}` },
+        method: "DELETE",
       });
     }
 
     await fetch(`${ApiEndpoint.Microsoft.Applications}/${app.id}`, {
-      method: "DELETE",
       headers: { Authorization: `Bearer ${MS_TOKEN}` },
+      method: "DELETE",
     });
   }
 
@@ -262,8 +261,8 @@ async function cleanupClaimsPolicies() {
 
   for (const policy of value) {
     await fetch(`${ApiEndpoint.Microsoft.ClaimsPolicies}/${policy.id}`, {
-      method: "DELETE",
       headers: { Authorization: `Bearer ${MS_TOKEN}` },
+      method: "DELETE",
     });
   }
 
@@ -282,8 +281,8 @@ export async function fullCleanup() {
 }
 
 if (require.main === module) {
-  fullCleanup().catch((err) => {
-    console.error(err);
+  fullCleanup().catch((error) => {
+    console.error(error);
     process.exitCode = 1;
   });
 }

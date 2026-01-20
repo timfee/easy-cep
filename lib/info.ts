@@ -1,6 +1,7 @@
 "use server";
 
 import { z } from "zod";
+
 import {
   ApiEndpoint,
   PROTECTED_RESOURCES,
@@ -51,10 +52,10 @@ export async function listDomains(): Promise<InfoItem[]> {
   }
   const data = Schema.parse(await res.json());
   return data.domains.map((domain) => ({
+    href: "https://admin.google.com/ac/domains",
     id: domain.domainName,
     label: domain.domainName + (domain.isPrimary ? " (Primary)" : ""),
     subLabel: domain.verified ? "Verified" : "Unverified",
-    href: "https://admin.google.com/ac/domains",
   }));
 }
 
@@ -71,8 +72,8 @@ export async function listOrgUnits(): Promise<InfoItem[]> {
     organizationUnits: z
       .array(
         z.object({
-          orgUnitId: z.string(),
           name: z.string(),
+          orgUnitId: z.string(),
           orgUnitPath: z.string(),
         })
       )
@@ -88,13 +89,13 @@ export async function listOrgUnits(): Promise<InfoItem[]> {
   const data = Schema.parse(await res.json());
   return (
     data.organizationUnits?.map((ou) => ({
-      id: ou.orgUnitId,
-      label: ou.orgUnitPath,
-      href: "https://admin.google.com/ac/orgunits",
       deletable: true,
       deleteEndpoint: `${ApiEndpoint.Google.OrgUnits}/${encodeURIComponent(
         ou.orgUnitPath.replace(LEADING_SLASH_REGEX, "")
       )}`,
+      href: "https://admin.google.com/ac/orgunits",
+      id: ou.orgUnitId,
+      label: ou.orgUnitPath,
     })) ?? []
   );
 }
@@ -110,7 +111,7 @@ export async function listSamlProfiles(): Promise<InfoItem[]> {
 
   const Schema = z.object({
     inboundSamlSsoProfiles: z
-      .array(z.object({ name: z.string(), displayName: z.string().optional() }))
+      .array(z.object({ displayName: z.string().optional(), name: z.string() }))
       .optional(),
   });
 
@@ -122,15 +123,13 @@ export async function listSamlProfiles(): Promise<InfoItem[]> {
   }
   const data = Schema.parse(await res.json());
   return (
-    data.inboundSamlSsoProfiles?.map((profile) => {
-      return {
-        id: profile.name,
-        label: profile.displayName ?? profile.name,
-        href: `https://admin.google.com/ac/security/sso/sso-profiles/${encodeURIComponent(profile.name)}`,
-        deletable: true,
-        deleteEndpoint: ApiEndpoint.Google.SamlProfile(profile.name),
-      };
-    }) ?? []
+    data.inboundSamlSsoProfiles?.map((profile) => ({
+      deletable: true,
+      deleteEndpoint: ApiEndpoint.Google.SamlProfile(profile.name),
+      href: `https://admin.google.com/ac/security/sso/sso-profiles/${encodeURIComponent(profile.name)}`,
+      id: profile.name,
+      label: profile.displayName ?? profile.name,
+    })) ?? []
   );
 }
 
@@ -148,9 +147,9 @@ export async function listSsoAssignments(): Promise<InfoItem[]> {
       .array(
         z.object({
           name: z.string(),
+          ssoMode: z.string().optional(),
           targetGroup: z.string().optional(),
           targetOrgUnit: z.string().optional(),
-          ssoMode: z.string().optional(),
         })
       )
       .optional(),
@@ -170,15 +169,15 @@ export async function listSsoAssignments(): Promise<InfoItem[]> {
         ResourceTypes.InboundSsoAssignments
       );
       return {
-        id,
-        label:
-          assignment.targetGroup || assignment.targetOrgUnit || assignment.name,
-        subLabel: assignment.ssoMode,
-        href: "https://admin.google.com/ac/security/sso",
         deletable: true,
         deleteEndpoint: `${ApiEndpoint.Google.SsoAssignments}/${encodeURIComponent(
           id
         )}`,
+        href: "https://admin.google.com/ac/security/sso",
+        id,
+        label:
+          assignment.targetGroup || assignment.targetOrgUnit || assignment.name,
+        subLabel: assignment.ssoMode,
       };
     }) ?? []
   );
@@ -194,7 +193,7 @@ export async function listProvisioningJobs(): Promise<InfoItem[]> {
   }
 
   const SpSchema = z.object({
-    value: z.array(z.object({ id: z.string(), appId: z.string() })),
+    value: z.array(z.object({ appId: z.string(), id: z.string() })),
   });
   const spFilter = encodeURIComponent(
     "displayName eq 'Google Workspace Provisioning'"
@@ -216,8 +215,8 @@ export async function listProvisioningJobs(): Promise<InfoItem[]> {
     value: z.array(
       z.object({
         id: z.string(),
-        templateId: z.string().optional(),
         status: z.object({ code: z.string().optional() }).optional(),
+        templateId: z.string().optional(),
       })
     ),
   });
@@ -230,12 +229,12 @@ export async function listProvisioningJobs(): Promise<InfoItem[]> {
   }
   const data = JobsSchema.parse(await res.json());
   return data.value.map((job) => ({
+    deletable: true,
+    deleteEndpoint: `${ApiEndpoint.Microsoft.SyncJobs(sp.id)}/${job.id}`,
+    href: `https://portal.azure.com/#view/Microsoft_AAD_Connect_Provisioning/ProvisioningMenuBlade/~/Overview/objectId/${sp.id}/appId/${sp.appId}`,
     id: job.id,
     label: job.templateId ?? job.id,
     subLabel: job.status?.code,
-    href: `https://portal.azure.com/#view/Microsoft_AAD_Connect_Provisioning/ProvisioningMenuBlade/~/Overview/objectId/${sp.id}/appId/${sp.appId}`,
-    deletable: true,
-    deleteEndpoint: `${ApiEndpoint.Microsoft.SyncJobs(sp.id)}/${job.id}`,
   }));
 }
 
@@ -250,7 +249,7 @@ export async function listClaimsPolicies(): Promise<InfoItem[]> {
 
   const Schema = z.object({
     value: z.array(
-      z.object({ id: z.string(), displayName: z.string().optional() })
+      z.object({ displayName: z.string().optional(), id: z.string() })
     ),
   });
 
@@ -262,11 +261,11 @@ export async function listClaimsPolicies(): Promise<InfoItem[]> {
   }
   const data = Schema.parse(await res.json());
   return data.value.map((policy) => ({
-    id: policy.id,
-    label: policy.displayName ?? policy.id,
-    href: "https://portal.azure.com/#view/Microsoft_AAD_IAM/ActiveDirectoryMenuBlade/~/Overview",
     deletable: true,
     deleteEndpoint: `${ApiEndpoint.Microsoft.ClaimsPolicies}/${policy.id}`,
+    href: "https://portal.azure.com/#view/Microsoft_AAD_IAM/ActiveDirectoryMenuBlade/~/Overview",
+    id: policy.id,
+    label: policy.displayName ?? policy.id,
   }));
 }
 
@@ -281,7 +280,7 @@ export async function listEnterpriseApps(): Promise<InfoItem[]> {
 
   const Schema = z.object({
     value: z.array(
-      z.object({ id: z.string(), appId: z.string(), displayName: z.string() })
+      z.object({ appId: z.string(), displayName: z.string(), id: z.string() })
     ),
   });
 
@@ -311,13 +310,13 @@ export async function listEnterpriseApps(): Promise<InfoItem[]> {
       const spId = spData.value[0]?.id;
 
       items.push({
-        id: application.id,
-        label: application.displayName,
+        deletable: !PROTECTED_RESOURCES.microsoftAppIds.has(application.appId),
+        deleteEndpoint: `${ApiEndpoint.Microsoft.Applications}/${application.id}`,
         href: spId
           ? `https://portal.azure.com/#view/Microsoft_AAD_IAM/ManagedAppMenuBlade/~/SignOn/objectId/${spId}/appId/${application.appId}/preferredSingleSignOnMode~/null/servicePrincipalType/Application/fromNav/`
           : "https://portal.azure.com/#view/Microsoft_AAD_IAM/ActiveDirectoryMenuBlade/~/Overview",
-        deletable: !PROTECTED_RESOURCES.microsoftAppIds.has(application.appId),
-        deleteEndpoint: `${ApiEndpoint.Microsoft.Applications}/${application.id}`,
+        id: application.id,
+        label: application.displayName,
       });
     }
   }
@@ -349,11 +348,11 @@ export async function listUsers(): Promise<InfoItem[]> {
   const data = Schema.parse(await res.json());
   return (
     data.users?.map((user) => ({
-      id: user.id,
-      label: user.primaryEmail,
       deletable: true,
       deleteEndpoint: `${ApiEndpoint.Google.Users}/${user.id}`,
       href: "https://admin.google.com/ac/users",
+      id: user.id,
+      label: user.primaryEmail,
     })) ?? []
   );
 }
@@ -382,11 +381,11 @@ export async function listAdminRoles(): Promise<InfoItem[]> {
   const data = Schema.parse(await res.json());
   return (
     data.items?.map((role) => ({
-      id: role.roleId,
-      label: role.roleName,
       deletable: !role.roleId.startsWith("_"),
       deleteEndpoint: `${ApiEndpoint.Google.Roles}/${role.roleId}`,
       href: "https://admin.google.com/ac/roles",
+      id: role.roleId,
+      label: role.roleName,
     })) ?? []
   );
 }

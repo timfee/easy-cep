@@ -2,14 +2,15 @@ import { afterEach, beforeAll, describe, expect, mock, test } from "bun:test";
 import fs from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
-import type { Token } from "@/lib/auth";
+
+import  { type Token } from "@/lib/auth";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
 const token: Token = {
   accessToken: "tok",
-  refreshToken: "",
   expiresAt: 0,
+  refreshToken: "",
   scope: [],
 };
 
@@ -26,12 +27,12 @@ let listEnterpriseApps: typeof import("@/lib/info").listEnterpriseApps;
 
 beforeAll(async () => {
   const mod = await import("@/lib/info");
-  listOrgUnits = mod.listOrgUnits;
-  listSamlProfiles = mod.listSamlProfiles;
-  listSsoAssignments = mod.listSsoAssignments;
-  listProvisioningJobs = mod.listProvisioningJobs;
-  listClaimsPolicies = mod.listClaimsPolicies;
-  listEnterpriseApps = mod.listEnterpriseApps;
+  ({ listOrgUnits } = mod);
+  ({ listSamlProfiles } = mod);
+  ({ listSsoAssignments } = mod);
+  ({ listProvisioningJobs } = mod);
+  ({ listClaimsPolicies } = mod);
+  ({ listEnterpriseApps } = mod);
 });
 
 function load(name: string) {
@@ -60,20 +61,20 @@ describe("info server actions", () => {
   test("listOrgUnits", async () => {
     const fetchMock = mock(() =>
       Promise.resolve({
-        ok: true,
         json: async () => load("google-org-units.json"),
+        ok: true,
       })
     );
     setFetchMock(fetchMock);
     const items = await listOrgUnits();
     expect(items).toEqual([
       {
-        id: "id:123",
-        label: "/Automation",
-        href: "https://admin.google.com/ac/orgunits",
         deletable: true,
         deleteEndpoint:
           "https://admin.googleapis.com/admin/directory/v1/customer/my_customer/orgunits/Automation",
+        href: "https://admin.google.com/ac/orgunits",
+        id: "id:123",
+        label: "/Automation",
       },
     ]);
   });
@@ -81,20 +82,20 @@ describe("info server actions", () => {
   test("listSamlProfiles", async () => {
     const fetchMock = mock(() =>
       Promise.resolve({
-        ok: true,
         json: async () => load("google-saml-profiles.json"),
+        ok: true,
       })
     );
     setFetchMock(fetchMock);
     const items = await listSamlProfiles();
     expect(items).toEqual([
       {
-        id: "samlProfiles/abc123",
-        label: "Workspace SAML",
-        href: "https://admin.google.com/ac/security/sso/sso-profiles/samlProfiles%2Fabc123",
         deletable: true,
         deleteEndpoint:
           "https://cloudidentity.googleapis.com/v1/samlProfiles/abc123",
+        href: "https://admin.google.com/ac/security/sso/sso-profiles/samlProfiles%2Fabc123",
+        id: "samlProfiles/abc123",
+        label: "Workspace SAML",
       },
     ]);
   });
@@ -102,30 +103,30 @@ describe("info server actions", () => {
   test("listSsoAssignments", async () => {
     const fetchMock = mock(() =>
       Promise.resolve({
-        ok: true,
         json: async () => load("google-sso-assignments.json"),
+        ok: true,
       })
     );
     setFetchMock(fetchMock);
     const items = await listSsoAssignments();
     expect(items).toEqual([
       {
-        id: "root",
-        label: "orgUnits/03ph8a2z23yjui6",
-        subLabel: "SAML_SSO",
-        href: "https://admin.google.com/ac/security/sso",
         deletable: true,
         deleteEndpoint:
           "https://cloudidentity.googleapis.com/v1/inboundSsoAssignments/root",
+        href: "https://admin.google.com/ac/security/sso",
+        id: "root",
+        label: "orgUnits/03ph8a2z23yjui6",
+        subLabel: "SAML_SSO",
       },
       {
-        id: "automation",
-        label: "orgUnits/03ph8a2z1s3ovsg",
-        subLabel: "SSO_OFF",
-        href: "https://admin.google.com/ac/security/sso",
         deletable: true,
         deleteEndpoint:
           "https://cloudidentity.googleapis.com/v1/inboundSsoAssignments/automation",
+        href: "https://admin.google.com/ac/security/sso",
+        id: "automation",
+        label: "orgUnits/03ph8a2z1s3ovsg",
+        subLabel: "SSO_OFF",
       },
     ]);
   });
@@ -133,21 +134,21 @@ describe("info server actions", () => {
   test("listSsoAssignments handles prefixed names", async () => {
     const fetchMock = mock(() =>
       Promise.resolve({
-        ok: true,
         json: async () => load("google-sso-assignments-prefixed.json"),
+        ok: true,
       })
     );
     setFetchMock(fetchMock);
     const items = await listSsoAssignments();
     expect(items).toEqual([
       {
-        id: "abc123",
-        label: "orgUnits/03ph8a2z23yjui6",
-        subLabel: "SSO_OFF",
-        href: "https://admin.google.com/ac/security/sso",
         deletable: true,
         deleteEndpoint:
           "https://cloudidentity.googleapis.com/v1/inboundSsoAssignments/abc123",
+        href: "https://admin.google.com/ac/security/sso",
+        id: "abc123",
+        label: "orgUnits/03ph8a2z23yjui6",
+        subLabel: "SSO_OFF",
       },
     ]);
   });
@@ -155,24 +156,24 @@ describe("info server actions", () => {
   test("listProvisioningJobs", async () => {
     const fetchMock = mock()
       .mockResolvedValueOnce({
+        json: async () => ({ value: [{ appId: "abcd1234", id: "sp1" }] }),
         ok: true,
-        json: async () => ({ value: [{ id: "sp1", appId: "abcd1234" }] }),
       })
       .mockResolvedValueOnce({
-        ok: true,
         json: async () => load("ms-sync-jobs.json"),
+        ok: true,
       });
     setFetchMock(fetchMock);
     const items = await listProvisioningJobs();
     expect(items).toEqual([
       {
-        id: "Initial",
-        label: "gsuite",
-        subLabel: "Active",
-        href: "https://portal.azure.com/#view/Microsoft_AAD_Connect_Provisioning/ProvisioningMenuBlade/~/Overview/objectId/sp1/appId/abcd1234",
         deletable: true,
         deleteEndpoint:
           "https://graph.microsoft.com/v1.0/servicePrincipals/sp1/synchronization/jobs/Initial",
+        href: "https://portal.azure.com/#view/Microsoft_AAD_Connect_Provisioning/ProvisioningMenuBlade/~/Overview/objectId/sp1/appId/abcd1234",
+        id: "Initial",
+        label: "gsuite",
+        subLabel: "Active",
       },
     ]);
   });
@@ -180,20 +181,20 @@ describe("info server actions", () => {
   test("listClaimsPolicies", async () => {
     const fetchMock = mock(() =>
       Promise.resolve({
-        ok: true,
         json: async () => load("ms-claims-policies.json"),
+        ok: true,
       })
     );
     setFetchMock(fetchMock);
     const items = await listClaimsPolicies();
     expect(items).toEqual([
       {
-        id: "policy123",
-        label: "Google Workspace Claims",
-        href: "https://portal.azure.com/#view/Microsoft_AAD_IAM/ActiveDirectoryMenuBlade/~/Overview",
         deletable: true,
         deleteEndpoint:
           "https://graph.microsoft.com/beta/policies/claimsMappingPolicies/policy123",
+        href: "https://portal.azure.com/#view/Microsoft_AAD_IAM/ActiveDirectoryMenuBlade/~/Overview",
+        id: "policy123",
+        label: "Google Workspace Claims",
       },
     ]);
   });
@@ -201,19 +202,19 @@ describe("info server actions", () => {
   test("listEnterpriseApps", async () => {
     const fetchMock = mock(() =>
       Promise.resolve({
-        ok: true,
         json: async () => load("ms-applications.json"),
+        ok: true,
       })
     );
     setFetchMock(fetchMock);
     const items = await listEnterpriseApps();
     expect(items).toEqual([
       {
-        id: "app1",
-        label: "Google Workspace Provisioning",
-        href: "https://portal.azure.com/#view/Microsoft_AAD_IAM/ManagedAppMenuBlade/~/SignOn/objectId/app1/appId/abcd1234/preferredSingleSignOnMode~/null/servicePrincipalType/Application/fromNav/",
         deletable: true,
         deleteEndpoint: "https://graph.microsoft.com/beta/applications/app1",
+        href: "https://portal.azure.com/#view/Microsoft_AAD_IAM/ManagedAppMenuBlade/~/SignOn/objectId/app1/appId/abcd1234/preferredSingleSignOnMode~/null/servicePrincipalType/Application/fromNav/",
+        id: "app1",
+        label: "Google Workspace Provisioning",
       },
     ]);
   });

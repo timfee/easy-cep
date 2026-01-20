@@ -54,15 +54,15 @@ export function useMultiSelect<T extends { id: string }>(_items: T[]) {
   }, []);
 
   return {
-    selectedIds,
-    selectedCount: selectedIds.size,
-    isSelected: (id: string) => selectedIds.has(id),
-    selectAll,
-    deselectAll,
-    toggleAll,
-    select,
     deselect,
-    toggle,
+    deselectAll,
+    isSelected: (id: string) => selectedIds.has(id),
     reset,
+    select,
+    selectAll,
+    selectedCount: selectedIds.size,
+    selectedIds,
+    toggle,
+    toggleAll,
   };
 }

@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useState } from "react";
-import type { InfoItem } from "@/lib/info";
+
+import  { type InfoItem } from "@/lib/info";
 
 /**
  * Fetch and refresh info items when a dialog is open.
@@ -10,7 +11,7 @@ export function useInfoItems(
 ) {
   const [loading, setLoading] = useState(false);
   const [items, setItems] = useState<InfoItem[]>([]);
-  const [error, setError] = useState<string | undefined>(undefined);
+  const [error, setError] = useState<string | undefined>();
 
   const load = useCallback(
     async (signal: AbortSignal) => {
@@ -21,9 +22,9 @@ export function useInfoItems(
         if (!signal.aborted) {
           setItems(res);
         }
-      } catch (err) {
+      } catch (error) {
         if (!signal.aborted) {
-          setError(err instanceof Error ? err.message : String(err));
+          setError(error instanceof Error ? error.message : String(error));
         }
       } finally {
         if (!signal.aborted) {
@@ -45,5 +46,5 @@ export function useInfoItems(
     return () => controller.abort();
   }, [open, load]);
 
-  return { items, loading, error, refetch: load };
+  return { error, items, loading, refetch: load };
 }

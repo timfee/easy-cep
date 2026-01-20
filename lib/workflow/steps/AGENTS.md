@@ -73,13 +73,11 @@ const email = vars.build("{prefix}@{domain}");
 await google.users.get(email).get();
 
 // With POST body
-await google.users
-  .create()
-  .post({
-    primaryEmail: email,
-    name: { givenName: "Test", familyName: "User" },
-    password: "secret"
-  });
+await google.users.create().post({
+  primaryEmail: email,
+  name: { givenName: "Test", familyName: "User" },
+  password: "secret",
+});
 ```
 
 Example:

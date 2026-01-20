@@ -1,5 +1,7 @@
-import type { z } from "zod";
+import  { type z } from "zod";
+
 import { HttpMethod, HttpStatus, LogLevel, type StepLogEntry } from "@/types";
+
 import {
   ConflictError,
   HttpError,
@@ -58,14 +60,18 @@ async function handleResponseError(res: Response): Promise<never> {
   }
 
   switch (res.status) {
-    case HttpStatus.NotFound:
+    case HttpStatus.NotFound: {
       throw new NotFoundError(detail, errorBody);
-    case HttpStatus.Conflict:
+    }
+    case HttpStatus.Conflict: {
       throw new ConflictError(detail, errorBody);
-    case HttpStatus.PreconditionFailed:
+    }
+    case HttpStatus.PreconditionFailed: {
       throw new PreconditionFailedError(detail, errorBody);
-    default:
+    }
+    default: {
       throw new HttpError(res.status, detail, errorBody);
+    }
   }
 }
 
@@ -81,7 +87,7 @@ async function executeSingleFetch<T>(
   expectNotFound: boolean
 ): Promise<T> {
   const method = reqInit.method ?? HttpMethod.GET;
-  const body = reqInit.body;
+  const { body } = reqInit;
   let parsedBody: unknown;
   if (typeof body === "string") {
     try {
@@ -94,20 +100,20 @@ async function executeSingleFetch<T>(
   }
 
   context.addLog({
-    timestamp: Date.now(),
-    message: "Request",
-    method,
-    url,
     data: {
-      url,
-      method,
+      body: parsedBody,
       headers: {
         ...reqInit.headers,
-        Authorization: `Bearer ${token.substring(0, 10)}...`,
+        Authorization: `Bearer ${token.slice(0, 10)}...`,
       },
-      body: parsedBody,
+      method,
+      url,
     },
     level: LogLevel.Debug,
+    message: "Request",
+    method,
+    timestamp: Date.now(),
+    url,
   });
 
   let res: Response;
@@ -115,7 +121,7 @@ async function executeSingleFetch<T>(
     res = await fetch(url, {
       ...reqInit,
       headers: {
-        ...(reqInit.headers ?? {}),
+        ...reqInit.headers,
         Authorization: `Bearer ${token}`,
         "Content-Type": "application/json",
       },
@@ -123,12 +129,12 @@ async function executeSingleFetch<T>(
   } catch (error) {
     const message = error instanceof Error ? error.message : String(error);
     context.addLog({
-      timestamp: Date.now(),
-      message: "Network error",
-      method,
-      url,
       data: message,
       level: LogLevel.Error,
+      message: "Network error",
+      method,
+      timestamp: Date.now(),
+      url,
     });
     throw new HttpError(0, message);
   }
@@ -150,13 +156,13 @@ async function executeSingleFetch<T>(
   const isExpected404 = is404 && expectNotFound;
 
   context.addLog({
-    timestamp: Date.now(),
+    data: logData,
+    level: LogLevel.Debug,
     message: "Response",
     method,
     status: res.status,
+    timestamp: Date.now(),
     url,
-    data: logData,
-    level: LogLevel.Debug,
   });
 
   if (!(res.ok || isExpected404)) {
@@ -189,7 +195,7 @@ const readPageState = (page: Record<string, unknown>, key: string) => {
   const nextToken = getString(page.nextPageToken);
   const nextLink =
     getString(page.nextLink) ?? getString(page["@odata.nextLink"]);
-  return { items, nextToken, nextLink };
+  return { items, nextLink, nextToken };
 };
 
 const toNextPageUrl = (
@@ -212,7 +218,7 @@ const toNextPageUrl = (
       : new URL(nextLink, baseUrl).toString();
   }
 
-  return undefined;
+  return;
 };
 
 /**

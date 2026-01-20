@@ -1,11 +1,12 @@
+import { cookies } from "next/headers";
+import  { type NextResponse } from "next/server";
 import {
   createCipheriv,
   createDecipheriv,
   createHash,
   randomBytes,
 } from "node:crypto";
-import { cookies } from "next/headers";
-import type { NextResponse } from "next/server";
+
 import {
   ApiEndpoint,
   OAUTH_STATE_COOKIE_NAME,
@@ -96,11 +97,10 @@ interface OAuthConfig {
  * OAuth configuration for Google providers.
  */
 const googleOAuthConfig: OAuthConfig = {
+  authorizationUrl: ApiEndpoint.GoogleAuth.Authorize,
   clientId: env.GOOGLE_OAUTH_CLIENT_ID,
   clientSecret: env.GOOGLE_OAUTH_CLIENT_SECRET,
   redirectUri: "/api/auth/callback/google",
-  authorizationUrl: ApiEndpoint.GoogleAuth.Authorize,
-  tokenUrl: ApiEndpoint.GoogleAuth.Token,
   scopes: [
     "openid",
     "email",
@@ -113,21 +113,19 @@ const googleOAuthConfig: OAuthConfig = {
     "https://www.googleapis.com/auth/siteverification",
     "https://www.googleapis.com/auth/admin.directory.rolemanagement",
   ],
+  tokenUrl: ApiEndpoint.GoogleAuth.Token,
 };
 
 /**
  * OAuth configuration for Microsoft providers.
  */
 const microsoftOAuthConfig: OAuthConfig = {
-  clientId: env.MICROSOFT_OAUTH_CLIENT_ID,
-  clientSecret: env.MICROSOFT_OAUTH_CLIENT_SECRET,
-  redirectUri: "/api/auth/callback/microsoft",
   authorizationUrl: ApiEndpoint.MicrosoftAuth.Authorize(
     env.MICROSOFT_TENANT ?? "organizations"
   ),
-  tokenUrl: ApiEndpoint.MicrosoftAuth.Token(
-    env.MICROSOFT_TENANT ?? "organizations"
-  ),
+  clientId: env.MICROSOFT_OAUTH_CLIENT_ID,
+  clientSecret: env.MICROSOFT_OAUTH_CLIENT_SECRET,
+  redirectUri: "/api/auth/callback/microsoft",
   scopes: [
     "openid",
     "profile",
@@ -140,6 +138,9 @@ const microsoftOAuthConfig: OAuthConfig = {
     "Policy.ReadWrite.ApplicationConfiguration",
     "offline_access",
   ],
+  tokenUrl: ApiEndpoint.MicrosoftAuth.Token(
+    env.MICROSOFT_TENANT ?? "organizations"
+  ),
 };
 
 /**
@@ -186,7 +187,7 @@ function parseToken(value: unknown): Token | null {
     return null;
   }
 
-  return { accessToken, refreshToken, expiresAt, scope };
+  return { accessToken, expiresAt, refreshToken, scope };
 }
 
 /**
@@ -236,14 +237,14 @@ export async function exchangeCodeForToken(
     client_id: config.clientId,
     client_secret: config.clientSecret,
     code,
-    redirect_uri: redirectUri,
     grant_type: "authorization_code",
+    redirect_uri: redirectUri,
   });
 
   const res = await fetch(config.tokenUrl, {
-    method: "POST",
-    headers: { "Content-Type": "application/x-www-form-urlencoded" },
     body: params.toString(),
+    headers: { "Content-Type": "application/x-www-form-urlencoded" },
+    method: "POST",
   });
 
   if (!res.ok) {
@@ -254,8 +255,8 @@ export async function exchangeCodeForToken(
   const data = await res.json();
   return {
     accessToken: data.access_token,
-    refreshToken: data.refresh_token,
     expiresAt: Date.now() + data.expires_in * TIME.MS_IN_SECOND,
+    refreshToken: data.refresh_token,
     scope: data.scope?.split(" ") || config.scopes,
   };
 }
@@ -303,14 +304,14 @@ export async function refreshTokenIfNeeded(
     const params = new URLSearchParams({
       client_id: config.clientId,
       client_secret: config.clientSecret,
-      refresh_token: token.refreshToken,
       grant_type: "refresh_token",
+      refresh_token: token.refreshToken,
     });
 
     const res = await fetch(config.tokenUrl, {
-      method: "POST",
-      headers: { "Content-Type": "application/x-www-form-urlencoded" },
       body: params.toString(),
+      headers: { "Content-Type": "application/x-www-form-urlencoded" },
+      method: "POST",
     });
 
     if (!res.ok) {
@@ -320,8 +321,8 @@ export async function refreshTokenIfNeeded(
     const data = await res.json();
     const newToken: Token = {
       accessToken: data.access_token,
-      refreshToken: data.refresh_token || token.refreshToken,
       expiresAt: Date.now() + data.expires_in * TIME.MS_IN_SECOND,
+      refreshToken: data.refresh_token || token.refreshToken,
       scope: data.scope?.split(" ") || token.scope,
     };
 
@@ -348,9 +349,9 @@ export async function setToken(
   await clearChunkedCookie(response, cookieName);
   await setChunkedCookie(response, cookieName, encrypted, {
     httpOnly: true,
-    secure: env.NODE_ENV === "production",
-    path: "/",
     maxAge: WORKFLOW_CONSTANTS.TOKEN_COOKIE_MAX_AGE,
+    path: "/",
+    secure: env.NODE_ENV === "production",
   });
 }
 
@@ -407,7 +408,7 @@ export async function getChunkedCookie(
     if (!first) {
       return undefined;
     }
-    let value = first.value;
+    let { value } = first;
     for (let i = 1; ; i++) {
       const part = store.get(`${name}-${i}`);
       if (!part) {

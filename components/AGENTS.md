@@ -18,4 +18,3 @@
 - Use Next.js `fetch` with `{ cache: "no-store" }` for token-based requests or `revalidate` options for cached data.
 - When consuming workflow SSE, use `EventSource` and apply streamed `StepStreamEvent` updates incrementally.
 - Filter sensitive vars before storing SSE `vars`/`complete` updates in client state.
-
