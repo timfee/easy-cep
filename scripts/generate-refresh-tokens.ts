@@ -2,6 +2,7 @@
 import { once } from "node:events";
 import { readFile, writeFile } from "node:fs/promises";
 import { createServer } from "node:http";
+import type { ServerResponse } from "node:http";
 
 import type { Provider } from "@/constants";
 
@@ -47,7 +48,7 @@ const getProviderFromPath = (pathname: string) => {
 };
 
 const sendHtml = (
-  res: import("node:http").ServerResponse,
+  res: ServerResponse,
   status: number,
   body: string
 ) => {
@@ -56,7 +57,7 @@ const sendHtml = (
 };
 
 const sendNotFound = (
-  res: import("node:http").ServerResponse,
+  res: ServerResponse,
   pathname: string
 ) => {
   res.writeHead(404, { "Content-Type": "text/plain" });
@@ -78,7 +79,7 @@ const requireRefreshToken = (
 const handleCallback = async (
   provider: Provider,
   code: string,
-  res: import("node:http").ServerResponse
+  res: ServerResponse
 ) => {
   const token = await exchangeCodeForToken(provider, code, HOST);
   const refreshToken = requireRefreshToken(token, provider);

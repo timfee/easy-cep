@@ -46,6 +46,7 @@ type PaginationLinkProps = { isActive?: boolean } & Pick<
   React.ComponentProps<"a">;
 
 function PaginationLink({
+  children,
   className,
   isActive,
   size = "icon",
@@ -61,7 +62,9 @@ function PaginationLink({
       data-active={isActive}
       data-slot="pagination-link"
       {...props}
-    />
+    >
+      {children}
+    </a>
   );
 }
 
