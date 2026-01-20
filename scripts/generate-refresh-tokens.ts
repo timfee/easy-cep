@@ -163,7 +163,9 @@ const server = createServer(async (req, res) => {
     console.log(`[${provider}] Code received. Exchanging for token...`);
     try {
       const refreshToken = await handleCallback(provider, code, res);
-      tokenEmitter.emit(provider, refreshToken);
+      tokenTarget.dispatchEvent(
+        new CustomEvent<string>(provider, { detail: refreshToken })
+      );
     } catch (error) {
       console.error(`[${provider}] Token exchange failed:`, error);
       sendHtml(
@@ -186,7 +188,8 @@ async function main() {
 
   console.log("🚀 Starting Refresh Token Generator");
 
-  await new Promise<void>((resolve) => server.listen(PORT, resolve));
+  server.listen(PORT);
+  await once(server, "listening");
   console.log(`📡 Listening on ${HOST}`);
 
   try {
@@ -199,7 +202,8 @@ async function main() {
     console.log(`\nClick here:\n${googleUrl}\n`);
     console.log("Waiting for Google callback...");
 
-    const googleRefreshToken = await googleAuthPromise;
+    const [googleEvent] = await once(tokenTarget, PROVIDERS.GOOGLE);
+    const googleRefreshToken = (googleEvent as CustomEvent<string>).detail;
     await updateEnvFile("TEST_GOOGLE_REFRESH_TOKEN", googleRefreshToken);
 
     const msState = Math.random().toString(36).slice(7);
@@ -211,7 +215,8 @@ async function main() {
     console.log(`\nClick here:\n${msUrl}\n`);
     console.log("Waiting for Microsoft callback...");
 
-    const msRefreshToken = await microsoftAuthPromise;
+    const [msEvent] = await once(tokenTarget, PROVIDERS.MICROSOFT);
+    const msRefreshToken = (msEvent as CustomEvent<string>).detail;
     await updateEnvFile("TEST_MS_REFRESH_TOKEN", msRefreshToken);
 
     console.log("\n✨ All done. Exiting.");
@@ -224,4 +229,13 @@ async function main() {
   }
 }
 
-main();
+if (typeof require !== "undefined" && require.main === module) {
+  (async () => {
+    try {
+      await main();
+    } catch (error) {
+      console.error(error);
+      process.exitCode = 1;
+    }
+  })();
+}
