@@ -1,0 +1,1 @@
+I need to investigate a solid solution for authentication (end-user). Especially with Google, we sometimes get into a state where the token no longer can be used for AdminSDK functions and cause 401s.

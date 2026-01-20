@@ -143,11 +143,13 @@ export function WorkflowProvider({
         return updated;
       });
 
+      /* eslint-disable promise/prefer-await-to-callbacks */
       if (listenerInvocations.length > 0) {
-        await Promise.all(
-          listenerInvocations.map(({ cb, value }) => cb(value))
-        );
+        for (const { cb, value } of listenerInvocations) {
+          await cb(value);
+        }
       }
+      /* eslint-enable promise/prefer-await-to-callbacks */
     },
     [steps]
   );
@@ -174,6 +176,7 @@ export function WorkflowProvider({
         updateVars(updates);
       },
 
+      /* eslint-disable promise/prefer-await-to-callbacks */
       subscribe(key: VarName, callback: (value: unknown) => void): () => void {
         if (!listeners.current.has(key)) {
           listeners.current.set(key, new Set());
@@ -184,6 +187,7 @@ export function WorkflowProvider({
           listeners.current.get(key)?.delete(callback);
         };
       },
+      /* eslint-enable promise/prefer-await-to-callbacks */
     }),
     [vars, updateVars]
   );
@@ -262,21 +266,23 @@ export function WorkflowProvider({
         setStatus((prev) => {
           const current = prev[stepId] ?? { status: StepStatus.Ready };
           const next = { ...current, ...event.state };
-          
+
           // Merge logs if they exist in state update
           if (event.state.logs) {
             const existingLogs = current.logs ?? [];
-            const newLogs = event.state.logs.filter(newLog => 
-              !existingLogs.some(existing => 
-                existing.timestamp === newLog.timestamp && 
-                existing.message === newLog.message
-              )
+            const newLogs = event.state.logs.filter(
+              (newLog) =>
+                !existingLogs.some(
+                  (existing) =>
+                    existing.timestamp === newLog.timestamp &&
+                    existing.message === newLog.message
+                )
             );
             if (newLogs.length > 0) {
               next.logs = [...existingLogs, ...newLogs];
             }
           }
-          
+
           statusRef.current = { ...statusRef.current, [stepId]: next };
           return { ...prev, [stepId]: next };
         });
@@ -315,16 +321,19 @@ export function WorkflowProvider({
         status: statusRef.current[id]?.status ?? StepStatus.Ready,
       });
 
+      let handleMessage: ((message: MessageEvent) => void) | null = null;
+      let handleError: ((event: Event) => void) | null = null;
       try {
-        const stream = new EventSource(
+        const currentStream = new EventSource(
           `/api/workflow/steps/${id}/stream?vars=${encodeURIComponent(
             JSON.stringify(filterSensitiveVars(vars))
           )}`
         );
 
         try {
+          /* eslint-disable promise/avoid-new, unicorn/prefer-add-event-listener */
           await new Promise<void>((resolve, reject) => {
-            stream.onmessage = (message) => {
+            handleMessage = (message: MessageEvent) => {
               if (!message.data) {
                 return;
               }
@@ -339,12 +348,22 @@ export function WorkflowProvider({
               }
             };
 
-            stream.onerror = (err) => {
+            handleError = (err: Event) => {
               reject(err);
             };
+
+            currentStream.addEventListener("message", handleMessage);
+            currentStream.addEventListener("error", handleError);
           });
+          /* eslint-enable promise/avoid-new, unicorn/prefer-add-event-listener */
         } finally {
-          stream.close();
+          if (handleMessage) {
+            currentStream.removeEventListener("message", handleMessage);
+          }
+          if (handleError) {
+            currentStream.removeEventListener("error", handleError);
+          }
+          currentStream.close();
         }
       } catch {
         try {
@@ -405,16 +424,28 @@ export function WorkflowProvider({
   );
 
   const checkSteps = useCallback(async () => {
-    for (const step of steps) {
-      const current = status[step.id];
-      if (
-        checkedSteps.current.has(step.id) ||
-        inflightChecks.current.has(step.id) ||
-        (current?.status === StepStatus.Complete && current.logs?.length)
-      ) {
-        continue;
+    const shouldSkipStep = (
+      step: StepDefinition,
+      current?: StepUIState
+    ): boolean => {
+      if (checkedSteps.current.has(step.id)) {
+        return true;
+      }
+      if (inflightChecks.current.has(step.id)) {
+        return true;
+      }
+      if (current?.status === StepStatus.Complete && current.logs?.length) {
+        return true;
       }
       if (step.requires.some((varName) => !vars[varName])) {
+        return true;
+      }
+      return false;
+    };
+
+    for (const step of steps) {
+      const current = status[step.id];
+      if (shouldSkipStep(step, current)) {
         continue;
       }
 
@@ -430,9 +461,9 @@ export function WorkflowProvider({
         result = await checkStep(step.id, vars);
         updateStep(step.id, result.state);
 
-          if (Object.keys(result.newVars).length > 0) {
-            updateVars(result.newVars);
-          }
+        if (Object.keys(result.newVars).length > 0) {
+          updateVars(result.newVars);
+        }
       } catch (error) {
         updateStep(step.id, {
           error: error instanceof Error ? error.message : "Check failed",

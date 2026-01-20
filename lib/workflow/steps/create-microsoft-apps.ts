@@ -246,8 +246,7 @@ export default defineStep(StepId.CreateMicrosoftApps)
       if (provSpId) {
         const removed = await removeResource(
           "Service Principal",
-          () =>
-          () =>
+          () => () =>
             microsoft.servicePrincipals
               .delete(provSpId)
               .delete() as Promise<void>,
@@ -262,8 +261,7 @@ export default defineStep(StepId.CreateMicrosoftApps)
       if (ssoSpId && ssoSpId !== provSpId) {
         const removed = await removeResource(
           "Service Principal",
-          () =>
-          () =>
+          () => () =>
             microsoft.servicePrincipals
               .delete(ssoSpId)
               .delete() as Promise<void>,
@@ -278,11 +276,8 @@ export default defineStep(StepId.CreateMicrosoftApps)
       if (appId) {
         const removed = await removeResource(
           "Application",
-          () =>
-          () =>
-            microsoft.applications
-              .delete(appId)
-              .delete() as Promise<void>,
+          () => () =>
+            microsoft.applications.delete(appId).delete() as Promise<void>,
           log,
           markFailed
         );

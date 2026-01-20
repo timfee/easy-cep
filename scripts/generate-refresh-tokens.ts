@@ -1,8 +1,9 @@
 #!/usr/bin/env bun
+import type { ServerResponse } from "node:http";
+
 import { once } from "node:events";
 import { readFile, writeFile } from "node:fs/promises";
 import { createServer } from "node:http";
-import type { ServerResponse } from "node:http";
 
 import type { Provider } from "@/constants";
 
@@ -47,19 +48,12 @@ const getProviderFromPath = (pathname: string) => {
   return null;
 };
 
-const sendHtml = (
-  res: ServerResponse,
-  status: number,
-  body: string
-) => {
+const sendHtml = (res: ServerResponse, status: number, body: string) => {
   res.writeHead(status, { "Content-Type": "text/html" });
   res.end(body);
 };
 
-const sendNotFound = (
-  res: ServerResponse,
-  pathname: string
-) => {
+const sendNotFound = (res: ServerResponse, pathname: string) => {
   res.writeHead(404, { "Content-Type": "text/plain" });
   res.end(
     `Not Found. Expected callback for google or microsoft. Got: ${pathname}`
