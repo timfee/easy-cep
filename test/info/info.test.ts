@@ -3,7 +3,8 @@ import fs from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 
-import type  { Token } from "@/lib/auth";
+import type { Token } from "@/lib/auth";
+import type * as Info from "@/lib/info";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
@@ -14,18 +15,17 @@ const token: Token = {
   scope: [],
 };
 
-mock.module("@/lib/auth", () => ({
-  refreshTokenIfNeeded: mock(() => Promise.resolve(token)),
-}));
-
-let listOrgUnits: typeof import("@/lib/info").listOrgUnits;
-let listSamlProfiles: typeof import("@/lib/info").listSamlProfiles;
-let listSsoAssignments: typeof import("@/lib/info").listSsoAssignments;
-let listProvisioningJobs: typeof import("@/lib/info").listProvisioningJobs;
-let listClaimsPolicies: typeof import("@/lib/info").listClaimsPolicies;
-let listEnterpriseApps: typeof import("@/lib/info").listEnterpriseApps;
+let listOrgUnits: typeof Info.listOrgUnits;
+let listSamlProfiles: typeof Info.listSamlProfiles;
+let listSsoAssignments: typeof Info.listSsoAssignments;
+let listProvisioningJobs: typeof Info.listProvisioningJobs;
+let listClaimsPolicies: typeof Info.listClaimsPolicies;
+let listEnterpriseApps: typeof Info.listEnterpriseApps;
 
 beforeAll(async () => {
+  mock.module("@/lib/auth", () => ({
+    refreshTokenIfNeeded: mock(() => token),
+  }));
   const mod = await import("@/lib/info");
   ({ listOrgUnits } = mod);
   ({ listSamlProfiles } = mod);
@@ -59,12 +59,10 @@ describe("info server actions", () => {
   });
 
   test("listOrgUnits", async () => {
-    const fetchMock = mock(() =>
-      Promise.resolve({
-        json: async () => load("google-org-units.json"),
-        ok: true,
-      })
-    );
+    const fetchMock = mock(() => ({
+      json: () => load("google-org-units.json"),
+      ok: true,
+    }));
     setFetchMock(fetchMock);
     const items = await listOrgUnits();
     expect(items).toEqual([
@@ -80,12 +78,10 @@ describe("info server actions", () => {
   });
 
   test("listSamlProfiles", async () => {
-    const fetchMock = mock(() =>
-      Promise.resolve({
-        json: async () => load("google-saml-profiles.json"),
-        ok: true,
-      })
-    );
+    const fetchMock = mock(() => ({
+      json: () => load("google-saml-profiles.json"),
+      ok: true,
+    }));
     setFetchMock(fetchMock);
     const items = await listSamlProfiles();
     expect(items).toEqual([
@@ -101,12 +97,10 @@ describe("info server actions", () => {
   });
 
   test("listSsoAssignments", async () => {
-    const fetchMock = mock(() =>
-      Promise.resolve({
-        json: async () => load("google-sso-assignments.json"),
-        ok: true,
-      })
-    );
+    const fetchMock = mock(() => ({
+      json: () => load("google-sso-assignments.json"),
+      ok: true,
+    }));
     setFetchMock(fetchMock);
     const items = await listSsoAssignments();
     expect(items).toEqual([
@@ -132,12 +126,10 @@ describe("info server actions", () => {
   });
 
   test("listSsoAssignments handles prefixed names", async () => {
-    const fetchMock = mock(() =>
-      Promise.resolve({
-        json: async () => load("google-sso-assignments-prefixed.json"),
-        ok: true,
-      })
-    );
+    const fetchMock = mock(() => ({
+      json: () => load("google-sso-assignments-prefixed.json"),
+      ok: true,
+    }));
     setFetchMock(fetchMock);
     const items = await listSsoAssignments();
     expect(items).toEqual([
@@ -156,11 +148,11 @@ describe("info server actions", () => {
   test("listProvisioningJobs", async () => {
     const fetchMock = mock()
       .mockResolvedValueOnce({
-        json: async () => ({ value: [{ appId: "abcd1234", id: "sp1" }] }),
+        json: () => ({ value: [{ appId: "abcd1234", id: "sp1" }] }),
         ok: true,
       })
       .mockResolvedValueOnce({
-        json: async () => load("ms-sync-jobs.json"),
+        json: () => load("ms-sync-jobs.json"),
         ok: true,
       });
     setFetchMock(fetchMock);
@@ -179,12 +171,10 @@ describe("info server actions", () => {
   });
 
   test("listClaimsPolicies", async () => {
-    const fetchMock = mock(() =>
-      Promise.resolve({
-        json: async () => load("ms-claims-policies.json"),
-        ok: true,
-      })
-    );
+    const fetchMock = mock(() => ({
+      json: () => load("ms-claims-policies.json"),
+      ok: true,
+    }));
     setFetchMock(fetchMock);
     const items = await listClaimsPolicies();
     expect(items).toEqual([
@@ -200,12 +190,10 @@ describe("info server actions", () => {
   });
 
   test("listEnterpriseApps", async () => {
-    const fetchMock = mock(() =>
-      Promise.resolve({
-        json: async () => load("ms-applications.json"),
-        ok: true,
-      })
-    );
+    const fetchMock = mock(() => ({
+      json: () => load("ms-applications.json"),
+      ok: true,
+    }));
     setFetchMock(fetchMock);
     const items = await listEnterpriseApps();
     expect(items).toEqual([

@@ -6,12 +6,12 @@ import {
   it,
   setDefaultTimeout,
 } from "bun:test";
+import { setTimeout as delay } from "node:timers/promises";
 
 import { env } from "@/env";
 import { getBearerTokens } from "@/lib/testing/tokens";
 import { runStep, undoStep } from "@/lib/workflow/engine";
 import { StepId } from "@/lib/workflow/step-ids";
-import type  { WorkflowVars } from "@/lib/workflow/variables";
 import { Var } from "@/lib/workflow/variables";
 
 import {
@@ -20,10 +20,53 @@ import {
 } from "../../scripts/e2e-setup";
 import { assertFixture } from "./fixtures";
 
-setDefaultTimeout(120_000);
+type WorkflowVars = Record<string, string | undefined>;
+type StepResult = Awaited<ReturnType<typeof runStep>>;
+type StepLogEntry = NonNullable<StepResult["state"]["logs"]>[number];
+
+const isErrorLog = (log: StepLogEntry) =>
+  log.level === "error" || "method" in log;
+
+const formatLogMessage = (log: StepLogEntry) => {
+  if ("method" in log && log.method && log.url && log.status) {
+    return `  ${log.method} ${log.url} -> ${log.status}`;
+  }
+  return `  [${log.level}] ${log.message}`;
+};
+
+const logErrorLogData = (log: StepLogEntry) => {
+  if (!log.data) {
+    return;
+  }
+  console.error("  Data:", JSON.stringify(log.data, null, 2));
+};
+
+const logErrorLogs = (logs: StepLogEntry[] | undefined) => {
+  if (!logs?.length) {
+    return;
+  }
+  console.error("\nError logs:");
+  for (const log of logs) {
+    console.error(formatLogMessage(log));
+    logErrorLogData(log);
+  }
+};
+
+const logExecutionFailure = (step: string, result: StepResult) => {
+  if (result.state.status === "complete") {
+    return;
+  }
+  console.error(`\n❌ ${step} FAILED`);
+  console.error("Error:", result.state.error);
+  console.error("Summary:", result.state.summary);
+  logErrorLogs(result.state.logs?.filter(isErrorLog));
+};
 
 describe("Workflow Live E2E", () => {
+  const varsRef: { current: Partial<WorkflowVars> } = { current: {} };
+
   beforeAll(async () => {
+    setDefaultTimeout(120_000);
     console.log("🧹 Cleaning test environment before tests...");
 
     let retries = 3;
@@ -42,7 +85,7 @@ describe("Workflow Live E2E", () => {
         console.warn(
           `🧹 Cleanup attempt failed, retrying... (${retries} attempts left)`
         );
-        await new Promise((resolve) => setTimeout(resolve, 2000));
+        await delay(2000);
       }
     }
 
@@ -54,27 +97,23 @@ describe("Workflow Live E2E", () => {
       );
     }
 
-    vars = {
-      ...vars,
+    const testRunId = Date.now().toString(36);
+    const suffix = `_test-${testRunId}`;
+    varsRef.current = {
+      [Var.PrimaryDomain]: env.TEST_DOMAIN ?? "test.example.com",
+      [Var.IsDomainVerified]: "true",
+      [Var.AutomationOuName]: `automation${suffix}`,
+      [Var.AutomationOuPath]: `/automation${suffix}`,
+      [Var.ProvisioningUserPrefix]: `azuread-provisioning${suffix}`,
+      [Var.AdminRoleName]: `Microsoft Entra Provisioning${suffix}`,
+      [Var.SamlProfileDisplayName]: `Azure AD${suffix}`,
+      [Var.ProvisioningAppDisplayName]: `Google Workspace Provisioning${suffix}`,
+      [Var.SsoAppDisplayName]: `Google Workspace SSO${suffix}`,
+      [Var.ClaimsPolicyDisplayName]: `Google Workspace Basic Claims${suffix}`,
       [Var.GoogleAccessToken]: googleToken.accessToken,
       [Var.MsGraphToken]: microsoftToken.accessToken,
     };
   });
-
-  const testRunId = Date.now().toString(36);
-  const suffix = `_test-${testRunId}`;
-  let vars: Partial<WorkflowVars> = {
-    [Var.PrimaryDomain]: env.TEST_DOMAIN ?? "test.example.com",
-    [Var.IsDomainVerified]: "true",
-    [Var.AutomationOuName]: `automation${suffix}`,
-    [Var.AutomationOuPath]: `/automation${suffix}`,
-    [Var.ProvisioningUserPrefix]: `azuread-provisioning${suffix}`,
-    [Var.AdminRoleName]: `Microsoft Entra Provisioning${suffix}`,
-    [Var.SamlProfileDisplayName]: `Azure AD${suffix}`,
-    [Var.ProvisioningAppDisplayName]: `Google Workspace Provisioning${suffix}`,
-    [Var.SsoAppDisplayName]: `Google Workspace SSO${suffix}`,
-    [Var.ClaimsPolicyDisplayName]: `Google Workspace Basic Claims${suffix}`,
-  };
 
   const steps = [
     StepId.VerifyPrimaryDomain,
@@ -90,57 +129,30 @@ describe("Workflow Live E2E", () => {
     StepId.AssignUsersToSso,
   ];
 
-  for (const step of steps) {
-    it(`Execute: ${step}`, async () => {
-      console.log(`\n📋 Executing ${step}...`);
-      const result = await runStep(step, vars);
-      console.log(`   Status: ${result.state.status}`);
-
-      if (result.state.status !== "complete") {
-        console.error(`\n❌ ${step} FAILED`);
-        console.error("Error:", result.state.error);
-        console.error("Summary:", result.state.summary);
-
-        const errorLogs = result.state.logs?.filter(
-          (log) => log.level === "error" || "method" in log
-        );
-        if (errorLogs?.length) {
-          console.error("\nError logs:");
-          for (const log of errorLogs) {
-            if ("method" in log && log.method && log.url && log.status) {
-              console.error(`  ${log.method} ${log.url} -> ${log.status}`);
-            } else {
-              console.error(`  [${log.level}] ${log.message}`);
-            }
-            if (log.data) {
-              console.error("  Data:", JSON.stringify(log.data, null, 2));
-            }
-          }
-        }
-      }
-
-      expect(["complete", "blocked", "pending"]).toContain(result.state.status);
-      assertFixture(step, {
-        error: result.state.error,
-        status: result.state.status,
-      });
-      vars = { ...vars, ...result.newVars };
+  it.each(steps)("Execute: %s", async (step) => {
+    console.log(`\n📋 Executing ${step}...`);
+    const result = await runStep(step, varsRef.current);
+    console.log(`   Status: ${result.state.status}`);
+    logExecutionFailure(step, result);
+    expect(["complete", "blocked", "pending"]).toContain(result.state.status);
+    assertFixture(step, {
+      error: result.state.error,
+      status: result.state.status,
     });
-  }
+    varsRef.current = { ...varsRef.current, ...result.newVars };
+  });
 
   const undoSteps = [...steps].toReversed();
-  for (const step of undoSteps) {
-    it(`Undo: ${step}`, async () => {
-      console.log(`\n🔄 Undoing ${step}...`);
-      const result = await undoStep(step, vars);
-      console.log(`   Status: ${result.state.status}`);
-      expect(["complete", "blocked"]).toContain(result.state.status);
-      assertFixture(`${step}-undo`, {
-        error: result.state.error,
-        status: result.state.status,
-      });
+  it.each(undoSteps)("Undo: %s", async (step) => {
+    console.log(`\n🔄 Undoing ${step}...`);
+    const result = await undoStep(step, varsRef.current);
+    console.log(`   Status: ${result.state.status}`);
+    expect(["complete", "blocked"]).toContain(result.state.status);
+    assertFixture(`${step}-undo`, {
+      error: result.state.error,
+      status: result.state.status,
     });
-  }
+  });
 
   afterAll(async () => {
     console.log("\n🧹 Final cleanup...");
