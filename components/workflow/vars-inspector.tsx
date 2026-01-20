@@ -46,7 +46,7 @@ function VariableRowContent({
       return (
         <Input
           autoFocus
-          className="h-7 w-full rounded-md bg-background text-xs text-foreground/90"
+          className="h-7 w-full rounded-none border-x-0 border-t-0 border-b border-border/60 bg-transparent px-0 text-xs text-foreground/90"
           onBlur={onSaveEdit}
           onChange={(e) => onUpdateEdit(e.target.value)}
           onClick={(e) => e.stopPropagation()}
@@ -65,7 +65,7 @@ function VariableRowContent({
 
     if (value !== undefined) {
       return (
-        <code className="block truncate rounded-md bg-muted/30 px-3 py-0.5 font-mono text-foreground/70 text-xs">
+        <code className="block truncate px-3 py-0.5 font-mono text-foreground/70 text-xs">
           {meta.sensitive ? "••••••••" : String(value)}
         </code>
       );
@@ -83,11 +83,6 @@ function VariableRowContent({
       <div className="flex items-center gap-1.5">
         <Database className="h-2.5 w-2.5 text-foreground/50" />
         <span className="font-medium text-foreground text-xs">{varKey}</span>
-        {isConfigurable && !isEditing && (
-          <span className="rounded-full border border-foreground/15 bg-muted/50 px-1.5 py-0.5 text-[9px] font-semibold uppercase tracking-wider text-foreground/60">
-            Editable
-          </span>
-        )}
       </div>
       <div>{renderValue()}</div>
     </div>
@@ -99,11 +94,11 @@ function VariableRow(props: VariableRowProps) {
   const isEditing = editingVar?.key === varKey;
   const isConfigurable = meta.configurable;
   const commonClasses =
-    "group block w-full rounded-md px-3 py-1.5 text-left transition-colors duration-150 hover:bg-muted/50";
+    "group block w-full px-3 py-1.5 text-left transition-colors duration-150";
 
   if (isEditing) {
     return (
-      <div className={`${commonClasses} border-l-2 border-l-primary/30`}>
+      <div className={`${commonClasses} bg-muted/30`}>
         <VariableRowContent
           {...props}
           isConfigurable={!!isConfigurable}
@@ -116,7 +111,7 @@ function VariableRow(props: VariableRowProps) {
   if (isConfigurable) {
     return (
       <button
-        className={`${commonClasses} cursor-pointer border-l-2 border-l-primary/30 hover:border-l-primary/50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/30 focus-visible:ring-offset-1 focus-visible:ring-offset-background`}
+        className={`${commonClasses} cursor-text hover:bg-muted/40 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-primary/30 focus-visible:ring-offset-1 focus-visible:ring-offset-background`}
         onClick={() => onStartEditing(varKey, value)}
         type="button"
       >
@@ -130,7 +125,7 @@ function VariableRow(props: VariableRowProps) {
   }
 
   return (
-    <div className={`${commonClasses} border-l-2 border-l-transparent`}>
+    <div className={`${commonClasses} cursor-default`}>
       <VariableRowContent
         {...props}
         isConfigurable={!!isConfigurable}

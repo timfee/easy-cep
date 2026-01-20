@@ -3,7 +3,7 @@ import { useCallback, useMemo } from "react";
 
 import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
-import  { type StepIdValue } from "@/lib/workflow/step-ids";
+import { type StepIdValue } from "@/lib/workflow/step-ids";
 import {
   type VariableMetadata,
   type VarName,
@@ -51,11 +51,6 @@ function VariableItem({
       >
         <Database className="h-3 w-3 text-foreground/60" />
         <span>{varKey}</span>
-        {isEditable && (
-          <span className="rounded-full border border-primary/30 bg-primary/10 px-1.5 py-0.5 text-[9px] font-semibold uppercase tracking-wider text-primary/80">
-            Editable
-          </span>
-        )}
       </label>
       {isEditable ? (
         <Input
@@ -135,8 +130,8 @@ export function StepVariables({
   );
 
   return (
-    <div className="grid w-full gap-3 text-left md:grid-cols-2">
-      <div className="flex-1 space-y-3 rounded-lg border border-border/60 border-l-2 border-l-primary/60 bg-muted/30 p-4">
+    <div className="flex w-full flex-wrap gap-4 text-left">
+      <div className="min-w-[260px] flex-1 space-y-3 rounded-lg border border-border/60 border-l-2 border-l-primary/60 bg-muted/30 p-4">
         <h4 className="mb-3 text-[11px] font-semibold uppercase tracking-[0.08em] text-foreground/80">
           Requires
         </h4>
@@ -160,7 +155,7 @@ export function StepVariables({
         )}
       </div>
 
-      <div className="flex-1 space-y-3 rounded-lg border border-border/60 border-l-2 border-l-ring/60 bg-muted/30 p-4">
+      <div className="min-w-[260px] flex-1 space-y-3 rounded-lg border border-border/60 border-l-2 border-l-ring/60 bg-muted/30 p-4">
         <h4 className="mb-3 text-[11px] font-semibold uppercase tracking-[0.08em] text-foreground/80">
           Provides
         </h4>

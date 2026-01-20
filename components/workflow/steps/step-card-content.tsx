@@ -84,7 +84,7 @@ export function StepCardContent({ definition, state, vars, executing }: Props) {
         <div className="w-full overflow-x-auto rounded-lg border border-border/70 bg-muted/30 p-4 text-left empty:hidden">
           <StepApiCalls stepId={definition.id} />
         </div>
-        <div className="flex flex-wrap items-start justify-between gap-4">
+        <div className="flex flex-wrap items-start justify-between gap-4 px-4">
           <div>
             <div className="flex items-center gap-2">
               <Button
