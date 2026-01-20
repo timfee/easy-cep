@@ -230,6 +230,14 @@ export function WorkflowProvider({
       if (event.type === "log") {
         setStatus((prev) => {
           const current = prev[stepId] ?? { status: StepStatus.Ready };
+          // Ensure we don't duplicate logs by checking timestamp + message
+          const entryId = `${event.entry.timestamp}-${event.entry.message}`;
+          const exists = current.logs?.some(
+            (l) => `${l.timestamp}-${l.message}` === entryId
+          );
+          if (exists) {
+            return prev;
+          }
           const logs = current.logs
             ? [...current.logs, event.entry]
             : [event.entry];
@@ -254,6 +262,21 @@ export function WorkflowProvider({
         setStatus((prev) => {
           const current = prev[stepId] ?? { status: StepStatus.Ready };
           const next = { ...current, ...event.state };
+          
+          // Merge logs if they exist in state update
+          if (event.state.logs) {
+            const existingLogs = current.logs ?? [];
+            const newLogs = event.state.logs.filter(newLog => 
+              !existingLogs.some(existing => 
+                existing.timestamp === newLog.timestamp && 
+                existing.message === newLog.message
+              )
+            );
+            if (newLogs.length > 0) {
+              next.logs = [...existingLogs, ...newLogs];
+            }
+          }
+          
           statusRef.current = { ...statusRef.current, [stepId]: next };
           return { ...prev, [stepId]: next };
         });

@@ -169,8 +169,12 @@ export function StepCardContent({ definition, state, vars, executing }: Props) {
             />
           </CollapsibleTrigger>
           <CollapsibleContent className="rounded-lg rounded-t-none border border-border/70 border-t-0 bg-card/40 p-4 data-[state=closed]:animate-collapsible-up data-[state=open]:animate-collapsible-down">
-            {state?.logs && state.logs.length > 0 && (
+            {state?.logs && state.logs.length > 0 ? (
               <StepLogs logs={state.logs} />
+            ) : (
+              <div className="py-2 text-center text-muted-foreground text-sm">
+                No logs available
+              </div>
             )}
           </CollapsibleContent>
         </Collapsible>

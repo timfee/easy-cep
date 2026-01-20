@@ -206,7 +206,7 @@ async function processStep<T extends StepIdValue>(
     logs = nextLogs;
     logDev(sanitizedEntry, vars);
     emitLogEvent(eventMeta, sanitizedEntry);
-    pushState({});
+    currentState = { ...currentState, logs };
   };
 
   const logPhase = (phase: "check" | "execute", status: "start" | "end") => {
