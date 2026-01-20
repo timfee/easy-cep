@@ -259,20 +259,16 @@ export const stepApiMetadata: Record<StepIdValue, ApiCallMetadata[]> = {
   ],
 
   "create-microsoft-apps": [
-    {
-      description: "Check existing apps",
-      endpoint:
-        extractPath(ApiEndpoint.Microsoft.Applications) +
-        "?$filter=applicationTemplateId eq '{templateId}'",
-      method: "GET",
-    },
-    {
-      description: "Get service principals",
-      endpoint:
-        extractPath(ApiEndpoint.Microsoft.ServicePrincipals) +
-        "?$filter=appId eq '{appId}'",
-      method: "GET",
-    },
+      {
+        description: "Check existing apps",
+        endpoint: `${extractPath(ApiEndpoint.Microsoft.Applications)}?$filter=applicationTemplateId eq '{templateId}'`,
+        method: "GET",
+      },
+      {
+        description: "Get service principals",
+        endpoint: `${extractPath(ApiEndpoint.Microsoft.ServicePrincipals)}?$filter=appId eq '{appId}'`,
+        method: "GET",
+      },
     {
       body: { displayName: "{displayName}" },
       description: "Create enterprise apps",
@@ -282,13 +278,11 @@ export const stepApiMetadata: Record<StepIdValue, ApiCallMetadata[]> = {
   ],
 
   "create-service-user": [
-    {
-      description: "Check if service user exists",
-      endpoint:
-        extractPath(ApiEndpoint.Google.Users) +
-        "/azuread-provisioning@{primaryDomain}",
-      method: "GET",
-    },
+      {
+        description: "Check if service user exists",
+        endpoint: `${extractPath(ApiEndpoint.Google.Users)}/azuread-provisioning@{primaryDomain}`,
+        method: "GET",
+      },
     {
       body: {
         primaryEmail: "azuread-provisioning@{primaryDomain}",

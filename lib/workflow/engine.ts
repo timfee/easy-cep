@@ -285,9 +285,7 @@ async function processStep<T extends StepIdValue>(
     });
   } catch (error) {
     pushState({
-      error:
-        "Check error: " +
-        (error instanceof Error ? error.message : "Unknown error"),
+      error: `Check error: ${error instanceof Error ? error.message : "Unknown error"}`,
       status: StepStatus.Blocked,
     });
     pushState({ isChecking: false, isExecuting: false });
@@ -352,9 +350,7 @@ async function processStep<T extends StepIdValue>(
       });
     } catch (error) {
       pushState({
-        error:
-          "Execute error: " +
-          (error instanceof Error ? error.message : "Unknown error"),
+        error: `Execute error: ${error instanceof Error ? error.message : "Unknown error"}`,
         status: StepStatus.Blocked,
       });
     }
@@ -483,9 +479,7 @@ async function processUndoStep<T extends StepIdValue>(
     });
   } catch (error) {
     pushState({
-      error:
-        "Undo error: " +
-        (error instanceof Error ? error.message : "Unknown error"),
+      error: `Undo error: ${error instanceof Error ? error.message : "Unknown error"}`,
       status: StepStatus.Blocked,
     });
   }
