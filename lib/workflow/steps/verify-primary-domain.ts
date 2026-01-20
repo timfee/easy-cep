@@ -108,5 +108,7 @@ export default defineStep(StepId.VerifyPrimaryDomain)
       }
     }
   )
-  .undo(({ markReverted }) => Promise.resolve(markReverted()))
+  .undo(async ({ markReverted }) => {
+    await markReverted();
+  })
   .build();

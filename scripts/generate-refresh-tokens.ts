@@ -1,4 +1,5 @@
 #!/usr/bin/env bun
+import { once } from "node:events";
 import { readFile, writeFile } from "node:fs/promises";
 import { createServer } from "node:http";
 
@@ -125,17 +126,7 @@ async function updateEnvFile(key: string, value: string) {
   console.log(`✅ Updated ${key} in ${ENV_PATH}`);
 }
 
-// These will be resolved when the respective callback is hit
-let onGoogleToken: (token: string) => void;
-let onMicrosoftToken: (token: string) => void;
-
-const googleAuthPromise = new Promise<string>((resolve) => {
-  onGoogleToken = resolve;
-});
-
-const microsoftAuthPromise = new Promise<string>((resolve) => {
-  onMicrosoftToken = resolve;
-});
+const tokenTarget = new EventTarget();
 
 const server = createServer(async (req, res) => {
   try {
@@ -172,11 +163,7 @@ const server = createServer(async (req, res) => {
     console.log(`[${provider}] Code received. Exchanging for token...`);
     try {
       const refreshToken = await handleCallback(provider, code, res);
-      if (provider === PROVIDERS.GOOGLE) {
-        onGoogleToken(refreshToken);
-      } else {
-        onMicrosoftToken(refreshToken);
-      }
+      tokenEmitter.emit(provider, refreshToken);
     } catch (error) {
       console.error(`[${provider}] Token exchange failed:`, error);
       sendHtml(

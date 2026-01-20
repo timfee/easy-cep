@@ -1,6 +1,7 @@
 import { z } from "zod";
 
 import { HttpMethod } from "@/types";
+import { setTimeout as delay } from "node:timers/promises";
 
 import type { HttpClient } from "../types/http-client";
 
@@ -172,9 +173,7 @@ export class ResourceBuilder<TContext = Record<string, never>> {
       } catch (error) {
         lastError = error;
         if (attempt < retries) {
-          await new Promise<void>((resolve) => {
-            setTimeout(resolve, 2 ** attempt * 1000);
-          });
+          await delay(2 ** attempt * 1000);
         }
       }
     }

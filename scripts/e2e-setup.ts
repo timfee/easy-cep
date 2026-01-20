@@ -229,8 +229,12 @@ export async function setupEnvironment() {
 }
 
 if (typeof require !== "undefined" && require.main === module) {
-  setupEnvironment().catch((error) => {
-    console.error(error);
-    process.exitCode = 1;
-  });
+  (async () => {
+    try {
+      await setupEnvironment();
+    } catch (error) {
+      console.error(error);
+      process.exitCode = 1;
+    }
+  })();
 }

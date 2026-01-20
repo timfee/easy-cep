@@ -125,7 +125,13 @@ async function main() {
   await deleteGoogleProjects(googleToken, threshold);
 }
 
-main().catch((error) => {
-  console.error(error);
-  process.exitCode = 1;
-});
+if (typeof require !== "undefined" && require.main === module) {
+  (async () => {
+    try {
+      await main();
+    } catch (error) {
+      console.error(error);
+      process.exitCode = 1;
+    }
+  })();
+}

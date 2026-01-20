@@ -283,8 +283,12 @@ export async function fullCleanup() {
 }
 
 if (require.main === module) {
-  fullCleanup().catch((error) => {
-    console.error(error);
-    process.exitCode = 1;
-  });
+  (async () => {
+    try {
+      await fullCleanup();
+    } catch (error) {
+      console.error(error);
+      process.exitCode = 1;
+    }
+  })();
 }

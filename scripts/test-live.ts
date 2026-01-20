@@ -1,20 +1,23 @@
+import { once } from "node:events";
 import { spawn } from "node:child_process";
 
 /**
  * Spawn a child process and stream output.
  */
-function run(command: string, args: string[], env?: NodeJS.ProcessEnv) {
-  return new Promise<void>((resolve, reject) => {
-    const child = spawn(command, args, { env, stdio: "inherit" });
-    child.on("error", reject);
-    child.on("close", (code) => {
-      if (code === 0) {
-        resolve();
-        return;
-      }
-      reject(new Error(`${command} ${args.join(" ")} exited with ${code}`));
-    });
-  });
+async function run(command: string, args: string[], env?: NodeJS.ProcessEnv) {
+  const child = spawn(command, args, { env, stdio: "inherit" });
+  const closePromise = once(child, "close");
+  const errorPromise = once(child, "error");
+  const result = await Promise.race([closePromise, errorPromise]);
+
+  if (result[0] instanceof Error) {
+    throw result[0];
+  }
+
+  const code = result[0] as number | null;
+  if (code !== 0) {
+    throw new Error(`${command} ${args.join(" ")} exited with ${code}`);
+  }
 }
 
 /**
@@ -27,7 +30,13 @@ async function main() {
   });
 }
 
-main().catch((error) => {
-  console.error(error);
-  process.exitCode = 1;
-});
+if (typeof require !== "undefined" && require.main === module) {
+  (async () => {
+    try {
+      await main();
+    } catch (error) {
+      console.error(error);
+      process.exitCode = 1;
+    }
+  })();
+}

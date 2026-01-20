@@ -124,9 +124,12 @@ function VariableRow(props: VariableRowProps) {
   const interactiveClasses =
     "cursor-pointer hover:bg-muted/50 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-primary/30 focus-visible:ring-inset active:bg-muted/60";
 
-  const handleStartEditing = () => {
-    onStartEditing(varKey, value);
-  };
+  const handleStartEditing = useCallback(
+    () => {
+      onStartEditing(varKey, value);
+    },
+    [onStartEditing, varKey, value]
+  );
 
   if (isEditing) {
     return (
@@ -187,7 +190,7 @@ export function VarsInspector({ vars, onChange }: VarsInspectorProps) {
     (key: VarName, currentValue: unknown) => {
       setEditingVar({
         key,
-        value: currentValue !== undefined ? String(currentValue) : "",
+      value: currentValue === undefined ? "" : String(currentValue),
       });
     },
     []

@@ -1,6 +1,7 @@
 "use server";
 
 import pLimit from "p-limit";
+import { setTimeout as delay } from "node:timers/promises";
 import { z } from "zod";
 
 import type { Provider } from "@/constants";
@@ -84,9 +85,7 @@ function createDeleteAction(
           }
 
           if (options.delayMs && index < deletableIds.length - 1) {
-            await new Promise((resolve) =>
-              setTimeout(resolve, options.delayMs)
-            );
+            await delay(options.delayMs);
           }
         })
       )
@@ -161,7 +160,7 @@ export async function deleteOrgUnits(ids: string[]): Promise<DeleteResult> {
     }
 
     if (index < ids.length - 1) {
-      await new Promise((resolve) => setTimeout(resolve, 1500));
+      await delay(1500);
     }
   }
 
