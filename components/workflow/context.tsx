@@ -35,7 +35,7 @@ interface WorkflowContextValue {
   executing: StepIdValue | null;
   steps: StepDefinition[];
   updateVars: (updates: Partial<WorkflowVars>) => Promise<void>;
-  updateStep: (stepId: StepIdValue, state: StepUIState) => void;
+  updateStep: (stepId: StepIdValue, state: Partial<StepUIState>) => void;
   applyStepEvent: (event: StepStreamEvent) => void;
   executeStep: (stepId: StepIdValue) => Promise<void>;
   undoStep: (stepId: StepIdValue) => Promise<void>;
@@ -193,9 +193,13 @@ export function WorkflowProvider({
   );
 
   const updateStep = useCallback(
-    (stepId: StepIdValue, stepState: StepUIState) => {
-      setStatus((prev) => ({ ...prev, [stepId]: stepState }));
-      statusRef.current = { ...statusRef.current, [stepId]: stepState };
+    (stepId: StepIdValue, stepState: Partial<StepUIState>) => {
+      setStatus((prev) => {
+        const current = prev[stepId] ?? { status: StepStatus.Ready };
+        const next = { ...current, ...stepState };
+        statusRef.current = { ...statusRef.current, [stepId]: next };
+        return { ...prev, [stepId]: next };
+      });
     },
     []
   );
@@ -311,6 +315,7 @@ export function WorkflowProvider({
         updateStep(id, {
           error: `Missing required vars: ${messages.join(", ")}`,
           status: StepStatus.Blocked,
+          logs: [], // Clear logs if blocked by vars
         });
         return;
       }
@@ -319,6 +324,8 @@ export function WorkflowProvider({
       updateStep(id, {
         isExecuting: true,
         status: statusRef.current[id]?.status ?? StepStatus.Ready,
+        logs: [], // Clear logs on new execution
+        error: undefined,
       });
 
       let handleMessage: ((message: MessageEvent) => void) | null = null;
