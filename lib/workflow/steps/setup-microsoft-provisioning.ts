@@ -69,7 +69,6 @@ export default defineStep(StepId.SetupMicrosoftProvisioning)
         .templates(spId)
         .get()) as { value?: { id: string; factoryTag: string }[] };
 
-      console.log("Templates", templates);
       const templateId =
         templates?.find(
           (template) => template.factoryTag === SyncTemplateTag.GoogleWorkspace
@@ -86,7 +85,6 @@ export default defineStep(StepId.SetupMicrosoftProvisioning)
         }
       }
 
-      console.log("Trying to create job", { templateId });
       const job = (await microsoft.synchronization
         .jobs(spId)
         .create()
