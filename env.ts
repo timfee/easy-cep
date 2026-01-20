@@ -17,8 +17,6 @@ export const env = createEnv({
     GOOGLE_IMPERSONATED_ADMIN_EMAIL: z.string().optional(),
     GOOGLE_SERVICE_ACCOUNT_FILE: z.string().optional(),
     GOOGLE_SERVICE_ACCOUNT_JSON: z.string().optional(),
-    RUN_E2E: z.string().optional(),
-    SKIP_E2E: z.string().optional(),
     TEST_DOMAIN: z.string().optional(),
     TEST_GOOGLE_BEARER_TOKEN: z.string().optional(),
     TEST_GOOGLE_REFRESH_TOKEN: z.string().optional(),

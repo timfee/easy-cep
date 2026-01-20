@@ -9,7 +9,7 @@
     "format": "bun x ultracite fix",
     "lint": "bun x ultracite check",
     "start": "bun x next start",
-    "test": "bun --env-file=.env.local test",
+    "test": "bun test",
     "tokens:generate": "bun run scripts/generate-refresh-tokens.ts",
     "cleanup:apps": "bun x tsx scripts/cleanup-apps.ts",
     "e2e:setup": "bun x tsx scripts/e2e-setup.ts",

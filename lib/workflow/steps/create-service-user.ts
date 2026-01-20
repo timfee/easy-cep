@@ -1,4 +1,4 @@
-import crypto from "node:crypto";
+import { createHash } from "node:crypto";
 import {
   isConflictError,
   isNotFoundError,
@@ -29,7 +29,6 @@ export default defineStep(StepId.CreateServiceUser)
       google,
       markComplete,
       markIncomplete,
-      markStale,
       markCheckFailed,
       log,
     }) => {
@@ -45,15 +44,19 @@ export default defineStep(StepId.CreateServiceUser)
 
         if (user.id && user.primaryEmail) {
           log(LogLevel.Info, "Service user already exists");
-          if (vars.get(Var.GeneratedPassword)) {
+          const existingPassword = vars.get(Var.GeneratedPassword);
+          if (existingPassword) {
             markComplete({
               provisioningUserId: user.id,
               provisioningUserEmail: user.primaryEmail,
+              generatedPassword: existingPassword,
             });
           } else {
-            markStale(
-              "User exists but password lost. Re-run to generate new password."
-            );
+      markIncomplete("Service user password missing", {
+        provisioningUserId: user.id,
+        provisioningUserEmail: user.primaryEmail,
+      });
+
           }
         } else {
           log(LogLevel.Error, "Unexpected user response", { user });
@@ -83,14 +86,14 @@ export default defineStep(StepId.CreateServiceUser)
       log,
     }) => {
       try {
-        vars.require(Var.PrimaryDomain);
-
-        const chars =
-          "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!@#$%^&*";
-        const password = Array.from(
-          crypto.randomBytes(16),
-          (b) => chars[b % chars.length]
-        ).join("");
+        const primaryDomain = vars.require(Var.PrimaryDomain);
+        const existingPassword = vars.get(Var.GeneratedPassword);
+        const password =
+          existingPassword ??
+          createHash("md5")
+            .update(`${primaryDomain}cep${new Date().getFullYear()}`)
+            .digest("hex")
+            .slice(0, 11);
 
         let user: { id: string; primaryEmail: string };
         try {

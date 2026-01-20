@@ -44,7 +44,11 @@ const userSchemas = {
   z.infer<typeof userResponseSchema>,
   z.infer<typeof userUpdateSchema>
 >;
-const ouGetSchema = z.object({ orgUnitPath: z.string(), name: z.string() });
+const ouGetSchema = z.object({
+  orgUnitPath: z.string(),
+  name: z.string(),
+  orgUnitId: z.string().optional(),
+});
 const ouListSchema = z.object({
   organizationUnits: z
     .array(
@@ -134,7 +138,7 @@ const roleSchemas = {
   z.infer<typeof roleCreateSchema>,
   z.infer<typeof roleResponseSchema>,
   z.infer<typeof empty>,
-  z.infer<typeof roleGetSchema>
+  z.infer<typeof roleListSchema>
 >;
 const assignmentGetSchema = empty;
 const assignmentListSchema = z.object({
@@ -176,8 +180,8 @@ const samlGetSchema = z.object({
   displayName: z.string().optional(),
   idpConfig: z
     .object({
-      entityId: z.string(),
-      singleSignOnServiceUri: z.string(),
+      entityId: z.string().optional(),
+      singleSignOnServiceUri: z.string().optional(),
       signOutUri: z.string().optional(),
       changePasswordUri: z.string().optional(),
     })
@@ -383,8 +387,7 @@ export class GoogleClient {
                   )
                   .optional(),
               })
-            )
-            .flatten("idpCredentials"),
+            ),
         delete: (credentialId: string) =>
           this.builder()
             .path(

@@ -115,10 +115,10 @@ const created = await microsoft.applications
 
 ```bash
 # Run tests
-bun --env-file=.env.local test
+NODE_ENV=test bun test
 
-# Run live E2E tests
-RUN_E2E=1 bun --env-file=.env.local test
+# Run live E2E tests (always on)
+NODE_ENV=test bun test
 
 # Required for live E2E (.env.local)
 # TEST_GOOGLE_REFRESH_TOKEN=<refresh-token>
@@ -134,7 +134,7 @@ RUN_E2E=1 bun --env-file=.env.local test
 # GOOGLE_SERVICE_ACCOUNT_FILE=<path> (optional)
 # GOOGLE_IMPERSONATED_ADMIN_EMAIL=<email> (optional)
 
-# Clean test environment
+# Run test cleanup (only `_test` resources)
 bun run e2e:cleanup
 
 # Run live E2E tests (scripted)

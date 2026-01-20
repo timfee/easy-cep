@@ -9,6 +9,11 @@ const appGetSchema = z.object({
   id: z.string(),
   appId: z.string(),
   displayName: z.string(),
+  identifierUris: z.array(z.string()).optional(),
+  web: z
+    .object({ redirectUris: z.array(z.string()).optional() })
+    .nullable()
+    .optional(),
 });
 const appListSchema = z.object({
   value: z.array(

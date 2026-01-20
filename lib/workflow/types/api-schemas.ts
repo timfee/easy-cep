@@ -4,8 +4,8 @@ import { z } from "zod";
  * Schema for Google long-running operations.
  */
 export const GoogleOperationSchema = z.object({
-  name: z.string(),
-  done: z.boolean(),
+  name: z.string().optional(),
+  done: z.boolean().optional(),
   response: z.unknown().optional(),
   error: z
     .object({

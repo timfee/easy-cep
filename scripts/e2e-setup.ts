@@ -22,7 +22,8 @@ const getRequiredBearerTokens = async () => {
 };
 
 const TEST_DOMAIN = normalizeEnvValue(env.TEST_DOMAIN) || "test.example.com";
-const TEST_PREFIX = "test-";
+const TEST_SUFFIX = "_test";
+const TEST_NAME_FILTER = `displayName co '${TEST_SUFFIX}'`;
 
 /**
  * Remove Google Workspace resources created by E2E runs.
@@ -52,7 +53,7 @@ export async function cleanupGoogleEnvironment() {
 
   try {
     const res = await fetch(
-      `${ApiEndpoint.Google.Users}?domain=${TEST_DOMAIN}&query=email:${TEST_PREFIX}azuread-provisioning-*`,
+      `${ApiEndpoint.Google.Users}?domain=${TEST_DOMAIN}&query=email:*${TEST_SUFFIX}*`,
       { headers: { Authorization: `Bearer ${googleToken}` } }
     );
     const data = UsersSchema.parse(await res.json());
@@ -75,7 +76,7 @@ export async function cleanupGoogleEnvironment() {
     });
     const data = OrgUnitsSchema.parse(await res.json());
     for (const ou of data.organizationUnits ?? []) {
-      if (ou.name?.startsWith(`${TEST_PREFIX}automation-`)) {
+      if (ou.name?.includes(TEST_SUFFIX)) {
         await fetch(
           `${ApiEndpoint.Google.OrgUnits}/${encodeURIComponent(ou.orgUnitPath)}`,
           {
@@ -94,7 +95,7 @@ export async function cleanupGoogleEnvironment() {
   });
   const roles = RolesSchema.parse(await rolesRes.json());
   for (const role of roles.items ?? []) {
-    if (role.roleName?.startsWith("Test Microsoft Entra Provisioning")) {
+    if (role.roleName?.includes(TEST_SUFFIX)) {
       await fetch(`${ApiEndpoint.Google.Roles}/${role.roleId}`, {
         method: "DELETE",
         headers: { Authorization: `Bearer ${googleToken}` },
@@ -107,7 +108,7 @@ export async function cleanupGoogleEnvironment() {
   });
   const samlData = SamlSchema.parse(await samlRes.json());
   for (const profile of samlData.inboundSamlSsoProfiles ?? []) {
-    if (profile.displayName?.startsWith("Test ")) {
+    if (profile.displayName?.includes(TEST_SUFFIX)) {
       try {
         await fetch(ApiEndpoint.Google.SamlProfile(profile.name), {
           method: "DELETE",
@@ -157,13 +158,16 @@ export async function cleanupMicrosoftEnvironment() {
       .optional(),
   });
 
-  const appsRes = await fetch(ApiEndpoint.Microsoft.Applications, {
-    headers: { Authorization: `Bearer ${msToken}` },
-  });
+  const appsRes = await fetch(
+    `${ApiEndpoint.Microsoft.Applications}?$filter=${encodeURIComponent(TEST_NAME_FILTER)}`,
+    {
+      headers: { Authorization: `Bearer ${msToken}` },
+    }
+  );
   const apps = AppsSchema.parse(await appsRes.json());
 
   for (const app of apps.value ?? []) {
-    if (!app.displayName?.startsWith("Test ")) {
+    if (!app.displayName?.includes(TEST_SUFFIX)) {
       continue;
     }
     if (PROTECTED_APP_IDS.includes(app.appId)) {
@@ -193,12 +197,15 @@ export async function cleanupMicrosoftEnvironment() {
     console.log(`🗑️  Deleted test app: ${app.displayName}`);
   }
 
-  const policiesRes = await fetch(ApiEndpoint.Microsoft.ClaimsPolicies, {
-    headers: { Authorization: `Bearer ${msToken}` },
-  });
+  const policiesRes = await fetch(
+    `${ApiEndpoint.Microsoft.ClaimsPolicies}?$filter=${encodeURIComponent(TEST_NAME_FILTER)}`,
+    {
+      headers: { Authorization: `Bearer ${msToken}` },
+    }
+  );
   const policies = PoliciesSchema.parse(await policiesRes.json());
   for (const policy of policies.value ?? []) {
-    if (!policy.displayName?.startsWith("Test ")) {
+    if (!policy.displayName?.includes(TEST_SUFFIX)) {
       continue;
     }
     await fetch(`${ApiEndpoint.Microsoft.ClaimsPolicies}/${policy.id}`, {

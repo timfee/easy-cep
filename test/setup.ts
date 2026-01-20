@@ -52,28 +52,25 @@ const normalizeScopes = (value: unknown) => {
   return [] as string[];
 };
 
-if (env.RUN_E2E === "1") {
-  const missingKeys = [
-    ["TEST_GOOGLE_REFRESH_TOKEN", env.TEST_GOOGLE_REFRESH_TOKEN],
-    ["TEST_MS_REFRESH_TOKEN", env.TEST_MS_REFRESH_TOKEN],
-    ["GOOGLE_OAUTH_CLIENT_ID", env.GOOGLE_OAUTH_CLIENT_ID],
-    ["GOOGLE_OAUTH_CLIENT_SECRET", env.GOOGLE_OAUTH_CLIENT_SECRET],
-    ["MICROSOFT_OAUTH_CLIENT_ID", env.MICROSOFT_OAUTH_CLIENT_ID],
-    ["MICROSOFT_OAUTH_CLIENT_SECRET", env.MICROSOFT_OAUTH_CLIENT_SECRET],
-    ["MICROSOFT_TENANT", env.MICROSOFT_TENANT],
-    ["GOOGLE_HD_DOMAIN", env.GOOGLE_HD_DOMAIN],
-  ].filter(([, value]) => !value);
-  if (missingKeys.length > 0) {
-    throw new Error(
-      `RUN_E2E=1 requires ${missingKeys.map(([key]) => key).join(", ")} in .env.local`
-    );
-  }
+const missingKeys = [
+  ["TEST_GOOGLE_REFRESH_TOKEN", env.TEST_GOOGLE_REFRESH_TOKEN],
+  ["TEST_MS_REFRESH_TOKEN", env.TEST_MS_REFRESH_TOKEN],
+  ["GOOGLE_OAUTH_CLIENT_ID", env.GOOGLE_OAUTH_CLIENT_ID],
+  ["GOOGLE_OAUTH_CLIENT_SECRET", env.GOOGLE_OAUTH_CLIENT_SECRET],
+  ["MICROSOFT_OAUTH_CLIENT_ID", env.MICROSOFT_OAUTH_CLIENT_ID],
+  ["MICROSOFT_OAUTH_CLIENT_SECRET", env.MICROSOFT_OAUTH_CLIENT_SECRET],
+  ["MICROSOFT_TENANT", env.MICROSOFT_TENANT],
+  ["GOOGLE_HD_DOMAIN", env.GOOGLE_HD_DOMAIN],
+].filter(([, value]) => !value);
+if (missingKeys.length > 0) {
+  throw new Error(
+    `E2E requires ${missingKeys.map(([key]) => key).join(", ")} in .env.local`
+  );
 }
 
-const forceRefresh = env.RUN_E2E === "1";
-const { googleToken, microsoftToken } = await getBearerTokens(forceRefresh);
+const { googleToken, microsoftToken } = await getBearerTokens(true);
 
-if (forceRefresh && googleToken?.accessToken) {
+if (googleToken?.accessToken) {
   const tokenInfoUrl = ApiEndpoint.GoogleAuth.TokenInfo;
   const googleAccessToken = googleToken.accessToken;
   const googleResponse = await fetchWithTimeout(

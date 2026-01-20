@@ -8,9 +8,10 @@ files for scope-specific rules.
 - `bun install`
 - `bun run dev`
 - `bun run build` / `bun run check` / `bun run lint` / `bun run format`
-- `bun test` (runs all tests)
-- `bun test path/to/file.test.ts` or `bun test --filter "name"` (single test)
-- `RUN_E2E=1 bun test` (live E2E), `UPDATE_FIXTURES=1` or `CHECK_FIXTURES=1` for fixtures, `SKIP_E2E=1` to skip
+- `NODE_ENV=test bun test` (runs all tests)
+- `NODE_ENV=test bun test path/to/file.test.ts` or `NODE_ENV=test bun test --filter "name"` (single test)
+- `NODE_ENV=test bun test` (live E2E always runs)
+- `UPDATE_FIXTURES=1 NODE_ENV=test bun test` or `CHECK_FIXTURES=1 NODE_ENV=test bun test` for fixtures
 - `bun run e2e:live` (live E2E runner)
 
 ## Workflow Steps (lib/workflow/steps)
@@ -23,6 +24,14 @@ files for scope-specific rules.
 - Reuse shared types in `lib/workflow/types` and constants in `lib/workflow/constants`.
 - No `any`, no type assertions (`as`), no extra default exports.
 - Do not read `process.env` in steps; use `env` from `env.ts`.
+
+## Workflow SSE
+
+- Stream endpoint: `GET /api/workflow/steps/:stepId/stream`.
+- Clients use `EventSource` and apply `StepStreamEvent` updates incrementally.
+- Server injects provider access tokens from cookies; do not send tokens via query params.
+- Filter sensitive vars before sending to the client.
+- Events include `phase`, `log`, `state`, `vars`, `lro`, and `complete`.
 
 ## Scope-Specific Rules
 

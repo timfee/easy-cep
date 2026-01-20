@@ -3,9 +3,10 @@
 ## Commands (Repo-wide)
 
 - `bun run build` / `bun run check` / `bun run lint` / `bun run format`
-- `bun --env-file=.env.local test` (runs all tests)
-- `bun --env-file=.env.local test path/to/file.test.ts` or `bun --env-file=.env.local test --filter "name"` (single test)
-- `RUN_E2E=1 bun --env-file=.env.local test` (live E2E), `UPDATE_FIXTURES=1` or `CHECK_FIXTURES=1` for fixtures, `SKIP_E2E=1` to skip
+- `NODE_ENV=test bun test` (runs all tests)
+- `NODE_ENV=test bun test path/to/file.test.ts` or `NODE_ENV=test bun test --filter "name"` (single test)
+- `NODE_ENV=test bun test` (live E2E always runs)
+- `UPDATE_FIXTURES=1 NODE_ENV=test bun test` or `CHECK_FIXTURES=1 NODE_ENV=test bun test` for fixtures
 - `bun run e2e:live` (live E2E runner)
 
 Below is a complete canvas of **12 steps**, each with:
@@ -17,8 +18,10 @@ Below is a complete canvas of **12 steps**, each with:
 
 Before running or developing a step that performs live API calls, confirm the
 Google and Microsoft bearer tokens are valid (sourced from `.env.local` via the
-refresh token or service account flow). These credentials point to test tenants,
-so API mutations are allowed during step development.
+automated refresh token or service account flow). Bun auto-loads `.env`,
+`.env.test`, and `.env.local` based on `NODE_ENV`, so do not pass `--env-file`.
+These credentials point to test tenants, so API mutations are allowed during
+step development.
 
 ## Step 1: `verifyPrimaryDomain`
 

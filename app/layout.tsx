@@ -5,7 +5,6 @@ import { WorkflowProvider } from "@/components/workflow/context";
 import { WorkflowHeader } from "@/components/workflow/header";
 import { PROTECTED_RESOURCES } from "@/constants";
 import { env } from "@/env";
-import { generateSecurePassword } from "@/lib/utils";
 import { getAllSteps } from "@/lib/workflow/step-registry";
 import { Var } from "@/lib/workflow/variables";
 
@@ -41,7 +40,6 @@ export default function RootLayout({
     [Var.ProvisioningAppDisplayName]: "Google Workspace Provisioning",
     [Var.SsoAppDisplayName]: "Google Workspace SSO",
     [Var.ClaimsPolicyDisplayName]: "Google Workspace Basic Claims",
-    [Var.GeneratedPassword]: generateSecurePassword(),
   };
 
   return (

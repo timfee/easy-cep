@@ -24,7 +24,6 @@ async function main() {
   await run("bun", ["x", "tsx", "scripts/e2e-setup.ts"]);
   await run("bun", ["test", "test/e2e/workflow.test.ts"], {
     ...process.env,
-    RUN_E2E: "1",
   });
 }
 
