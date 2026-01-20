@@ -109,7 +109,7 @@ export function StepCardHeader({
   }
 
   const handleCardClick = useCallback(
-    (event: MouseEvent<HTMLDivElement>) => {
+    (event: MouseEvent<HTMLButtonElement>) => {
       event.stopPropagation();
       onToggle();
     },
@@ -117,7 +117,7 @@ export function StepCardHeader({
   );
 
   const handleCardKeyDown = useCallback(
-    (event: KeyboardEvent<HTMLDivElement>) => {
+    (event: KeyboardEvent<HTMLButtonElement>) => {
       if (event.key === "Enter" || event.key === " ") {
         event.preventDefault();
         onToggle();
@@ -127,15 +127,14 @@ export function StepCardHeader({
   );
 
   return (
-    <CardHeader
-      className="cursor-pointer rounded-t-xl px-6 py-4 transition-colors focus-visible:outline-none"
-      aria-expanded={isExpanded}
-      onClick={handleCardClick}
-      onKeyDown={handleCardKeyDown}
-      role="button"
-      tabIndex={0}
-    >
-      <div className="flex items-center justify-between">
+    <CardHeader className="rounded-t-xl px-6 py-4 transition-colors">
+      <button
+        type="button"
+        className="relative flex w-full cursor-pointer items-center justify-between text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/30"
+        aria-expanded={isExpanded}
+        onClick={handleCardClick}
+        onKeyDown={handleCardKeyDown}
+      >
         <div className="flex min-w-0 flex-1 items-center gap-3">
           <div
             className={cn(
@@ -169,7 +168,7 @@ export function StepCardHeader({
             )}
           </div>
         </div>
-      </div>
+      </button>
       {state?.error && isExpanded && (
         <div className="mt-3 max-h-32 overflow-y-auto rounded border-destructive border-l-4 bg-destructive/10 p-4">
           <div className="flex items-start gap-2">

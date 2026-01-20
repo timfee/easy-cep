@@ -171,7 +171,7 @@ export function WorkflowProvider({
       },
 
       set(updates: Partial<WorkflowVars>) {
-        updateVars(updates).catch(() => {});
+        updateVars(updates);
       },
 
       subscribe(key: VarName, callback: (value: unknown) => void): () => void {
@@ -201,13 +201,13 @@ export function WorkflowProvider({
       const { stepId } = event;
       if (event.type === "vars") {
         const updates = filterSensitiveVars(event.vars);
-        updateVars(updates).catch(() => {});
+        updateVars(updates);
         return;
       }
 
       if (event.type === "complete") {
         updateStep(stepId, event.state);
-        updateVars(filterSensitiveVars(event.newVars)).catch(() => {});
+        updateVars(filterSensitiveVars(event.newVars));
         setExecuting(null);
         checkedSteps.current.delete(stepId);
         return;
@@ -350,7 +350,7 @@ export function WorkflowProvider({
         try {
           const fallback = await runStep(id, vars);
           updateStep(id, fallback.state);
-          updateVars(fallback.newVars).catch(() => {});
+          updateVars(fallback.newVars);
         } catch (error) {
           console.error("Failed to run step:", error);
           updateStep(id, {
@@ -430,9 +430,9 @@ export function WorkflowProvider({
         result = await checkStep(step.id, vars);
         updateStep(step.id, result.state);
 
-        if (Object.keys(result.newVars).length > 0) {
-          updateVars(result.newVars).catch(() => {});
-        }
+          if (Object.keys(result.newVars).length > 0) {
+            updateVars(result.newVars);
+          }
       } catch (error) {
         updateStep(step.id, {
           error: error instanceof Error ? error.message : "Check failed",
