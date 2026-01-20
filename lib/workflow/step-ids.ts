@@ -44,3 +44,11 @@ export const StepId: Record<
   CompleteGoogleSsoSetup: "complete-google-sso-setup",
   AssignUsersToSso: "assign-users-to-sso",
 };
+
+export const STEP_ID_VALUES: ReadonlySet<string> = new Set(
+  Object.values(StepId)
+);
+
+export function isStepIdValue(value: string): value is StepIdValue {
+  return STEP_ID_VALUES.has(value);
+}

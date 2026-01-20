@@ -314,7 +314,7 @@ async function processStep<T extends StepIdValue>(
         ...baseContext,
         vars,
         checkData,
-        markSucceeded: (newVars: Partial<WorkflowVars>) => {
+        output: (newVars: Partial<WorkflowVars>) => {
           finalVars = newVars;
           emitVarsEvent(eventMeta, newVars);
           pushState({ status: StepStatus.Complete, summary: "Succeeded" });
@@ -323,7 +323,7 @@ async function processStep<T extends StepIdValue>(
           pushState({ status: StepStatus.Blocked, error });
         },
         markPending: (notes: string) => {
-          pushState({ status: StepStatus.Ready, notes });
+          pushState({ status: StepStatus.Pending, notes });
         },
       });
     } catch (error) {

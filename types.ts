@@ -91,7 +91,7 @@ export interface StepExecuteContext<T> {
   log(level: LogLevel, message: string, data?: unknown): void;
   vars: Partial<WorkflowVars>;
   checkData: T;
-  markSucceeded(vars: Partial<WorkflowVars>): void;
+  output(vars: Partial<WorkflowVars>): void;
   markFailed(error: string): void;
   markPending(notes: string): void;
 }

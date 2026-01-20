@@ -52,11 +52,10 @@ export default defineStep(StepId.CreateServiceUser)
               generatedPassword: existingPassword,
             });
           } else {
-      markIncomplete("Service user password missing", {
-        provisioningUserId: user.id,
-        provisioningUserEmail: user.primaryEmail,
-      });
-
+            markIncomplete("Service user password missing", {
+              provisioningUserId: user.id,
+              provisioningUserEmail: user.primaryEmail,
+            });
           }
         } else {
           log(LogLevel.Error, "Unexpected user response", { user });

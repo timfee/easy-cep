@@ -117,7 +117,7 @@ describe("Workflow Live E2E", () => {
         }
       }
 
-      expect(["complete", "blocked"]).toContain(result.state.status);
+      expect(["complete", "blocked", "pending"]).toContain(result.state.status);
       assertFixture(step, {
         status: result.state.status,
         error: result.state.error,

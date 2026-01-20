@@ -69,26 +69,25 @@ export default defineStep(StepId.ConfigureMicrosoftSso)
           return start <= now && now <= end && cert.key;
         });
 
-          if (!activeCert?.key) {
-            log(LogLevel.Info, "SSO configured but certificate missing");
-            const existingCert = vars.get(Var.MsSigningCertificate);
-            const existingLoginUrl = vars.get(Var.MsSsoLoginUrl);
-            const existingEntityId = vars.get(Var.MsSsoEntityId);
-            if (existingCert && existingLoginUrl && existingEntityId) {
-              markComplete({
-                msSigningCertificate: existingCert,
-                msSsoLoginUrl: existingLoginUrl,
-                msSsoEntityId: existingEntityId,
-              });
-            } else {
-              markIncomplete(
-                "SSO configured but certificate missing. Re-run will regenerate and reconfigure Google.",
-                {}
-              );
-            }
-            return;
+        if (!activeCert?.key) {
+          log(LogLevel.Info, "SSO configured but certificate missing");
+          const existingCert = vars.get(Var.MsSigningCertificate);
+          const existingLoginUrl = vars.get(Var.MsSsoLoginUrl);
+          const existingEntityId = vars.get(Var.MsSsoEntityId);
+          if (existingCert && existingLoginUrl && existingEntityId) {
+            markComplete({
+              msSigningCertificate: existingCert,
+              msSsoLoginUrl: existingLoginUrl,
+              msSsoEntityId: existingEntityId,
+            });
+          } else {
+            markIncomplete(
+              "SSO configured but certificate missing. Re-run will regenerate and reconfigure Google.",
+              {}
+            );
           }
-
+          return;
+        }
 
         const tenantInfo = (await microsoft.organization.get()) as {
           value: Array<{ id: string }>;
@@ -176,21 +175,21 @@ export default defineStep(StepId.ConfigureMicrosoftSso)
         throw new Error("Unable to find application object");
       }
 
-       log(LogLevel.Info, "Configuring application URLs");
-       const appResponse = (await microsoft.applications
-         .get(applicationObjectId)
-         .get()) as {
-         identifierUris?: string[];
-         web?: { redirectUris?: string[] } | null;
-       };
-       const existingRedirectUris = appResponse.web?.redirectUris ?? [];
-       const redirectUriSet = new Set([acsUrl, ...existingRedirectUris]);
-       const existingIdentifierUris = appResponse.identifierUris ?? [];
-       const identifierUriSet = new Set([entityId, ...existingIdentifierUris]);
-       await microsoft.applications.update(applicationObjectId).patch({
-         identifierUris: Array.from(identifierUriSet),
-         web: { redirectUris: Array.from(redirectUriSet) },
-       });
+      log(LogLevel.Info, "Configuring application URLs");
+      const appResponse = (await microsoft.applications
+        .get(applicationObjectId)
+        .get()) as {
+        identifierUris?: string[];
+        web?: { redirectUris?: string[] } | null;
+      };
+      const existingRedirectUris = appResponse.web?.redirectUris ?? [];
+      const redirectUriSet = new Set([acsUrl, ...existingRedirectUris]);
+      const existingIdentifierUris = appResponse.identifierUris ?? [];
+      const identifierUriSet = new Set([entityId, ...existingIdentifierUris]);
+      await microsoft.applications.update(applicationObjectId).patch({
+        identifierUris: Array.from(identifierUriSet),
+        web: { redirectUris: Array.from(redirectUriSet) },
+      });
       completedOps.push({
         description: "Reset application URLs",
         rollback: async () => {

@@ -49,6 +49,15 @@ const stepStateConfig: Record<StepStatus, StepStateConfig> = {
     indicatorClass: "bg-destructive text-white",
     borderClass: "border-destructive",
   },
+  pending: {
+    badge: {
+      variant: "default",
+      className: "bg-amber-500/15 text-amber-700 border-amber-500/40",
+    },
+    icon: null,
+    indicatorClass: "bg-amber-500 text-white",
+    borderClass: "border-amber-500/60 hover:border-amber-500/80",
+  },
 };
 
 /**

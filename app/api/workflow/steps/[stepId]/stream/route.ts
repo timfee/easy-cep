@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { PROVIDERS } from "@/constants";
 import { getToken } from "@/lib/auth";
 import { runStepWithEvents } from "@/lib/workflow/engine";
-import type { StepIdValue } from "@/lib/workflow/step-ids";
+import { isStepIdValue } from "@/lib/workflow/step-ids";
 import { Var, type WorkflowVars } from "@/lib/workflow/variables";
 import type { StepStreamEvent } from "@/types";
 
@@ -18,9 +18,12 @@ function toSsePayload(event: StepStreamEvent) {
 
 export async function GET(
   request: Request,
-  { params }: { params: { stepId: StepIdValue } }
+  { params }: { params: Promise<{ stepId: string }> }
 ) {
-  const { stepId } = params;
+  const { stepId } = await params;
+  if (!isStepIdValue(stepId)) {
+    return new NextResponse("Invalid step id", { status: 400 });
+  }
   const stream = new TransformStream();
   const writer = stream.writable.getWriter();
   const encoder = new TextEncoder();

@@ -6,6 +6,7 @@ import {
 } from "@/lib/workflow/core/errors";
 import { extractResourceId, ResourceTypes } from "@/lib/workflow/core/http";
 import { StepId } from "@/lib/workflow/step-ids";
+import type { WorkflowVars } from "@/lib/workflow/variables";
 import { Var } from "@/lib/workflow/variables";
 import { LogLevel } from "@/types";
 import type { GoogleClient } from "../http/google-client";
@@ -189,32 +190,9 @@ async function applySsoAssignment(
     return "done";
   } catch (error) {
     if (isBadRequestError(error)) {
-      const responseBody =
-        error instanceof Error && "responseBody" in error
-          ? (error as { responseBody?: unknown }).responseBody
-          : undefined;
-      const responseMessage =
-        responseBody &&
-        typeof responseBody === "object" &&
-        responseBody !== null &&
-        "error" in responseBody &&
-        typeof responseBody.error === "object" &&
-        responseBody.error !== null &&
-        "message" in responseBody.error
-          ? (responseBody.error as { message?: string }).message
-          : undefined;
-      if (responseMessage?.includes("already exists")) {
-        const { inboundSsoAssignments = [] } = (await google.ssoAssignments
-          .list()
-          .get()) as { inboundSsoAssignments?: SsoAssignment[] };
-        const existingAssignment = inboundSsoAssignments.find((item) => {
-          const existingTarget = item.targetOrgUnit
-            ? `orgUnits/${normalizeOrgUnitId(
-                extractResourceId(item.targetOrgUnit, ResourceTypes.OrgUnits)
-              )}`
-            : undefined;
-          return existingTarget === targetOrgUnit;
-        });
+      const message = extractResponseMessage(error);
+      if (message?.includes("already exists")) {
+        const existingAssignment = await findAssignment(google, targetOrgUnit);
         if (existingAssignment) {
           log(LogLevel.Info, `Replacing existing ${label} assignment`, {
             targetOrgUnit: existingAssignment.targetOrgUnit,
@@ -231,8 +209,83 @@ async function applySsoAssignment(
         }
       }
     }
+    if (isHttpError(error, 503)) {
+      log(LogLevel.Info, `${label} assignment service unavailable`, {
+        error,
+      });
+      return "pending";
+    }
     throw error;
   }
+}
+
+function extractResponseMessage(error: unknown): string | undefined {
+  if (!(error instanceof Error && "responseBody" in error)) {
+    return undefined;
+  }
+  const responseBody = (error as { responseBody?: unknown }).responseBody;
+  if (!responseBody || typeof responseBody !== "object") {
+    return undefined;
+  }
+  if (!("error" in responseBody)) {
+    return undefined;
+  }
+  const errorBody = responseBody.error;
+  if (!errorBody || typeof errorBody !== "object") {
+    return undefined;
+  }
+  if (!("message" in errorBody)) {
+    return undefined;
+  }
+  return typeof errorBody.message === "string" ? errorBody.message : undefined;
+}
+
+async function findAssignment(
+  google: GoogleClient,
+  targetOrgUnit: string
+): Promise<SsoAssignment | undefined> {
+  const { inboundSsoAssignments = [] } = (await google.ssoAssignments
+    .list()
+    .get()) as { inboundSsoAssignments?: SsoAssignment[] };
+  return inboundSsoAssignments.find((item) => {
+    const existingTarget = item.targetOrgUnit
+      ? `orgUnits/${normalizeOrgUnitId(
+          extractResourceId(item.targetOrgUnit, ResourceTypes.OrgUnits)
+        )}`
+      : undefined;
+    return existingTarget === targetOrgUnit;
+  });
+}
+
+function handleAssignmentFailure(
+  error: unknown,
+  log: StepLogger,
+  markFailed: (message: string) => void,
+  output: (vars: Partial<WorkflowVars>) => void
+) {
+  if (isConflictError(error)) {
+    output({});
+    return;
+  }
+  if (isHttpError(error, 412)) {
+    log(LogLevel.Info, "Assignment already exists", { error });
+    output({});
+    return;
+  }
+  if (isNotFoundError(error)) {
+    log(LogLevel.Error, "SAML profile not found", { error });
+    markFailed("SAML profile missing. Run 'Complete Google SSO setup' first.");
+    return;
+  }
+  if (isBadRequestError(error)) {
+    log(LogLevel.Error, "Invalid SSO profile", { error });
+    markFailed(
+      "SSO profile incomplete or missing. Run 'Complete Google SSO setup' first."
+    );
+    return;
+  }
+  log(LogLevel.Error, "Failed to assign users to SSO", { error });
+  markFailed(error instanceof Error ? error.message : "Execute failed");
 }
 
 export default defineStep(StepId.AssignUsersToSso)
@@ -294,7 +347,8 @@ export default defineStep(StepId.AssignUsersToSso)
               )}`
             : undefined;
           return (
-            targetOrgUnit === automationTarget && assignment.ssoMode === "SSO_OFF"
+            targetOrgUnit === automationTarget &&
+            assignment.ssoMode === "SSO_OFF"
           );
         });
 
@@ -356,25 +410,7 @@ export default defineStep(StepId.AssignUsersToSso)
 
       output({});
     } catch (error) {
-      if (isConflictError(error)) {
-        output({});
-      } else if (isHttpError(error, 412)) {
-        log(LogLevel.Info, "Assignment already exists", { error });
-        output({});
-      } else if (isNotFoundError(error)) {
-        log(LogLevel.Error, "SAML profile not found", { error });
-        markFailed(
-          "SAML profile missing. Run 'Complete Google SSO setup' first."
-        );
-      } else if (isBadRequestError(error)) {
-        log(LogLevel.Error, "Invalid SSO profile", { error });
-        markFailed(
-          "SSO profile incomplete or missing. Run 'Complete Google SSO setup' first."
-        );
-      } else {
-        log(LogLevel.Error, "Failed to assign users to SSO", { error });
-        markFailed(error instanceof Error ? error.message : "Execute failed");
-      }
+      handleAssignmentFailure(error, log, markFailed, output);
     }
   })
   .undo(async ({ vars, google, markReverted, markFailed, log }) => {
@@ -387,57 +423,47 @@ export default defineStep(StepId.AssignUsersToSso)
       const automationOuPath = vars.require(Var.AutomationOuPath);
 
       const rootId = await getRootOrgUnitId(google);
-      const rootTarget = `orgUnits/${rootId}`.replace("orgUnits/id:", "orgUnits/");
-      const automationTarget = (await getOrgUnitResourceName(
+      const rootTarget = `orgUnits/${normalizeOrgUnitId(rootId)}`;
+      const automationTarget = await getOrgUnitResourceName(
         google,
         automationOuPath
-      )).replace("orgUnits/id:", "orgUnits/");
-      const rootAssignment = inboundSsoAssignments.find(
-        (item) =>
-          item.targetOrgUnit === rootTarget &&
-          item.samlSsoInfo?.inboundSamlSsoProfile === profileId &&
-          item.ssoMode === "SAML_SSO"
       );
+      const rootAssignment = inboundSsoAssignments.find((assignment) => {
+        const targetOrgUnit = assignment.targetOrgUnit
+          ? `orgUnits/${normalizeOrgUnitId(
+              extractResourceId(
+                assignment.targetOrgUnit,
+                ResourceTypes.OrgUnits
+              )
+            )}`
+          : undefined;
+        return (
+          targetOrgUnit === rootTarget &&
+          assignment.samlSsoInfo?.inboundSamlSsoProfile === profileId &&
+          assignment.ssoMode === "SAML_SSO"
+        );
+      });
 
       if (rootAssignment) {
-        const id = extractResourceId(
-          rootAssignment.name,
-          ResourceTypes.InboundSsoAssignments
-        );
-        try {
-          await google.ssoAssignments.delete(id).delete();
-        } catch (error) {
-          if (!isNotFoundError(error)) {
-            throw error;
-          }
-          log(
-            LogLevel.Info,
-            "Inbound SSO Assignment already deleted or not found"
-          );
-        }
+        await deleteAssignment(google, rootAssignment, log);
       }
 
-      const automationAssignment = inboundSsoAssignments.find(
-        (item) =>
-          item.targetOrgUnit === automationTarget && item.ssoMode === "SSO_OFF"
-      );
+      const automationAssignment = inboundSsoAssignments.find((assignment) => {
+        const targetOrgUnit = assignment.targetOrgUnit
+          ? `orgUnits/${normalizeOrgUnitId(
+              extractResourceId(
+                assignment.targetOrgUnit,
+                ResourceTypes.OrgUnits
+              )
+            )}`
+          : undefined;
+        return (
+          targetOrgUnit === automationTarget && assignment.ssoMode === "SSO_OFF"
+        );
+      });
 
       if (automationAssignment) {
-        const id = extractResourceId(
-          automationAssignment.name,
-          ResourceTypes.InboundSsoAssignments
-        );
-        try {
-          await google.ssoAssignments.delete(id).delete();
-        } catch (error) {
-          if (!isNotFoundError(error)) {
-            throw error;
-          }
-          log(
-            LogLevel.Info,
-            "Inbound SSO Assignment already deleted or not found"
-          );
-        }
+        await deleteAssignment(google, automationAssignment, log);
       }
 
       markReverted();

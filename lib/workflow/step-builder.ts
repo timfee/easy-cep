@@ -133,8 +133,7 @@ export function defineStep<
         const ctx = {
           ...wrapContext(originalCtx),
           checkData: originalCtx.checkData,
-          output: (vars: Partial<WorkflowVars>) =>
-            originalCtx.markSucceeded(vars),
+          output: (vars: Partial<WorkflowVars>) => originalCtx.output(vars),
         };
         await executeFn?.(ctx);
       };
