@@ -335,6 +335,7 @@ export function WorkflowProvider({
       updateStep(id, {
         isExecuting: true,
         status: statusRef.current[id]?.status ?? StepStatus.Ready,
+        logs: [],
         error: undefined,
       });
 
@@ -499,8 +500,86 @@ export function WorkflowProvider({
     [steps, vars, updateStep, clearStepActivity, updateVars]
   );
 
-  const checkSingleStep = useCallback(
-    async (step: StepDefinition) => {
+  const shouldSkipStep = useCallback(
+    (step: StepDefinition, current?: StepUIState): boolean => {
+      if (checkedSteps.current.has(step.id)) {
+        return true;
+      }
+      if (inflightChecks.current.has(step.id)) {
+        return true;
+      }
+      if (current?.status === StepStatus.Complete && current.logs?.length) {
+        return true;
+      }
+      if (getMissingRequiredVars(step.requires, vars).length > 0) {
+        return true;
+      }
+      return false;
+    },
+    [vars]
+  );
+
+  const mergeStepLogs = useCallback(
+    (
+      existingLogs?: StepUIState["logs"],
+      incomingLogs?: StepUIState["logs"]
+    ) => {
+      const mergedLogs = [...(existingLogs ?? [])];
+      for (const log of incomingLogs ?? []) {
+        const exists = mergedLogs.some(
+          (entry) =>
+            entry.timestamp === log.timestamp && entry.message === log.message
+        );
+        if (!exists) {
+          mergedLogs.push(log);
+        }
+      }
+      return mergedLogs;
+    },
+    []
+  );
+
+  const buildCheckResult = useCallback(
+    (
+      stepId: StepIdValue,
+      result: Awaited<ReturnType<typeof checkStep>> | undefined,
+      checkError: string | undefined
+    ) => {
+      const prevStatus = statusRef.current[stepId]?.status ?? StepStatus.Ready;
+      let nextStatus = prevStatus;
+      let nextError = result?.state.error;
+
+      if (checkError) {
+        nextStatus = StepStatus.Blocked;
+        nextError = checkError;
+      } else if (result?.state.status) {
+        nextStatus = result.state.status;
+      }
+
+      const mergedLogs = mergeStepLogs(
+        statusRef.current[stepId]?.logs,
+        result?.state.logs
+      );
+
+      return { mergedLogs, nextError, nextStatus };
+    },
+    [mergeStepLogs]
+  );
+
+  const checkSteps = useCallback(async () => {
+    for (const step of steps) {
+      const current = status[step.id];
+      if (shouldSkipStep(step, current)) {
+        continue;
+      }
+
+      const isExecutingStep =
+        executing === step.id || statusRef.current[step.id]?.isExecuting;
+      const isUndoingStep = statusRef.current[step.id]?.isUndoing;
+      if (isExecutingStep || isUndoingStep) {
+        continue;
+      }
+
       checkedSteps.current.add(step.id);
       inflightChecks.current.add(step.id);
 
@@ -515,18 +594,11 @@ export function WorkflowProvider({
       } finally {
         inflightChecks.current.delete(step.id);
 
-        const prevStatus =
-          statusRef.current[step.id]?.status ?? StepStatus.Pending;
-
-        const { status: nextStatus, error: nextError } = resolveCheckStatus(
-          checkError,
-          result?.state,
-          prevStatus
+        const { mergedLogs, nextError, nextStatus } = buildCheckResult(
+          step.id,
+          result,
+          checkError
         );
-
-        const existingLogs = statusRef.current[step.id]?.logs ?? [];
-        const incomingLogs = result?.state.logs ?? [];
-        const mergedLogs = mergeLogs(existingLogs, incomingLogs);
 
         updateStep(step.id, {
           isChecking: false,
@@ -543,43 +615,21 @@ export function WorkflowProvider({
           try {
             await updateVars(result.newVars);
           } catch (error) {
-            console.error("Failed to update vars", error);
+            console.error("Failed to update vars after check", error);
           }
         }
       }
-    },
-    [vars, updateStep, updateVars]
-  );
-
-  const checkSteps = useCallback(async () => {
-    for (const step of steps) {
-      const current = status[step.id];
-
-      // Skip logic
-      if (checkedSteps.current.has(step.id)) {
-        continue;
-      }
-      if (inflightChecks.current.has(step.id)) {
-        continue;
-      }
-      if (current?.status === StepStatus.Complete && current.logs?.length) {
-        continue;
-      }
-
-      if (getMissingRequiredVars(step.requires, vars).length > 0) {
-        continue;
-      }
-
-      const isExecutingStep =
-        executing === step.id || statusRef.current[step.id]?.isExecuting;
-      const isUndoingStep = statusRef.current[step.id]?.isUndoing;
-      if (isExecutingStep || isUndoingStep) {
-        continue;
-      }
-
-      await checkSingleStep(step);
     }
-  }, [vars, steps, status, executing, checkSingleStep]);
+  }, [
+    buildCheckResult,
+    executing,
+    shouldSkipStep,
+    status,
+    steps,
+    updateStep,
+    updateVars,
+    vars,
+  ]);
 
   useEffect(() => {
     if (debouncedCheckTimeout.current) {
@@ -614,7 +664,7 @@ export function WorkflowProvider({
       };
     }
     return computed;
-  }, [steps, vars, status]);
+  }, [steps, status, vars]);
 
   const value: WorkflowContextValue = {
     applyStepEvent,

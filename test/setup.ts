@@ -1,4 +1,3 @@
-import "tsconfig-paths/register";
 import { ApiEndpoint } from "@/constants";
 import { env } from "@/env";
 import {

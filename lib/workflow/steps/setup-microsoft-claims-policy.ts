@@ -68,13 +68,13 @@ export default defineStep(StepId.SetupMicrosoftClaimsPolicy)
           const matchedPolicy = value.find(
             (policy) => policy.displayName === displayName
           );
-          if (!matchedPolicy?.id) {
+          policyId = matchedPolicy?.id;
+          if (!policyId) {
             throw new Error(
-              `Claims policy '${displayName}' already exists but could not be found.`,
+              `Claims policy not found for display name: ${displayName}`,
               { cause: error }
             );
           }
-          policyId = matchedPolicy.id;
         } else {
           throw error;
         }

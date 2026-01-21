@@ -172,7 +172,7 @@ describe("info server actions", () => {
         deletable: true,
         deleteEndpoint:
           "https://graph.microsoft.com/v1.0/servicePrincipals/sp1/synchronization/jobs/Initial",
-        href: "https://portal.azure.com/#view/Microsoft_AAD_Connect_Provisioning/ProvisioningMenuBlade/~/Overview/objectId/sp1/appId/abcd1234",
+        href: "https://portal.azure.com/#view/Microsoft_AAD_Connect_Provisioning/ProvisioningMenuBlade/~/OverviewPreview/objectId/sp1/appId/abcd1234",
         id: "Initial",
         label: "gsuite",
         subLabel: "Active",

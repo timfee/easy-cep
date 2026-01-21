@@ -24,7 +24,11 @@ import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import {
   Dialog,
+  DialogClose,
   DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
@@ -357,156 +361,171 @@ export function InfoButton({
           <Info className="h-3.5 w-3.5" /> Inspect
         </Button>
       </DialogTrigger>
-      <DialogContent className="flex max-h-150 max-w-2xl flex-col p-0">
-        <div className="space-y-1 border-b px-6 py-4">
-          <DialogTitle className="text-lg font-semibold">{title}</DialogTitle>
-          {context && <p className="text-xs text-foreground/60">{context}</p>}
-        </div>
+      <DialogContent className="max-h-[90vh] w-[min(92vw,52rem)] p-0">
+        <div className="flex h-full max-h-[90vh] flex-col">
+          <div className="border-b px-6 py-5">
+            <DialogHeader className="gap-2">
+              <DialogTitle>{title}</DialogTitle>
+              {context && (
+                <DialogDescription className="text-sm text-foreground/70">
+                  {context}
+                </DialogDescription>
+              )}
+            </DialogHeader>
+          </div>
 
-        {showSelectionToolbar && (
-          <div className="border-b px-6 py-4">
-            <div className="flex flex-wrap items-center justify-between gap-3">
-              <div className="flex items-center gap-2">
-                {visibleDeletableItems.length > 0 && (
-                  <Checkbox
-                    checked={selectAllChecked}
-                    className="h-3 w-3"
-                    onCheckedChange={handleToggleAllVisible}
-                  />
-                )}
-                <p className="text-xs text-foreground/70">
-                  {selectedIds.size} selected · {deletableItems.length}{" "}
-                  deletable
-                </p>
-              </div>
-
-              <div className="flex flex-wrap gap-2">
-                <Button
-                  className="h-6 px-2 text-xs"
-                  disabled={selectedIds.size === 0 || isDeleting}
-                  onClick={handleDeleteSelected}
-                  size="sm"
-                  variant="destructive"
-                >
-                  {isDeleting && (
-                    <Loader2 className="mr-1 h-3 w-3 animate-spin" />
+          {showSelectionToolbar && (
+            <div className="border-b px-6 py-3">
+              <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                <div className="flex items-center gap-2 text-xs uppercase tracking-[0.3em] text-foreground/60">
+                  {visibleDeletableItems.length > 0 && (
+                    <Checkbox
+                      checked={selectAllChecked}
+                      className="h-3 w-3"
+                      onCheckedChange={handleToggleAllVisible}
+                    />
                   )}
-                  Delete Selected
-                </Button>
+                  <span>
+                    {selectedIds.size} selected · {deletableItems.length}{" "}
+                    deletable
+                  </span>
+                </div>
 
-                <AlertDialog>
-                  <AlertDialogTrigger asChild>
-                    <Button
-                      className="h-6 px-2 text-xs"
-                      disabled={deletableItems.length === 0 || isDeleting}
-                      size="sm"
-                      variant="destructive"
-                    >
-                      <Trash2 className="mr-1 h-3 w-3" />
-                      Purge All
-                    </Button>
-                  </AlertDialogTrigger>
-                  <AlertDialogContent className="space-y-4">
-                    <AlertDialogHeader>
-                      <AlertDialogTitle>Purge All {title}?</AlertDialogTitle>
-                      <AlertDialogDescription>
-                        This will delete {deletableItems.length} items. This
-                        action cannot be undone. Type &quot;DELETE ALL&quot; to
-                        confirm.
-                      </AlertDialogDescription>
-                    </AlertDialogHeader>
-                    <Input
-                      className="w-full"
-                      disabled={isDeleting}
-                      onChange={handleDeleteConfirmChange}
-                      placeholder="Type DELETE ALL to confirm"
-                      value={deleteConfirmText}
-                    />
-                    <AlertDialogFooter>
-                      <AlertDialogCancel
+                <div className="flex flex-wrap items-center gap-2">
+                  <Button
+                    className="h-8 px-3 text-xs font-semibold"
+                    disabled={selectedIds.size === 0 || isDeleting}
+                    onClick={handleDeleteSelected}
+                    size="sm"
+                    variant="destructive"
+                  >
+                    {isDeleting && (
+                      <Loader2 className="mr-1 h-3 w-3 animate-spin" />
+                    )}
+                    Delete Selected
+                  </Button>
+
+                  <AlertDialog>
+                    <AlertDialogTrigger asChild>
+                      <Button
+                        className="h-8 px-3 text-xs font-semibold"
+                        disabled={deletableItems.length === 0 || isDeleting}
+                        size="sm"
+                        variant="destructive"
+                      >
+                        <Trash2 className="mr-1 h-3 w-3" /> Purge All
+                      </Button>
+                    </AlertDialogTrigger>
+                    <AlertDialogContent>
+                      <AlertDialogHeader>
+                        <AlertDialogTitle>Purge All {title}?</AlertDialogTitle>
+                        <AlertDialogDescription>
+                          This will delete {deletableItems.length} items. This
+                          action cannot be undone. Type &quot;DELETE ALL&quot;
+                          to confirm.
+                        </AlertDialogDescription>
+                      </AlertDialogHeader>
+                      <Input
+                        className="mt-2"
                         disabled={isDeleting}
-                        onClick={handleResetDeleteConfirm}
-                      >
-                        Cancel
-                      </AlertDialogCancel>
-                      <AlertDialogAction
-                        className="bg-destructive hover:bg-destructive/90"
-                        disabled={
-                          deleteConfirmText !== "DELETE ALL" || isDeleting
+                        onChange={handleDeleteConfirmChange}
+                        placeholder="Type DELETE ALL to confirm"
+                        value={deleteConfirmText}
+                      />
+                      <AlertDialogFooter>
+                        <AlertDialogCancel
+                          disabled={isDeleting}
+                          onClick={handleResetDeleteConfirm}
+                        >
+                          Cancel
+                        </AlertDialogCancel>
+                        <AlertDialogAction
+                          className="bg-destructive hover:bg-destructive/90"
+                          disabled={
+                            deleteConfirmText !== "DELETE ALL" || isDeleting
+                          }
+                          onClick={handlePurgeAllClick}
+                        >
+                          {isDeleting && (
+                            <Loader2 className="mr-1 h-3 w-3 animate-spin" />
+                          )}
+                          Purge All
+                        </AlertDialogAction>
+                      </AlertDialogFooter>
+                    </AlertDialogContent>
+                  </AlertDialog>
+                </div>
+              </div>
+              <p className="mt-1 text-xs text-foreground/60">
+                {selectedIds.size > 0
+                  ? "Deletes run immediately and cannot be undone."
+                  : "Select entries to enable destructive actions."}
+              </p>
+            </div>
+          )}
+
+          <InfoCallouts error={error} failureDetails={failureDetails} />
+
+          <div className="flex-1 overflow-y-auto px-6 py-4">{listContent}</div>
+
+          {showPagination && (
+            <div className="border-t px-6 py-3">
+              <div className="flex items-center justify-between">
+                <span className="text-foreground/60 text-xs">
+                  Showing {(currentPage - 1) * 25 + 1}-
+                  {Math.min(currentPage * 25, items.length)} of {items.length}
+                </span>
+                <Pagination>
+                  <PaginationContent>
+                    <PaginationItem>
+                      <PaginationPrevious
+                        className={
+                          currentPage === 1
+                            ? "pointer-events-none opacity-50"
+                            : "cursor-pointer"
                         }
-                        onClick={handlePurgeAllClick}
-                      >
-                        {isDeleting && (
-                          <Loader2 className="mr-1 h-3 w-3 animate-spin" />
-                        )}
-                        Purge All
-                      </AlertDialogAction>
-                    </AlertDialogFooter>
-                  </AlertDialogContent>
-                </AlertDialog>
+                        onClick={goToPrevPage}
+                      />
+                    </PaginationItem>
+                    {Array.from(
+                      { length: Math.min(totalPages, 5) },
+                      (_, i) => i + 1
+                    ).map((pageNum) => (
+                      <PaginationItem key={pageNum}>
+                        <PaginationLink
+                          className="cursor-pointer"
+                          data-page={pageNum}
+                          isActive={currentPage === pageNum}
+                          onClick={handlePageClick}
+                        >
+                          {pageNum}
+                        </PaginationLink>
+                      </PaginationItem>
+                    ))}
+                    <PaginationItem>
+                      <PaginationNext
+                        className={
+                          currentPage === totalPages
+                            ? "pointer-events-none opacity-50"
+                            : "cursor-pointer"
+                        }
+                        onClick={goToNextPage}
+                      />
+                    </PaginationItem>
+                  </PaginationContent>
+                </Pagination>
               </div>
             </div>
-            <p className="mt-1 text-xs text-foreground/60">
-              {selectedIds.size > 0
-                ? "Deletes run immediately and cannot be undone."
-                : "Select entries to enable destructive actions."}
-            </p>
-          </div>
-        )}
+          )}
 
-        <InfoCallouts error={error} failureDetails={failureDetails} />
-
-        <div className="flex-1 overflow-y-auto px-6 py-4">{listContent}</div>
-
-        {showPagination && (
-          <div className="border-t px-6 py-3">
-            <div className="flex items-center justify-between">
-              <span className="text-foreground/60 text-xs">
-                Showing {(currentPage - 1) * 25 + 1}-
-                {Math.min(currentPage * 25, items.length)} of {items.length}
-              </span>
-              <Pagination>
-                <PaginationContent>
-                  <PaginationItem>
-                    <PaginationPrevious
-                      className={
-                        currentPage === 1
-                          ? "pointer-events-none opacity-50"
-                          : "cursor-pointer"
-                      }
-                      onClick={goToPrevPage}
-                    />
-                  </PaginationItem>
-                  {Array.from(
-                    { length: Math.min(totalPages, 5) },
-                    (_, i) => i + 1
-                  ).map((pageNum) => (
-                    <PaginationItem key={pageNum}>
-                      <PaginationLink
-                        className="cursor-pointer"
-                        data-page={pageNum}
-                        isActive={currentPage === pageNum}
-                        onClick={handlePageClick}
-                      >
-                        {pageNum}
-                      </PaginationLink>
-                    </PaginationItem>
-                  ))}
-                  <PaginationItem>
-                    <PaginationNext
-                      className={
-                        currentPage === totalPages
-                          ? "pointer-events-none opacity-50"
-                          : "cursor-pointer"
-                      }
-                      onClick={goToNextPage}
-                    />
-                  </PaginationItem>
-                </PaginationContent>
-              </Pagination>
-            </div>
-          </div>
-        )}
+          <DialogFooter className="border-t px-6 py-4">
+            <DialogClose asChild>
+              <Button size="sm" variant="ghost">
+                Close
+              </Button>
+            </DialogClose>
+          </DialogFooter>
+        </div>
       </DialogContent>
     </Dialog>
   );

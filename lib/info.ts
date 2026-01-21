@@ -215,8 +215,39 @@ export async function listProvisioningJobs(): Promise<InfoItem[]> {
     value: z.array(
       z.object({
         id: z.string(),
-        status: z.object({ code: z.string().optional() }).optional(),
         templateId: z.string().optional(),
+        schedule: z.object({ state: z.string().optional() }).optional(),
+        status: z
+          .object({
+            code: z.string().optional(),
+            lastExecution: z
+              .object({
+                state: z.string().optional(),
+                error: z
+                  .object({
+                    code: z.string().optional(),
+                    message: z.string().optional(),
+                    tenantActionable: z.boolean().optional(),
+                  })
+                  .optional(),
+                timeBegan: z.string().optional(),
+                timeEnded: z.string().optional(),
+              })
+              .optional(),
+            quarantine: z
+              .object({
+                reason: z.string().optional(),
+                error: z
+                  .object({
+                    code: z.string().optional(),
+                    message: z.string().optional(),
+                    tenantActionable: z.boolean().optional(),
+                  })
+                  .optional(),
+              })
+              .optional(),
+          })
+          .optional(),
       })
     ),
   });
@@ -228,14 +259,26 @@ export async function listProvisioningJobs(): Promise<InfoItem[]> {
     throw new Error(`HTTP ${res.status}`);
   }
   const data = JobsSchema.parse(await res.json());
-  return data.value.map((job) => ({
-    deletable: true,
-    deleteEndpoint: `${ApiEndpoint.Microsoft.SyncJobs(sp.id)}/${job.id}`,
-    href: `https://portal.azure.com/#view/Microsoft_AAD_Connect_Provisioning/ProvisioningMenuBlade/~/Overview/objectId/${sp.id}/appId/${sp.appId}`,
-    id: job.id,
-    label: job.templateId ?? job.id,
-    subLabel: job.status?.code,
-  }));
+  return data.value.map((job) => {
+    const { status } = job;
+    const lastExecutionErrorMessage = status?.lastExecution?.error?.message;
+    const quarantineErrorMessage = status?.quarantine?.error?.message;
+    const errorMessage = lastExecutionErrorMessage ?? quarantineErrorMessage;
+    const descriptionParts = [
+      job.schedule?.state,
+      status?.code,
+      status?.quarantine?.reason,
+      errorMessage,
+    ].filter(Boolean) as string[];
+    return {
+      deletable: true,
+      deleteEndpoint: `${ApiEndpoint.Microsoft.SyncJobs(sp.id)}/${job.id}`,
+      href: `https://portal.azure.com/#view/Microsoft_AAD_Connect_Provisioning/ProvisioningMenuBlade/~/OverviewPreview/objectId/${sp.id}/appId/${sp.appId}`,
+      id: job.id,
+      label: job.templateId ?? job.id,
+      subLabel: descriptionParts.join(" · ") || undefined,
+    };
+  });
 }
 
 /**

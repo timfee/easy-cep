@@ -2,9 +2,13 @@
 
 import type React from "react";
 
+import Link from "next/link";
+import { useMemo } from "react";
+
 import type { InfoItem } from "@/lib/info";
 import type { DeleteResult } from "@/lib/workflow/info-actions";
 
+import { useWorkflow } from "@/components/workflow/context";
 import { PROTECTED_RESOURCES } from "@/constants";
 import { env } from "@/env";
 import {
@@ -28,6 +32,7 @@ import {
   deleteSamlProfiles,
   deleteSsoAssignments,
 } from "@/lib/workflow/info-actions";
+import { Var } from "@/lib/workflow/variables";
 
 import { InfoButton } from "./info-button";
 
@@ -195,21 +200,47 @@ export const AppsInfoButton = createInfoButton({
 /**
  * Inspect existing provisioning jobs.
  */
-export const ProvisioningInfoButton = createInfoButton({
-  context: (
-    <a
+const PROVISIONING_PORTAL_BASE =
+  "https://portal.azure.com/#view/Microsoft_AAD_Connect_Provisioning/ProvisioningMenuBlade";
+const PROVISIONING_OVERVIEW_PATH = `${PROVISIONING_PORTAL_BASE}/~/OverviewPreview`;
+const PROVISIONING_APP_ID = "417cd3a1-7ada-4b98-a0d4-099ec66bc6cd";
+
+function ProvisioningContextLink() {
+  const { varsRaw } = useWorkflow();
+  const userId = varsRaw[Var.ProvisioningUserId];
+  const href = useMemo(() => {
+    if (!userId) {
+      return PROVISIONING_PORTAL_BASE;
+    }
+    return `${PROVISIONING_OVERVIEW_PATH}/objectId/${userId}/appId/${PROVISIONING_APP_ID}`;
+  }, [userId]);
+
+  const label = userId
+    ? "Open provisioning user in Microsoft Entra"
+    : "Open provisioning in Microsoft Entra";
+
+  return (
+    <Link
       className="text-primary hover:underline"
-      href="https://entra.microsoft.com/#view/Microsoft_AAD_Connect/ProvisioningMenuBlade"
+      href={href}
       rel="noopener noreferrer"
       target="_blank"
     >
-      Open in Microsoft Entra
-    </a>
-  ),
-  deleteItems: env.ALLOW_INFO_PURGE ? deleteProvisioningJobs : undefined,
-  fetchItems: listProvisioningJobs,
-  title: "Existing Provisioning Jobs",
-});
+      {label}
+    </Link>
+  );
+}
+
+export function ProvisioningInfoButton() {
+  return (
+    <InfoButton
+      context={<ProvisioningContextLink />}
+      deleteItems={env.ALLOW_INFO_PURGE ? deleteProvisioningJobs : undefined}
+      fetchItems={listProvisioningJobs}
+      title="Existing Provisioning Jobs"
+    />
+  );
+}
 
 /**
  * Inspect existing claims policies.

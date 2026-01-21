@@ -1,4 +1,5 @@
 import { isNotFoundError } from "@/lib/workflow/core/errors";
+import { extractResourceId, ResourceTypes } from "@/lib/workflow/core/http";
 import { StepId } from "@/lib/workflow/step-ids";
 import { Var } from "@/lib/workflow/variables";
 import { LogLevel } from "@/types";
@@ -85,7 +86,13 @@ export default defineStep(StepId.ConfigureGoogleSamlProfile)
         return;
       }
 
-      const profile = (await google.samlProfiles.get(profileName).get()) as {
+      const profileResourceId = extractResourceId(
+        profileName,
+        ResourceTypes.InboundSamlSsoProfiles
+      );
+      const profile = (await google.samlProfiles
+        .get(profileResourceId)
+        .get()) as {
         name: string;
         spConfig: { entityId: string; assertionConsumerServiceUri: string };
       };
