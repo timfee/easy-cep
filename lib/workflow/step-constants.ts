@@ -33,12 +33,12 @@ const stepStateConfig: Record<StepStatus, StepStateConfig> = {
   },
   pending: {
     badge: {
-      variant: "default",
-      className: "bg-amber-500/15 text-amber-700 border-amber-500/40",
+      variant: "outline",
+      className: "bg-muted/10 text-muted-foreground/50 border-border/20",
     },
-    borderClass: "border-amber-500/60 hover:border-amber-500/80",
+    borderClass: "border-border/20 border-dotted",
     icon: null,
-    indicatorClass: "bg-amber-500 text-white",
+    indicatorClass: "bg-muted/40 text-muted-foreground/40",
   },
   ready: {
     badge: {
