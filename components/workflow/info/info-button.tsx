@@ -70,7 +70,7 @@ function InfoCallout({
   const variantClasses =
     variant === "error"
       ? "border border-destructive/60 bg-destructive/10 text-destructive"
-      : "border border-primary/60 bg-primary/10 text-primary-foreground";
+      : "border border-primary/60 bg-primary/10 text-primary";
 
   const iconNode =
     icon ??
@@ -376,20 +376,20 @@ export function InfoButton({
 
           {showSelectionToolbar && (
             <div className="border-b px-6 py-3">
-              <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-                <div className="flex items-center gap-2 text-xs uppercase tracking-[0.3em] text-foreground/60">
-                  {visibleDeletableItems.length > 0 && (
-                    <Checkbox
-                      checked={selectAllChecked}
-                      className="h-3 w-3"
-                      onCheckedChange={handleToggleAllVisible}
-                    />
-                  )}
-                  <span>
-                    {selectedIds.size} selected · {deletableItems.length}{" "}
-                    deletable
-                  </span>
-                </div>
+            <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+              <div className="flex items-center gap-2 text-foreground/60 text-xs">
+                {visibleDeletableItems.length > 0 && (
+                  <Checkbox
+                    checked={selectAllChecked}
+                    className="h-3 w-3"
+                    onCheckedChange={handleToggleAllVisible}
+                  />
+                )}
+                <span className="font-medium">
+                  {selectedIds.size} selected · {deletableItems.length}{" "}
+                  deletable
+                </span>
+              </div>
 
                 <div className="flex flex-wrap items-center gap-2">
                   <Button
