@@ -174,6 +174,7 @@ export const WORKFLOW_VARIABLES: Record<string, VariableMetadata> = {
     category: "state",
     description: "Email for provisioning account",
     producedBy: StepId.CreateServiceUser,
+    consumedBy: [StepId.SetupMicrosoftProvisioning],
     type: "string",
   },
   provisioningUserId: {
