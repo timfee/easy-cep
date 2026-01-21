@@ -133,14 +133,14 @@ function InfoCallouts({ error, failureDetails }: InfoCalloutsProps) {
               {failureDetails.map((failure) => (
                 <li
                   key={failure.id}
-                  className="flex items-start gap-2 text-[11px] text-destructive"
+                  className="flex items-start gap-2 text-xs text-destructive"
                 >
-                  <Badge variant="destructive">Failed</Badge>
+                  <Badge variant="destructive" className="h-5 px-1.5 text-[10px]">Failed</Badge>
                   <div className="min-w-0">
-                    <p className="text-foreground text-xs font-semibold">
+                    <p className="font-medium text-foreground">
                       {failure.label}
                     </p>
-                    <p className="text-destructive/80 text-[11px]">
+                    <p className="text-destructive/80">
                       {failure.message}
                     </p>
                   </div>
@@ -336,8 +336,8 @@ export function InfoButton({
 
     if (paginatedItems.length === 0) {
       return (
-        <div className="rounded-xl border border-dashed border-border/70 bg-muted/50 px-4 py-6 text-center text-xs text-foreground/60">
-          No entries found.
+        <div className="flex flex-col items-center justify-center py-8 text-center">
+          <p className="text-sm text-muted-foreground">No entries found.</p>
         </div>
       );
     }
@@ -367,30 +367,29 @@ export function InfoButton({
             <DialogHeader className="gap-2">
               <DialogTitle>{title}</DialogTitle>
               {context && (
-                <DialogDescription className="text-sm text-foreground/70">
+                <DialogDescription className="text-sm text-muted-foreground">
                   {context}
                 </DialogDescription>
               )}
-            </DialogHeader>
-          </div>
+                        </DialogHeader>          </div>
 
-          {showSelectionToolbar && (
-            <div className="border-b px-6 py-3">
-            <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-              <div className="flex items-center gap-2 text-foreground/60 text-xs">
-                {visibleDeletableItems.length > 0 && (
-                  <Checkbox
-                    checked={selectAllChecked}
-                    className="h-3 w-3"
-                    onCheckedChange={handleToggleAllVisible}
-                  />
-                )}
-                <span className="font-medium">
-                  {selectedIds.size} selected · {deletableItems.length}{" "}
-                  deletable
-                </span>
-              </div>
-
+                    {showSelectionToolbar && (
+                      <div className="border-b px-6 py-3">
+                        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                          <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                            {visibleDeletableItems.length > 0 && (
+                              <Checkbox
+                                checked={selectAllChecked}
+                                className="h-4 w-4"
+                                onCheckedChange={handleToggleAllVisible}
+                              />
+                            )}
+                            <span className="font-medium text-foreground">
+                              {selectedIds.size} selected
+                            </span>
+                            <span>·</span>
+                            <span>{deletableItems.length} deletable</span>
+                          </div>
                 <div className="flex flex-wrap items-center gap-2">
                   <Button
                     className="h-8 px-3 text-xs font-semibold"
@@ -456,7 +455,7 @@ export function InfoButton({
                   </AlertDialog>
                 </div>
               </div>
-              <p className="mt-1 text-xs text-foreground/60">
+              <p className="mt-1 text-xs text-muted-foreground">
                 {selectedIds.size > 0
                   ? "Deletes run immediately and cannot be undone."
                   : "Select entries to enable destructive actions."}
@@ -471,7 +470,7 @@ export function InfoButton({
           {showPagination && (
             <div className="border-t px-6 py-3">
               <div className="flex items-center justify-between">
-                <span className="text-foreground/60 text-xs">
+                <span className="text-xs text-muted-foreground">
                   Showing {(currentPage - 1) * 25 + 1}-
                   {Math.min(currentPage * 25, items.length)} of {items.length}
                 </span>
