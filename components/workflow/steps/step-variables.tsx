@@ -54,18 +54,18 @@ function VariableItem({
     <div className="space-y-1.5">
       <label
         className={cn(
-          "flex items-center gap-1.5 font-medium text-foreground/70 text-xs",
+          "flex items-center gap-1.5 font-medium text-muted-foreground text-xs",
           missing.includes(varKey) && "text-destructive"
         )}
         htmlFor={`var-${varKey}-${stepId}`}
       >
-        <Database className="h-3 w-3 text-foreground/60" />
+        <Database className="h-3 w-3 text-muted-foreground" />
         <span>{varKey}</span>
       </label>
       {isEditable ? (
         <Input
           aria-invalid={missing.includes(varKey)}
-          className="h-8 w-full rounded-md border-input bg-background px-2 py-1 text-xs text-foreground/90 placeholder:text-foreground/50"
+          className="h-8 w-full rounded-md border-input bg-background px-2 py-1 text-xs text-foreground/90 placeholder:text-muted-foreground"
           id={`var-${varKey}-${stepId}`}
           onChange={handleInputChange}
           placeholder={meta.description || "Enter value"}
@@ -76,12 +76,12 @@ function VariableItem({
         <div
           aria-invalid={missing.includes(varKey)}
           className={cn(
-            "flex min-h-[32px] w-full items-center rounded-md border border-border/70 bg-muted/40 px-2 py-1.5 text-foreground/70 text-xs",
+            "flex min-h-[32px] w-full items-center rounded-md border border-border/70 bg-muted/40 px-2 py-1.5 text-muted-foreground text-xs",
             missing.includes(varKey) && "border-destructive text-destructive"
           )}
         >
           {vars[varKey] === undefined ? (
-            <span className="text-[11px] text-foreground/50 italic">
+            <span className="text-[11px] text-muted-foreground italic">
               Not set
             </span>
           ) : (
@@ -159,7 +159,7 @@ export function StepVariables({
             />
           ))
         ) : (
-          <p className="py-4 text-center text-[11px] text-foreground/60">
+          <p className="py-4 text-center text-[11px] text-muted-foreground">
             No required inputs for this step.
           </p>
         )}
@@ -183,7 +183,7 @@ export function StepVariables({
             />
           ))
         ) : (
-          <p className="py-4 text-center text-[11px] text-foreground/60">
+          <p className="py-4 text-center text-[11px] text-muted-foreground">
             No provided outputs for this step.
           </p>
         )}

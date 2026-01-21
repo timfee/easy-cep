@@ -62,7 +62,7 @@ export function StepApiCalls({ stepId }: StepApiCallsProps) {
     const colors = {
       [HttpMethod.GET]: "bg-primary/10 text-primary border-primary/20",
       [HttpMethod.POST]:
-        "bg-secondary/40 text-secondary-foreground border-secondary/30",
+        "bg-secondary/15 text-secondary border-secondary/20",
       [HttpMethod.PUT]: "bg-accent/50 text-accent-foreground border-accent/40",
       [HttpMethod.PATCH]:
         "bg-accent/40 text-accent-foreground border-accent/30",

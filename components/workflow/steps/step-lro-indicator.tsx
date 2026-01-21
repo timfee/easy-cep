@@ -44,7 +44,7 @@ export function StepLROIndicator({
             {operationType || "Long-running operation in progress"}
           </span>
         </div>
-        <div className="flex items-center gap-2 text-foreground/70">
+        <div className="flex items-center gap-2 text-muted-foreground">
           <Clock className="h-3.5 w-3.5" />
           <span>{formatTime(elapsed)} elapsed</span>
         </div>
@@ -59,12 +59,12 @@ export function StepLROIndicator({
         </div>
       )}
       {estimatedDuration && elapsed < estimatedDuration && (
-        <p className="text-center text-foreground/60 text-xs">
+        <p className="text-center text-muted-foreground text-xs">
           Estimated time remaining: {formatTime(estimatedDuration - elapsed)}
         </p>
       )}
       {estimatedDuration && elapsed > estimatedDuration && (
-        <p className="text-center text-amber-600 text-xs">
+        <p className="text-center text-muted-foreground text-xs">
           Taking longer than expected. This is normal for complex operations.
         </p>
       )}

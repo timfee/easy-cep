@@ -85,8 +85,8 @@ function VariableRowContent({
     if (value !== undefined) {
       const valueClasses =
         isConfigurable && !isEditing
-          ? "text-foreground/80 group-hover:text-foreground"
-          : "text-foreground/70";
+          ? "text-foreground/90 group-hover:text-foreground"
+          : "text-muted-foreground";
       return (
         <code
           className={`block truncate py-0.5 font-mono text-xs ${valueClasses}`}
@@ -98,18 +98,18 @@ function VariableRowContent({
 
     const emptyClasses =
       isConfigurable && !isEditing
-        ? "text-foreground/60 group-hover:text-foreground/70"
-        : "text-foreground/50";
+        ? "text-muted-foreground group-hover:text-foreground/80"
+        : "text-muted-foreground/70";
     return <span className={`text-xs italic ${emptyClasses}`}>(Not set)</span>;
   };
 
   return (
     <div className="flex flex-col gap-0.5">
       <div className="flex w-full items-center gap-1.5">
-        <Database className="h-2.5 w-2.5 text-foreground/50" />
-        <span className="font-medium text-foreground text-xs">{varKey}</span>
+        <Database className="h-2.5 w-2.5 text-muted-foreground" />
+        <span className="font-medium text-xs">{varKey}</span>
         {isConfigurable && !isEditing && (
-          <Pencil className="ml-auto h-3 w-3 text-foreground/40 opacity-0 transition-opacity duration-150 group-hover:opacity-100 group-hover:text-foreground/60 group-focus-visible:opacity-100" />
+          <Pencil className="ml-auto h-3 w-3 text-muted-foreground/50 opacity-0 transition-opacity duration-150 group-hover:opacity-100 group-hover:text-muted-foreground group-focus-visible:opacity-100" />
         )}
       </div>
       <div>{renderValue()}</div>
@@ -248,7 +248,7 @@ export function VarsInspector({ vars, onChange }: VarsInspectorProps) {
           const categoryTitle = categoryTitles[category];
           return (
             <div className="py-3" key={category}>
-              <h4 className="sticky top-0 z-10 bg-background/95 px-3 py-2 text-[11px] font-semibold uppercase tracking-[0.08em] text-foreground/80 backdrop-blur shadow-[0_1px_0_0_hsl(var(--border)/0.7)]">
+              <h4 className="sticky top-0 z-10 bg-background/95 px-3 py-2 text-[11px] font-semibold uppercase tracking-[0.08em] text-muted-foreground backdrop-blur border-b border-border/70">
                 {categoryTitle}
               </h4>
 

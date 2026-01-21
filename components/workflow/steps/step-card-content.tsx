@@ -106,7 +106,7 @@ export function StepCardContent({ definition, state, vars, executing }: Props) {
     <CardContent className="px-6 pb-8 pt-4">
       <div className="space-y-6">
         {detail?.description && (
-          <div className="space-y-2 rounded-lg border border-border/70 bg-muted/30 px-4 py-3 text-left text-foreground/70 text-sm">
+          <div className="space-y-2 rounded-lg border border-border/70 bg-muted/30 px-4 py-3 text-left text-muted-foreground text-sm">
             {detail.description.split("\n").map((l, i) => (
               <p key={`${definition.id}-desc-${i}`}>{l}</p>
             ))}
@@ -166,7 +166,7 @@ export function StepCardContent({ definition, state, vars, executing }: Props) {
             </div>
             <ChevronRight
               className={cn(
-                "h-4 w-4 text-foreground/60 transition-transform",
+                "h-4 w-4 text-muted-foreground transition-transform",
                 logsOpen && "rotate-90"
               )}
             />

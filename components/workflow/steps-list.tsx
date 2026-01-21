@@ -47,7 +47,7 @@ export function StepsList() {
 
   if (!sessionLoaded) {
     return (
-      <div className="py-24 text-center text-foreground/70">
+      <div className="py-24 text-center text-muted-foreground">
         <Loader2 className="mx-auto h-6 w-6 animate-spin" />
       </div>
     );
@@ -55,7 +55,7 @@ export function StepsList() {
 
   if (!loggedIn) {
     return (
-      <div className="my-24 text-center text-foreground/70">
+      <div className="my-24 text-center text-muted-foreground">
         <div className="h-40 rounded-lg border border-border/60 bg-muted/30 p-12">
           <h2 className="font-semibold text-foreground text-lg">
             Sign in to begin

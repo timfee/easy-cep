@@ -163,7 +163,7 @@ export function StepCardHeader({
           >
             {getBadgeText(executing, state?.status)}
           </Badge>
-          <div className="text-foreground/60">
+          <div className="text-muted-foreground">
             {isExpanded ? (
               <ChevronDown className="h-4 w-4" />
             ) : (
