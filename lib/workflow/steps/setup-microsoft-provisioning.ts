@@ -17,7 +17,8 @@ export default defineStep(StepId.SetupMicrosoftProvisioning)
   .requires(
     Var.MsGraphToken,
     Var.ProvisioningServicePrincipalId,
-    Var.GeneratedPassword
+    Var.GeneratedPassword,
+    Var.ProvisioningUserEmail
   )
   .provides()
 
@@ -64,6 +65,7 @@ export default defineStep(StepId.SetupMicrosoftProvisioning)
     try {
       const spId = vars.require(Var.ProvisioningServicePrincipalId);
       const password = vars.require(Var.GeneratedPassword);
+      const userEmail = vars.require(Var.ProvisioningUserEmail);
       const baseAddress = ApiEndpoint.Google.Users.replace("/users", "");
 
       const { value: templates } = (await microsoft.synchronization
@@ -91,10 +93,22 @@ export default defineStep(StepId.SetupMicrosoftProvisioning)
         .create()
         .post({ templateId })) as { id?: string };
 
+      const syncNotificationSettings = JSON.stringify({
+        Enabled: false,
+        DeleteThresholdEnabled: false,
+      });
+
       await microsoft.synchronization.secrets(spId).put({
         value: [
           { key: "BaseAddress", value: baseAddress },
           { key: "SecretToken", value: password },
+          { key: "UserName", value: userEmail },
+          { key: "Password", value: password },
+          {
+            key: "SyncNotificationSettings",
+            value: syncNotificationSettings,
+          },
+          { key: "SyncAll", value: "true" },
         ],
       });
 

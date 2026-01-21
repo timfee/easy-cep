@@ -332,6 +332,16 @@ export const stepApiMetadata: Record<StepIdValue, ApiCallMetadata[]> = {
     },
     {
       description: "Set credentials",
+      body: {
+        value: [
+          { key: "BaseAddress", value: "https://admin.googleapis.com/admin/directory/v1" },
+          { key: "SecretToken", value: "{generatedPassword}" },
+          { key: "UserName", value: "{provisioningUserEmail}" },
+          { key: "Password", value: "{generatedPassword}" },
+          { key: "SyncNotificationSettings", value: "{\"Enabled\":false,\"DeleteThresholdEnabled\":false}" },
+          { key: "SyncAll", value: "true" },
+        ],
+      },
       endpoint:
         "/graph/v1.0/servicePrincipals/{provisioningServicePrincipalId}/synchronization/secrets",
       method: "PUT",

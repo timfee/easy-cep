@@ -658,10 +658,14 @@ Authorization: Bearer {msGraphToken}
 Content-Type: application/json
 
 {
-  "value": [
-    { "key": "BaseAddress", "value": "https://admin.googleapis.com/admin/directory/v1" },
-    { "key": "SecretToken", "value": "{generatedPassword}" }
-  ]
+    "value": [
+        { "key": "BaseAddress", "value": "https://admin.googleapis.com/admin/directory/v1" },
+        { "key": "SecretToken", "value": "{generatedPassword}" },
+        { "key": "UserName", "value": "{provisioningUserEmail}" },
+        { "key": "Password", "value": "{generatedPassword}" },
+        { "key": "SyncNotificationSettings", "value": "{\"Enabled\":false,\"DeleteThresholdEnabled\":false}" },
+        { "key": "SyncAll", "value": "true" }
+    ]
 }
 ```
 
