@@ -68,6 +68,10 @@ async function deleteRoleAssignment(
     }
   );
 
+  if (res.status === 404) {
+    return;
+  }
+
   if (!res.ok) {
     const text = await res.text();
     throw new Error(`HTTP ${res.status}: ${text}`);
@@ -147,6 +151,12 @@ function createDeleteAction(
               method: "DELETE",
             });
 
+            if (res.status === 404) {
+              // Resource already gone, treat as success
+              results.deleted.push(id);
+              return;
+            }
+
             if (!res.ok) {
               const text = await res.text();
               throw new Error(`HTTP ${res.status}: ${text}`);
@@ -221,6 +231,11 @@ export async function deleteOrgUnits(ids: string[]): Promise<DeleteResult> {
           method: "DELETE",
         }
       );
+
+      if (res.status === 404) {
+        results.deleted.push(id);
+        continue;
+      }
 
       if (!res.ok) {
         const text = await res.text();

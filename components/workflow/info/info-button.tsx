@@ -137,7 +137,7 @@ function InfoCallouts({ error, failureDetails }: InfoCalloutsProps) {
                 >
                   <Badge variant="destructive" className="h-5 px-1.5 text-[10px]">Failed</Badge>
                   <div className="min-w-0">
-                    <p className="font-medium text-foreground">
+                    <p className="text-foreground">
                       {failure.label}
                     </p>
                     <p className="text-destructive/80">

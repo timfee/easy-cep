@@ -64,7 +64,7 @@ function InfoItemRow({
       <div className="min-w-0 flex-1 space-y-0.5">
         {item.href ? (
           <Link
-            className="block truncate font-medium text-primary hover:underline"
+            className="block truncate text-primary hover:underline"
             href={item.href}
             rel="noopener noreferrer"
             target="_blank"
@@ -72,7 +72,7 @@ function InfoItemRow({
             {item.label}
           </Link>
         ) : (
-          <span className="block truncate font-medium text-foreground">
+          <span className="block truncate text-foreground">
             {item.label}
           </span>
         )}
@@ -84,7 +84,7 @@ function InfoItemRow({
         {failed && (
           <div className="mt-2 flex items-start gap-2 rounded-md bg-destructive/10 p-2 text-xs text-destructive">
             <Badge variant="destructive" className="h-5 px-1.5 text-[10px]">Failed</Badge>
-            <p className="min-w-0 font-medium leading-5">
+            <p className="min-w-0 leading-5">
               {failedDeletes.get(item.id)}
             </p>
           </div>
