@@ -163,6 +163,16 @@ export function StepCardContent({ definition, state, vars, executing }: Props) {
           <CollapsibleTrigger className="flex w-full items-center justify-between rounded-lg border border-border bg-muted/40 px-4 py-3 font-medium text-foreground/80 transition-colors hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/30 focus-visible:ring-offset-2 focus-visible:ring-offset-background">
             <div className="flex items-center gap-2">
               <Terminal className="h-4 w-4 text-primary" /> Execution Logs
+              <span
+                className={cn(
+                  "ml-1.5 rounded-full px-2 py-0.5 text-[10px] font-semibold",
+                  (state?.logs?.length ?? 0) > 0
+                    ? "bg-primary/10 text-primary"
+                    : "bg-muted-foreground/10 text-muted-foreground"
+                )}
+              >
+                {state?.logs?.length ?? 0}
+              </span>
             </div>
             <ChevronRight
               className={cn(
